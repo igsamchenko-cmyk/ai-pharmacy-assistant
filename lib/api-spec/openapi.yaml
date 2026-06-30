@@ -3,13 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API specification for AI Pharmacy Assistant
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: drugs
+    description: Drug search and details
+  - name: analogs
+    description: Drug analog lookup
+  - name: interactions
+    description: Drug interaction checking
+  - name: ai
+    description: AI drug reference generation
+  - name: ocr
+    description: Package scanning / OCR
+  - name: history
+    description: User activity history
 paths:
   /healthz:
     get:
@@ -24,6 +36,220 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /drugs:
+    get:
+      operationId: searchDrugs
+      tags: [drugs]
+      summary: Search drugs
+      description: Search the demo drug database by various fields.
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, brand, inn, atc, form, dosage]
+      responses:
+        "200":
+          description: Matching drugs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Drug"
+  /drugs/stats:
+    get:
+      operationId: getDrugStats
+      tags: [drugs]
+      summary: Drug database statistics
+      description: Aggregate statistics about the demo drug database.
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DrugStats"
+  /drugs/{id}:
+    get:
+      operationId: getDrug
+      tags: [drugs]
+      summary: Get a single drug
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Drug detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Drug"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /drugs/{id}/analogs:
+    get:
+      operationId: getDrugAnalogs
+      tags: [analogs]
+      summary: Find analogs for a drug
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Analog groups
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalogResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /interactions/check:
+    post:
+      operationId: checkInteractions
+      tags: [interactions]
+      summary: Check interactions between drugs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InteractionCheckInput"
+      responses:
+        "200":
+          description: Interaction result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InteractionResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /ai/summary:
+    post:
+      operationId: createAiSummary
+      tags: [ai]
+      summary: Generate an AI drug reference
+      description: Generates a structured reference for a drug. Falls back to demo data when no AI key is configured. Blocks self-diagnosis / treatment requests.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiSummaryInput"
+      responses:
+        "200":
+          description: AI summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiSummary"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /ocr/scan:
+    post:
+      operationId: scanPackage
+      tags: [ocr]
+      summary: Scan a package photo
+      description: Runs OCR on an uploaded package image (base64) and returns matching drugs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OcrScanInput"
+      responses:
+        "200":
+          description: OCR result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OcrResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /history:
+    get:
+      operationId: listHistory
+      tags: [history]
+      summary: List activity history
+      responses:
+        "200":
+          description: History entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryEntry"
+    post:
+      operationId: createHistory
+      tags: [history]
+      summary: Create a history entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HistoryInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistoryEntry"
+    delete:
+      operationId: clearHistory
+      tags: [history]
+      summary: Clear all history
+      responses:
+        "204":
+          description: Cleared
+  /history/{id}:
+    delete:
+      operationId: deleteHistory
+      tags: [history]
+      summary: Delete a history entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
 components:
   schemas:
     HealthStatus:
@@ -33,4 +259,245 @@ components:
           type: string
       required:
         - status
-
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    Drug:
+      type: object
+      required:
+        - id
+        - brandName
+        - inn
+        - form
+        - dosage
+        - pharmacologicalGroup
+        - indications
+        - contraindications
+        - sideEffects
+        - warnings
+        - storage
+        - source
+      properties:
+        id:
+          type: string
+        brandName:
+          type: string
+        inn:
+          type: string
+        atcCode:
+          type: ["string", "null"]
+        form:
+          type: string
+        dosage:
+          type: string
+        pharmacologicalGroup:
+          type: string
+        indications:
+          type: string
+        contraindications:
+          type: string
+        sideEffects:
+          type: string
+        warnings:
+          type: string
+        storage:
+          type: string
+        source:
+          type: string
+    DrugStats:
+      type: object
+      required:
+        - totalDrugs
+        - totalGroups
+        - groups
+      properties:
+        totalDrugs:
+          type: integer
+        totalGroups:
+          type: integer
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupCount"
+    GroupCount:
+      type: object
+      required:
+        - group
+        - count
+      properties:
+        group:
+          type: string
+        count:
+          type: integer
+    AnalogResult:
+      type: object
+      required:
+        - base
+        - full
+        - partial
+        - therapeutic
+        - disclaimer
+      properties:
+        base:
+          $ref: "#/components/schemas/Drug"
+        full:
+          type: array
+          items:
+            $ref: "#/components/schemas/Drug"
+        partial:
+          type: array
+          items:
+            $ref: "#/components/schemas/Drug"
+        therapeutic:
+          type: array
+          items:
+            $ref: "#/components/schemas/Drug"
+        disclaimer:
+          type: string
+    InteractionCheckInput:
+      type: object
+      required:
+        - drugIds
+      properties:
+        drugIds:
+          type: array
+          items:
+            type: string
+    InteractionResult:
+      type: object
+      required:
+        - pairs
+        - disclaimer
+      properties:
+        pairs:
+          type: array
+          items:
+            $ref: "#/components/schemas/InteractionPair"
+        disclaimer:
+          type: string
+    InteractionPair:
+      type: object
+      required:
+        - drugAId
+        - drugAName
+        - drugBId
+        - drugBName
+        - riskLevel
+        - explanation
+        - whatToCheck
+        - whenToSeeDoctor
+      properties:
+        drugAId:
+          type: string
+        drugAName:
+          type: string
+        drugBId:
+          type: string
+        drugBName:
+          type: string
+        riskLevel:
+          type: string
+          enum: [low, medium, high, critical]
+        explanation:
+          type: string
+        whatToCheck:
+          type: string
+        whenToSeeDoctor:
+          type: string
+    AiSummaryInput:
+      type: object
+      properties:
+        drugId:
+          type: string
+        query:
+          type: string
+    AiSummary:
+      type: object
+      required:
+        - blocked
+        - isFallback
+        - disclaimer
+      properties:
+        blocked:
+          type: boolean
+        blockedMessage:
+          type: ["string", "null"]
+        isFallback:
+          type: boolean
+        drugName:
+          type: ["string", "null"]
+        whatItIs:
+          type: ["string", "null"]
+        whatFor:
+          type: ["string", "null"]
+        mainRisks:
+          type: ["string", "null"]
+        pharmacistChecklist:
+          type: ["string", "null"]
+        patientExplanation:
+          type: ["string", "null"]
+        disclaimer:
+          type: string
+    OcrScanInput:
+      type: object
+      required:
+        - imageBase64
+      properties:
+        imageBase64:
+          type: string
+        manualText:
+          type: string
+    OcrResult:
+      type: object
+      required:
+        - text
+        - matches
+        - ocrAvailable
+      properties:
+        text:
+          type: string
+        ocrAvailable:
+          type: boolean
+        detectedName:
+          type: ["string", "null"]
+        matches:
+          type: array
+          items:
+            $ref: "#/components/schemas/Drug"
+    HistoryEntry:
+      type: object
+      required:
+        - id
+        - type
+        - title
+        - detail
+        - createdAt
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [search, interaction, ai, ocr, analogs]
+        title:
+          type: string
+        detail:
+          type: string
+        createdAt:
+          type: string
+    HistoryInput:
+      type: object
+      required:
+        - type
+        - title
+      properties:
+        type:
+          type: string
+          enum: [search, interaction, ai, ocr, analogs]
+        title:
+          type: string
+        detail:
+          type: string

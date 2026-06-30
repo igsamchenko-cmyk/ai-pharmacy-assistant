@@ -1,0 +1,1 @@
+- [Pharmacy safety & analog rules](pharmacy-domain-rules.md) — medical-safety enforcement and analog-classification decisions for the AI Pharmacy Assistant.
