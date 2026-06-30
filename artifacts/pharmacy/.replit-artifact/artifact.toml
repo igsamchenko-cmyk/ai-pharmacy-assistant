@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AI Pharmacy Assistant"
+version = "1.0.0"
+id = "artifacts/pharmacy"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22873
+
+[services.development]
+run = "pnpm --filter @workspace/pharmacy run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pharmacy", "run", "build" ]
+publicDir = "artifacts/pharmacy/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22873"
+BASE_PATH = "/"
