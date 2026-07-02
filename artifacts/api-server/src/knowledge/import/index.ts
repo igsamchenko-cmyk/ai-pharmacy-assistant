@@ -61,3 +61,12 @@ export function importCatalog(rows: unknown[]): Promise<ImportResult> {
 export function getCatalogImporterId(): string {
   return activeImporter.id;
 }
+
+// v0.4 dictionary import pipeline (format, parse, guard, review, analyze, samples).
+export * from "./format";
+export * from "./csv";
+export * from "./parse";
+export * from "./guard";
+export * from "./review";
+export * from "./analyze";
+export * from "./samples";

@@ -10,7 +10,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "validate:knowledge": "tsx src/scripts/validate-knowledge.ts",
-    "seed:knowledge": "tsx src/scripts/seed-knowledge.ts"
+    "seed:knowledge": "tsx src/scripts/seed-knowledge.ts",
+    "validate:import": "tsx src/scripts/validate-import.ts",
+    "import:preview": "tsx src/scripts/import-preview.ts",
+    "import:knowledge": "tsx src/scripts/import-knowledge.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",

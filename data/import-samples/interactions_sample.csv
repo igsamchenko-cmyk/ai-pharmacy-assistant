@@ -1,0 +1,6 @@
+ingredient_a,ingredient_b,risk_level,mechanism,source_id,confidence,notes
+Варфарин,Ібупрофен,high,Підвищений ризик кровотеч (НПЗЗ + антикоагулянт),pharmacology-reference,high,Референсне правило рівня класів
+Варфарин,Ацетилсаліцилова кислота,high,Адитивний антитромботичний ефект,pharmacology-reference,high,
+Метотрексат,Ібупрофен,medium,НПЗЗ можуть підвищувати концентрацію метотрексату,pharmacology-reference,medium,
+Еналаприл,Ібупрофен,medium,НПЗЗ послаблюють антигіпертензивний ефект,pharmacology-reference,medium,
+Лоратадин,Аскорбінова кислота,low,Клінічно значущої взаємодії не очікується,pharmacology-reference,high,Демо: відсутність взаємодії

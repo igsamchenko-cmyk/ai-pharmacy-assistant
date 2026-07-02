@@ -486,6 +486,40 @@ export const ListKnowledgeSourcesResponse = zod.object({
 
 
 /**
+ * Parses and analyzes the bundled sample dictionary import file without writing anything. Returns counts, conflicts, confidence and review distributions, and whether the import would succeed. Reference data only.
+ * @summary Dry-run preview of the bundled dictionary import sample
+ */
+export const GetImportPreviewResponse = zod.object({
+  "rowsParsed": zod.number(),
+  "parseErrors": zod.number(),
+  "newIngredients": zod.number(),
+  "newMappings": zod.number(),
+  "duplicates": zod.number(),
+  "conflicts": zod.array(zod.object({
+  "type": zod.enum(['name_multiple_ingredients', 'brand_conflicting_inn', 'ingredient_duplicate_name', 'atc_unknown_class', 'low_confidence_review']),
+  "subject": zod.string(),
+  "detail": zod.string()
+})),
+  "missingSources": zod.number(),
+  "invalidAtc": zod.number(),
+  "confidenceDistribution": zod.object({
+  "low": zod.number(),
+  "medium": zod.number(),
+  "high": zod.number(),
+  "verified": zod.number()
+}),
+  "reviewDistribution": zod.object({
+  "pending": zod.number(),
+  "approved": zod.number(),
+  "rejected": zod.number(),
+  "needs_review": zod.number()
+}),
+  "copyrightViolations": zod.number(),
+  "wouldSucceed": zod.boolean()
+})
+
+
+/**
  * @summary Resolve an ATC code to its classification
  */
 export const GetAtcInfoParams = zod.object({

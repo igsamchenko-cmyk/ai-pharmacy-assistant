@@ -1,0 +1,12 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+paracetamol,Парацетамол,Парацетамол,uk,ukrainian,who-inn,verified,N02BE01,Демонстраційний рядок (публічна МНН)
+paracetamol,Парацетамол,Paracetamolum,la,latin,who-inn,verified,N02BE01,
+paracetamol,Парацетамол,Paracetamol,en,english,who-inn,verified,N02BE01,
+paracetamol,Парацетамол,acetaminophen,en,synonym,who-inn,high,N02BE01,Американська генерична назва
+ibuprofen,Ібупрофен,Ібупрофен,uk,ukrainian,who-inn,verified,M01AE01,
+ibuprofen,Ібупрофен,Ibuprofen,en,english,who-inn,verified,M01AE01,
+ibuprofen,Ібупрофен,ібупрефен,uk,typo,demo-catalog,low,M01AE01,Поширена помилка написання — потребує перевірки
+amoxicillin,Амоксицилін,Амоксицилін,uk,ukrainian,who-inn,verified,J01CA04,
+amoxicillin,Амоксицилін,Amoxicillin,en,english,who-inn,high,J01CA04,
+drotaverine,Дротаверин,Дротаверин,uk,ukrainian,who-inn,verified,A03AD02,Публічна МНН (демо)
+drotaverine,Дротаверин,Drotaverinum,la,latin,who-inn,high,A03AD02,

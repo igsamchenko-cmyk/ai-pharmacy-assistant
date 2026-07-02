@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { GlobalDisclaimer } from "@/components/disclaimer";
 import {
   ShieldCheck,
@@ -7,15 +8,40 @@ import {
   Database,
   BookOpen,
   ExternalLink,
+  Download,
+  Upload,
+  ListChecks,
+  GitCompareArrows,
 } from "lucide-react";
 import {
   useGetDataQuality,
   useListKnowledgeSources,
+  useGetImportPreview,
 } from "@workspace/api-client-react";
 import type {
   QualityIssue,
   ProvenanceSource,
+  ImportPreview,
+  ImportConflict,
 } from "@workspace/api-client-react";
+
+const CONFLICT_TYPE_LABEL: Record<ImportConflict["type"], string> = {
+  name_multiple_ingredients: "Назва → кілька речовин",
+  brand_conflicting_inn: "Бренд → суперечлива МНН",
+  ingredient_duplicate_name: "Речовина → дубль назви",
+  atc_unknown_class: "ATC → невідомий клас",
+  low_confidence_review: "Низька довіра",
+};
+
+const REVIEW_STATUS_LABEL: Record<
+  keyof ImportPreview["reviewDistribution"],
+  { label: string; className: string }
+> = {
+  approved: { label: "Схвалено", className: "text-emerald-600" },
+  pending: { label: "Очікують", className: "text-amber-600" },
+  needs_review: { label: "На перевірку", className: "text-blue-600" },
+  rejected: { label: "Відхилено", className: "text-destructive" },
+};
 
 const SOURCE_TYPE_LABEL: Record<ProvenanceSource["type"], string> = {
   official: "Офіційне",
@@ -89,9 +115,29 @@ function IssueRow({ issue }: { issue: QualityIssue }) {
 export default function DataQuality() {
   const quality = useGetDataQuality();
   const sourcesQuery = useListKnowledgeSources();
+  const importPreview = useGetImportPreview();
 
   const report = quality.data;
   const sources = sourcesQuery.data?.sources ?? [];
+  const preview = importPreview.data;
+
+  function handleExport() {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      quality: report ?? null,
+      sources,
+      importPreview: preview ?? null,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `data-quality-report-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in pb-10">
@@ -100,7 +146,7 @@ export default function DataQuality() {
           <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
             <Database className="w-6 h-6" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold text-foreground">
               Якість даних
             </h1>
@@ -108,6 +154,16 @@ export default function DataQuality() {
               Внутрішня панель: цілісність бази знань і провенанс джерел
             </p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={!report}
+            className="gap-1.5"
+          >
+            <Download className="w-4 h-4" />
+            Експорт JSON
+          </Button>
         </div>
       </div>
 
@@ -190,6 +246,116 @@ export default function DataQuality() {
               />
             </CardContent>
           </Card>
+
+          {preview && (
+            <Card className="bg-card/50">
+              <CardContent className="p-5 space-y-5">
+                <h3 className="font-bold text-foreground flex items-center gap-2">
+                  <Upload className="w-5 h-5 text-primary" />
+                  Попередній перегляд імпорту словника
+                </h3>
+                <p className="text-sm text-muted-foreground -mt-2">
+                  Аналіз вбудованого зразка проти живої бази знань (без запису).
+                </p>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <StatCard label="Рядків" value={preview.rowsParsed} />
+                  <StatCard label="Нові речовини" value={preview.newIngredients} />
+                  <StatCard label="Нові назви" value={preview.newMappings} />
+                  <StatCard label="Дублікати" value={preview.duplicates} />
+                  <StatCard label="Відсутні джерела" value={preview.missingSources} />
+                  <StatCard label="Некоректні ATC" value={preview.invalidAtc} />
+                  <StatCard
+                    label="Пропрієтарні"
+                    value={preview.copyrightViolations}
+                  />
+                  <StatCard label="Помилки розбору" value={preview.parseErrors} />
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                    <ListChecks className="w-4 h-4 text-muted-foreground" />
+                    Черга рецензування
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {(
+                      Object.keys(
+                        REVIEW_STATUS_LABEL,
+                      ) as (keyof ImportPreview["reviewDistribution"])[]
+                    ).map((key) => (
+                      <div
+                        key={key}
+                        className="bg-muted/50 rounded-lg px-3 py-2 text-center"
+                      >
+                        <div
+                          className={`text-lg font-bold ${REVIEW_STATUS_LABEL[key].className}`}
+                        >
+                          {preview.reviewDistribution[key]}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {REVIEW_STATUS_LABEL[key].label}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground mb-2">
+                    Розподіл рівнів довіри
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                    {(["low", "medium", "high", "verified"] as const).map((k) => (
+                      <div key={k} className="bg-muted/50 rounded-lg px-3 py-2">
+                        <div className="text-lg font-bold text-foreground">
+                          {preview.confidenceDistribution[k]}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {k}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {preview.conflicts.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                      <GitCompareArrows className="w-4 h-4 text-amber-500" />
+                      Конфлікти ({preview.conflicts.length})
+                    </h4>
+                    <div className="rounded-lg border border-border/60 divide-y divide-border/50">
+                      {preview.conflicts.map((c, i) => (
+                        <div
+                          key={`${c.type}-${i}`}
+                          className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 px-3 py-2"
+                        >
+                          <span className="text-[11px] uppercase tracking-wide text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded shrink-0 w-fit">
+                            {CONFLICT_TYPE_LABEL[c.type]}
+                          </span>
+                          <span className="text-sm text-foreground">
+                            {c.detail}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  className={`text-sm font-medium rounded-lg px-3 py-2 ${
+                    preview.wouldSucceed
+                      ? "text-emerald-700 bg-emerald-500/10"
+                      : "text-destructive bg-destructive/10"
+                  }`}
+                >
+                  {preview.wouldSucceed
+                    ? "✅ Імпорт буде успішним — блокуючих проблем немає."
+                    : "❌ Імпорт заблоковано — усуньте критичні проблеми."}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {report.warnings.length > 0 && (
             <Card className="bg-card/50">
