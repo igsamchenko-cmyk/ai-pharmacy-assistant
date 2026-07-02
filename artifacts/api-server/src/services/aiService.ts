@@ -6,7 +6,9 @@ import {
   isTreatmentRequest,
 } from "./safety";
 import type { DrugRecord } from "../data/drugs";
-import { getOpenAiClient, hasAiKey, OPENAI_MODEL } from "../lib/openai";
+import { getOpenAiClient, OPENAI_MODEL } from "../lib/openai";
+import { getGeminiClient, GEMINI_MODEL } from "../lib/gemini";
+import { aiProviderChain, hasAnyAiProvider } from "../lib/aiProvider";
 import { logger } from "../lib/logger";
 
 export interface AiSummary {
@@ -87,20 +89,12 @@ const SYSTEM_PROMPT = `Ти — довідковий асистент для д�
 
 Повертай ТІЛЬКИ валідний JSON без markdown і без додаткового тексту.`;
 
-async function callOpenAi(
-  prompt: string,
-  drug: DrugRecord | null,
-): Promise<AiSummary> {
-  const client = getOpenAiClient();
-  if (!client) {
-    return drug ? buildFallback(drug) : blockedSummary();
-  }
-
+function buildUserPrompt(prompt: string, drug: DrugRecord | null): string {
   const context = drug
     ? `Препарат: ${drug.brandName}\nМНН: ${drug.inn}\nATC: ${drug.atcCode ?? "—"}\nГрупа: ${drug.pharmacologicalGroup}\nФорма/доза: ${drug.form}, ${drug.dosage}\nПоказання: ${drug.indications}\nПротипоказання: ${drug.contraindications}\nПобічні: ${drug.sideEffects}\nЗастереження: ${drug.warnings}`
     : `Вільний запит фармацевта: ${prompt}`;
 
-  const userPrompt = `${context}
+  return `${context}
 
 Сформуй довідку у форматі JSON з полями:
 {
@@ -112,7 +106,26 @@ async function callOpenAi(
   "pharmacistChecklist": string|null, // що перевірити фармацевту перед відпуском
   "patientExplanation": string|null   // коротке пояснення простою мовою для пацієнта
 }`;
+}
 
+async function generateWithGemini(userPrompt: string): Promise<string> {
+  const client = getGeminiClient();
+  if (!client) throw new Error("Gemini client unavailable");
+  const response = await client.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+    config: {
+      systemInstruction: SYSTEM_PROMPT,
+      responseMimeType: "application/json",
+      temperature: 0.2,
+    },
+  });
+  return response.text ?? "{}";
+}
+
+async function generateWithOpenAi(userPrompt: string): Promise<string> {
+  const client = getOpenAiClient();
+  if (!client) throw new Error("OpenAI client unavailable");
   const completion = await client.chat.completions.create({
     model: OPENAI_MODEL,
     messages: [
@@ -122,27 +135,51 @@ async function callOpenAi(
     response_format: { type: "json_object" },
     temperature: 0.2,
   });
+  return completion.choices[0]?.message?.content ?? "{}";
+}
 
-  const raw = completion.choices[0]?.message?.content ?? "{}";
-  const parsed = aiResponseSchema.parse(JSON.parse(raw));
+/**
+ * Try each configured AI provider in priority order (Gemini first, OpenAI only
+ * when explicitly enabled). If a provider fails, fall through to the next; if
+ * all fail, throw so the caller uses demo fallback.
+ */
+async function callAi(
+  prompt: string,
+  drug: DrugRecord | null,
+): Promise<AiSummary> {
+  const userPrompt = buildUserPrompt(prompt, drug);
+  let lastError: unknown = null;
 
-  if (parsed.blocked) {
-    return blockedSummary();
+  for (const provider of aiProviderChain()) {
+    try {
+      const raw =
+        provider === "gemini"
+          ? await generateWithGemini(userPrompt)
+          : await generateWithOpenAi(userPrompt);
+      const parsed = aiResponseSchema.parse(JSON.parse(raw));
+
+      if (parsed.blocked) return blockedSummary();
+
+      return {
+        blocked: false,
+        blockedMessage: null,
+        isFallback: false,
+        drugName:
+          parsed.drugName ?? (drug ? `${drug.brandName} (${drug.inn})` : null),
+        whatItIs: parsed.whatItIs,
+        whatFor: parsed.whatFor,
+        mainRisks: parsed.mainRisks,
+        pharmacistChecklist: parsed.pharmacistChecklist,
+        patientExplanation: parsed.patientExplanation,
+        disclaimer: GLOBAL_DISCLAIMER,
+      };
+    } catch (err) {
+      lastError = err;
+      logger.warn({ err, provider }, "AI provider failed; trying next");
+    }
   }
 
-  return {
-    blocked: false,
-    blockedMessage: null,
-    isFallback: false,
-    drugName:
-      parsed.drugName ?? (drug ? `${drug.brandName} (${drug.inn})` : null),
-    whatItIs: parsed.whatItIs,
-    whatFor: parsed.whatFor,
-    mainRisks: parsed.mainRisks,
-    pharmacistChecklist: parsed.pharmacistChecklist,
-    patientExplanation: parsed.patientExplanation,
-    disclaimer: GLOBAL_DISCLAIMER,
-  };
+  throw lastError ?? new Error("No AI provider configured");
 }
 
 export async function generateSummary(input: {
@@ -169,7 +206,7 @@ export async function generateSummary(input: {
     };
   }
 
-  if (!hasAiKey()) {
+  if (!hasAnyAiProvider()) {
     if (drug) return buildFallback(drug);
     return {
       blocked: false,
@@ -177,7 +214,7 @@ export async function generateSummary(input: {
       isFallback: true,
       drugName: null,
       whatItIs:
-        "AI-генерацію вимкнено: не налаштовано ключ OPENAI_API_KEY. Оберіть препарат зі списку, щоб переглянути довідку з демонстраційної бази.",
+        "AI-генерацію вимкнено: не налаштовано жодного AI-провайдера. Додайте GEMINI_API_KEY (основний) або оберіть препарат зі списку, щоб переглянути довідку з демонстраційної бази.",
       whatFor: null,
       mainRisks: null,
       pharmacistChecklist: null,
@@ -187,7 +224,7 @@ export async function generateSummary(input: {
   }
 
   try {
-    return await callOpenAi(input.query ?? "", drug);
+    return await callAi(input.query ?? "", drug);
   } catch (err) {
     logger.error({ err }, "AI summary generation failed; using fallback");
     if (drug) return buildFallback(drug);

@@ -5,7 +5,7 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
-import type { GroupCount } from "./groupCount";
+import type { GroupCount } from './groupCount';
 
 export interface DrugStats {
   totalDrugs: number;

@@ -5,7 +5,7 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
-import type { InteractionPairRiskLevel } from "./interactionPairRiskLevel";
+import type { InteractionPairRiskLevel } from './interactionPairRiskLevel';
 
 export interface InteractionPair {
   drugAId: string;

@@ -1,2 +1,3 @@
-- [Pharmacy safety & analog rules](pharmacy-domain-rules.md) — medical-safety enforcement and analog-classification decisions for the AI Pharmacy Assistant.
-- [Pruning scaffold UI & deps](pruning-scaffold-ui.md) — remove unused shadcn/ui by transitive-closure (not raw ref-count), then prune matching npm deps + typecheck.
+- [AI provider strategy](ai-provider-strategy.md) — Gemini primary via direct SDK + user key; OpenAI opt-in only via ENABLE_OPENAI; zero-key => demo fallback.
+- [External drug data providers](external-data-providers.md) — RxNorm/openFDA are English/US DBs; Ukrainian names match poorly; best-effort, null-on-fail, in-memory TTL cache.
+- [GitHub feature-branch + PR workflow](github-pr-workflow.md) — how to branch/commit/push/PR from the sandbox without leaking the token or pushing main.

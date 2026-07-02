@@ -5,7 +5,7 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
-import type { HistoryInputType } from "./historyInputType";
+import type { HistoryInputType } from './historyInputType';
 
 export interface HistoryInput {
   type: HistoryInputType;

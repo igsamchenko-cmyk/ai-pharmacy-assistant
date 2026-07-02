@@ -5,9 +5,8 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
-import type { SearchDrugsField } from './searchDrugsField';
 
-export type SearchDrugsParams = {
-q?: string;
-field?: SearchDrugsField;
+export type GetExternalDrugReferenceParams = {
+drugId?: string;
+name?: string;
 };

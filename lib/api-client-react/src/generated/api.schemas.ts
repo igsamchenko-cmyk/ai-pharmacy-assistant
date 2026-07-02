@@ -13,6 +13,64 @@ export interface ErrorResponse {
   error: string;
 }
 
+export type DataSourceStatusCategory = typeof DataSourceStatusCategory[keyof typeof DataSourceStatusCategory];
+
+
+export const DataSourceStatusCategory = {
+  catalog: 'catalog',
+  external: 'external',
+  ai: 'ai',
+} as const;
+
+export type DataSourceStatusStatus = typeof DataSourceStatusStatus[keyof typeof DataSourceStatusStatus];
+
+
+export const DataSourceStatusStatus = {
+  active: 'active',
+  optional: 'optional',
+  disabled: 'disabled',
+} as const;
+
+export interface DataSourceStatus {
+  id: string;
+  name: string;
+  category: DataSourceStatusCategory;
+  status: DataSourceStatusStatus;
+  requiresKey: boolean;
+  detail: string;
+}
+
+export interface DataSourcesResponse {
+  sources: DataSourceStatus[];
+}
+
+export interface RxNormInfo {
+  rxcui: string;
+  name: string;
+  ingredients: string[];
+  brands: string[];
+}
+
+export interface OpenFdaInfo {
+  /** @nullable */
+  brandName: string | null;
+  /** @nullable */
+  genericName: string | null;
+  /** @nullable */
+  manufacturer: string | null;
+  /** @nullable */
+  purpose: string | null;
+  /** @nullable */
+  warnings: string | null;
+}
+
+export interface ExternalDrugReference {
+  name: string;
+  rxnorm: RxNormInfo | null;
+  openfda: OpenFdaInfo | null;
+  fetchedAt: string;
+}
+
 export interface Drug {
   id: string;
   brandName: string;
@@ -53,14 +111,14 @@ export interface InteractionCheckInput {
   drugIds: string[];
 }
 
-export type InteractionPairRiskLevel =
-  (typeof InteractionPairRiskLevel)[keyof typeof InteractionPairRiskLevel];
+export type InteractionPairRiskLevel = typeof InteractionPairRiskLevel[keyof typeof InteractionPairRiskLevel];
+
 
 export const InteractionPairRiskLevel = {
-  low: "low",
-  medium: "medium",
-  high: "high",
-  critical: "critical",
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+  critical: 'critical',
 } as const;
 
 export interface InteractionPair {
@@ -117,15 +175,15 @@ export interface OcrResult {
   matches: Drug[];
 }
 
-export type HistoryEntryType =
-  (typeof HistoryEntryType)[keyof typeof HistoryEntryType];
+export type HistoryEntryType = typeof HistoryEntryType[keyof typeof HistoryEntryType];
+
 
 export const HistoryEntryType = {
-  search: "search",
-  interaction: "interaction",
-  ai: "ai",
-  ocr: "ocr",
-  analogs: "analogs",
+  search: 'search',
+  interaction: 'interaction',
+  ai: 'ai',
+  ocr: 'ocr',
+  analogs: 'analogs',
 } as const;
 
 export interface HistoryEntry {
@@ -136,15 +194,15 @@ export interface HistoryEntry {
   createdAt: string;
 }
 
-export type HistoryInputType =
-  (typeof HistoryInputType)[keyof typeof HistoryInputType];
+export type HistoryInputType = typeof HistoryInputType[keyof typeof HistoryInputType];
+
 
 export const HistoryInputType = {
-  search: "search",
-  interaction: "interaction",
-  ai: "ai",
-  ocr: "ocr",
-  analogs: "analogs",
+  search: 'search',
+  interaction: 'interaction',
+  ai: 'ai',
+  ocr: 'ocr',
+  analogs: 'analogs',
 } as const;
 
 export interface HistoryInput {
@@ -154,18 +212,24 @@ export interface HistoryInput {
 }
 
 export type SearchDrugsParams = {
-  q?: string;
-  field?: SearchDrugsField;
+q?: string;
+field?: SearchDrugsField;
 };
 
-export type SearchDrugsField =
-  (typeof SearchDrugsField)[keyof typeof SearchDrugsField];
+export type SearchDrugsField = typeof SearchDrugsField[keyof typeof SearchDrugsField];
+
 
 export const SearchDrugsField = {
-  all: "all",
-  brand: "brand",
-  inn: "inn",
-  atc: "atc",
-  form: "form",
-  dosage: "dosage",
+  all: 'all',
+  brand: 'brand',
+  inn: 'inn',
+  atc: 'atc',
+  form: 'form',
+  dosage: 'dosage',
 } as const;
+
+export type GetExternalDrugReferenceParams = {
+drugId?: string;
+name?: string;
+};
+

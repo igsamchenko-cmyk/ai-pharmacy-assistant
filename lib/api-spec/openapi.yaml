@@ -250,6 +250,43 @@ paths:
       responses:
         "204":
           description: Deleted
+  /sources:
+    get:
+      operationId: listDataSources
+      tags: [external]
+      summary: List data source and AI provider status
+      description: Reports the live status of every data source (demo catalog, external providers, AI providers) for the data-sources page.
+      responses:
+        "200":
+          description: Data source statuses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSourcesResponse"
+  /external/drug:
+    get:
+      operationId: getExternalDrugReference
+      tags: [external]
+      summary: Fetch supplementary external drug data
+      description: Aggregates RxNorm and openFDA reference data for a drug (by demo id or free-text name). Best-effort — providers that fail return null and never crash the request.
+      parameters:
+        - name: drugId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: External reference data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExternalDrugReference"
 components:
   schemas:
     HealthStatus:
@@ -266,6 +303,98 @@ components:
           type: string
       required:
         - error
+    DataSourceStatus:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - status
+        - requiresKey
+        - detail
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+          enum: [catalog, external, ai]
+        status:
+          type: string
+          enum: [active, optional, disabled]
+        requiresKey:
+          type: boolean
+        detail:
+          type: string
+    DataSourcesResponse:
+      type: object
+      required:
+        - sources
+      properties:
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataSourceStatus"
+    RxNormInfo:
+      type: object
+      required:
+        - rxcui
+        - name
+        - ingredients
+        - brands
+      properties:
+        rxcui:
+          type: string
+        name:
+          type: string
+        ingredients:
+          type: array
+          items:
+            type: string
+        brands:
+          type: array
+          items:
+            type: string
+    OpenFdaInfo:
+      type: object
+      required:
+        - brandName
+        - genericName
+        - manufacturer
+        - purpose
+        - warnings
+      properties:
+        brandName:
+          type: ["string", "null"]
+        genericName:
+          type: ["string", "null"]
+        manufacturer:
+          type: ["string", "null"]
+        purpose:
+          type: ["string", "null"]
+        warnings:
+          type: ["string", "null"]
+    ExternalDrugReference:
+      type: object
+      required:
+        - name
+        - rxnorm
+        - openfda
+        - fetchedAt
+      properties:
+        name:
+          type: string
+        rxnorm:
+          oneOf:
+            - $ref: "#/components/schemas/RxNormInfo"
+            - type: "null"
+        openfda:
+          oneOf:
+            - $ref: "#/components/schemas/OpenFdaInfo"
+            - type: "null"
+        fetchedAt:
+          type: string
     Drug:
       type: object
       required:
