@@ -5,27 +5,21 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { mockupPreviewPlugin } from "./mockupPreviewPlugin";
 
+// PORT and BASE_PATH are provided by the workflow at runtime. They are only
+// needed for the dev/preview server, not for producing a static build, so fall
+// back to safe defaults when absent to keep tooling commands (e.g. `build`)
+// working. Production always injects real values, so this does not affect it.
+const DEFAULT_PORT = 5173;
+const DEFAULT_BASE_PATH = "/";
+
 const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
-const port = Number(rawPort);
+const port = rawPort ? Number(rawPort) : DEFAULT_PORT;
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+const basePath = process.env.BASE_PATH ?? DEFAULT_BASE_PATH;
 
 export default defineConfig({
   base: basePath,
