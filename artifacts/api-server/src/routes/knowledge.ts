@@ -5,6 +5,8 @@ import {
   NormalizeDrugNameQueryParams,
   NormalizeDrugNameResponse,
   GetKnowledgeStatsResponse,
+  GetDataQualityResponse,
+  ListKnowledgeSourcesResponse,
   GetAtcInfoResponse,
   CompareDrugsBody,
   CompareDrugsResponse,
@@ -15,6 +17,8 @@ import {
   getKnowledgeEngineStats,
   getAtcInfo,
   compareDrugs,
+  validateKnowledge,
+  listSources,
 } from "../knowledge";
 
 const router: IRouter = Router();
@@ -49,6 +53,14 @@ router.get("/knowledge/normalize", (req, res): void => {
 
 router.get("/knowledge/stats", (_req, res): void => {
   res.json(GetKnowledgeStatsResponse.parse(getKnowledgeEngineStats()));
+});
+
+router.get("/knowledge/quality", (_req, res): void => {
+  res.json(GetDataQualityResponse.parse(validateKnowledge()));
+});
+
+router.get("/knowledge/sources", (_req, res): void => {
+  res.json(ListKnowledgeSourcesResponse.parse({ sources: listSources() }));
 });
 
 router.get("/atc/:code", (req, res): void => {

@@ -10,6 +10,7 @@ import {
   Scan,
   Clock,
   Info,
+  Database,
   Moon,
   Sun,
 } from "lucide-react";
@@ -93,6 +94,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="p-4 border-t border-border flex flex-col gap-2">
+          <Link
+            href="/data-quality"
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium ${location === "/data-quality" ? "bg-primary text-primary-foreground" : "hover:bg-accent text-foreground"}`}
+            data-testid="nav-data-quality"
+          >
+            <Database className="w-5 h-5" />
+            Якість даних
+          </Link>
           <Link
             href="/about"
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium ${location === "/about" ? "bg-primary text-primary-foreground" : "hover:bg-accent text-foreground"}`}

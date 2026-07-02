@@ -5,6 +5,30 @@
 
 ## [Не випущено]
 
+### Додано (v0.3 — Якість даних та база знань)
+
+- **Провенанс** (`artifacts/api-server/src/knowledge/provenance`): єдиний реєстр
+  джерел (`SOURCES`) і детермінований `provenanceForNameKind`; кожен запис
+  словника тепер має провенанс (`sourceKey` + `evidenceLevel`).
+- **Метадані правил взаємодій**: `origin` (`curated`/`generated`), `sourceKey`,
+  `evidence` та за потреби `mechanism`; генератор класів проставляє їх автоматично.
+- **Перевірка якості** (`knowledge/validation`): чиста `validateKnowledge` →
+  `QualityReport` (лічильники, покриття провенансом, помилки/попередження) плюс
+  інжектована `runQualityChecks`.
+- **Пайплайн імпорту** (`knowledge/import/pipeline.ts`): детермінований
+  `buildKnowledgeSnapshot` (дедуплікація речовин за МНН), `runImportPipeline`
+  та DB-незалежні лоадери (`DryRunLoader`, `PostgresLoader`).
+- **Нормалізована схема БЗ** (`lib/db/src/schema/knowledge.ts`): 5 таблиць
+  (`sources`, `ingredients`, `ingredient_names`, `atc_codes`, `interaction_rules`)
+  з натуральними ключами та drizzle-zod insert-схемами.
+- **Ендпоінти**: `GET /api/knowledge/quality`, `GET /api/knowledge/sources`.
+- **Скрипти**: `validate:knowledge` (CI-гейт, exit 1 на помилках) і
+  `seed:knowledge` (ідемпотентний upsert у Postgres).
+- **Фронтенд**: внутрішня панель «Якість даних» (`/data-quality`) з навігацією.
+- **Документи**: `DATA_QUALITY.md`, `IMPORT_GUIDE.md`.
+- Розширене покриття тестами (провенанс, валідація, пайплайн імпорту, метадані
+  взаємодій) — 122 тести.
+
 ### Додано
 
 - **Knowledge Engine** (`artifacts/api-server/src/knowledge`): словник МНН

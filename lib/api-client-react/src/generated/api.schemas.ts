@@ -270,6 +270,81 @@ export interface KnowledgeStats {
   catalogImporter: string;
 }
 
+export type QualityIssueSeverity = typeof QualityIssueSeverity[keyof typeof QualityIssueSeverity];
+
+
+export const QualityIssueSeverity = {
+  error: 'error',
+  warning: 'warning',
+} as const;
+
+export interface QualityIssue {
+  code: string;
+  severity: QualityIssueSeverity;
+  message: string;
+  subject: string;
+}
+
+export type DataQualityReportCounts = {
+  ingredients: number;
+  mappings: number;
+  interactionRules: number;
+  curatedRules: number;
+  generatedRules: number;
+  drugs: number;
+  atcCodesReferenced: number;
+};
+
+export type DataQualityReportCoverage = {
+  mappingsWithProvenance: number;
+  mappingProvenancePct: number;
+  rulesWithSource: number;
+  ruleSourcePct: number;
+  drugsWithValidAtc: number;
+  drugAtcPct: number;
+};
+
+export interface DataQualityReport {
+  ok: boolean;
+  generatedAt: string;
+  counts: DataQualityReportCounts;
+  coverage: DataQualityReportCoverage;
+  errors: QualityIssue[];
+  warnings: QualityIssue[];
+}
+
+export type ProvenanceSourceType = typeof ProvenanceSourceType[keyof typeof ProvenanceSourceType];
+
+
+export const ProvenanceSourceType = {
+  official: 'official',
+  reference: 'reference',
+  demo: 'demo',
+  external: 'external',
+} as const;
+
+export type ProvenanceSourceReliability = typeof ProvenanceSourceReliability[keyof typeof ProvenanceSourceReliability];
+
+
+export const ProvenanceSourceReliability = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface ProvenanceSource {
+  key: string;
+  label: string;
+  type: ProvenanceSourceType;
+  reliability: ProvenanceSourceReliability;
+  url?: string | null;
+  note: string;
+}
+
+export interface ProvenanceSourceList {
+  sources: ProvenanceSource[];
+}
+
 export type KnowledgeSearchResultResolvedStage = typeof KnowledgeSearchResultResolvedStage[keyof typeof KnowledgeSearchResultResolvedStage];
 
 

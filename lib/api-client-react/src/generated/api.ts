@@ -26,6 +26,7 @@ import type {
   AtcInfo,
   CompareInput,
   CompareResult,
+  DataQualityReport,
   DataSourcesResponse,
   Drug,
   DrugStats,
@@ -44,6 +45,7 @@ import type {
   NormalizeResult,
   OcrResult,
   OcrScanInput,
+  ProvenanceSourceList,
   SearchDrugsParams
 } from './api.schemas';
 
@@ -1367,6 +1369,162 @@ export function useGetKnowledgeStats<TData = Awaited<ReturnType<typeof getKnowle
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetKnowledgeStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetDataQualityUrl = () => {
+
+
+
+
+  return `/api/knowledge/quality`
+}
+
+/**
+ * Read-only internal report: integrity errors/warnings, record counts and provenance coverage over the static knowledge base. Reference data only.
+ * @summary Knowledge-base data-quality report
+ */
+export const getDataQuality = async ( options?: RequestInit): Promise<DataQualityReport> => {
+
+  return customFetch<DataQualityReport>(getGetDataQualityUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDataQualityQueryKey = () => {
+    return [
+    `/api/knowledge/quality`
+    ] as const;
+    }
+
+
+export const getGetDataQualityQueryOptions = <TData = Awaited<ReturnType<typeof getDataQuality>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDataQuality>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDataQualityQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDataQuality>>> = ({ signal }) => getDataQuality({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDataQuality>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDataQualityQueryResult = NonNullable<Awaited<ReturnType<typeof getDataQuality>>>
+export type GetDataQualityQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Knowledge-base data-quality report
+ */
+
+export function useGetDataQuality<TData = Awaited<ReturnType<typeof getDataQuality>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDataQuality>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDataQualityQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListKnowledgeSourcesUrl = () => {
+
+
+
+
+  return `/api/knowledge/sources`
+}
+
+/**
+ * The list of sources knowledge mappings and rules can cite.
+ * @summary Provenance source registry
+ */
+export const listKnowledgeSources = async ( options?: RequestInit): Promise<ProvenanceSourceList> => {
+
+  return customFetch<ProvenanceSourceList>(getListKnowledgeSourcesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListKnowledgeSourcesQueryKey = () => {
+    return [
+    `/api/knowledge/sources`
+    ] as const;
+    }
+
+
+export const getListKnowledgeSourcesQueryOptions = <TData = Awaited<ReturnType<typeof listKnowledgeSources>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKnowledgeSources>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListKnowledgeSourcesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listKnowledgeSources>>> = ({ signal }) => listKnowledgeSources({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listKnowledgeSources>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListKnowledgeSourcesQueryResult = NonNullable<Awaited<ReturnType<typeof listKnowledgeSources>>>
+export type ListKnowledgeSourcesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Provenance source registry
+ */
+
+export function useListKnowledgeSources<TData = Awaited<ReturnType<typeof listKnowledgeSources>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKnowledgeSources>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListKnowledgeSourcesQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

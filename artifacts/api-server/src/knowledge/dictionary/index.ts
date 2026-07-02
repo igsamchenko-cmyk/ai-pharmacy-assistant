@@ -1,5 +1,7 @@
 import { normalize } from "../../lib/text";
 import { ingredientSeeds, type IngredientSeed } from "./ingredients";
+import type { NameKind } from "./kinds";
+import { provenanceForNameKind, type Provenance } from "../provenance";
 
 /**
  * A canonical ingredient resolved from any of its names. This is what query
@@ -14,13 +16,14 @@ export interface CanonicalIngredient {
   group: string;
 }
 
-/** One name → ingredient mapping, tagged with how the name is used. */
-export type NameKind = "inn" | "latin" | "english" | "brand" | "synonym";
+export type { NameKind };
 
 export interface DictionaryEntry {
   name: string;
   kind: NameKind;
   ingredient: CanonicalIngredient;
+  /** Where this name mapping comes from (v0.3 provenance). */
+  provenance: Provenance;
 }
 
 function toCanonical(seed: IngredientSeed): CanonicalIngredient {
@@ -56,7 +59,12 @@ for (const seed of ingredientSeeds) {
     if (name === "") continue;
     const key = normalize(name);
     if (key === "" || byName.has(key)) continue;
-    const entry: DictionaryEntry = { name, kind, ingredient };
+    const entry: DictionaryEntry = {
+      name,
+      kind,
+      ingredient,
+      provenance: provenanceForNameKind(kind),
+    };
     byName.set(key, entry);
     entries.push(entry);
   }

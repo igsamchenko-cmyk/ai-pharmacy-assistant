@@ -18,6 +18,7 @@ import AiReference from "@/pages/ai-reference";
 import Scan from "@/pages/scan";
 import History from "@/pages/history";
 import About from "@/pages/about";
+import DataQuality from "@/pages/data-quality";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ function Router() {
           <Route path="/ai" component={AiReference} />
           <Route path="/scan" component={Scan} />
           <Route path="/history" component={History} />
+          <Route path="/data-quality" component={DataQuality} />
           <Route path="/about" component={About} />
           <Route component={NotFound} />
         </Switch>

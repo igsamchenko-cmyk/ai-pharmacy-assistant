@@ -431,6 +431,61 @@ export const GetKnowledgeStatsResponse = zod.object({
 
 
 /**
+ * Read-only internal report: integrity errors/warnings, record counts and provenance coverage over the static knowledge base. Reference data only.
+ * @summary Knowledge-base data-quality report
+ */
+export const GetDataQualityResponse = zod.object({
+  "ok": zod.boolean(),
+  "generatedAt": zod.string(),
+  "counts": zod.object({
+  "ingredients": zod.number(),
+  "mappings": zod.number(),
+  "interactionRules": zod.number(),
+  "curatedRules": zod.number(),
+  "generatedRules": zod.number(),
+  "drugs": zod.number(),
+  "atcCodesReferenced": zod.number()
+}),
+  "coverage": zod.object({
+  "mappingsWithProvenance": zod.number(),
+  "mappingProvenancePct": zod.number(),
+  "rulesWithSource": zod.number(),
+  "ruleSourcePct": zod.number(),
+  "drugsWithValidAtc": zod.number(),
+  "drugAtcPct": zod.number()
+}),
+  "errors": zod.array(zod.object({
+  "code": zod.string(),
+  "severity": zod.enum(['error', 'warning']),
+  "message": zod.string(),
+  "subject": zod.string()
+})),
+  "warnings": zod.array(zod.object({
+  "code": zod.string(),
+  "severity": zod.enum(['error', 'warning']),
+  "message": zod.string(),
+  "subject": zod.string()
+}))
+})
+
+
+/**
+ * The list of sources knowledge mappings and rules can cite.
+ * @summary Provenance source registry
+ */
+export const ListKnowledgeSourcesResponse = zod.object({
+  "sources": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "type": zod.enum(['official', 'reference', 'demo', 'external']),
+  "reliability": zod.enum(['high', 'medium', 'low']),
+  "url": zod.union([zod.string(),zod.null()]).optional(),
+  "note": zod.string()
+}))
+})
+
+
+/**
  * @summary Resolve an ATC code to its classification
  */
 export const GetAtcInfoParams = zod.object({
