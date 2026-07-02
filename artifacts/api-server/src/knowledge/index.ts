@@ -18,6 +18,9 @@ export * from "./search";
 export * from "./compare";
 export * from "./barcode";
 export * from "./import";
+export * from "./import/pipeline";
+export * from "./provenance";
+export * from "./validation";
 
 import { getDictionaryStats } from "./dictionary";
 import { interactionRules } from "../data/interactions";

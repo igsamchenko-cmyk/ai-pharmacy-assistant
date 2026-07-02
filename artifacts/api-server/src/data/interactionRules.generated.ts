@@ -1,4 +1,8 @@
-import type { InteractionRule, RiskLevel } from "./interactions";
+import type {
+  InteractionRule,
+  RiskLevel,
+  InteractionEvidence,
+} from "./interactions";
 
 /**
  * Class-based interaction rule generator.
@@ -62,6 +66,10 @@ interface Template {
   explanation: string;
   whatToCheck: string;
   whenToSeeDoctor: string;
+  /** Short mechanism note carried into every generated rule (provenance). */
+  mechanism?: string;
+  /** Evidence strength; defaults to "reference" for generated rules. */
+  evidence?: InteractionEvidence;
 }
 
 const TEMPLATES: Template[] = [
@@ -75,6 +83,7 @@ const TEMPLATES: Template[] = [
       "Розгляньте безпечніше знеболення (парацетамол), контроль показників згортання (МНО), захист ШКТ.",
     whenToSeeDoctor:
       "Негайно при ознаках кровотечі: чорний кал, кров у сечі, підшкірні крововиливи, тривала кровотеча.",
+    mechanism: "Адитивний вплив на гемостаз + гастротоксичність НПЗЗ.",
   },
   {
     a: ANTICOAGULANTS,
@@ -85,6 +94,7 @@ const TEMPLATES: Template[] = [
     whatToCheck:
       "Уточніть, чи комбінацію свідомо призначив лікар, контроль згортання та ознак кровотеч.",
     whenToSeeDoctor: "При будь-яких ознаках кровотечі — негайно до лікаря.",
+    mechanism: "Подвійне пригнічення гемостазу (коагуляція + агрегація).",
   },
   {
     a: ANTIPLATELETS,
@@ -190,6 +200,7 @@ const TEMPLATES: Template[] = [
       "Розгляньте паузу статину на час курсу макроліда, ознаки м'язового болю.",
     whenToSeeDoctor:
       "При м'язовому болі, слабкості або темній сечі — терміново до лікаря.",
+    mechanism: "Інгібування CYP3A4 → накопичення статину.",
   },
   {
     a: FLUOROQUINOLONES,
@@ -200,6 +211,7 @@ const TEMPLATES: Template[] = [
     whatToCheck: "Оцінити серцевий анамнез, ЕКГ (QT), рівні електролітів.",
     whenToSeeDoctor:
       "При серцебитті, запамороченні чи непритомності — терміново до лікаря.",
+    mechanism: "Адитивне подовження інтервалу QT.",
   },
 ];
 
@@ -215,6 +227,8 @@ function cross(t: Template): InteractionRule[] {
         explanation: t.explanation,
         whatToCheck: t.whatToCheck,
         whenToSeeDoctor: t.whenToSeeDoctor,
+        mechanism: t.mechanism,
+        evidence: t.evidence,
       });
     }
   }

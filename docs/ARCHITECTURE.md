@@ -73,7 +73,9 @@ Express API (artifacts/api-server)
 | `search`      | багатоетапний пошук: cache → dictionary → catalog → RxNorm → openFDA → AI   |
 | `compare`     | порівняння препаратів поруч + попарна перевірка взаємодій                   |
 | `barcode`     | абстракція резолвера GTIN (підключається; за замовч. «unconfigured»)        |
-| `import`      | абстракція імпортера каталогу (підключається; за замовч. «unconfigured»)    |
+| `import`      | пайплайн імпорту БЗ (`buildKnowledgeSnapshot` → validate → load, лоадери)   |
+| `provenance`  | реєстр джерел (`SOURCES`) і провенанс для кожного мапування назв            |
+| `validation`  | перевірка цілісності БЗ → `QualityReport` (чиста, без БД)                   |
 
 Кожен етап деградує безпечно: відсутній ключ OpenAI чи збій зовнішнього
 провайдера ніколи не кидає виняток — результат просто повідомляє, що вдалося
@@ -81,7 +83,18 @@ Express API (artifacts/api-server)
 (`TtlCache`, 5 хв) з окремими ключами для режиму `skipExternal`.
 
 Ендпоінти: `GET /api/knowledge/search`, `GET /api/knowledge/normalize`,
-`GET /api/knowledge/stats`, `GET /api/atc/{code}`, `POST /api/compare`.
+`GET /api/knowledge/stats`, `GET /api/atc/{code}`, `POST /api/compare`,
+`GET /api/knowledge/quality`, `GET /api/knowledge/sources`.
+
+### Якість даних і провенанс
+
+Шар v0.3 надбудовується над статичними даними, не змінюючи рантайм-сервісів:
+кожне мапування назв має провенанс (`sourceKey` + `evidenceLevel`) з реєстру
+`SOURCES`, а правила взаємодій — `origin`/`sourceKey`/`evidence`/`mechanism`.
+`validateKnowledge` повертає `QualityReport`, а `import/pipeline.ts` детерміновано
+будує нормалізований snapshot і завантажує його через інжектований лоадер у
+таблиці `lib/db/src/schema/knowledge.ts`. Деталі — `docs/DATA_QUALITY.md` та
+`docs/IMPORT_GUIDE.md`.
 
 ### Дані
 
@@ -113,5 +126,7 @@ Express API (artifacts/api-server)
 Vitest (`src/services/__tests__`, `src/lib/__tests__`, `src/knowledge/__tests__`)
 перевіряє пошук, виявлення препаратів у тексті, аналоги, взаємодії, шар безпеки,
 утиліти, а також Knowledge Engine: словник МНН, ATC-класифікацію, TTL-кеш,
-багатоетапний пошук (у режимі `skipExternal`) і порівняння препаратів. Тести
-працюють над статичними даними, тож не потребують БД чи мережі.
+багатоетапний пошук (у режимі `skipExternal`) і порівняння препаратів, а також
+шар якості даних v0.3 (провенанс, `validateKnowledge`, пайплайн імпорту з
+`DryRunLoader`, метадані правил взаємодій). Тести працюють над статичними даними,
+тож не потребують БД чи мережі (122 тести).

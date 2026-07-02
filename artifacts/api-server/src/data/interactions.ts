@@ -2,7 +2,28 @@ import { generatedInteractionRules } from "./interactionRules.generated";
 
 export type RiskLevel = "low" | "medium" | "high" | "critical";
 
-export interface InteractionRule {
+/** Whether a rule was hand-curated or produced by the class-based generator. */
+export type RuleOrigin = "curated" | "generated";
+
+/** Evidence strength behind an interaction rule. */
+export type InteractionEvidence = "established" | "reference" | "theoretical";
+
+/**
+ * Optional provenance/quality metadata attached to interaction rules (v0.3).
+ * Kept optional so the shape stays backward-compatible and the interaction
+ * matcher (which only needs a/b/riskLevel/text) is unaffected.
+ */
+export interface InteractionMeta {
+  /** Set automatically by the rule builder. */
+  origin?: RuleOrigin;
+  /** Provenance source key (see knowledge/provenance registry). */
+  sourceKey?: string;
+  evidence?: InteractionEvidence;
+  /** Short mechanism note, e.g. "подвійний вплив на гемостаз". */
+  mechanism?: string;
+}
+
+export interface InteractionRule extends InteractionMeta {
   /** Matchers are matched against a drug's INN (case-insensitive substring). */
   a: string;
   b: string;
@@ -176,13 +197,21 @@ const baseInteractionRules: InteractionRule[] = [
 export const interactionRules: InteractionRule[] = (() => {
   const seen = new Set<string>();
   const out: InteractionRule[] = [];
-  const push = (rule: InteractionRule) => {
+  const push = (rule: InteractionRule, origin: RuleOrigin) => {
     const key = [rule.a.toLowerCase(), rule.b.toLowerCase()].sort().join("|");
     if (seen.has(key)) return;
     seen.add(key);
-    out.push(rule);
+    // Tag origin here so every rule reports whether it is curated or generated.
+    // Curated rules default to "established" evidence, generated to "reference".
+    out.push({
+      ...rule,
+      origin,
+      sourceKey: rule.sourceKey ?? "pharmacology-reference",
+      evidence:
+        rule.evidence ?? (origin === "curated" ? "established" : "reference"),
+    });
   };
-  for (const rule of baseInteractionRules) push(rule);
-  for (const rule of generatedInteractionRules) push(rule);
+  for (const rule of baseInteractionRules) push(rule, "curated");
+  for (const rule of generatedInteractionRules) push(rule, "generated");
   return out;
 })();

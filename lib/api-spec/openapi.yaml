@@ -361,6 +361,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/KnowledgeStats"
+  /knowledge/quality:
+    get:
+      operationId: getDataQuality
+      tags: [knowledge]
+      summary: Knowledge-base data-quality report
+      description: >-
+        Read-only internal report: integrity errors/warnings, record counts and
+        provenance coverage over the static knowledge base. Reference data only.
+      responses:
+        "200":
+          description: Data-quality report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataQualityReport"
+  /knowledge/sources:
+    get:
+      operationId: listKnowledgeSources
+      tags: [knowledge]
+      summary: Provenance source registry
+      description: The list of sources knowledge mappings and rules can cite.
+      responses:
+        "200":
+          description: Registered provenance sources
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProvenanceSourceList"
   /atc/{code}:
     get:
       operationId: getAtcInfo
@@ -865,6 +893,126 @@ components:
           type: string
         catalogImporter:
           type: string
+    QualityIssue:
+      type: object
+      required:
+        - code
+        - severity
+        - message
+        - subject
+      properties:
+        code:
+          type: string
+        severity:
+          type: string
+          enum: [error, warning]
+        message:
+          type: string
+        subject:
+          type: string
+    DataQualityReport:
+      type: object
+      required:
+        - ok
+        - generatedAt
+        - counts
+        - coverage
+        - errors
+        - warnings
+      properties:
+        ok:
+          type: boolean
+        generatedAt:
+          type: string
+        counts:
+          type: object
+          required:
+            - ingredients
+            - mappings
+            - interactionRules
+            - curatedRules
+            - generatedRules
+            - drugs
+            - atcCodesReferenced
+          properties:
+            ingredients:
+              type: integer
+            mappings:
+              type: integer
+            interactionRules:
+              type: integer
+            curatedRules:
+              type: integer
+            generatedRules:
+              type: integer
+            drugs:
+              type: integer
+            atcCodesReferenced:
+              type: integer
+        coverage:
+          type: object
+          required:
+            - mappingsWithProvenance
+            - mappingProvenancePct
+            - rulesWithSource
+            - ruleSourcePct
+            - drugsWithValidAtc
+            - drugAtcPct
+          properties:
+            mappingsWithProvenance:
+              type: integer
+            mappingProvenancePct:
+              type: number
+            rulesWithSource:
+              type: integer
+            ruleSourcePct:
+              type: number
+            drugsWithValidAtc:
+              type: integer
+            drugAtcPct:
+              type: number
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/QualityIssue"
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/QualityIssue"
+    ProvenanceSource:
+      type: object
+      required:
+        - key
+        - label
+        - type
+        - reliability
+        - note
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [official, reference, demo, external]
+        reliability:
+          type: string
+          enum: [high, medium, low]
+        url:
+          oneOf:
+            - type: string
+            - type: "null"
+        note:
+          type: string
+    ProvenanceSourceList:
+      type: object
+      required:
+        - sources
+      properties:
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProvenanceSource"
     KnowledgeSearchResult:
       type: object
       required:
