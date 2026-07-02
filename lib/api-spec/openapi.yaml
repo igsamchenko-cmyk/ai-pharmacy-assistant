@@ -287,6 +287,131 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ExternalDrugReference"
+  /knowledge/search:
+    get:
+      operationId: knowledgeSearch
+      tags: [knowledge]
+      summary: Multi-stage Ukrainian drug search
+      description: >-
+        Resolves a free-text query through the knowledge engine
+        (cache → dictionary → local catalog → RxNorm → openFDA → AI). Reports
+        which stage answered and returns the canonical ingredient, ATC
+        classification, catalog matches and external references. Reference only.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: skipExternal
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Knowledge search result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeSearchResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /knowledge/normalize:
+    get:
+      operationId: normalizeDrugName
+      tags: [knowledge]
+      summary: Normalize a drug name to its canonical ingredient
+      description: >-
+        Maps a brand / INN / Latin / English / synonym query to a single
+        canonical active ingredient using the drug dictionary.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Normalization result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NormalizeResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /knowledge/stats:
+    get:
+      operationId: getKnowledgeStats
+      tags: [knowledge]
+      summary: Knowledge engine statistics
+      description: Dictionary size, interaction rule count and active resolver ids.
+      responses:
+        "200":
+          description: Knowledge engine stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeStats"
+  /atc/{code}:
+    get:
+      operationId: getAtcInfo
+      tags: [knowledge]
+      summary: Resolve an ATC code to its classification
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ATC classification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AtcInfo"
+        "404":
+          description: Unknown ATC code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /compare:
+    post:
+      operationId: compareDrugs
+      tags: [knowledge]
+      summary: Compare drugs side by side
+      description: >-
+        Returns an aligned attribute comparison of 2–5 drugs plus a full
+        pairwise interaction check between them. Reference only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompareInput"
+      responses:
+        "200":
+          description: Comparison result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompareResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -629,4 +754,204 @@ components:
         title:
           type: string
         detail:
+          type: string
+    CanonicalIngredient:
+      type: object
+      required:
+        - inn
+        - latin
+        - english
+        - atc
+        - group
+      properties:
+        inn:
+          type: string
+        latin:
+          type: string
+        english:
+          type: string
+        atc:
+          type: string
+        group:
+          type: string
+    AtcInfo:
+      type: object
+      required:
+        - code
+        - anatomicalGroup
+        - therapeuticClass
+        - pharmacologicalClass
+      properties:
+        code:
+          type: string
+        anatomicalGroup:
+          type: string
+        therapeuticClass:
+          type: string
+        pharmacologicalClass:
+          type: string
+    DictionaryEntry:
+      type: object
+      required:
+        - name
+        - kind
+        - ingredient
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+          enum: [inn, latin, english, brand, synonym]
+        ingredient:
+          $ref: "#/components/schemas/CanonicalIngredient"
+    NormalizeResult:
+      type: object
+      required:
+        - query
+        - matched
+        - entry
+      properties:
+        query:
+          type: string
+        matched:
+          type: boolean
+        entry:
+          oneOf:
+            - $ref: "#/components/schemas/DictionaryEntry"
+            - type: "null"
+    DictionaryStats:
+      type: object
+      required:
+        - ingredients
+        - mappings
+        - byKind
+      properties:
+        ingredients:
+          type: integer
+        mappings:
+          type: integer
+        byKind:
+          type: object
+          required:
+            - inn
+            - latin
+            - english
+            - brand
+            - synonym
+          properties:
+            inn:
+              type: integer
+            latin:
+              type: integer
+            english:
+              type: integer
+            brand:
+              type: integer
+            synonym:
+              type: integer
+    KnowledgeStats:
+      type: object
+      required:
+        - dictionary
+        - interactionRules
+        - barcodeResolver
+        - catalogImporter
+      properties:
+        dictionary:
+          $ref: "#/components/schemas/DictionaryStats"
+        interactionRules:
+          type: integer
+        barcodeResolver:
+          type: string
+        catalogImporter:
+          type: string
+    KnowledgeSearchResult:
+      type: object
+      required:
+        - query
+        - resolvedStage
+        - fromCache
+        - normalized
+        - atc
+        - catalogMatches
+        - external
+        - suggestAi
+      properties:
+        query:
+          type: string
+        resolvedStage:
+          type: string
+          enum: [cache, dictionary, catalog, rxnorm, openfda, ai]
+        fromCache:
+          type: boolean
+        normalized:
+          oneOf:
+            - $ref: "#/components/schemas/CanonicalIngredient"
+            - type: "null"
+        atc:
+          oneOf:
+            - $ref: "#/components/schemas/AtcInfo"
+            - type: "null"
+        catalogMatches:
+          type: array
+          items:
+            $ref: "#/components/schemas/Drug"
+        external:
+          oneOf:
+            - $ref: "#/components/schemas/ExternalDrugReference"
+            - type: "null"
+        suggestAi:
+          type: boolean
+    CompareInput:
+      type: object
+      required:
+        - drugIds
+      properties:
+        drugIds:
+          type: array
+          items:
+            type: string
+    ComparedDrug:
+      type: object
+      required:
+        - drug
+        - atc
+      properties:
+        drug:
+          $ref: "#/components/schemas/Drug"
+        atc:
+          oneOf:
+            - $ref: "#/components/schemas/AtcInfo"
+            - type: "null"
+    CompareRow:
+      type: object
+      required:
+        - label
+        - values
+      properties:
+        label:
+          type: string
+        values:
+          type: array
+          items:
+            type: ["string", "null"]
+    CompareResult:
+      type: object
+      required:
+        - drugs
+        - rows
+        - interactions
+        - disclaimer
+      properties:
+        drugs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComparedDrug"
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompareRow"
+        interactions:
+          $ref: "#/components/schemas/InteractionResult"
+        disclaimer:
           type: string

@@ -1,3 +1,1 @@
-- [AI provider strategy](ai-provider-strategy.md) — Gemini primary via direct SDK + user key; OpenAI opt-in only via ENABLE_OPENAI; zero-key => demo fallback.
-- [External drug data providers](external-data-providers.md) — RxNorm/openFDA are English/US DBs; Ukrainian names match poorly; best-effort, null-on-fail, in-memory TTL cache.
-- [GitHub feature-branch + PR workflow](github-pr-workflow.md) — how to branch/commit/push/PR from the sandbox without leaking the token or pushing main.
+- [Git commit / push / PR workflow](git-workflow.md) — bash blocks `git commit`; use code_execution child_process, push only the branch via GitHub token URL.

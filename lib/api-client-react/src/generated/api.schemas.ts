@@ -211,6 +211,109 @@ export interface HistoryInput {
   detail?: string;
 }
 
+export interface CanonicalIngredient {
+  inn: string;
+  latin: string;
+  english: string;
+  atc: string;
+  group: string;
+}
+
+export interface AtcInfo {
+  code: string;
+  anatomicalGroup: string;
+  therapeuticClass: string;
+  pharmacologicalClass: string;
+}
+
+export type DictionaryEntryKind = typeof DictionaryEntryKind[keyof typeof DictionaryEntryKind];
+
+
+export const DictionaryEntryKind = {
+  inn: 'inn',
+  latin: 'latin',
+  english: 'english',
+  brand: 'brand',
+  synonym: 'synonym',
+} as const;
+
+export interface DictionaryEntry {
+  name: string;
+  kind: DictionaryEntryKind;
+  ingredient: CanonicalIngredient;
+}
+
+export interface NormalizeResult {
+  query: string;
+  matched: boolean;
+  entry: DictionaryEntry | null;
+}
+
+export type DictionaryStatsByKind = {
+  inn: number;
+  latin: number;
+  english: number;
+  brand: number;
+  synonym: number;
+};
+
+export interface DictionaryStats {
+  ingredients: number;
+  mappings: number;
+  byKind: DictionaryStatsByKind;
+}
+
+export interface KnowledgeStats {
+  dictionary: DictionaryStats;
+  interactionRules: number;
+  barcodeResolver: string;
+  catalogImporter: string;
+}
+
+export type KnowledgeSearchResultResolvedStage = typeof KnowledgeSearchResultResolvedStage[keyof typeof KnowledgeSearchResultResolvedStage];
+
+
+export const KnowledgeSearchResultResolvedStage = {
+  cache: 'cache',
+  dictionary: 'dictionary',
+  catalog: 'catalog',
+  rxnorm: 'rxnorm',
+  openfda: 'openfda',
+  ai: 'ai',
+} as const;
+
+export interface KnowledgeSearchResult {
+  query: string;
+  resolvedStage: KnowledgeSearchResultResolvedStage;
+  fromCache: boolean;
+  normalized: CanonicalIngredient | null;
+  atc: AtcInfo | null;
+  catalogMatches: Drug[];
+  external: ExternalDrugReference | null;
+  suggestAi: boolean;
+}
+
+export interface CompareInput {
+  drugIds: string[];
+}
+
+export interface ComparedDrug {
+  drug: Drug;
+  atc: AtcInfo | null;
+}
+
+export interface CompareRow {
+  label: string;
+  values: (string | null)[];
+}
+
+export interface CompareResult {
+  drugs: ComparedDrug[];
+  rows: CompareRow[];
+  interactions: InteractionResult;
+  disclaimer: string;
+}
+
 export type SearchDrugsParams = {
 q?: string;
 field?: SearchDrugsField;
@@ -231,5 +334,14 @@ export const SearchDrugsField = {
 export type GetExternalDrugReferenceParams = {
 drugId?: string;
 name?: string;
+};
+
+export type KnowledgeSearchParams = {
+q: string;
+skipExternal?: boolean;
+};
+
+export type NormalizeDrugNameParams = {
+q: string;
 };
 

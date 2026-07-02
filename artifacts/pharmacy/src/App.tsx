@@ -12,6 +12,8 @@ import SearchPage from "@/pages/search";
 import DrugDetail from "@/pages/drug-detail";
 import Analogs from "@/pages/analogs";
 import Interactions from "@/pages/interactions";
+import Compare from "@/pages/compare";
+import Hospital from "@/pages/hospital";
 import AiReference from "@/pages/ai-reference";
 import Scan from "@/pages/scan";
 import History from "@/pages/history";
@@ -29,6 +31,8 @@ function Router() {
           <Route path="/drug/:id" component={DrugDetail} />
           <Route path="/analogs/:id" component={Analogs} />
           <Route path="/interactions" component={Interactions} />
+          <Route path="/compare" component={Compare} />
+          <Route path="/hospital" component={Hospital} />
           <Route path="/ai" component={AiReference} />
           <Route path="/scan" component={Scan} />
           <Route path="/history" component={History} />

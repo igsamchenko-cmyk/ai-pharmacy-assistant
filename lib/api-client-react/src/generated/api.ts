@@ -23,6 +23,9 @@ import type {
   AiSummary,
   AiSummaryInput,
   AnalogResult,
+  AtcInfo,
+  CompareInput,
+  CompareResult,
   DataSourcesResponse,
   Drug,
   DrugStats,
@@ -34,6 +37,11 @@ import type {
   HistoryInput,
   InteractionCheckInput,
   InteractionResult,
+  KnowledgeSearchParams,
+  KnowledgeSearchResult,
+  KnowledgeStats,
+  NormalizeDrugNameParams,
+  NormalizeResult,
   OcrResult,
   OcrScanInput,
   SearchDrugsParams
@@ -1122,4 +1130,400 @@ export function useGetExternalDrugReference<TData = Awaited<ReturnType<typeof ge
 
 
 
+
+export const getKnowledgeSearchUrl = (params: KnowledgeSearchParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/knowledge/search?${stringifiedParams}` : `/api/knowledge/search`
+}
+
+/**
+ * Resolves a free-text query through the knowledge engine (cache → dictionary → local catalog → RxNorm → openFDA → AI). Reports which stage answered and returns the canonical ingredient, ATC classification, catalog matches and external references. Reference only.
+ * @summary Multi-stage Ukrainian drug search
+ */
+export const knowledgeSearch = async (params: KnowledgeSearchParams, options?: RequestInit): Promise<KnowledgeSearchResult> => {
+
+  return customFetch<KnowledgeSearchResult>(getKnowledgeSearchUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getKnowledgeSearchQueryKey = (params?: KnowledgeSearchParams,) => {
+    return [
+    `/api/knowledge/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getKnowledgeSearchQueryOptions = <TData = Awaited<ReturnType<typeof knowledgeSearch>>, TError = ErrorType<ErrorResponse>>(params: KnowledgeSearchParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof knowledgeSearch>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getKnowledgeSearchQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof knowledgeSearch>>> = ({ signal }) => knowledgeSearch(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof knowledgeSearch>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type KnowledgeSearchQueryResult = NonNullable<Awaited<ReturnType<typeof knowledgeSearch>>>
+export type KnowledgeSearchQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Multi-stage Ukrainian drug search
+ */
+
+export function useKnowledgeSearch<TData = Awaited<ReturnType<typeof knowledgeSearch>>, TError = ErrorType<ErrorResponse>>(
+ params: KnowledgeSearchParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof knowledgeSearch>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getKnowledgeSearchQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getNormalizeDrugNameUrl = (params: NormalizeDrugNameParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/knowledge/normalize?${stringifiedParams}` : `/api/knowledge/normalize`
+}
+
+/**
+ * Maps a brand / INN / Latin / English / synonym query to a single canonical active ingredient using the drug dictionary.
+ * @summary Normalize a drug name to its canonical ingredient
+ */
+export const normalizeDrugName = async (params: NormalizeDrugNameParams, options?: RequestInit): Promise<NormalizeResult> => {
+
+  return customFetch<NormalizeResult>(getNormalizeDrugNameUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getNormalizeDrugNameQueryKey = (params?: NormalizeDrugNameParams,) => {
+    return [
+    `/api/knowledge/normalize`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getNormalizeDrugNameQueryOptions = <TData = Awaited<ReturnType<typeof normalizeDrugName>>, TError = ErrorType<ErrorResponse>>(params: NormalizeDrugNameParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof normalizeDrugName>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getNormalizeDrugNameQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof normalizeDrugName>>> = ({ signal }) => normalizeDrugName(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof normalizeDrugName>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type NormalizeDrugNameQueryResult = NonNullable<Awaited<ReturnType<typeof normalizeDrugName>>>
+export type NormalizeDrugNameQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Normalize a drug name to its canonical ingredient
+ */
+
+export function useNormalizeDrugName<TData = Awaited<ReturnType<typeof normalizeDrugName>>, TError = ErrorType<ErrorResponse>>(
+ params: NormalizeDrugNameParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof normalizeDrugName>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getNormalizeDrugNameQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetKnowledgeStatsUrl = () => {
+
+
+
+
+  return `/api/knowledge/stats`
+}
+
+/**
+ * Dictionary size, interaction rule count and active resolver ids.
+ * @summary Knowledge engine statistics
+ */
+export const getKnowledgeStats = async ( options?: RequestInit): Promise<KnowledgeStats> => {
+
+  return customFetch<KnowledgeStats>(getGetKnowledgeStatsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetKnowledgeStatsQueryKey = () => {
+    return [
+    `/api/knowledge/stats`
+    ] as const;
+    }
+
+
+export const getGetKnowledgeStatsQueryOptions = <TData = Awaited<ReturnType<typeof getKnowledgeStats>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKnowledgeStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetKnowledgeStatsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getKnowledgeStats>>> = ({ signal }) => getKnowledgeStats({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getKnowledgeStats>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetKnowledgeStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getKnowledgeStats>>>
+export type GetKnowledgeStatsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Knowledge engine statistics
+ */
+
+export function useGetKnowledgeStats<TData = Awaited<ReturnType<typeof getKnowledgeStats>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKnowledgeStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetKnowledgeStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAtcInfoUrl = (code: string,) => {
+
+
+
+
+  return `/api/atc/${code}`
+}
+
+/**
+ * @summary Resolve an ATC code to its classification
+ */
+export const getAtcInfo = async (code: string, options?: RequestInit): Promise<AtcInfo> => {
+
+  return customFetch<AtcInfo>(getGetAtcInfoUrl(code),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAtcInfoQueryKey = (code: string,) => {
+    return [
+    `/api/atc/${code}`
+    ] as const;
+    }
+
+
+export const getGetAtcInfoQueryOptions = <TData = Awaited<ReturnType<typeof getAtcInfo>>, TError = ErrorType<ErrorResponse>>(code: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAtcInfo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAtcInfoQueryKey(code);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAtcInfo>>> = ({ signal }) => getAtcInfo(code, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: code !== null && code !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAtcInfo>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAtcInfoQueryResult = NonNullable<Awaited<ReturnType<typeof getAtcInfo>>>
+export type GetAtcInfoQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Resolve an ATC code to its classification
+ */
+
+export function useGetAtcInfo<TData = Awaited<ReturnType<typeof getAtcInfo>>, TError = ErrorType<ErrorResponse>>(
+ code: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAtcInfo>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAtcInfoQueryOptions(code,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCompareDrugsUrl = () => {
+
+
+
+
+  return `/api/compare`
+}
+
+/**
+ * Returns an aligned attribute comparison of 2–5 drugs plus a full pairwise interaction check between them. Reference only.
+ * @summary Compare drugs side by side
+ */
+export const compareDrugs = async (compareInput: CompareInput, options?: RequestInit): Promise<CompareResult> => {
+
+  return customFetch<CompareResult>(getCompareDrugsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(compareInput)
+  }
+);}
+
+
+
+
+export const getCompareDrugsMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof compareDrugs>>, TError,{data: BodyType<CompareInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof compareDrugs>>, TError,{data: BodyType<CompareInput>}, TContext> => {
+
+const mutationKey = ['compareDrugs'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof compareDrugs>>, {data: BodyType<CompareInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  compareDrugs(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CompareDrugsMutationResult = NonNullable<Awaited<ReturnType<typeof compareDrugs>>>
+    export type CompareDrugsMutationBody = BodyType<CompareInput>
+    export type CompareDrugsMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Compare drugs side by side
+ */
+export const useCompareDrugs = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof compareDrugs>>, TError,{data: BodyType<CompareInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof compareDrugs>>,
+        TError,
+        {data: BodyType<CompareInput>},
+        TContext
+      > => {
+      return useMutation(getCompareDrugsMutationOptions(options));
+    }
 

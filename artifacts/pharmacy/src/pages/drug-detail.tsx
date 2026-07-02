@@ -1,5 +1,6 @@
 import { useGetDrug, getGetDrugQueryKey } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,12 +13,15 @@ import {
   AlertTriangle,
   Info,
   BookOpen,
+  Star,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { DEMO_LABEL } from "@/lib/constants";
+import { useFavorites, recordRecentlyViewed } from "@/hooks/use-favorites";
 
 export default function DrugDetail() {
   const { id } = useParams();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const {
     data: drug,
     isLoading,
@@ -25,6 +29,16 @@ export default function DrugDetail() {
   } = useGetDrug(id || "", {
     query: { enabled: !!id, queryKey: getGetDrugQueryKey(id || "") },
   });
+
+  useEffect(() => {
+    if (drug) {
+      recordRecentlyViewed({
+        id: drug.id,
+        brandName: drug.brandName,
+        inn: drug.inn,
+      });
+    }
+  }, [drug]);
 
   if (isLoading) {
     return (
@@ -106,9 +120,38 @@ export default function DrugDetail() {
             >
               {drug.brandName}
             </h1>
-            <Badge variant="outline" className="uppercase text-[10px] shrink-0">
-              {DEMO_LABEL}
-            </Badge>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() =>
+                  toggleFavorite({
+                    id: drug.id,
+                    brandName: drug.brandName,
+                    inn: drug.inn,
+                  })
+                }
+                className="p-2 rounded-full hover:bg-accent transition-colors"
+                aria-label={
+                  isFavorite(drug.id)
+                    ? "Прибрати з обраного"
+                    : "Додати в обране"
+                }
+                data-testid="btn-toggle-favorite"
+              >
+                <Star
+                  className={`w-6 h-6 ${
+                    isFavorite(drug.id)
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-muted-foreground"
+                  }`}
+                />
+              </button>
+              <Badge
+                variant="outline"
+                className="uppercase text-[10px] shrink-0"
+              >
+                {DEMO_LABEL}
+              </Badge>
+            </div>
           </div>
           <p className="text-lg text-primary font-medium mt-1">
             МНН / діюча речовина: {drug.inn}

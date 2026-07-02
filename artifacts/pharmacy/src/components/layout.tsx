@@ -4,6 +4,8 @@ import {
   Search,
   Pill,
   GitCompare,
+  Columns3,
+  Stethoscope,
   Sparkles,
   Scan,
   Clock,
@@ -24,11 +26,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/", icon: Home, label: "Головна" },
     { href: "/search", icon: Search, label: "Пошук" },
+    { href: "/hospital", icon: Stethoscope, label: "Швидкий" },
     { href: "/interactions", icon: GitCompare, label: "Взаємодії" },
+    { href: "/compare", icon: Columns3, label: "Порівняння" },
     { href: "/ai", icon: Sparkles, label: "AI" },
     { href: "/scan", icon: Scan, label: "Скан" },
     { href: "/history", icon: Clock, label: "Історія" },
   ];
+
+  // Bottom bar on phones keeps only the most-used destinations to stay legible.
+  const mobileNavItems = navItems.filter((item) =>
+    ["/", "/search", "/hospital", "/interactions", "/ai", "/history"].includes(
+      item.href,
+    ),
+  );
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground pb-20 md:pb-0 md:flex-row">
@@ -110,7 +121,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border flex justify-around p-2 pb-[env(safe-area-inset-bottom)] shadow-lg z-50">
-        {navItems.map((item) => (
+        {mobileNavItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}

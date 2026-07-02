@@ -1,3 +1,5 @@
+import { generatedInteractionRules } from "./interactionRules.generated";
+
 export type RiskLevel = "low" | "medium" | "high" | "critical";
 
 export interface InteractionRule {
@@ -11,10 +13,12 @@ export interface InteractionRule {
 }
 
 /**
- * Demo interaction rules keyed by active ingredient (INN) substrings.
- * These are illustrative only and must be verified against official sources.
+ * Curated interaction rules keyed by active ingredient (INN) substrings.
+ * These are illustrative reference rules and must be verified against official
+ * sources. They are listed first so the interaction matcher (first match wins)
+ * always prefers a specific curated rule over a generated class-based one.
  */
-export const interactionRules: InteractionRule[] = [
+const baseInteractionRules: InteractionRule[] = [
   {
     a: "варфарин",
     b: "ібупрофен",
@@ -162,3 +166,23 @@ export const interactionRules: InteractionRule[] = [
       "При симптомах гіпоглікемії — проконсультуватися з лікарем.",
   },
 ];
+
+/**
+ * The full interaction rule set: curated rules first, then generated
+ * class-based rules (deduplicated by unordered ingredient pair, curated wins).
+ * The interaction matcher returns the first matching rule, so curated rules
+ * always take precedence over generated ones for the same pair.
+ */
+export const interactionRules: InteractionRule[] = (() => {
+  const seen = new Set<string>();
+  const out: InteractionRule[] = [];
+  const push = (rule: InteractionRule) => {
+    const key = [rule.a.toLowerCase(), rule.b.toLowerCase()].sort().join("|");
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(rule);
+  };
+  for (const rule of baseInteractionRules) push(rule);
+  for (const rule of generatedInteractionRules) push(rule);
+  return out;
+})();
