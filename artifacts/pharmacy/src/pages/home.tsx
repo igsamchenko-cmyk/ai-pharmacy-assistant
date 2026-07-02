@@ -10,14 +10,28 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Link } from "wouter";
-import { Search, GitCompare, Sparkles, Scan, Clock, Pill } from "lucide-react";
+import {
+  Search,
+  GitCompare,
+  Columns3,
+  Stethoscope,
+  Sparkles,
+  Scan,
+  Clock,
+  Pill,
+  Star,
+  ChevronRight,
+} from "lucide-react";
 import { GlobalDisclaimer } from "@/components/disclaimer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DEMO_LABEL } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
+import { useFavorites, useRecentlyViewed } from "@/hooks/use-favorites";
 
 export default function Home() {
   const { data: stats, isLoading, isError } = useGetDrugStats();
+  const { favorites } = useFavorites();
+  const recentlyViewed = useRecentlyViewed();
 
   const menuItems = [
     {
@@ -27,10 +41,22 @@ export default function Home() {
       desc: "Знайти препарат за назвою чи МНН",
     },
     {
+      href: "/hospital",
+      icon: Stethoscope,
+      title: "Швидкий режим",
+      desc: "Пошук біля пацієнта",
+    },
+    {
       href: "/interactions",
       icon: GitCompare,
       title: "Взаємодії",
       desc: "Перевірити сумісність ліків",
+    },
+    {
+      href: "/compare",
+      icon: Columns3,
+      title: "Порівняння",
+      desc: "Зіставити препарати поруч",
     },
     {
       href: "/ai",
@@ -94,6 +120,55 @@ export default function Home() {
           </Link>
         ))}
       </section>
+
+      {favorites.length > 0 && (
+        <section className="space-y-3 pt-2">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
+            Обране
+          </h2>
+          <div className="space-y-2">
+            {favorites.slice(0, 5).map((f) => (
+              <Link key={f.id} href={`/drug/${f.id}`}>
+                <Card className="hover:border-primary/50 active:scale-[0.99] transition-all cursor-pointer">
+                  <CardContent className="p-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-foreground truncate">
+                        {f.brandName}
+                      </div>
+                      <div className="text-xs text-primary truncate">
+                        {f.inn}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {recentlyViewed.length > 0 && (
+        <section className="space-y-3 pt-2">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Clock className="w-5 h-5 text-muted-foreground" />
+            Нещодавно переглянуті
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {recentlyViewed.map((r) => (
+              <Link key={r.id} href={`/drug/${r.id}`}>
+                <Badge
+                  variant="secondary"
+                  className="px-3 py-1.5 text-sm bg-secondary/60 text-secondary-foreground hover:bg-secondary transition-colors cursor-pointer"
+                >
+                  {r.brandName}
+                </Badge>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="space-y-4 pt-4">
         <h2 className="text-xl font-semibold flex items-center gap-2">

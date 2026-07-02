@@ -321,3 +321,180 @@ export const GetExternalDrugReferenceResponse = zod.object({
 })
 
 
+/**
+ * Resolves a free-text query through the knowledge engine (cache → dictionary → local catalog → RxNorm → openFDA → AI). Reports which stage answered and returns the canonical ingredient, ATC classification, catalog matches and external references. Reference only.
+ * @summary Multi-stage Ukrainian drug search
+ */
+export const KnowledgeSearchQueryParams = zod.object({
+  "q": zod.coerce.string(),
+  "skipExternal": zod.coerce.boolean().optional()
+})
+
+export const KnowledgeSearchResponse = zod.object({
+  "query": zod.string(),
+  "resolvedStage": zod.enum(['cache', 'dictionary', 'catalog', 'rxnorm', 'openfda', 'ai']),
+  "fromCache": zod.boolean(),
+  "normalized": zod.union([zod.object({
+  "inn": zod.string(),
+  "latin": zod.string(),
+  "english": zod.string(),
+  "atc": zod.string(),
+  "group": zod.string()
+}),zod.null()]),
+  "atc": zod.union([zod.object({
+  "code": zod.string(),
+  "anatomicalGroup": zod.string(),
+  "therapeuticClass": zod.string(),
+  "pharmacologicalClass": zod.string()
+}),zod.null()]),
+  "catalogMatches": zod.array(zod.object({
+  "id": zod.string(),
+  "brandName": zod.string(),
+  "inn": zod.string(),
+  "atcCode": zod.string().nullish(),
+  "form": zod.string(),
+  "dosage": zod.string(),
+  "pharmacologicalGroup": zod.string(),
+  "indications": zod.string(),
+  "contraindications": zod.string(),
+  "sideEffects": zod.string(),
+  "warnings": zod.string(),
+  "storage": zod.string(),
+  "source": zod.string()
+})),
+  "external": zod.union([zod.object({
+  "name": zod.string(),
+  "rxnorm": zod.union([zod.object({
+  "rxcui": zod.string(),
+  "name": zod.string(),
+  "ingredients": zod.array(zod.string()),
+  "brands": zod.array(zod.string())
+}),zod.null()]),
+  "openfda": zod.union([zod.object({
+  "brandName": zod.string().nullable(),
+  "genericName": zod.string().nullable(),
+  "manufacturer": zod.string().nullable(),
+  "purpose": zod.string().nullable(),
+  "warnings": zod.string().nullable()
+}),zod.null()]),
+  "fetchedAt": zod.string()
+}),zod.null()]),
+  "suggestAi": zod.boolean()
+})
+
+
+/**
+ * Maps a brand / INN / Latin / English / synonym query to a single canonical active ingredient using the drug dictionary.
+ * @summary Normalize a drug name to its canonical ingredient
+ */
+export const NormalizeDrugNameQueryParams = zod.object({
+  "q": zod.coerce.string()
+})
+
+export const NormalizeDrugNameResponse = zod.object({
+  "query": zod.string(),
+  "matched": zod.boolean(),
+  "entry": zod.union([zod.object({
+  "name": zod.string(),
+  "kind": zod.enum(['inn', 'latin', 'english', 'brand', 'synonym']),
+  "ingredient": zod.object({
+  "inn": zod.string(),
+  "latin": zod.string(),
+  "english": zod.string(),
+  "atc": zod.string(),
+  "group": zod.string()
+})
+}),zod.null()])
+})
+
+
+/**
+ * Dictionary size, interaction rule count and active resolver ids.
+ * @summary Knowledge engine statistics
+ */
+export const GetKnowledgeStatsResponse = zod.object({
+  "dictionary": zod.object({
+  "ingredients": zod.number(),
+  "mappings": zod.number(),
+  "byKind": zod.object({
+  "inn": zod.number(),
+  "latin": zod.number(),
+  "english": zod.number(),
+  "brand": zod.number(),
+  "synonym": zod.number()
+})
+}),
+  "interactionRules": zod.number(),
+  "barcodeResolver": zod.string(),
+  "catalogImporter": zod.string()
+})
+
+
+/**
+ * @summary Resolve an ATC code to its classification
+ */
+export const GetAtcInfoParams = zod.object({
+  "code": zod.coerce.string()
+})
+
+export const GetAtcInfoResponse = zod.object({
+  "code": zod.string(),
+  "anatomicalGroup": zod.string(),
+  "therapeuticClass": zod.string(),
+  "pharmacologicalClass": zod.string()
+})
+
+
+/**
+ * Returns an aligned attribute comparison of 2–5 drugs plus a full pairwise interaction check between them. Reference only.
+ * @summary Compare drugs side by side
+ */
+export const CompareDrugsBody = zod.object({
+  "drugIds": zod.array(zod.string())
+})
+
+export const CompareDrugsResponse = zod.object({
+  "drugs": zod.array(zod.object({
+  "drug": zod.object({
+  "id": zod.string(),
+  "brandName": zod.string(),
+  "inn": zod.string(),
+  "atcCode": zod.string().nullish(),
+  "form": zod.string(),
+  "dosage": zod.string(),
+  "pharmacologicalGroup": zod.string(),
+  "indications": zod.string(),
+  "contraindications": zod.string(),
+  "sideEffects": zod.string(),
+  "warnings": zod.string(),
+  "storage": zod.string(),
+  "source": zod.string()
+}),
+  "atc": zod.union([zod.object({
+  "code": zod.string(),
+  "anatomicalGroup": zod.string(),
+  "therapeuticClass": zod.string(),
+  "pharmacologicalClass": zod.string()
+}),zod.null()])
+})),
+  "rows": zod.array(zod.object({
+  "label": zod.string(),
+  "values": zod.array(zod.string().nullable())
+})),
+  "interactions": zod.object({
+  "pairs": zod.array(zod.object({
+  "drugAId": zod.string(),
+  "drugAName": zod.string(),
+  "drugBId": zod.string(),
+  "drugBName": zod.string(),
+  "riskLevel": zod.enum(['low', 'medium', 'high', 'critical']),
+  "explanation": zod.string(),
+  "whatToCheck": zod.string(),
+  "whenToSeeDoctor": zod.string()
+})),
+  "disclaimer": zod.string()
+}),
+  "disclaimer": zod.string()
+})
+
+

@@ -6,6 +6,7 @@ import aiRouter from "./ai";
 import ocrRouter from "./ocr";
 import historyRouter from "./history";
 import externalRouter from "./external";
+import knowledgeRouter from "./knowledge";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(aiRouter);
 router.use(ocrRouter);
 router.use(historyRouter);
 router.use(externalRouter);
+router.use(knowledgeRouter);
 
 export default router;

@@ -7,6 +7,16 @@
 
 ### Додано
 
+- **Knowledge Engine** (`artifacts/api-server/src/knowledge`): словник МНН
+  (UA/латина/англ., 130 діючих речовин, 700+ мапувань назв), ATC-класифікація,
+  багатоетапний пошук (cache → dictionary → catalog → RxNorm → openFDA → AI) з
+  TTL-кешем, порівняння препаратів поруч, а також абстракції `barcode`/`import`.
+- Ендпоінти: `GET /api/knowledge/search`, `/knowledge/normalize`,
+  `/knowledge/stats`, `GET /api/atc/{code}`, `POST /api/compare`.
+- Клас-клас правила взаємодій (генератор `cross()`, `interactionRules.generated.ts`)
+  поверх курованого базового набору; дедуплікація «базові — перші».
+- Фронтенд: сторінки «Порівняння» (`/compare`) і «Швидкий режим» (`/hospital`),
+  обране та нещодавно переглянуті (localStorage), badge-компоненти ризику/групи.
 - Спільні модулі бекенду: `lib/openai.ts` (клієнт OpenAI, `hasAiKey`,
   `OPENAI_MODEL`) і `lib/text.ts` (`normalize`).
 - `drugService.findDrugsInText` для виявлення препаратів у вільному тексті (OCR).
