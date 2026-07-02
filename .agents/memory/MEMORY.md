@@ -1,1 +1,2 @@
 - [Pharmacy safety & analog rules](pharmacy-domain-rules.md) — medical-safety enforcement and analog-classification decisions for the AI Pharmacy Assistant.
+- [Pruning scaffold UI & deps](pruning-scaffold-ui.md) — remove unused shadcn/ui by transitive-closure (not raw ref-count), then prune matching npm deps + typecheck.

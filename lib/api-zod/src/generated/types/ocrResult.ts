@@ -5,7 +5,7 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
-import type { Drug } from './drug';
+import type { Drug } from "./drug";
 
 export interface OcrResult {
   text: string;

@@ -1,9 +1,14 @@
 import { desc, eq } from "drizzle-orm";
-import { db, historyTable, type History } from "@workspace/db";
+import {
+  db,
+  historyTable,
+  type History,
+  type HistoryType,
+} from "@workspace/db";
 
 export interface HistoryDto {
   id: string;
-  type: string;
+  type: HistoryType;
   title: string;
   detail: string;
   createdAt: string;
@@ -12,7 +17,7 @@ export interface HistoryDto {
 function toDto(row: History): HistoryDto {
   return {
     id: row.id,
-    type: row.type,
+    type: row.type as HistoryType,
     title: row.title,
     detail: row.detail,
     createdAt: row.createdAt.toISOString(),
@@ -28,7 +33,7 @@ export async function listHistory(): Promise<HistoryDto[]> {
 }
 
 export async function createHistory(entry: {
-  type: string;
+  type: HistoryType;
   title: string;
   detail?: string;
 }): Promise<HistoryDto> {

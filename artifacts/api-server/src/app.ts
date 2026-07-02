@@ -1,4 +1,9 @@
-import express, { type Express } from "express";
+import express, {
+  type Express,
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
@@ -30,5 +35,18 @@ app.use(express.json({ limit: "12mb" }));
 app.use(express.urlencoded({ extended: true, limit: "12mb" }));
 
 app.use("/api", router);
+
+// Unknown API route -> consistent JSON 404.
+app.use("/api", (_req: Request, res: Response) => {
+  res.status(404).json({ error: "Не знайдено" });
+});
+
+// Central error handler: log the cause, return a safe JSON message. Express 5
+// forwards rejected async handlers here automatically.
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+  req.log.error({ err }, "Unhandled request error");
+  if (res.headersSent) return;
+  res.status(500).json({ error: "Внутрішня помилка сервера" });
+});
 
 export default app;

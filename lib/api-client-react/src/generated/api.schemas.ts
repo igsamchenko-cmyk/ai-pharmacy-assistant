@@ -53,14 +53,14 @@ export interface InteractionCheckInput {
   drugIds: string[];
 }
 
-export type InteractionPairRiskLevel = typeof InteractionPairRiskLevel[keyof typeof InteractionPairRiskLevel];
-
+export type InteractionPairRiskLevel =
+  (typeof InteractionPairRiskLevel)[keyof typeof InteractionPairRiskLevel];
 
 export const InteractionPairRiskLevel = {
-  low: 'low',
-  medium: 'medium',
-  high: 'high',
-  critical: 'critical',
+  low: "low",
+  medium: "medium",
+  high: "high",
+  critical: "critical",
 } as const;
 
 export interface InteractionPair {
@@ -117,15 +117,15 @@ export interface OcrResult {
   matches: Drug[];
 }
 
-export type HistoryEntryType = typeof HistoryEntryType[keyof typeof HistoryEntryType];
-
+export type HistoryEntryType =
+  (typeof HistoryEntryType)[keyof typeof HistoryEntryType];
 
 export const HistoryEntryType = {
-  search: 'search',
-  interaction: 'interaction',
-  ai: 'ai',
-  ocr: 'ocr',
-  analogs: 'analogs',
+  search: "search",
+  interaction: "interaction",
+  ai: "ai",
+  ocr: "ocr",
+  analogs: "analogs",
 } as const;
 
 export interface HistoryEntry {
@@ -136,15 +136,15 @@ export interface HistoryEntry {
   createdAt: string;
 }
 
-export type HistoryInputType = typeof HistoryInputType[keyof typeof HistoryInputType];
-
+export type HistoryInputType =
+  (typeof HistoryInputType)[keyof typeof HistoryInputType];
 
 export const HistoryInputType = {
-  search: 'search',
-  interaction: 'interaction',
-  ai: 'ai',
-  ocr: 'ocr',
-  analogs: 'analogs',
+  search: "search",
+  interaction: "interaction",
+  ai: "ai",
+  ocr: "ocr",
+  analogs: "analogs",
 } as const;
 
 export interface HistoryInput {
@@ -154,19 +154,18 @@ export interface HistoryInput {
 }
 
 export type SearchDrugsParams = {
-q?: string;
-field?: SearchDrugsField;
+  q?: string;
+  field?: SearchDrugsField;
 };
 
-export type SearchDrugsField = typeof SearchDrugsField[keyof typeof SearchDrugsField];
-
+export type SearchDrugsField =
+  (typeof SearchDrugsField)[keyof typeof SearchDrugsField];
 
 export const SearchDrugsField = {
-  all: 'all',
-  brand: 'brand',
-  inn: 'inn',
-  atc: 'atc',
-  form: 'form',
-  dosage: 'dosage',
+  all: "all",
+  brand: "brand",
+  inn: "inn",
+  atc: "atc",
+  form: "form",
+  dosage: "dosage",
 } as const;
-

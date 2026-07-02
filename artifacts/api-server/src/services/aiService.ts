@@ -1,7 +1,12 @@
-import OpenAI from "openai";
+import { z } from "zod/v4";
 import { getDrugById } from "./drugService";
-import { GLOBAL_DISCLAIMER, BLOCKED_MESSAGE, isTreatmentRequest } from "./safety";
+import {
+  GLOBAL_DISCLAIMER,
+  BLOCKED_MESSAGE,
+  isTreatmentRequest,
+} from "./safety";
 import type { DrugRecord } from "../data/drugs";
+import { getOpenAiClient, hasAiKey, OPENAI_MODEL } from "../lib/openai";
 import { logger } from "../lib/logger";
 
 export interface AiSummary {
@@ -17,9 +22,22 @@ export interface AiSummary {
   disclaimer: string;
 }
 
-function hasAiKey(): boolean {
-  return typeof process.env.OPENAI_API_KEY === "string" && process.env.OPENAI_API_KEY.length > 0;
-}
+const nullableString = z
+  .string()
+  .nullish()
+  .transform((v: string | null | undefined) => v ?? null);
+
+// Shape the model is instructed to return. Validated before use so malformed
+// output falls back instead of leaking undefined fields.
+const aiResponseSchema = z.object({
+  blocked: z.boolean().optional().default(false),
+  drugName: nullableString,
+  whatItIs: nullableString,
+  whatFor: nullableString,
+  mainRisks: nullableString,
+  pharmacistChecklist: nullableString,
+  patientExplanation: nullableString,
+});
 
 function buildFallback(drug: DrugRecord): AiSummary {
   return {
@@ -51,16 +69,32 @@ function blockedSummary(): AiSummary {
   };
 }
 
-const SYSTEM_PROMPT = `Ти — довідковий асистент для фармацевтів. Відповідай ВИКЛЮЧНО українською мовою.
-Суворі правила безпеки:
-- Надавай лише довідкову інформацію про лікарські засоби.
-- НЕ діагностуй захворювання, НЕ призначай і НЕ рекомендуй лікування для конкретної людини.
-- Якщо запит стосується симптомів, самопочуття або підбору терапії — відмовся і поверни поле "blocked": true.
-- Завжди базуйся на загальновідомій довідковій інформації та наголошуй на перевірці за офіційною інструкцією.
-Повертай ТІЛЬКИ валідний JSON без додаткового тексту.`;
+const SYSTEM_PROMPT = `Ти — довідковий асистент для дипломованих фармацевтів. Відповідай ВИКЛЮЧНО українською мовою, стисло, професійно і по суті.
 
-async function callOpenAi(prompt: string, drug: DrugRecord | null): Promise<AiSummary> {
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+Роль і межі:
+- Надавай лише довідкову інформацію про лікарські засоби (склад, показання, протипоказання, взаємодії, застереження).
+- Аудиторія — фахівець, тому використовуй коректну фармацевтичну термінологію, але без «води».
+- НЕ став діагнозів, НЕ підбирай терапію і НЕ давай індивідуальних рекомендацій для конкретного пацієнта.
+- Якщо запит стосується симптомів, самопочуття, підбору чи зміни лікування — НЕ відповідай по суті, а поверни {"blocked": true} і залиш решту полів null.
+- Не вигадуй фактів. Якщо даних недостатньо — коротко зазнач це у відповідному полі та наголоси на перевірці за офіційною інструкцією.
+
+Формат кожного поля:
+- whatItIs: 1 речення — що це за препарат і фармакологічна група.
+- whatFor: показання, стисло.
+- mainRisks: ключові протипоказання та серйозні побічні ефекти.
+- pharmacistChecklist: 2–4 конкретні пункти, що перевірити фармацевту перед відпуском.
+- patientExplanation: 1–2 речення простою мовою для пацієнта, без вказівок щодо дозування.
+
+Повертай ТІЛЬКИ валідний JSON без markdown і без додаткового тексту.`;
+
+async function callOpenAi(
+  prompt: string,
+  drug: DrugRecord | null,
+): Promise<AiSummary> {
+  const client = getOpenAiClient();
+  if (!client) {
+    return drug ? buildFallback(drug) : blockedSummary();
+  }
 
   const context = drug
     ? `Препарат: ${drug.brandName}\nМНН: ${drug.inn}\nATC: ${drug.atcCode ?? "—"}\nГрупа: ${drug.pharmacologicalGroup}\nФорма/доза: ${drug.form}, ${drug.dosage}\nПоказання: ${drug.indications}\nПротипоказання: ${drug.contraindications}\nПобічні: ${drug.sideEffects}\nЗастереження: ${drug.warnings}`
@@ -80,7 +114,7 @@ async function callOpenAi(prompt: string, drug: DrugRecord | null): Promise<AiSu
 }`;
 
   const completion = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: OPENAI_MODEL,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: userPrompt },
@@ -90,7 +124,7 @@ async function callOpenAi(prompt: string, drug: DrugRecord | null): Promise<AiSu
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(raw) as Partial<AiSummary>;
+  const parsed = aiResponseSchema.parse(JSON.parse(raw));
 
   if (parsed.blocked) {
     return blockedSummary();
@@ -100,12 +134,13 @@ async function callOpenAi(prompt: string, drug: DrugRecord | null): Promise<AiSu
     blocked: false,
     blockedMessage: null,
     isFallback: false,
-    drugName: parsed.drugName ?? (drug ? `${drug.brandName} (${drug.inn})` : null),
-    whatItIs: parsed.whatItIs ?? null,
-    whatFor: parsed.whatFor ?? null,
-    mainRisks: parsed.mainRisks ?? null,
-    pharmacistChecklist: parsed.pharmacistChecklist ?? null,
-    patientExplanation: parsed.patientExplanation ?? null,
+    drugName:
+      parsed.drugName ?? (drug ? `${drug.brandName} (${drug.inn})` : null),
+    whatItIs: parsed.whatItIs,
+    whatFor: parsed.whatFor,
+    mainRisks: parsed.mainRisks,
+    pharmacistChecklist: parsed.pharmacistChecklist,
+    patientExplanation: parsed.patientExplanation,
     disclaimer: GLOBAL_DISCLAIMER,
   };
 }
@@ -114,7 +149,7 @@ export async function generateSummary(input: {
   drugId?: string;
   query?: string;
 }): Promise<AiSummary> {
-  const drug = input.drugId ? getDrugById(input.drugId) ?? null : null;
+  const drug = input.drugId ? (getDrugById(input.drugId) ?? null) : null;
 
   // Safety: block treatment/symptom requests in the free-text query no matter
   // what — even when a drug is also selected, the symptom text must not be

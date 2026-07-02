@@ -8,12 +8,7 @@ import {
   GetDrugAnalogsParams,
   GetDrugAnalogsResponse,
 } from "@workspace/api-zod";
-import {
-  searchDrugs,
-  getDrugById,
-  getStats,
-  type SearchField,
-} from "../services/drugService";
+import { searchDrugs, getDrugById, getStats } from "../services/drugService";
 import { findAnalogs } from "../services/analogService";
 
 const router: IRouter = Router();
@@ -24,7 +19,7 @@ router.get("/drugs", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const results = searchDrugs(parsed.data.q ?? "", (parsed.data.field ?? "all") as SearchField);
+  const results = searchDrugs(parsed.data.q ?? "", parsed.data.field ?? "all");
   res.json(SearchDrugsResponse.parse(results));
 });
 

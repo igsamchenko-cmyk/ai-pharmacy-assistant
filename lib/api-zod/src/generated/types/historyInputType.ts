@@ -6,13 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type HistoryInputType = typeof HistoryInputType[keyof typeof HistoryInputType];
-
+export type HistoryInputType =
+  (typeof HistoryInputType)[keyof typeof HistoryInputType];
 
 export const HistoryInputType = {
-  search: 'search',
-  interaction: 'interaction',
-  ai: 'ai',
-  ocr: 'ocr',
-  analogs: 'analogs',
+  search: "search",
+  interaction: "interaction",
+  ai: "ai",
+  ocr: "ocr",
+  analogs: "analogs",
 } as const;

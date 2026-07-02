@@ -29,7 +29,9 @@ describe("aiService.generateSummary (no AI key)", () => {
   });
 
   it("blocks treatment requests instead of answering", async () => {
-    const result = await generateSummary({ query: "що приймати від температури" });
+    const result = await generateSummary({
+      query: "що приймати від температури",
+    });
     expect(result.blocked).toBe(true);
     expect(result.blockedMessage).toBeTruthy();
   });

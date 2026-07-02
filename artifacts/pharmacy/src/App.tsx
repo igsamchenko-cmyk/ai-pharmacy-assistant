@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
 
@@ -21,18 +22,20 @@ const queryClient = new QueryClient();
 function Router() {
   return (
     <Layout>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/search" component={SearchPage} />
-        <Route path="/drug/:id" component={DrugDetail} />
-        <Route path="/analogs/:id" component={Analogs} />
-        <Route path="/interactions" component={Interactions} />
-        <Route path="/ai" component={AiReference} />
-        <Route path="/scan" component={Scan} />
-        <Route path="/history" component={History} />
-        <Route path="/about" component={About} />
-        <Route component={NotFound} />
-      </Switch>
+      <ErrorBoundary>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/search" component={SearchPage} />
+          <Route path="/drug/:id" component={DrugDetail} />
+          <Route path="/analogs/:id" component={Analogs} />
+          <Route path="/interactions" component={Interactions} />
+          <Route path="/ai" component={AiReference} />
+          <Route path="/scan" component={Scan} />
+          <Route path="/history" component={History} />
+          <Route path="/about" component={About} />
+          <Route component={NotFound} />
+        </Switch>
+      </ErrorBoundary>
     </Layout>
   );
 }

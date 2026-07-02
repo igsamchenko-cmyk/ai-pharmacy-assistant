@@ -6,14 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SearchDrugsField = typeof SearchDrugsField[keyof typeof SearchDrugsField];
-
+export type SearchDrugsField =
+  (typeof SearchDrugsField)[keyof typeof SearchDrugsField];
 
 export const SearchDrugsField = {
-  all: 'all',
-  brand: 'brand',
-  inn: 'inn',
-  atc: 'atc',
-  form: 'form',
-  dosage: 'dosage',
+  all: "all",
+  brand: "brand",
+  inn: "inn",
+  atc: "atc",
+  form: "form",
+  dosage: "dosage",
 } as const;

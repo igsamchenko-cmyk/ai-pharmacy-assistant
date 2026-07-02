@@ -17,7 +17,9 @@ describe("analogService.findAnalogs", () => {
     const result = findAnalogs("ibuprofen-200");
     expect(result).toBeDefined();
     // Diclofenac is a different INN but the same NSAID group.
-    expect(result?.therapeutic.some((d) => d.id === "diclofenac-50")).toBe(true);
+    expect(result?.therapeutic.some((d) => d.id === "diclofenac-50")).toBe(
+      true,
+    );
     // The base drug is never listed among its own analogs.
     const allIds = [
       ...(result?.full ?? []),
@@ -34,7 +36,10 @@ describe("analogService.findAnalogs", () => {
     const partialIds = (result?.partial ?? []).map((d) => d.id);
     // Any same-INN paracetamol whose base form differs (e.g. syrup/suspension)
     // must not appear among full analogs.
-    const sameInnDifferentForm = [...(result?.full ?? []), ...(result?.partial ?? [])]
+    const sameInnDifferentForm = [
+      ...(result?.full ?? []),
+      ...(result?.partial ?? []),
+    ]
       .filter((d) => d.form.split(",")[0].trim().toLowerCase() !== "таблетки")
       .map((d) => d.id);
     for (const id of sameInnDifferentForm) {

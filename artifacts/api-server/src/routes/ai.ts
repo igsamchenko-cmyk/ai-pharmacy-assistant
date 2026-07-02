@@ -1,5 +1,8 @@
 import { Router, type IRouter } from "express";
-import { CreateAiSummaryBody, CreateAiSummaryResponse } from "@workspace/api-zod";
+import {
+  CreateAiSummaryBody,
+  CreateAiSummaryResponse,
+} from "@workspace/api-zod";
 import { generateSummary } from "../services/aiService";
 
 const router: IRouter = Router();

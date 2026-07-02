@@ -4,6 +4,8 @@ import {
   getDrugById,
   getStats,
   getDrugsByIds,
+  getAllDrugs,
+  findDrugsInText,
 } from "../drugService";
 
 describe("drugService.searchDrugs", () => {
@@ -17,9 +19,9 @@ describe("drugService.searchDrugs", () => {
     const results = searchDrugs("парацетамол", "inn");
     // Both Парацетамол and Панадол share the INN Парацетамол.
     expect(results.length).toBeGreaterThanOrEqual(2);
-    expect(results.every((d) => d.inn.toLowerCase().includes("парацетамол"))).toBe(
-      true,
-    );
+    expect(
+      results.every((d) => d.inn.toLowerCase().includes("парацетамол")),
+    ).toBe(true);
   });
 
   it("is case-insensitive", () => {
@@ -59,6 +61,67 @@ describe("drugService lookups", () => {
   it("resolves multiple ids and skips unknown ones", () => {
     const drugs = getDrugsByIds(["ibuprofen-200", "nope", "warfarin-5"]);
     expect(drugs.map((d) => d.id)).toEqual(["ibuprofen-200", "warfarin-5"]);
+  });
+});
+
+describe("drugService.searchDrugs field variants", () => {
+  it("matches by pharmaceutical form", () => {
+    const results = searchDrugs("таблетки", "form");
+    expect(results.length).toBeGreaterThan(0);
+    expect(
+      results.every((d) => d.form.toLowerCase().includes("таблетки")),
+    ).toBe(true);
+  });
+
+  it("trims surrounding whitespace before matching", () => {
+    const padded = searchDrugs("  аспірин  ");
+    const clean = searchDrugs("аспірин");
+    expect(padded.map((d) => d.id)).toEqual(clean.map((d) => d.id));
+  });
+
+  it("returns results sorted by brand name", () => {
+    const results = searchDrugs("");
+    const names = results.map((d) => d.brandName);
+    const sorted = [...names].sort((a, b) => a.localeCompare(b, "uk"));
+    expect(names).toEqual(sorted);
+  });
+
+  it("does not mutate the underlying catalog on empty query", () => {
+    const first = searchDrugs("");
+    first.reverse();
+    const second = searchDrugs("");
+    expect(second).not.toEqual(first);
+  });
+});
+
+describe("drugService.findDrugsInText", () => {
+  it("detects a brand name embedded in free text", () => {
+    const { detectedName, matches } = findDrugsInText(
+      "Пацієнт приймає Ібупрофен 200 мг двічі на день",
+    );
+    expect(detectedName).toBe("Ібупрофен");
+    expect(matches.some((d) => d.brandName === "Ібупрофен")).toBe(true);
+  });
+
+  it("detects a drug by its INN", () => {
+    const { matches } = findDrugsInText("склад: парацетамол");
+    expect(
+      matches.some((d) => d.inn.toLowerCase().includes("парацетамол")),
+    ).toBe(true);
+  });
+
+  it("returns no matches and a null name for unrelated text", () => {
+    const { detectedName, matches } = findDrugsInText(
+      "немає жодного препарату",
+    );
+    expect(detectedName).toBeNull();
+    expect(matches).toHaveLength(0);
+  });
+});
+
+describe("drugService.getAllDrugs", () => {
+  it("returns the full catalog", () => {
+    expect(getAllDrugs().length).toBe(getStats().totalDrugs);
   });
 });
 

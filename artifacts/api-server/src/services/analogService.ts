@@ -1,5 +1,6 @@
 import { getDrugById, getAllDrugs } from "./drugService";
 import type { DrugRecord } from "../data/drugs";
+import { normalize } from "../lib/text";
 
 export const ANALOG_DISCLAIMER =
   "Заміна препарату — рішення лікаря або фармацевта з урахуванням стану пацієнта. Терапевтичні альтернативи мають інший склад і не є прямою заміною.";
@@ -10,10 +11,6 @@ export interface AnalogResult {
   partial: DrugRecord[];
   therapeutic: DrugRecord[];
   disclaimer: string;
-}
-
-function normalize(value: string): string {
-  return value.trim().toLowerCase();
 }
 
 // Extract the first numeric strength (e.g. "200 мг" -> 200) so we can compare

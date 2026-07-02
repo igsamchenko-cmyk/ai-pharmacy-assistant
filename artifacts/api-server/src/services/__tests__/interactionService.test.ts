@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { checkInteractions, INTERACTION_DISCLAIMER } from "../interactionService";
+import {
+  checkInteractions,
+  INTERACTION_DISCLAIMER,
+} from "../interactionService";
 
 describe("interactionService.checkInteractions", () => {
   it("flags a critical interaction between warfarin and ibuprofen", () => {
