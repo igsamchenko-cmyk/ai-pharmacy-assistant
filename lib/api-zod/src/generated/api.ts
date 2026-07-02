@@ -5,273 +5,319 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from "zod";
+import * as zod from 'zod';
+
 
 /**
  * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
-  status: zod.string(),
-});
+  "status": zod.string()
+})
+
 
 /**
  * Search the demo drug database by various fields.
  * @summary Search drugs
  */
 export const SearchDrugsQueryParams = zod.object({
-  q: zod.coerce.string().optional(),
-  field: zod.enum(["all", "brand", "inn", "atc", "form", "dosage"]).optional(),
-});
+  "q": zod.coerce.string().optional(),
+  "field": zod.enum(['all', 'brand', 'inn', 'atc', 'form', 'dosage']).optional()
+})
 
 export const SearchDrugsResponseItem = zod.object({
-  id: zod.string(),
-  brandName: zod.string(),
-  inn: zod.string(),
-  atcCode: zod.string().nullish(),
-  form: zod.string(),
-  dosage: zod.string(),
-  pharmacologicalGroup: zod.string(),
-  indications: zod.string(),
-  contraindications: zod.string(),
-  sideEffects: zod.string(),
-  warnings: zod.string(),
-  storage: zod.string(),
-  source: zod.string(),
-});
-export const SearchDrugsResponse = zod.array(SearchDrugsResponseItem);
+  "id": zod.string(),
+  "brandName": zod.string(),
+  "inn": zod.string(),
+  "atcCode": zod.string().nullish(),
+  "form": zod.string(),
+  "dosage": zod.string(),
+  "pharmacologicalGroup": zod.string(),
+  "indications": zod.string(),
+  "contraindications": zod.string(),
+  "sideEffects": zod.string(),
+  "warnings": zod.string(),
+  "storage": zod.string(),
+  "source": zod.string()
+})
+export const SearchDrugsResponse = zod.array(SearchDrugsResponseItem)
+
 
 /**
  * Aggregate statistics about the demo drug database.
  * @summary Drug database statistics
  */
 export const GetDrugStatsResponse = zod.object({
-  totalDrugs: zod.number(),
-  totalGroups: zod.number(),
-  groups: zod.array(
-    zod.object({
-      group: zod.string(),
-      count: zod.number(),
-    }),
-  ),
-});
+  "totalDrugs": zod.number(),
+  "totalGroups": zod.number(),
+  "groups": zod.array(zod.object({
+  "group": zod.string(),
+  "count": zod.number()
+}))
+})
+
 
 /**
  * @summary Get a single drug
  */
 export const GetDrugParams = zod.object({
-  id: zod.coerce.string(),
-});
+  "id": zod.coerce.string()
+})
 
 export const GetDrugResponse = zod.object({
-  id: zod.string(),
-  brandName: zod.string(),
-  inn: zod.string(),
-  atcCode: zod.string().nullish(),
-  form: zod.string(),
-  dosage: zod.string(),
-  pharmacologicalGroup: zod.string(),
-  indications: zod.string(),
-  contraindications: zod.string(),
-  sideEffects: zod.string(),
-  warnings: zod.string(),
-  storage: zod.string(),
-  source: zod.string(),
-});
+  "id": zod.string(),
+  "brandName": zod.string(),
+  "inn": zod.string(),
+  "atcCode": zod.string().nullish(),
+  "form": zod.string(),
+  "dosage": zod.string(),
+  "pharmacologicalGroup": zod.string(),
+  "indications": zod.string(),
+  "contraindications": zod.string(),
+  "sideEffects": zod.string(),
+  "warnings": zod.string(),
+  "storage": zod.string(),
+  "source": zod.string()
+})
+
 
 /**
  * @summary Find analogs for a drug
  */
 export const GetDrugAnalogsParams = zod.object({
-  id: zod.coerce.string(),
-});
+  "id": zod.coerce.string()
+})
 
 export const GetDrugAnalogsResponse = zod.object({
-  base: zod.object({
-    id: zod.string(),
-    brandName: zod.string(),
-    inn: zod.string(),
-    atcCode: zod.string().nullish(),
-    form: zod.string(),
-    dosage: zod.string(),
-    pharmacologicalGroup: zod.string(),
-    indications: zod.string(),
-    contraindications: zod.string(),
-    sideEffects: zod.string(),
-    warnings: zod.string(),
-    storage: zod.string(),
-    source: zod.string(),
-  }),
-  full: zod.array(
-    zod.object({
-      id: zod.string(),
-      brandName: zod.string(),
-      inn: zod.string(),
-      atcCode: zod.string().nullish(),
-      form: zod.string(),
-      dosage: zod.string(),
-      pharmacologicalGroup: zod.string(),
-      indications: zod.string(),
-      contraindications: zod.string(),
-      sideEffects: zod.string(),
-      warnings: zod.string(),
-      storage: zod.string(),
-      source: zod.string(),
-    }),
-  ),
-  partial: zod.array(
-    zod.object({
-      id: zod.string(),
-      brandName: zod.string(),
-      inn: zod.string(),
-      atcCode: zod.string().nullish(),
-      form: zod.string(),
-      dosage: zod.string(),
-      pharmacologicalGroup: zod.string(),
-      indications: zod.string(),
-      contraindications: zod.string(),
-      sideEffects: zod.string(),
-      warnings: zod.string(),
-      storage: zod.string(),
-      source: zod.string(),
-    }),
-  ),
-  therapeutic: zod.array(
-    zod.object({
-      id: zod.string(),
-      brandName: zod.string(),
-      inn: zod.string(),
-      atcCode: zod.string().nullish(),
-      form: zod.string(),
-      dosage: zod.string(),
-      pharmacologicalGroup: zod.string(),
-      indications: zod.string(),
-      contraindications: zod.string(),
-      sideEffects: zod.string(),
-      warnings: zod.string(),
-      storage: zod.string(),
-      source: zod.string(),
-    }),
-  ),
-  disclaimer: zod.string(),
-});
+  "base": zod.object({
+  "id": zod.string(),
+  "brandName": zod.string(),
+  "inn": zod.string(),
+  "atcCode": zod.string().nullish(),
+  "form": zod.string(),
+  "dosage": zod.string(),
+  "pharmacologicalGroup": zod.string(),
+  "indications": zod.string(),
+  "contraindications": zod.string(),
+  "sideEffects": zod.string(),
+  "warnings": zod.string(),
+  "storage": zod.string(),
+  "source": zod.string()
+}),
+  "full": zod.array(zod.object({
+  "id": zod.string(),
+  "brandName": zod.string(),
+  "inn": zod.string(),
+  "atcCode": zod.string().nullish(),
+  "form": zod.string(),
+  "dosage": zod.string(),
+  "pharmacologicalGroup": zod.string(),
+  "indications": zod.string(),
+  "contraindications": zod.string(),
+  "sideEffects": zod.string(),
+  "warnings": zod.string(),
+  "storage": zod.string(),
+  "source": zod.string()
+})),
+  "partial": zod.array(zod.object({
+  "id": zod.string(),
+  "brandName": zod.string(),
+  "inn": zod.string(),
+  "atcCode": zod.string().nullish(),
+  "form": zod.string(),
+  "dosage": zod.string(),
+  "pharmacologicalGroup": zod.string(),
+  "indications": zod.string(),
+  "contraindications": zod.string(),
+  "sideEffects": zod.string(),
+  "warnings": zod.string(),
+  "storage": zod.string(),
+  "source": zod.string()
+})),
+  "therapeutic": zod.array(zod.object({
+  "id": zod.string(),
+  "brandName": zod.string(),
+  "inn": zod.string(),
+  "atcCode": zod.string().nullish(),
+  "form": zod.string(),
+  "dosage": zod.string(),
+  "pharmacologicalGroup": zod.string(),
+  "indications": zod.string(),
+  "contraindications": zod.string(),
+  "sideEffects": zod.string(),
+  "warnings": zod.string(),
+  "storage": zod.string(),
+  "source": zod.string()
+})),
+  "disclaimer": zod.string()
+})
+
 
 /**
  * @summary Check interactions between drugs
  */
 export const CheckInteractionsBody = zod.object({
-  drugIds: zod.array(zod.string()),
-});
+  "drugIds": zod.array(zod.string())
+})
 
 export const CheckInteractionsResponse = zod.object({
-  pairs: zod.array(
-    zod.object({
-      drugAId: zod.string(),
-      drugAName: zod.string(),
-      drugBId: zod.string(),
-      drugBName: zod.string(),
-      riskLevel: zod.enum(["low", "medium", "high", "critical"]),
-      explanation: zod.string(),
-      whatToCheck: zod.string(),
-      whenToSeeDoctor: zod.string(),
-    }),
-  ),
-  disclaimer: zod.string(),
-});
+  "pairs": zod.array(zod.object({
+  "drugAId": zod.string(),
+  "drugAName": zod.string(),
+  "drugBId": zod.string(),
+  "drugBName": zod.string(),
+  "riskLevel": zod.enum(['low', 'medium', 'high', 'critical']),
+  "explanation": zod.string(),
+  "whatToCheck": zod.string(),
+  "whenToSeeDoctor": zod.string()
+})),
+  "disclaimer": zod.string()
+})
+
 
 /**
  * Generates a structured reference for a drug. Falls back to demo data when no AI key is configured. Blocks self-diagnosis / treatment requests.
  * @summary Generate an AI drug reference
  */
 export const CreateAiSummaryBody = zod.object({
-  drugId: zod.string().optional(),
-  query: zod.string().optional(),
-});
+  "drugId": zod.string().optional(),
+  "query": zod.string().optional()
+})
 
 export const CreateAiSummaryResponse = zod.object({
-  blocked: zod.boolean(),
-  blockedMessage: zod.string().nullish(),
-  isFallback: zod.boolean(),
-  drugName: zod.string().nullish(),
-  whatItIs: zod.string().nullish(),
-  whatFor: zod.string().nullish(),
-  mainRisks: zod.string().nullish(),
-  pharmacistChecklist: zod.string().nullish(),
-  patientExplanation: zod.string().nullish(),
-  disclaimer: zod.string(),
-});
+  "blocked": zod.boolean(),
+  "blockedMessage": zod.string().nullish(),
+  "isFallback": zod.boolean(),
+  "drugName": zod.string().nullish(),
+  "whatItIs": zod.string().nullish(),
+  "whatFor": zod.string().nullish(),
+  "mainRisks": zod.string().nullish(),
+  "pharmacistChecklist": zod.string().nullish(),
+  "patientExplanation": zod.string().nullish(),
+  "disclaimer": zod.string()
+})
+
 
 /**
  * Runs OCR on an uploaded package image (base64) and returns matching drugs.
  * @summary Scan a package photo
  */
 export const ScanPackageBody = zod.object({
-  imageBase64: zod.string(),
-  manualText: zod.string().optional(),
-});
+  "imageBase64": zod.string(),
+  "manualText": zod.string().optional()
+})
 
 export const ScanPackageResponse = zod.object({
-  text: zod.string(),
-  ocrAvailable: zod.boolean(),
-  detectedName: zod.string().nullish(),
-  matches: zod.array(
-    zod.object({
-      id: zod.string(),
-      brandName: zod.string(),
-      inn: zod.string(),
-      atcCode: zod.string().nullish(),
-      form: zod.string(),
-      dosage: zod.string(),
-      pharmacologicalGroup: zod.string(),
-      indications: zod.string(),
-      contraindications: zod.string(),
-      sideEffects: zod.string(),
-      warnings: zod.string(),
-      storage: zod.string(),
-      source: zod.string(),
-    }),
-  ),
-});
+  "text": zod.string(),
+  "ocrAvailable": zod.boolean(),
+  "detectedName": zod.string().nullish(),
+  "matches": zod.array(zod.object({
+  "id": zod.string(),
+  "brandName": zod.string(),
+  "inn": zod.string(),
+  "atcCode": zod.string().nullish(),
+  "form": zod.string(),
+  "dosage": zod.string(),
+  "pharmacologicalGroup": zod.string(),
+  "indications": zod.string(),
+  "contraindications": zod.string(),
+  "sideEffects": zod.string(),
+  "warnings": zod.string(),
+  "storage": zod.string(),
+  "source": zod.string()
+}))
+})
+
 
 /**
  * @summary List activity history
  */
 export const ListHistoryResponseItem = zod.object({
-  id: zod.string(),
-  type: zod.enum(["search", "interaction", "ai", "ocr", "analogs"]),
-  title: zod.string(),
-  detail: zod.string(),
-  createdAt: zod.string(),
-});
-export const ListHistoryResponse = zod.array(ListHistoryResponseItem);
+  "id": zod.string(),
+  "type": zod.enum(['search', 'interaction', 'ai', 'ocr', 'analogs']),
+  "title": zod.string(),
+  "detail": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListHistoryResponse = zod.array(ListHistoryResponseItem)
+
 
 /**
  * @summary Create a history entry
  */
 export const CreateHistoryBody = zod.object({
-  type: zod.enum(["search", "interaction", "ai", "ocr", "analogs"]),
-  title: zod.string(),
-  detail: zod.string().optional(),
-});
+  "type": zod.enum(['search', 'interaction', 'ai', 'ocr', 'analogs']),
+  "title": zod.string(),
+  "detail": zod.string().optional()
+})
 
 export const CreateHistoryResponse = zod.object({
-  id: zod.string(),
-  type: zod.enum(["search", "interaction", "ai", "ocr", "analogs"]),
-  title: zod.string(),
-  detail: zod.string(),
-  createdAt: zod.string(),
-});
+  "id": zod.string(),
+  "type": zod.enum(['search', 'interaction', 'ai', 'ocr', 'analogs']),
+  "title": zod.string(),
+  "detail": zod.string(),
+  "createdAt": zod.string()
+})
+
 
 /**
  * @summary Clear all history
  */
-export const ClearHistoryResponse = zod.void();
+export const ClearHistoryResponse = zod.void()
+
 
 /**
  * @summary Delete a history entry
  */
 export const DeleteHistoryParams = zod.object({
-  id: zod.coerce.string(),
-});
+  "id": zod.coerce.string()
+})
 
-export const DeleteHistoryResponse = zod.void();
+export const DeleteHistoryResponse = zod.void()
+
+
+/**
+ * Reports the live status of every data source (demo catalog, external providers, AI providers) for the data-sources page.
+ * @summary List data source and AI provider status
+ */
+export const ListDataSourcesResponse = zod.object({
+  "sources": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "category": zod.enum(['catalog', 'external', 'ai']),
+  "status": zod.enum(['active', 'optional', 'disabled']),
+  "requiresKey": zod.boolean(),
+  "detail": zod.string()
+}))
+})
+
+
+/**
+ * Aggregates RxNorm and openFDA reference data for a drug (by demo id or free-text name). Best-effort — providers that fail return null and never crash the request.
+ * @summary Fetch supplementary external drug data
+ */
+export const GetExternalDrugReferenceQueryParams = zod.object({
+  "drugId": zod.coerce.string().optional(),
+  "name": zod.coerce.string().optional()
+})
+
+export const GetExternalDrugReferenceResponse = zod.object({
+  "name": zod.string(),
+  "rxnorm": zod.union([zod.object({
+  "rxcui": zod.string(),
+  "name": zod.string(),
+  "ingredients": zod.array(zod.string()),
+  "brands": zod.array(zod.string())
+}),zod.null()]),
+  "openfda": zod.union([zod.object({
+  "brandName": zod.string().nullable(),
+  "genericName": zod.string().nullable(),
+  "manufacturer": zod.string().nullable(),
+  "purpose": zod.string().nullable(),
+  "warnings": zod.string().nullable()
+}),zod.null()]),
+  "fetchedAt": zod.string()
+})
+
+
