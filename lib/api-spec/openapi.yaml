@@ -348,6 +348,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /knowledge/runtime/status:
+    get:
+      operationId: getKnowledgeRuntimeStatus
+      tags: [knowledge]
+      summary: Knowledge runtime provider status
+      description: >-
+        Reports whether the DB-backed dictionary runtime is enabled and
+        available, whether static fallback is active, review-status counts for
+        imported mappings, the latest import batch and runtime source
+        distribution. Reference/admin diagnostics only.
+      responses:
+        "200":
+          description: Runtime provider status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeRuntimeStatus"
   /knowledge/stats:
     get:
       operationId: getKnowledgeStats
@@ -848,12 +865,24 @@ components:
           enum: [inn, latin, english, brand, synonym]
         ingredient:
           $ref: "#/components/schemas/CanonicalIngredient"
+        runtimeSource:
+          $ref: "#/components/schemas/RuntimeKnowledgeSource"
+        confidence:
+          $ref: "#/components/schemas/RuntimeConfidence"
+        confidenceScore:
+          type: number
+        provenance:
+          $ref: "#/components/schemas/RuntimeProvenance"
     NormalizeResult:
       type: object
       required:
         - query
         - matched
         - entry
+        - source
+        - confidence
+        - provenance
+        - warnings
       properties:
         query:
           type: string
@@ -863,6 +892,134 @@ components:
           oneOf:
             - $ref: "#/components/schemas/DictionaryEntry"
             - type: "null"
+        source:
+          $ref: "#/components/schemas/RuntimeKnowledgeSource"
+        confidence:
+          oneOf:
+            - $ref: "#/components/schemas/RuntimeConfidence"
+            - type: "null"
+        provenance:
+          oneOf:
+            - $ref: "#/components/schemas/RuntimeProvenance"
+            - type: "null"
+        warnings:
+          type: array
+          items:
+            type: string
+    RuntimeKnowledgeSource:
+      type: string
+      enum: [db, static, rxnorm, openfda, gemini, fallback]
+    RuntimeConfidence:
+      type: string
+      enum: [low, medium, high, verified]
+    RuntimeReviewStatus:
+      type: string
+      enum: [pending, approved, rejected, needs_review]
+    RuntimeProvenance:
+      type: object
+      required:
+        - sourceKey
+        - evidenceLevel
+      properties:
+        sourceKey:
+          type: string
+        evidenceLevel:
+          type: string
+        lastReviewed:
+          type: string
+        sourceLabel:
+          type: string
+        sourceType:
+          type: string
+          enum: [official, reference, demo, external]
+        sourceReliability:
+          type: string
+          enum: [high, medium, low]
+        sourceUrl:
+          oneOf:
+            - type: string
+            - type: "null"
+        locale:
+          type: string
+        importBatchId:
+          oneOf:
+            - type: string
+            - type: "null"
+        importedAt:
+          oneOf:
+            - type: string
+            - type: "null"
+        reviewStatus:
+          $ref: "#/components/schemas/RuntimeReviewStatus"
+    KnowledgeRuntimeStatus:
+      type: object
+      required:
+        - runtimeMode
+        - dbEnabled
+        - dbAvailable
+        - staticFallbackEnabled
+        - approvedMappingsCount
+        - pendingCount
+        - rejectedCount
+        - needsReviewCount
+        - lastImportBatch
+        - warnings
+        - providerStatus
+        - sourceDistribution
+      properties:
+        runtimeMode:
+          type: string
+          enum: [static, db]
+        dbEnabled:
+          type: boolean
+        dbAvailable:
+          type: boolean
+        staticFallbackEnabled:
+          type: boolean
+        approvedMappingsCount:
+          type: integer
+        pendingCount:
+          type: integer
+        rejectedCount:
+          type: integer
+        needsReviewCount:
+          type: integer
+        lastImportBatch:
+          oneOf:
+            - type: string
+            - type: "null"
+        warnings:
+          type: array
+          items:
+            type: string
+        providerStatus:
+          type: object
+          required:
+            - db
+            - static
+          properties:
+            db:
+              type: string
+              enum: [active, disabled, unavailable]
+            static:
+              type: string
+              enum: [active]
+        sourceDistribution:
+          type: object
+          required: [db, static, rxnorm, openfda, gemini, fallback]
+          properties:
+            db:
+              type: integer
+            static:
+              type: integer
+            rxnorm:
+              type: integer
+            openfda:
+              type: integer
+            gemini:
+              type: integer
+            fallback:
+              type: integer
     DictionaryStats:
       type: object
       required:
@@ -1115,8 +1272,11 @@ components:
       required:
         - query
         - resolvedStage
+        - source
         - fromCache
         - normalized
+        - confidence
+        - provenance
         - atc
         - catalogMatches
         - external
@@ -1127,11 +1287,21 @@ components:
         resolvedStage:
           type: string
           enum: [cache, dictionary, catalog, rxnorm, openfda, ai]
+        source:
+          $ref: "#/components/schemas/RuntimeKnowledgeSource"
         fromCache:
           type: boolean
         normalized:
           oneOf:
             - $ref: "#/components/schemas/CanonicalIngredient"
+            - type: "null"
+        confidence:
+          oneOf:
+            - $ref: "#/components/schemas/RuntimeConfidence"
+            - type: "null"
+        provenance:
+          oneOf:
+            - $ref: "#/components/schemas/RuntimeProvenance"
             - type: "null"
         atc:
           oneOf:

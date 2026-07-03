@@ -7,9 +7,16 @@
  */
 import type { CanonicalIngredient } from './canonicalIngredient';
 import type { DictionaryEntryKind } from './dictionaryEntryKind';
+import type { RuntimeConfidence } from './runtimeConfidence';
+import type { RuntimeKnowledgeSource } from './runtimeKnowledgeSource';
+import type { RuntimeProvenance } from './runtimeProvenance';
 
 export interface DictionaryEntry {
   name: string;
   kind: DictionaryEntryKind;
   ingredient: CanonicalIngredient;
+  runtimeSource?: RuntimeKnowledgeSource;
+  confidence?: RuntimeConfidence;
+  confidenceScore?: number;
+  provenance?: RuntimeProvenance;
 }

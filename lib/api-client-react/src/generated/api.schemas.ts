@@ -237,6 +237,71 @@ export const DictionaryEntryKind = {
   synonym: 'synonym',
 } as const;
 
+export type RuntimeKnowledgeSource = typeof RuntimeKnowledgeSource[keyof typeof RuntimeKnowledgeSource];
+
+
+export const RuntimeKnowledgeSource = {
+  db: 'db',
+  static: 'static',
+  rxnorm: 'rxnorm',
+  openfda: 'openfda',
+  gemini: 'gemini',
+  fallback: 'fallback',
+} as const;
+
+export type RuntimeConfidence = typeof RuntimeConfidence[keyof typeof RuntimeConfidence];
+
+
+export const RuntimeConfidence = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+  verified: 'verified',
+} as const;
+
+export type RuntimeProvenanceSourceType = typeof RuntimeProvenanceSourceType[keyof typeof RuntimeProvenanceSourceType];
+
+
+export const RuntimeProvenanceSourceType = {
+  official: 'official',
+  reference: 'reference',
+  demo: 'demo',
+  external: 'external',
+} as const;
+
+export type RuntimeProvenanceSourceReliability = typeof RuntimeProvenanceSourceReliability[keyof typeof RuntimeProvenanceSourceReliability];
+
+
+export const RuntimeProvenanceSourceReliability = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export type RuntimeReviewStatus = typeof RuntimeReviewStatus[keyof typeof RuntimeReviewStatus];
+
+
+export const RuntimeReviewStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  needs_review: 'needs_review',
+} as const;
+
+export interface RuntimeProvenance {
+  sourceKey: string;
+  evidenceLevel: string;
+  lastReviewed?: string;
+  sourceLabel?: string;
+  sourceType?: RuntimeProvenanceSourceType;
+  sourceReliability?: RuntimeProvenanceSourceReliability;
+  sourceUrl?: string | null;
+  locale?: string;
+  importBatchId?: string | null;
+  importedAt?: string | null;
+  reviewStatus?: RuntimeReviewStatus;
+}
+
 export interface DictionaryEntry {
   name: string;
   kind: DictionaryEntryKind;
@@ -257,58 +322,46 @@ export interface NormalizeResult {
   warnings: string[];
 }
 
-export type RuntimeKnowledgeSource = typeof RuntimeKnowledgeSource[keyof typeof RuntimeKnowledgeSource];
+export type KnowledgeRuntimeStatusRuntimeMode = typeof KnowledgeRuntimeStatusRuntimeMode[keyof typeof KnowledgeRuntimeStatusRuntimeMode];
 
-export const RuntimeKnowledgeSource = {
-  db: 'db',
+
+export const KnowledgeRuntimeStatusRuntimeMode = {
   static: 'static',
-  rxnorm: 'rxnorm',
-  openfda: 'openfda',
-  gemini: 'gemini',
-  fallback: 'fallback',
+  db: 'db',
 } as const;
 
-export type RuntimeConfidence = typeof RuntimeConfidence[keyof typeof RuntimeConfidence];
+export type KnowledgeRuntimeStatusProviderStatusDb = typeof KnowledgeRuntimeStatusProviderStatusDb[keyof typeof KnowledgeRuntimeStatusProviderStatusDb];
 
-export const RuntimeConfidence = {
-  low: 'low',
-  medium: 'medium',
-  high: 'high',
-  verified: 'verified',
+
+export const KnowledgeRuntimeStatusProviderStatusDb = {
+  active: 'active',
+  disabled: 'disabled',
+  unavailable: 'unavailable',
 } as const;
 
-export type RuntimeReviewStatus = typeof RuntimeReviewStatus[keyof typeof RuntimeReviewStatus];
+export type KnowledgeRuntimeStatusProviderStatusStatic = typeof KnowledgeRuntimeStatusProviderStatusStatic[keyof typeof KnowledgeRuntimeStatusProviderStatusStatic];
 
-export const RuntimeReviewStatus = {
-  pending: 'pending',
-  approved: 'approved',
-  rejected: 'rejected',
-  needs_review: 'needs_review',
+
+export const KnowledgeRuntimeStatusProviderStatusStatic = {
+  active: 'active',
 } as const;
-
-export interface RuntimeProvenance {
-  sourceKey: string;
-  evidenceLevel: string;
-  lastReviewed?: string;
-  sourceLabel?: string;
-  sourceType?: ProvenanceSourceType;
-  sourceReliability?: ProvenanceSourceReliability;
-  sourceUrl?: string | null;
-  locale?: string;
-  importBatchId?: string | null;
-  importedAt?: string | null;
-  reviewStatus?: RuntimeReviewStatus;
-}
 
 export type KnowledgeRuntimeStatusProviderStatus = {
-  db: 'active' | 'disabled' | 'unavailable';
-  static: 'active';
+  db: KnowledgeRuntimeStatusProviderStatusDb;
+  static: KnowledgeRuntimeStatusProviderStatusStatic;
 };
 
-export type KnowledgeRuntimeStatusSourceDistribution = Record<RuntimeKnowledgeSource, number>;
+export type KnowledgeRuntimeStatusSourceDistribution = {
+  db: number;
+  static: number;
+  rxnorm: number;
+  openfda: number;
+  gemini: number;
+  fallback: number;
+};
 
 export interface KnowledgeRuntimeStatus {
-  runtimeMode: 'static' | 'db';
+  runtimeMode: KnowledgeRuntimeStatusRuntimeMode;
   dbEnabled: boolean;
   dbAvailable: boolean;
   staticFallbackEnabled: boolean;

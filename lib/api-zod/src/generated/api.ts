@@ -456,6 +456,36 @@ export const NormalizeDrugNameResponse = zod.object({
 
 
 /**
+ * Reports whether the DB-backed dictionary runtime is enabled and available, whether static fallback is active, review-status counts for imported mappings, the latest import batch and runtime source distribution. Reference/admin diagnostics only.
+ * @summary Knowledge runtime provider status
+ */
+export const GetKnowledgeRuntimeStatusResponse = zod.object({
+  "runtimeMode": zod.enum(['static', 'db']),
+  "dbEnabled": zod.boolean(),
+  "dbAvailable": zod.boolean(),
+  "staticFallbackEnabled": zod.boolean(),
+  "approvedMappingsCount": zod.number(),
+  "pendingCount": zod.number(),
+  "rejectedCount": zod.number(),
+  "needsReviewCount": zod.number(),
+  "lastImportBatch": zod.union([zod.string(),zod.null()]),
+  "warnings": zod.array(zod.string()),
+  "providerStatus": zod.object({
+  "db": zod.enum(['active', 'disabled', 'unavailable']),
+  "static": zod.enum(['active'])
+}),
+  "sourceDistribution": zod.object({
+  "db": zod.number(),
+  "static": zod.number(),
+  "rxnorm": zod.number(),
+  "openfda": zod.number(),
+  "gemini": zod.number(),
+  "fallback": zod.number()
+})
+})
+
+
+/**
  * Dictionary size, interaction rule count and active resolver ids.
  * @summary Knowledge engine statistics
  */

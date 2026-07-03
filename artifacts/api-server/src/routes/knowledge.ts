@@ -11,6 +11,7 @@ import {
   GetAtcInfoResponse,
   CompareDrugsBody,
   CompareDrugsResponse,
+  GetKnowledgeRuntimeStatusResponse,
 } from "@workspace/api-zod";
 import {
   knowledgeSearch,
@@ -62,7 +63,7 @@ router.get("/knowledge/normalize", async (req, res): Promise<void> => {
 });
 
 router.get("/knowledge/runtime/status", async (_req, res): Promise<void> => {
-  res.json(await getKnowledgeRuntimeStatus());
+  res.json(GetKnowledgeRuntimeStatusResponse.parse(await getKnowledgeRuntimeStatus()));
 });
 
 router.get("/knowledge/stats", (_req, res): void => {

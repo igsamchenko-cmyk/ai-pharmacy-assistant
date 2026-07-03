@@ -6,9 +6,16 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { DictionaryEntry } from './dictionaryEntry';
+import type { RuntimeConfidence } from './runtimeConfidence';
+import type { RuntimeKnowledgeSource } from './runtimeKnowledgeSource';
+import type { RuntimeProvenance } from './runtimeProvenance';
 
 export interface NormalizeResult {
   query: string;
   matched: boolean;
   entry: DictionaryEntry | null;
+  source: RuntimeKnowledgeSource;
+  confidence: RuntimeConfidence | null;
+  provenance: RuntimeProvenance | null;
+  warnings: string[];
 }

@@ -10,12 +10,18 @@ import type { CanonicalIngredient } from './canonicalIngredient';
 import type { Drug } from './drug';
 import type { ExternalDrugReference } from './externalDrugReference';
 import type { KnowledgeSearchResultResolvedStage } from './knowledgeSearchResultResolvedStage';
+import type { RuntimeConfidence } from './runtimeConfidence';
+import type { RuntimeKnowledgeSource } from './runtimeKnowledgeSource';
+import type { RuntimeProvenance } from './runtimeProvenance';
 
 export interface KnowledgeSearchResult {
   query: string;
   resolvedStage: KnowledgeSearchResultResolvedStage;
+  source: RuntimeKnowledgeSource;
   fromCache: boolean;
   normalized: CanonicalIngredient | null;
+  confidence: RuntimeConfidence | null;
+  provenance: RuntimeProvenance | null;
   atc: AtcInfo | null;
   catalogMatches: Drug[];
   external: ExternalDrugReference | null;

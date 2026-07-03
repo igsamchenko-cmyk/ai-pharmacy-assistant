@@ -39,9 +39,9 @@ import type {
   ImportPreview,
   InteractionCheckInput,
   InteractionResult,
+  KnowledgeRuntimeStatus,
   KnowledgeSearchParams,
   KnowledgeSearchResult,
-  KnowledgeRuntimeStatus,
   KnowledgeStats,
   NormalizeDrugNameParams,
   NormalizeResult,
@@ -1314,6 +1314,7 @@ export const getGetKnowledgeRuntimeStatusUrl = () => {
 }
 
 /**
+ * Reports whether the DB-backed dictionary runtime is enabled and available, whether static fallback is active, review-status counts for imported mappings, the latest import batch and runtime source distribution. Reference/admin diagnostics only.
  * @summary Knowledge runtime provider status
  */
 export const getKnowledgeRuntimeStatus = async ( options?: RequestInit): Promise<KnowledgeRuntimeStatus> => {
@@ -1375,6 +1376,7 @@ export function useGetKnowledgeRuntimeStatus<TData = Awaited<ReturnType<typeof g
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
 
 
 
