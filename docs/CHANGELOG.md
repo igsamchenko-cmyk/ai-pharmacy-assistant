@@ -5,6 +5,38 @@
 
 ## [Не випущено]
 
+### Додано (v0.4 — Імпорт українського словника)
+
+- **Канонічний формат імпорту** (`knowledge/import/format.ts`): єдиний рядковий
+  формат для CSV і JSON (`ImportRow`, `IMPORT_COLUMNS`, `name_type`/`confidence`
+  енуми, `nameTypeToKind`).
+- **Парсери** (`knowledge/import/{csv,parse}.ts`): чистий CSV-парсер/серіалізатор
+  та строгий `parseImportCsv`/`parseImportJson` (невідомі енуми, відсутні поля й
+  некоректні структури стають помилками рядка, а не мовчазним приведенням).
+- **Guard пропрієтарних джерел** (`knowledge/import/guard.ts`): денилист
+  (`compendium`, `vidal`, `rls`, `drugbank`, …) — копірайтний датасет не можна
+  імпортувати випадково.
+- **Робочий процес рецензування** (`knowledge/import/review.ts`):
+  `deriveReviewStatus` (`pending`/`approved`/`rejected`/`needs_review`);
+  підозрілі рядки ніколи не авто-схвалюються.
+- **Аналіз імпорту** (`knowledge/import/analyze.ts`): чистий `analyzeImport` →
+  `ImportPreview` (нове/дублікати/конфлікти/відсутні джерела/некоректні ATC,
+  розподіли довіри й рецензування, `wouldSucceed`) через інжектований
+  `KnowledgeView`.
+- **Зразкові файли** (`data/import-samples/`): словник CSV+JSON, взаємодії,
+  ATC — лише публічні генеричні дані.
+- **CLI**: `validate:import` (CI-гейт), `import:preview` (dry-run прев’ю),
+  `import:knowledge` (безпечний dry-run; `--commit` записує лише approved-рядки).
+- **Runtime-міст** (`knowledge/runtime.ts`, `dictionary/provider.ts`): статичний
+  провайдер за замовчуванням; DB-провайдер за прапорцем `KNOWLEDGE_DB_RUNTIME`.
+- **Ендпоінт**: `GET /api/knowledge/import/preview`.
+- **Фронтенд**: панель `/data-quality` розширено прев’ю імпорту (статистика,
+  черга рецензування, розподіл довіри, таблиця конфліктів, експорт звіту в JSON).
+- **Документи**: `DICTIONARY_CONTRIBUTING.md`; оновлено `DATA_QUALITY.md`,
+  `IMPORT_GUIDE.md`, `ROADMAP.md`, `ARCHITECTURE.md`.
+- Розширене покриття тестами (формат, парсери, guard, рецензування, аналіз,
+  зразки, runtime-міст, провайдер) — 161 тест.
+
 ### Додано (v0.3 — Якість даних та база знань)
 
 - **Провенанс** (`artifacts/api-server/src/knowledge/provenance`): єдиний реєстр

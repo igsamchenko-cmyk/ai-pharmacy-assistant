@@ -389,6 +389,22 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProvenanceSourceList"
+  /knowledge/import/preview:
+    get:
+      operationId: getImportPreview
+      tags: [knowledge]
+      summary: Dry-run preview of the bundled dictionary import sample
+      description: >-
+        Parses and analyzes the bundled sample dictionary import file without
+        writing anything. Returns counts, conflicts, confidence and review
+        distributions, and whether the import would succeed. Reference data only.
+      responses:
+        "200":
+          description: Import preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportPreview"
   /atc/{code}:
     get:
       operationId: getAtcInfo
@@ -1013,6 +1029,87 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ProvenanceSource"
+    ImportConflict:
+      type: object
+      required:
+        - type
+        - subject
+        - detail
+      properties:
+        type:
+          type: string
+          enum:
+            - name_multiple_ingredients
+            - brand_conflicting_inn
+            - ingredient_duplicate_name
+            - atc_unknown_class
+            - low_confidence_review
+        subject:
+          type: string
+        detail:
+          type: string
+    ImportPreview:
+      type: object
+      required:
+        - rowsParsed
+        - parseErrors
+        - newIngredients
+        - newMappings
+        - duplicates
+        - conflicts
+        - missingSources
+        - invalidAtc
+        - confidenceDistribution
+        - reviewDistribution
+        - copyrightViolations
+        - wouldSucceed
+      properties:
+        rowsParsed:
+          type: integer
+        parseErrors:
+          type: integer
+        newIngredients:
+          type: integer
+        newMappings:
+          type: integer
+        duplicates:
+          type: integer
+        conflicts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportConflict"
+        missingSources:
+          type: integer
+        invalidAtc:
+          type: integer
+        confidenceDistribution:
+          type: object
+          required: [low, medium, high, verified]
+          properties:
+            low:
+              type: integer
+            medium:
+              type: integer
+            high:
+              type: integer
+            verified:
+              type: integer
+        reviewDistribution:
+          type: object
+          required: [pending, approved, rejected, needs_review]
+          properties:
+            pending:
+              type: integer
+            approved:
+              type: integer
+            rejected:
+              type: integer
+            needs_review:
+              type: integer
+        copyrightViolations:
+          type: integer
+        wouldSucceed:
+          type: boolean
     KnowledgeSearchResult:
       type: object
       required:

@@ -2,7 +2,8 @@ import { searchDrugs } from "../../services/drugService";
 import { getExternalReference } from "../../services/externalDataService";
 import type { DrugRecord } from "../../data/drugs";
 import type { ExternalDrugReference } from "../../services/externalDataService";
-import { normalizeQuery, type CanonicalIngredient } from "../dictionary";
+import { type CanonicalIngredient } from "../dictionary";
+import { resolveName } from "../dictionary/active";
 import { getAtcInfo, type AtcInfo } from "../atc";
 import { TtlCache } from "./cache";
 
@@ -82,7 +83,7 @@ export async function knowledgeSearch(
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, fromCache: true };
 
-  const entry = normalizeQuery(query);
+  const entry = resolveName(query);
   const normalized = entry?.ingredient ?? null;
   const atc = getAtcInfo(normalized?.atc);
 

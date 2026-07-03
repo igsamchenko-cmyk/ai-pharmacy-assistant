@@ -1,0 +1,124 @@
+Create branch feat/ukrainian-dictionary-import-v04.
+
+Goal:
+Expand the Ukrainian drug dictionary in a controlled, auditable way using the v0.3 data-quality system.
+
+Do not import copyrighted databases.
+Do not scrape private/commercial sources.
+Do not reduce medical safety.
+Do not break existing APIs.
+
+Implement v0.4:
+
+1. Import-ready dictionary format
+Create canonical CSV and JSON formats for dictionary imports:
+- ingredient_id
+- canonical_inn
+- name
+- locale
+- name_type: brand | generic | synonym | transliteration | typo | latin | english | ukrainian
+- source_id
+- confidence: low | medium | high | verified
+- atc_code optional
+- notes optional
+
+2. Sample import files
+Create safe sample files under data/import-samples:
+- ukrainian_dictionary_sample.csv
+- ukrainian_dictionary_sample.json
+- interactions_sample.csv
+- atc_sample.csv
+
+Use only project-owned demo entries and public generic names.
+Do not include copied proprietary datasets.
+
+3. Import validation CLI
+Add commands:
+- pnpm validate:import
+- pnpm import:preview
+- pnpm import:knowledge
+
+Preview must show:
+- rows parsed
+- new ingredients
+- new mappings
+- duplicates
+- conflicts
+- missing sources
+- invalid ATC
+- confidence distribution
+- import would succeed/fail
+
+4. Conflict resolution
+Implement conflict report:
+- same name → multiple ingredients
+- same brand → conflicting INN
+- same ingredient → duplicate names
+- same ATC → unknown class
+- low-confidence entries requiring review
+
+5. Review workflow
+Add review status:
+- pending
+- approved
+- rejected
+- needs_review
+
+Import must not auto-approve suspicious entries.
+
+6. Admin page improvements
+Improve /data-quality page:
+- import preview summary
+- conflict table
+- provenance coverage
+- confidence distribution
+- review queue placeholder
+- export data-quality report as JSON
+
+7. Runtime integration
+Do not switch all runtime services to DB yet.
+But create a clean bridge:
+- static dictionary remains default
+- optional DB-backed dictionary provider behind feature flag:
+  KNOWLEDGE_DB_RUNTIME=false by default
+
+8. Tests
+Increase tests from 122 to 150+.
+Cover:
+- CSV import parsing
+- JSON import parsing
+- invalid row handling
+- duplicate detection
+- conflict detection
+- review status behavior
+- import preview summary
+- confidence distribution
+- no copyrighted-source guard
+- feature flag behavior
+
+9. Docs
+Update:
+- DATA_QUALITY.md
+- IMPORT_GUIDE.md
+- ARCHITECTURE.md
+- ROADMAP.md
+- CHANGELOG.md
+
+Add:
+- docs/DICTIONARY_CONTRIBUTING.md
+
+10. Validation
+Run:
+- pnpm run typecheck
+- pnpm -r test
+- PORT=5173 BASE_PATH=/ pnpm run build
+
+11. Git
+Commit, push, open PR.
+
+Report:
+- PR URL
+- number of tests
+- import format
+- new CLI commands
+- known limitations

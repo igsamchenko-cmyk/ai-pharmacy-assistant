@@ -345,6 +345,52 @@ export interface ProvenanceSourceList {
   sources: ProvenanceSource[];
 }
 
+export type ImportConflictType = typeof ImportConflictType[keyof typeof ImportConflictType];
+
+
+export const ImportConflictType = {
+  name_multiple_ingredients: 'name_multiple_ingredients',
+  brand_conflicting_inn: 'brand_conflicting_inn',
+  ingredient_duplicate_name: 'ingredient_duplicate_name',
+  atc_unknown_class: 'atc_unknown_class',
+  low_confidence_review: 'low_confidence_review',
+} as const;
+
+export interface ImportConflict {
+  type: ImportConflictType;
+  subject: string;
+  detail: string;
+}
+
+export type ImportPreviewConfidenceDistribution = {
+  low: number;
+  medium: number;
+  high: number;
+  verified: number;
+};
+
+export type ImportPreviewReviewDistribution = {
+  pending: number;
+  approved: number;
+  rejected: number;
+  needs_review: number;
+};
+
+export interface ImportPreview {
+  rowsParsed: number;
+  parseErrors: number;
+  newIngredients: number;
+  newMappings: number;
+  duplicates: number;
+  conflicts: ImportConflict[];
+  missingSources: number;
+  invalidAtc: number;
+  confidenceDistribution: ImportPreviewConfidenceDistribution;
+  reviewDistribution: ImportPreviewReviewDistribution;
+  copyrightViolations: number;
+  wouldSucceed: boolean;
+}
+
 export type KnowledgeSearchResultResolvedStage = typeof KnowledgeSearchResultResolvedStage[keyof typeof KnowledgeSearchResultResolvedStage];
 
 

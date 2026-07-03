@@ -21,6 +21,9 @@ export * from "./import";
 export * from "./import/pipeline";
 export * from "./provenance";
 export * from "./validation";
+export * from "./runtime";
+export * from "./dictionary/provider";
+export * from "./dictionary/active";
 
 import { getDictionaryStats } from "./dictionary";
 import { interactionRules } from "../data/interactions";

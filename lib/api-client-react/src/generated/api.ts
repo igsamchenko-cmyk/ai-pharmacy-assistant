@@ -36,6 +36,7 @@ import type {
   HealthStatus,
   HistoryEntry,
   HistoryInput,
+  ImportPreview,
   InteractionCheckInput,
   InteractionResult,
   KnowledgeSearchParams,
@@ -1525,6 +1526,84 @@ export function useListKnowledgeSources<TData = Awaited<ReturnType<typeof listKn
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListKnowledgeSourcesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetImportPreviewUrl = () => {
+
+
+
+
+  return `/api/knowledge/import/preview`
+}
+
+/**
+ * Parses and analyzes the bundled sample dictionary import file without writing anything. Returns counts, conflicts, confidence and review distributions, and whether the import would succeed. Reference data only.
+ * @summary Dry-run preview of the bundled dictionary import sample
+ */
+export const getImportPreview = async ( options?: RequestInit): Promise<ImportPreview> => {
+
+  return customFetch<ImportPreview>(getGetImportPreviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetImportPreviewQueryKey = () => {
+    return [
+    `/api/knowledge/import/preview`
+    ] as const;
+    }
+
+
+export const getGetImportPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getImportPreview>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImportPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetImportPreviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getImportPreview>>> = ({ signal }) => getImportPreview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getImportPreview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetImportPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getImportPreview>>>
+export type GetImportPreviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Dry-run preview of the bundled dictionary import sample
+ */
+
+export function useGetImportPreview<TData = Awaited<ReturnType<typeof getImportPreview>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImportPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetImportPreviewQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

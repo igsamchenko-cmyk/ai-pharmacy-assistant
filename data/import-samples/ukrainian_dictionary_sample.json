@@ -1,0 +1,68 @@
+{
+  "rows": [
+    {
+      "ingredient_id": "paracetamol",
+      "canonical_inn": "Парацетамол",
+      "name": "Парацетамол",
+      "locale": "uk",
+      "name_type": "ukrainian",
+      "source_id": "who-inn",
+      "confidence": "verified",
+      "atc_code": "N02BE01",
+      "notes": "Демонстраційний рядок (публічна МНН)"
+    },
+    {
+      "ingredient_id": "paracetamol",
+      "canonical_inn": "Парацетамол",
+      "name": "Paracetamol",
+      "locale": "en",
+      "name_type": "english",
+      "source_id": "who-inn",
+      "confidence": "verified",
+      "atc_code": "N02BE01"
+    },
+    {
+      "ingredient_id": "paracetamol",
+      "canonical_inn": "Парацетамол",
+      "name": "acetaminophen",
+      "locale": "en",
+      "name_type": "synonym",
+      "source_id": "who-inn",
+      "confidence": "high",
+      "atc_code": "N02BE01",
+      "notes": "Американська генерична назва"
+    },
+    {
+      "ingredient_id": "ibuprofen",
+      "canonical_inn": "Ібупрофен",
+      "name": "Ібупрофен",
+      "locale": "uk",
+      "name_type": "ukrainian",
+      "source_id": "who-inn",
+      "confidence": "verified",
+      "atc_code": "M01AE01"
+    },
+    {
+      "ingredient_id": "ibuprofen",
+      "canonical_inn": "Ібупрофен",
+      "name": "ібупрефен",
+      "locale": "uk",
+      "name_type": "typo",
+      "source_id": "demo-catalog",
+      "confidence": "low",
+      "atc_code": "M01AE01",
+      "notes": "Поширена помилка написання — потребує перевірки"
+    },
+    {
+      "ingredient_id": "drotaverine",
+      "canonical_inn": "Дротаверин",
+      "name": "Дротаверин",
+      "locale": "uk",
+      "name_type": "ukrainian",
+      "source_id": "who-inn",
+      "confidence": "verified",
+      "atc_code": "A03AD02",
+      "notes": "Публічна МНН (демо)"
+    }
+  ]
+}

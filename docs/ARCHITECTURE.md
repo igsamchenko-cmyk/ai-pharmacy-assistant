@@ -73,9 +73,10 @@ Express API (artifacts/api-server)
 | `search`      | багатоетапний пошук: cache → dictionary → catalog → RxNorm → openFDA → AI   |
 | `compare`     | порівняння препаратів поруч + попарна перевірка взаємодій                   |
 | `barcode`     | абстракція резолвера GTIN (підключається; за замовч. «unconfigured»)        |
-| `import`      | пайплайн імпорту БЗ (`buildKnowledgeSnapshot` → validate → load, лоадери)   |
+| `import`      | пайплайн v0.3 + імпорт словника v0.4 (формат, парсери, guard, review, аналіз)|
 | `provenance`  | реєстр джерел (`SOURCES`) і провенанс для кожного мапування назв            |
 | `validation`  | перевірка цілісності БЗ → `QualityReport` (чиста, без БД)                   |
+| `runtime`     | прапорець джерела знань (`KNOWLEDGE_DB_RUNTIME`, за замовч. статичний)      |
 
 Кожен етап деградує безпечно: відсутній ключ OpenAI чи збій зовнішнього
 провайдера ніколи не кидає виняток — результат просто повідомляє, що вдалося
@@ -95,6 +96,18 @@ Express API (artifacts/api-server)
 будує нормалізований snapshot і завантажує його через інжектований лоадер у
 таблиці `lib/db/src/schema/knowledge.ts`. Деталі — `docs/DATA_QUALITY.md` та
 `docs/IMPORT_GUIDE.md`.
+
+### Імпорт словника (v0.4)
+
+Окремий, чистий шар у `knowledge/import/` для безпечного додавання назв із
+зовнішніх файлів: канонічний формат (`format.ts`), парсери CSV/JSON
+(`csv.ts`/`parse.ts`), guard пропрієтарних джерел (`guard.ts`), робочий процес
+рецензування (`review.ts`, підозрілі рядки не авто-схвалюються) та dry-run аналіз
+(`analyze.ts` → `ImportPreview` через інжектований `KnowledgeView`). CLI:
+`validate:import`, `import:preview`, `import:knowledge` (запис лише approved-рядків
+за `--commit`). Runtime-міст (`runtime.ts` + `dictionary/provider.ts`) залишає
+статичний провайдер за замовчуванням, а DB-провайдер вмикається прапорцем
+`KNOWLEDGE_DB_RUNTIME`. Деталі — `docs/DICTIONARY_CONTRIBUTING.md`.
 
 ### Дані
 

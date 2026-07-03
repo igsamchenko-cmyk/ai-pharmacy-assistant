@@ -7,18 +7,23 @@ import {
   GetKnowledgeStatsResponse,
   GetDataQualityResponse,
   ListKnowledgeSourcesResponse,
+  GetImportPreviewResponse,
   GetAtcInfoResponse,
   CompareDrugsBody,
   CompareDrugsResponse,
 } from "@workspace/api-zod";
 import {
   knowledgeSearch,
-  normalizeQuery,
+  resolveName,
   getKnowledgeEngineStats,
   getAtcInfo,
   compareDrugs,
   validateKnowledge,
   listSources,
+  parseImportCsv,
+  analyzeImport,
+  liveKnowledgeView,
+  readDictionarySampleCsv,
 } from "../knowledge";
 
 const router: IRouter = Router();
@@ -41,7 +46,7 @@ router.get("/knowledge/normalize", (req, res): void => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const entry = normalizeQuery(parsed.data.q);
+  const entry = resolveName(parsed.data.q);
   res.json(
     NormalizeDrugNameResponse.parse({
       query: parsed.data.q,
@@ -61,6 +66,12 @@ router.get("/knowledge/quality", (_req, res): void => {
 
 router.get("/knowledge/sources", (_req, res): void => {
   res.json(ListKnowledgeSourcesResponse.parse({ sources: listSources() }));
+});
+
+router.get("/knowledge/import/preview", (_req, res): void => {
+  const { rows, errors } = parseImportCsv(readDictionarySampleCsv());
+  const preview = analyzeImport(rows, liveKnowledgeView(), errors);
+  res.json(GetImportPreviewResponse.parse(preview));
 });
 
 router.get("/atc/:code", (req, res): void => {
