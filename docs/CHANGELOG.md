@@ -109,3 +109,28 @@
 - Import commit now writes runtime metadata: locale, confidence, review status,
   import batch and timestamps.
 - Data-quality UI now shows runtime provider diagnostics.
+## [v0.5.0] - 2026-07-03
+
+Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
+
+### Added
+
+- v0.4 Ukrainian Dictionary Import: strict CSV/JSON import format, preview,
+  validation, copyright guard, review workflow and approved-row commit path.
+- v0.5 Knowledge DB Runtime: DB-backed dictionary lookup behind
+  `KNOWLEDGE_DB_RUNTIME`, with static dictionary fallback preserved.
+- Runtime diagnostics via `/knowledge/runtime/status` and data-quality UI
+  visibility for DB availability, fallback state, review counts and source
+  distribution.
+- OpenAPI contract for runtime status plus regenerated React client and Zod
+  schemas from the spec.
+- Runtime source, confidence and provenance metadata on normalize/search
+  responses.
+
+### Verified
+
+- 191 tests pass.
+- Zero-key fallback is preserved: the app still works without OpenAI, Gemini or
+  database runtime enabled.
+- DB runtime is opt-in; unavailable DB falls back to static lookup without
+  crashing.
