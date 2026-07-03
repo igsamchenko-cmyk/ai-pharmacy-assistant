@@ -62,7 +62,6 @@ export function enrichSnapshotForBackfill(
     })),
   };
 }
-
 export function buildStaticBackfillSnapshot(
   batchId = createBackfillBatchId(),
 ): KnowledgeSnapshot {
@@ -195,4 +194,3 @@ export async function runStaticBackfill(
     loaded: mayLoad,
   };
 }
-

@@ -71,4 +71,3 @@ export async function writeKnowledgeQualityJsonReport(path: string): Promise<voi
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, JSON.stringify(report, null, 2), "utf8");
 }
-

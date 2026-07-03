@@ -22,4 +22,3 @@ KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify
 Without `DATABASE_URL`, verification checks the DB-shaped static snapshot and
 static fallback, then exits successfully with a warning. Use `--strict` when a
 live DB must be reachable.
-

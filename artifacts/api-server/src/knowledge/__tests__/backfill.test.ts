@@ -246,4 +246,3 @@ describe("static knowledge backfill", () => {
     expect(report.runtime.staticFallbackEnabled).toBe(true);
   });
 });
-

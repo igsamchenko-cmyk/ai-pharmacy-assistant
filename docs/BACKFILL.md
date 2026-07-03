@@ -31,4 +31,3 @@ KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify
 ```
 
 The command does not use AI services and does not require external API keys.
-
