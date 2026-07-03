@@ -56,3 +56,12 @@
 
 Remaining work: migrations/backfill for existing deployed databases and admin UI
 for editing review statuses after import.
+## v0.6 Release Checkpoint
+
+- Real static knowledge backfill into normalized DB tables.
+- Optional DB runtime hardened behind `KNOWLEDGE_DB_RUNTIME`.
+- Runtime verification CLI for DB availability, schema reachability, approved
+  counts, provenance coverage, sample normalization, and fallback behavior.
+- JSON quality report for release checks.
+- Next: curated admin review workflow for pending imports and richer source
+  coverage dashboards.

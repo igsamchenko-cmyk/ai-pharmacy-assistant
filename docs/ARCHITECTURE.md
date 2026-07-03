@@ -157,3 +157,23 @@ The runtime reads normalized `knowledge_ingredient_names` joined to
 `review_status='approved'` participate in user-facing search/normalize.
 Pending, rejected and needs_review rows are counted in diagnostics but ignored
 by runtime lookup.
+## v0.6 Knowledge DB Runtime Hardening
+
+The knowledge system now has a dedicated backfill layer between static source
+modules and the normalized database. The static modules remain the canonical
+runtime fallback. The database is an optional audited runtime provider enabled
+only by `KNOWLEDGE_DB_RUNTIME=true`.
+
+Flow:
+
+1. Static dictionary, ATC, provenance, and interaction modules build a
+   deterministic normalized snapshot.
+2. `pnpm knowledge:backfill` enriches name mappings with review status,
+   confidence, locale, provenance, and import batch metadata.
+3. With `DATABASE_URL`, the command upserts by natural key inside one
+   transaction and skips conflicting name-to-ingredient mappings.
+4. Without `DATABASE_URL`, it runs as a dry-run and exits successfully with a
+   warning.
+5. Runtime lookup reads only `approved` DB mappings; pending, rejected, and
+   needs-review rows are not user-facing.
+6. DB errors fall back to static data and preserve source attribution.

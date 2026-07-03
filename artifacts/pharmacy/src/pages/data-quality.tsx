@@ -131,6 +131,62 @@ function RuntimeStatusCard({ runtime }: { runtime: KnowledgeRuntimeStatus }) {
   );
 }
 
+function BackfillWorkflowCard({ runtime }: { runtime: KnowledgeRuntimeStatus | undefined }) {
+  const mode = runtime?.runtimeMode ?? "static";
+  const dbProvider = runtime?.providerStatus.db ?? "unknown";
+  const approved = runtime?.approvedMappingsCount ?? 0;
+  const lastBatch = runtime?.lastImportBatch ?? "none";
+  const provenanceCoverage =
+    runtime && runtime.sourceDistribution.static > 0
+      ? Math.round(
+          ((runtime.sourceDistribution.db + runtime.sourceDistribution.static) /
+            (runtime.sourceDistribution.db +
+              runtime.sourceDistribution.static +
+              runtime.sourceDistribution.fallback)) *
+            100,
+        )
+      : 100;
+
+  return (
+    <Card className="bg-card/50">
+      <CardContent className="p-5 space-y-4">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <GitCompareArrows className="w-5 h-5 text-primary" />
+          Backfill and runtime workflow
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <TextStatCard label="Runtime mode" value={mode} />
+          <TextStatCard label="DB status" value={dbProvider} />
+          <StatCard label="Approved DB rows" value={approved} />
+          <TextStatCard label="Last batch" value={lastBatch} />
+          <TextStatCard label="Source coverage" value={`${provenanceCoverage}%`} />
+        </div>
+        <div className="grid gap-2 text-sm text-muted-foreground">
+          <div className="flex items-start gap-2">
+            <ListChecks className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+            <span>
+              Run: pnpm db:push, pnpm knowledge:backfill,
+              KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify.
+            </span>
+          </div>
+          <div className="flex items-start gap-2">
+            <ListChecks className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+            <span>
+              Use pnpm knowledge:quality:report for JSON counts, provenance
+              coverage, runtime status, and warnings.
+            </span>
+          </div>
+        </div>
+        {runtime && runtime.warnings.length > 0 && (
+          <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
+            {runtime.warnings.join(" ")}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function CoverageBar({
   label,
   pct,
@@ -270,6 +326,8 @@ export default function DataQuality() {
           </Card>
 
           {runtime && <RuntimeStatusCard runtime={runtime} />}
+
+          <BackfillWorkflowCard runtime={runtime} />
 
           <Card className="bg-card/50">
             <CardContent className="p-5">

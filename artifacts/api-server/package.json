@@ -11,6 +11,9 @@
     "test": "vitest run",
     "validate:knowledge": "tsx src/scripts/validate-knowledge.ts",
     "seed:knowledge": "tsx src/scripts/seed-knowledge.ts",
+    "knowledge:backfill": "tsx src/scripts/knowledge-backfill.ts",
+    "knowledge:runtime:verify": "tsx src/scripts/knowledge-runtime-verify.ts",
+    "knowledge:quality:report": "tsx src/scripts/knowledge-quality-report.ts",
     "validate:import": "tsx src/scripts/validate-import.ts",
     "import:preview": "tsx src/scripts/import-preview.ts",
     "import:knowledge": "tsx src/scripts/import-knowledge.ts"

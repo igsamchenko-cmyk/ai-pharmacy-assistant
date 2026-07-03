@@ -98,3 +98,21 @@ The data-quality page now calls `/knowledge/runtime/status`. It shows whether DB
 runtime is enabled and available, static fallback state, approved mapping count,
 pending/rejected/needs_review counts, the latest import batch and source
 distribution across DB, static, RxNorm, openFDA, Gemini and fallback.
+## v0.6 Quality Report
+
+Use `pnpm knowledge:quality:report` to print a JSON report for CI or release
+review. Use `pnpm knowledge:quality:report --write` to write
+`artifacts/reports/knowledge-quality-report.json`; generated report files are
+ignored by git.
+
+The report includes:
+
+- normalized row counts for sources, ingredients, mappings, ATC codes, and
+  interaction rules;
+- provenance, ATC, source, and approved mapping coverage;
+- runtime status from `/knowledge/runtime/status` logic;
+- validation warnings and timestamp.
+
+The `/data-quality` page also shows the DB/static mode, DB provider status,
+approved mapping count, latest import batch, source coverage, and operator
+commands for schema push, backfill, runtime verification, and JSON report.

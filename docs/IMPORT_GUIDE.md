@@ -97,3 +97,19 @@ DATABASE_URL=... pnpm --filter @workspace/api-server run import:knowledge -- --c
 Committed rows store ingredient, name mapping, locale, confidence, confidence
 score, review status, source/provenance, ATC where present, import batch id and
 timestamps. Only approved rows are active when `KNOWLEDGE_DB_RUNTIME=true`.
+## v0.6 Static Backfill Workflow
+
+Recommended DB workflow:
+
+1. `pnpm db:push`
+2. `pnpm knowledge:backfill`
+3. `KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify`
+4. Run the app with `KNOWLEDGE_DB_RUNTIME=true` only after verification is clean.
+
+`pnpm knowledge:backfill` is idempotent. It upserts sources, ingredients, name
+mappings, ATC codes, and interaction rules by natural keys. Name mapping
+conflicts are counted and skipped instead of overwritten.
+
+If `DATABASE_URL` is missing, the command performs a dry-run and exits
+successfully. Use `--require-db` when a release or deployment step must fail
+without a live database.

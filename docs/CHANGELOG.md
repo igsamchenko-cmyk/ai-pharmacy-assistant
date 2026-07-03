@@ -134,3 +134,20 @@ Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
   database runtime enabled.
 - DB runtime is opt-in; unavailable DB falls back to static lookup without
   crashing.
+## v0.6.0 - Real Data Backfill and DB Runtime Hardening
+
+- Added `pnpm knowledge:backfill` for idempotent static knowledge backfill into
+  normalized DB tables with provenance, review, confidence, locale, and import
+  batch metadata.
+- Added `pnpm knowledge:runtime:verify` for DB runtime health checks, DB-shaped
+  sample normalization, runtime status counts, and static fallback verification.
+- Added `pnpm knowledge:quality:report` for JSON quality reporting with counts,
+  provenance coverage, ATC coverage, runtime status, timestamp, and warnings.
+- Hardened zero-key behavior: no DB or AI key is required for validation, dry
+  runs, static runtime, or fallback operation.
+- Improved `/data-quality` with backfill workflow status, DB/static mode,
+  approved DB row count, latest batch, source coverage, warnings, and operator
+  commands.
+- Kept OpenAPI as source of truth; no new endpoint was required for v0.6.
+- Preserved safety invariants: no diagnosis, no prescribing, approved-only DB
+  runtime mappings, static fallback, no secrets, and no copyrighted source data.

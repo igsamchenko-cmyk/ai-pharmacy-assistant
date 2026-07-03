@@ -121,3 +121,17 @@ diagnostics but are ignored by `/knowledge/normalize` and `/knowledge/search`.
 After committing, verify with `/knowledge/runtime/status` and a
 `/knowledge/normalize?q=...` query; DB-backed results include source,
 confidence and provenance metadata.
+## v0.6 Backfill Metadata Rules
+
+Static dictionary entries that are backfilled to the DB must keep explicit
+metadata:
+
+- every mapping has `sourceKey` and `evidenceLevel`;
+- reviewed static mappings are imported as `approved`;
+- static mappings use confidence `verified` and confidence score `100`;
+- locale defaults to `uk`;
+- each run sets `importBatchId` to `static-backfill-YYYY-MM-DD`.
+
+Do not add copyrighted dictionary payloads. Add only project-owned examples,
+short factual identifiers, public classification references, or curated
+metadata that can be safely redistributed.
