@@ -99,3 +99,13 @@
 
 - Перевірено відсутність секретів у коді; ключ OpenAI лишається опційним, і
   застосунок коректно працює без нього (graceful fallback).
+
+## v0.5 - Knowledge DB runtime
+
+- Added DB-backed dictionary runtime behind `KNOWLEDGE_DB_RUNTIME`.
+- Added fallback to static dictionary when DB is disabled, missing or failing.
+- Added `/knowledge/runtime/status`.
+- Added source/confidence/provenance metadata to normalize/search responses.
+- Import commit now writes runtime metadata: locale, confidence, review status,
+  import batch and timestamps.
+- Data-quality UI now shows runtime provider diagnostics.

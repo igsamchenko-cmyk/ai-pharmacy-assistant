@@ -24,6 +24,19 @@ import {
   type ParseResult,
 } from "../knowledge";
 
+function confidenceScore(confidence: ImportRow["confidence"]): number {
+  switch (confidence) {
+    case "verified":
+      return 100;
+    case "high":
+      return 85;
+    case "medium":
+      return 60;
+    case "low":
+      return 30;
+  }
+}
+
 function loadFile(path: string): ParseResult {
   const text = readFileSync(path, "utf8");
   return path.toLowerCase().endsWith(".json")
@@ -41,6 +54,7 @@ async function commit(approved: ImportRow[]): Promise<void> {
     knowledgeIngredientsTable,
     knowledgeIngredientNamesTable,
   } = await import("@workspace/db");
+  const importBatchId = `dictionary-${new Date().toISOString()}`;
 
   await db.transaction(async (tx) => {
     const seenInn = new Set<string>();
@@ -68,6 +82,11 @@ async function commit(approved: ImportRow[]): Promise<void> {
           ingredientInnKey: innKey,
           sourceKey: row.sourceId,
           evidenceLevel: "reference",
+          locale: row.locale,
+          confidence: row.confidence,
+          confidenceScore: confidenceScore(row.confidence),
+          reviewStatus: "approved",
+          importBatchId,
         })
         .onConflictDoNothing({
           target: knowledgeIngredientNamesTable.normalized,

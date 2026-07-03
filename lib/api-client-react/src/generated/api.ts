@@ -41,6 +41,7 @@ import type {
   InteractionResult,
   KnowledgeSearchParams,
   KnowledgeSearchResult,
+  KnowledgeRuntimeStatus,
   KnowledgeStats,
   NormalizeDrugNameParams,
   NormalizeResult,
@@ -1298,6 +1299,82 @@ export function useNormalizeDrugName<TData = Awaited<ReturnType<typeof normalize
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+
+
+
+
+
+
+export const getGetKnowledgeRuntimeStatusUrl = () => {
+
+
+
+
+  return `/api/knowledge/runtime/status`
+}
+
+/**
+ * @summary Knowledge runtime provider status
+ */
+export const getKnowledgeRuntimeStatus = async ( options?: RequestInit): Promise<KnowledgeRuntimeStatus> => {
+
+  return customFetch<KnowledgeRuntimeStatus>(getGetKnowledgeRuntimeStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetKnowledgeRuntimeStatusQueryKey = () => {
+    return [
+    `/api/knowledge/runtime/status`
+    ] as const;
+    }
+
+
+export const getGetKnowledgeRuntimeStatusQueryOptions = <TData = Awaited<ReturnType<typeof getKnowledgeRuntimeStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKnowledgeRuntimeStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetKnowledgeRuntimeStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getKnowledgeRuntimeStatus>>> = ({ signal }) => getKnowledgeRuntimeStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getKnowledgeRuntimeStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetKnowledgeRuntimeStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getKnowledgeRuntimeStatus>>>
+export type GetKnowledgeRuntimeStatusQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Knowledge runtime provider status
+ */
+
+export function useGetKnowledgeRuntimeStatus<TData = Awaited<ReturnType<typeof getKnowledgeRuntimeStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKnowledgeRuntimeStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetKnowledgeRuntimeStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 
 

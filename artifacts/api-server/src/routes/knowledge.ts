@@ -14,7 +14,6 @@ import {
 } from "@workspace/api-zod";
 import {
   knowledgeSearch,
-  resolveName,
   getKnowledgeEngineStats,
   getAtcInfo,
   compareDrugs,
@@ -24,6 +23,8 @@ import {
   analyzeImport,
   liveKnowledgeView,
   readDictionarySampleCsv,
+  resolveRuntimeName,
+  getKnowledgeRuntimeStatus,
 } from "../knowledge";
 
 const router: IRouter = Router();
@@ -40,20 +41,28 @@ router.get("/knowledge/search", async (req, res): Promise<void> => {
   res.json(KnowledgeSearchResponse.parse(result));
 });
 
-router.get("/knowledge/normalize", (req, res): void => {
+router.get("/knowledge/normalize", async (req, res): Promise<void> => {
   const parsed = NormalizeDrugNameQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const entry = resolveName(parsed.data.q);
+  const resolved = await resolveRuntimeName(parsed.data.q);
   res.json(
     NormalizeDrugNameResponse.parse({
       query: parsed.data.q,
-      matched: entry !== null,
-      entry,
+      matched: resolved.entry !== null,
+      entry: resolved.entry,
+      source: resolved.source,
+      confidence: resolved.entry?.confidence ?? null,
+      provenance: resolved.entry?.provenance ?? null,
+      warnings: resolved.warnings,
     }),
   );
+});
+
+router.get("/knowledge/runtime/status", async (_req, res): Promise<void> => {
+  res.json(await getKnowledgeRuntimeStatus());
 });
 
 router.get("/knowledge/stats", (_req, res): void => {

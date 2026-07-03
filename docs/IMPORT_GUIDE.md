@@ -79,3 +79,21 @@ pnpm --filter @workspace/db run push   # лише для розробки
 
 - Якість даних та провенанс — `docs/DATA_QUALITY.md`.
 - Архітектура — `docs/ARCHITECTURE.md`.
+
+## v0.5 Commit-to-Runtime Flow
+
+Preview imports before writing:
+
+```bash
+pnpm --filter @workspace/api-server run import:preview
+```
+
+Commit approved rows into runtime-readable tables:
+
+```bash
+DATABASE_URL=... pnpm --filter @workspace/api-server run import:knowledge -- --commit
+```
+
+Committed rows store ingredient, name mapping, locale, confidence, confidence
+score, review status, source/provenance, ATC where present, import batch id and
+timestamps. Only approved rows are active when `KNOWLEDGE_DB_RUNTIME=true`.

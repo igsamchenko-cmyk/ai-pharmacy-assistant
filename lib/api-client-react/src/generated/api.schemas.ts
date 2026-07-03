@@ -241,12 +241,85 @@ export interface DictionaryEntry {
   name: string;
   kind: DictionaryEntryKind;
   ingredient: CanonicalIngredient;
+  runtimeSource?: RuntimeKnowledgeSource;
+  confidence?: RuntimeConfidence;
+  confidenceScore?: number;
+  provenance?: RuntimeProvenance;
 }
 
 export interface NormalizeResult {
   query: string;
   matched: boolean;
   entry: DictionaryEntry | null;
+  source: RuntimeKnowledgeSource;
+  confidence: RuntimeConfidence | null;
+  provenance: RuntimeProvenance | null;
+  warnings: string[];
+}
+
+export type RuntimeKnowledgeSource = typeof RuntimeKnowledgeSource[keyof typeof RuntimeKnowledgeSource];
+
+export const RuntimeKnowledgeSource = {
+  db: 'db',
+  static: 'static',
+  rxnorm: 'rxnorm',
+  openfda: 'openfda',
+  gemini: 'gemini',
+  fallback: 'fallback',
+} as const;
+
+export type RuntimeConfidence = typeof RuntimeConfidence[keyof typeof RuntimeConfidence];
+
+export const RuntimeConfidence = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+  verified: 'verified',
+} as const;
+
+export type RuntimeReviewStatus = typeof RuntimeReviewStatus[keyof typeof RuntimeReviewStatus];
+
+export const RuntimeReviewStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  needs_review: 'needs_review',
+} as const;
+
+export interface RuntimeProvenance {
+  sourceKey: string;
+  evidenceLevel: string;
+  lastReviewed?: string;
+  sourceLabel?: string;
+  sourceType?: ProvenanceSourceType;
+  sourceReliability?: ProvenanceSourceReliability;
+  sourceUrl?: string | null;
+  locale?: string;
+  importBatchId?: string | null;
+  importedAt?: string | null;
+  reviewStatus?: RuntimeReviewStatus;
+}
+
+export type KnowledgeRuntimeStatusProviderStatus = {
+  db: 'active' | 'disabled' | 'unavailable';
+  static: 'active';
+};
+
+export type KnowledgeRuntimeStatusSourceDistribution = Record<RuntimeKnowledgeSource, number>;
+
+export interface KnowledgeRuntimeStatus {
+  runtimeMode: 'static' | 'db';
+  dbEnabled: boolean;
+  dbAvailable: boolean;
+  staticFallbackEnabled: boolean;
+  approvedMappingsCount: number;
+  pendingCount: number;
+  rejectedCount: number;
+  needsReviewCount: number;
+  lastImportBatch: string | null;
+  warnings: string[];
+  providerStatus: KnowledgeRuntimeStatusProviderStatus;
+  sourceDistribution: KnowledgeRuntimeStatusSourceDistribution;
 }
 
 export type DictionaryStatsByKind = {
@@ -406,8 +479,11 @@ export const KnowledgeSearchResultResolvedStage = {
 export interface KnowledgeSearchResult {
   query: string;
   resolvedStage: KnowledgeSearchResultResolvedStage;
+  source: RuntimeKnowledgeSource;
   fromCache: boolean;
   normalized: CanonicalIngredient | null;
+  confidence: RuntimeConfidence | null;
+  provenance: RuntimeProvenance | null;
   atc: AtcInfo | null;
   catalogMatches: Drug[];
   external: ExternalDrugReference | null;

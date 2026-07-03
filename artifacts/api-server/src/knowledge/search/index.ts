@@ -3,7 +3,13 @@ import { getExternalReference } from "../../services/externalDataService";
 import type { DrugRecord } from "../../data/drugs";
 import type { ExternalDrugReference } from "../../services/externalDataService";
 import { type CanonicalIngredient } from "../dictionary";
-import { resolveName } from "../dictionary/active";
+import {
+  resolveRuntimeName,
+  type RuntimeKnowledgeSource,
+  type RuntimeProvenance,
+  type RuntimeConfidence,
+  type RuntimeDbStore,
+} from "../dbRuntime";
 import { getAtcInfo, type AtcInfo } from "../atc";
 import { TtlCache } from "./cache";
 
@@ -24,9 +30,13 @@ export interface KnowledgeSearchResult {
   query: string;
   /** Stage that produced the primary answer. */
   resolvedStage: SearchStage;
+  /** Runtime source that produced the normalized answer or fallback. */
+  source: RuntimeKnowledgeSource;
   fromCache: boolean;
   /** Canonical ingredient if the dictionary recognised the query. */
   normalized: CanonicalIngredient | null;
+  confidence: RuntimeConfidence | null;
+  provenance: RuntimeProvenance | null;
   /** ATC classification derived from the dictionary/catalog match. */
   atc: AtcInfo | null;
   /** Matching drugs from the local catalog. */
@@ -40,6 +50,8 @@ export interface KnowledgeSearchResult {
 export interface SearchOptions {
   /** Skip network providers (RxNorm/openFDA). Used by tests and offline mode. */
   skipExternal?: boolean;
+  /** Test/admin injection point; production uses the default DB store. */
+  runtimeStore?: RuntimeDbStore;
 }
 
 const cache = new TtlCache<KnowledgeSearchResult>();
@@ -70,8 +82,11 @@ export async function knowledgeSearch(
     return {
       query,
       resolvedStage: "ai",
+      source: "fallback",
       fromCache: false,
       normalized: null,
+      confidence: null,
+      provenance: null,
       atc: null,
       catalogMatches: [],
       external: null,
@@ -79,11 +94,12 @@ export async function knowledgeSearch(
     };
   }
 
-  const cacheKey = `${query.toLowerCase()}::${options.skipExternal ? "local" : "full"}`;
+  const cacheKey = `${query.toLowerCase()}::${options.skipExternal ? "local" : "full"}::${options.runtimeStore ? "store" : "default"}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, fromCache: true };
 
-  const entry = resolveName(query);
+  const resolved = await resolveRuntimeName(query, options.runtimeStore);
+  const entry = resolved.entry;
   const normalized = entry?.ingredient ?? null;
   const atc = getAtcInfo(normalized?.atc);
 
@@ -113,8 +129,11 @@ export async function knowledgeSearch(
   const result: KnowledgeSearchResult = {
     query,
     resolvedStage,
+    source: entry?.runtimeSource ?? resolved.source,
     fromCache: false,
     normalized,
+    confidence: entry?.confidence ?? null,
+    provenance: entry?.provenance ?? null,
     atc,
     catalogMatches,
     external,

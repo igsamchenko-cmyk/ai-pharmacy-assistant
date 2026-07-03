@@ -17,12 +17,14 @@ import {
   useGetDataQuality,
   useListKnowledgeSources,
   useGetImportPreview,
+  useGetKnowledgeRuntimeStatus,
 } from "@workspace/api-client-react";
 import type {
   QualityIssue,
   ProvenanceSource,
   ImportPreview,
   ImportConflict,
+  KnowledgeRuntimeStatus,
 } from "@workspace/api-client-react";
 
 const CONFLICT_TYPE_LABEL: Record<ImportConflict["type"], string> = {
@@ -65,6 +67,67 @@ function StatCard({ label, value }: { label: string; value: number }) {
       <div className="text-2xl font-bold text-foreground">{value}</div>
       <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
+  );
+}
+
+function TextStatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-muted/50 rounded-xl p-4 text-center">
+      <div className="text-base font-bold text-foreground truncate">{value}</div>
+      <div className="text-xs text-muted-foreground mt-1">{label}</div>
+    </div>
+  );
+}
+
+function RuntimeStatusCard({ runtime }: { runtime: KnowledgeRuntimeStatus }) {
+  return (
+    <Card className="bg-card/50">
+      <CardContent className="p-5 space-y-4">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <Database className="w-5 h-5 text-primary" />
+          Runtime knowledge sources
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <TextStatCard label="Mode" value={runtime.runtimeMode} />
+          <TextStatCard
+            label="DB provider"
+            value={runtime.providerStatus.db}
+          />
+          <TextStatCard
+            label="Static fallback"
+            value={runtime.staticFallbackEnabled ? "active" : "off"}
+          />
+          <TextStatCard
+            label="Last import"
+            value={runtime.lastImportBatch ?? "none"}
+          />
+          <StatCard
+            label="Approved DB mappings"
+            value={runtime.approvedMappingsCount}
+          />
+          <StatCard label="Pending" value={runtime.pendingCount} />
+          <StatCard label="Rejected" value={runtime.rejectedCount} />
+          <StatCard label="Needs review" value={runtime.needsReviewCount} />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+          {(["db", "static", "rxnorm", "openfda", "gemini", "fallback"] as const).map(
+            (key) => (
+              <div key={key} className="bg-muted/50 rounded-lg px-3 py-2 text-center">
+                <div className="text-lg font-bold text-foreground">
+                  {runtime.sourceDistribution[key]}
+                </div>
+                <div className="text-[11px] text-muted-foreground">{key}</div>
+              </div>
+            ),
+          )}
+        </div>
+        {runtime.warnings.length > 0 && (
+          <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
+            {runtime.warnings.join(" ")}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -116,10 +179,12 @@ export default function DataQuality() {
   const quality = useGetDataQuality();
   const sourcesQuery = useListKnowledgeSources();
   const importPreview = useGetImportPreview();
+  const runtimeQuery = useGetKnowledgeRuntimeStatus();
 
   const report = quality.data;
   const sources = sourcesQuery.data?.sources ?? [];
   const preview = importPreview.data;
+  const runtime = runtimeQuery.data;
 
   function handleExport() {
     const payload = {
@@ -127,6 +192,7 @@ export default function DataQuality() {
       quality: report ?? null,
       sources,
       importPreview: preview ?? null,
+      runtime: runtime ?? null,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: "application/json",
@@ -202,6 +268,8 @@ export default function DataQuality() {
               </div>
             </CardContent>
           </Card>
+
+          {runtime && <RuntimeStatusCard runtime={runtime} />}
 
           <Card className="bg-card/50">
             <CardContent className="p-5">

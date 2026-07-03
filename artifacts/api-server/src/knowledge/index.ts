@@ -22,6 +22,7 @@ export * from "./import/pipeline";
 export * from "./provenance";
 export * from "./validation";
 export * from "./runtime";
+export * from "./dbRuntime";
 export * from "./dictionary/provider";
 export * from "./dictionary/active";
 

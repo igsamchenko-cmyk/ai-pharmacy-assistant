@@ -46,3 +46,13 @@
 - Інтеграція з офіційними реєстрами лікарських засобів.
 - Офлайн-режим для довідника (PWA).
 - Аудит доступу та журналювання дій для відповідності вимогам.
+
+## v0.5 Completed Direction
+
+- DB-backed dictionary runtime behind `KNOWLEDGE_DB_RUNTIME`.
+- Static dictionary fallback when DB is disabled or unavailable.
+- Runtime status endpoint and data-quality visibility.
+- Approved imported rows can participate in normalize/search paths.
+
+Remaining work: migrations/backfill for existing deployed databases and admin UI
+for editing review statuses after import.

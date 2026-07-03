@@ -23,6 +23,7 @@ import {
   text,
   uuid,
   timestamp,
+  integer,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -53,6 +54,24 @@ export type RuleOriginValue = (typeof RULE_ORIGINS)[number];
 
 export const RISK_LEVELS = ["low", "medium", "high", "critical"] as const;
 export type RiskLevelValue = (typeof RISK_LEVELS)[number];
+
+export const KNOWLEDGE_REVIEW_STATUSES = [
+  "pending",
+  "approved",
+  "rejected",
+  "needs_review",
+] as const;
+export type KnowledgeReviewStatusValue =
+  (typeof KNOWLEDGE_REVIEW_STATUSES)[number];
+
+export const KNOWLEDGE_CONFIDENCE_LEVELS = [
+  "low",
+  "medium",
+  "high",
+  "verified",
+] as const;
+export type KnowledgeConfidenceLevelValue =
+  (typeof KNOWLEDGE_CONFIDENCE_LEVELS)[number];
 
 /** Provenance registry — where knowledge comes from. */
 export const knowledgeSourcesTable = pgTable("knowledge_sources", {
@@ -100,10 +119,20 @@ export const knowledgeIngredientNamesTable = pgTable(
     ingredientInnKey: text("ingredient_inn_key").notNull(),
     sourceKey: text("source_key").notNull(),
     evidenceLevel: text("evidence_level").notNull().default("reference"),
+    locale: text("locale").notNull().default("uk"),
+    confidence: text("confidence").notNull().default("verified"),
+    confidenceScore: integer("confidence_score").notNull().default(100),
+    reviewStatus: text("review_status").notNull().default("approved"),
+    importBatchId: text("import_batch_id"),
+    importedAt: timestamp("imported_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [
     uniqueIndex("knowledge_names_normalized_idx").on(t.normalized),
     index("knowledge_names_ingredient_idx").on(t.ingredientInnKey),
+    index("knowledge_names_review_status_idx").on(t.reviewStatus),
+    index("knowledge_names_import_batch_idx").on(t.importBatchId),
   ],
 );
 

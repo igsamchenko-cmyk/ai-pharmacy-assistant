@@ -104,3 +104,33 @@ pnpm test
 - Секрети не зберігаються в репозиторії; `node_modules`, `dist`, `.env` та інші
   чутливі/похідні файли в `.gitignore`.
 - Ключі та `DATABASE_URL` зберігаються лише в середовищі/секретах.
+
+## Knowledge DB runtime v0.5
+
+The default runtime is still the bundled static dictionary. It works without
+`DATABASE_URL`, OpenAI or Gemini keys. Set `KNOWLEDGE_DB_RUNTIME=true` to read
+approved imported dictionary mappings from the normalized knowledge tables
+before falling back to static data.
+
+Runtime order:
+
+1. DB dictionary provider: approved rows only.
+2. Static dictionary provider.
+3. RxNorm/openFDA/Gemini supplementary flow when configured.
+
+If DB runtime is enabled but the database is missing or unavailable, the API
+logs a safe warning, returns no stack trace to users and falls back to static
+lookups. Use `/api/knowledge/runtime/status` to verify mode, DB availability,
+approved/pending/rejected/needs_review counts, last import batch and source
+distribution.
+
+Import flow:
+
+```bash
+pnpm --filter @workspace/api-server run import:preview
+DATABASE_URL=... pnpm --filter @workspace/api-server run import:knowledge -- --commit
+```
+
+`/api/knowledge/normalize?q=...` and `/api/knowledge/search?q=...` include
+`source`, `confidence` and `provenance` fields so admins can confirm whether a
+result came from DB, static data or fallback behavior.

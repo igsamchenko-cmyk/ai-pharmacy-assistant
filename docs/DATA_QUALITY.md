@@ -91,3 +91,10 @@ pnpm --filter @workspace/api-server run validate:knowledge
 - Внесок у словник (формат імпорту v0.4) — `docs/DICTIONARY_CONTRIBUTING.md`.
 - Медична безпека — `docs/MEDICAL_SAFETY.md`.
 - Архітектура — `docs/ARCHITECTURE.md`.
+
+## v0.5 Runtime Diagnostics
+
+The data-quality page now calls `/knowledge/runtime/status`. It shows whether DB
+runtime is enabled and available, static fallback state, approved mapping count,
+pending/rejected/needs_review counts, the latest import batch and source
+distribution across DB, static, RxNorm, openFDA, Gemini and fallback.

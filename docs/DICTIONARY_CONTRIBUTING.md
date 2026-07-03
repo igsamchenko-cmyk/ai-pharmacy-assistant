@@ -112,3 +112,12 @@ pnpm import:knowledge [файл] --force     # ігнорувати блокую
 - Пайплайн імпорту (v0.3) та seed БЗ — `docs/IMPORT_GUIDE.md`.
 - Медична безпека — `docs/MEDICAL_SAFETY.md`.
 - Архітектура — `docs/ARCHITECTURE.md`.
+
+## v0.5 Runtime Acceptance
+
+Imported mappings do not affect user-facing lookup until they are approved and
+committed. Suspicious, pending, rejected and needs_review rows remain visible in
+diagnostics but are ignored by `/knowledge/normalize` and `/knowledge/search`.
+After committing, verify with `/knowledge/runtime/status` and a
+`/knowledge/normalize?q=...` query; DB-backed results include source,
+confidence and provenance metadata.

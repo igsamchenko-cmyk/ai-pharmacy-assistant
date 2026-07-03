@@ -143,3 +143,17 @@ Vitest (`src/services/__tests__`, `src/lib/__tests__`, `src/knowledge/__tests__`
 шар якості даних v0.3 (провенанс, `validateKnowledge`, пайплайн імпорту з
 `DryRunLoader`, метадані правил взаємодій). Тести працюють над статичними даними,
 тож не потребують БД чи мережі (122 тести).
+
+## v0.5 Knowledge DB Runtime
+
+`KNOWLEDGE_DB_RUNTIME=false` (default) keeps the runtime on the static
+dictionary. `KNOWLEDGE_DB_RUNTIME=true` enables the DB dictionary provider first,
+then falls back to the static dictionary, then the existing RxNorm/openFDA/Gemini
+supplementary flow. DB failures are non-fatal: the API logs a warning and serves
+static results.
+
+The runtime reads normalized `knowledge_ingredient_names` joined to
+`knowledge_ingredients` and `knowledge_sources`. Only rows with
+`review_status='approved'` participate in user-facing search/normalize.
+Pending, rejected and needs_review rows are counted in diagnostics but ignored
+by runtime lookup.

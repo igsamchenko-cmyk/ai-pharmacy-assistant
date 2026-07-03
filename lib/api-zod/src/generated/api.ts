@@ -333,6 +333,7 @@ export const KnowledgeSearchQueryParams = zod.object({
 export const KnowledgeSearchResponse = zod.object({
   "query": zod.string(),
   "resolvedStage": zod.enum(['cache', 'dictionary', 'catalog', 'rxnorm', 'openfda', 'ai']),
+  "source": zod.enum(['db', 'static', 'rxnorm', 'openfda', 'gemini', 'fallback']),
   "fromCache": zod.boolean(),
   "normalized": zod.union([zod.object({
   "inn": zod.string(),
@@ -340,6 +341,20 @@ export const KnowledgeSearchResponse = zod.object({
   "english": zod.string(),
   "atc": zod.string(),
   "group": zod.string()
+}),zod.null()]),
+  "confidence": zod.union([zod.enum(['low', 'medium', 'high', 'verified']),zod.null()]),
+  "provenance": zod.union([zod.object({
+  "sourceKey": zod.string(),
+  "evidenceLevel": zod.string(),
+  "lastReviewed": zod.string().optional(),
+  "sourceLabel": zod.string().optional(),
+  "sourceType": zod.enum(['official', 'reference', 'demo', 'external']).optional(),
+  "sourceReliability": zod.enum(['high', 'medium', 'low']).optional(),
+  "sourceUrl": zod.union([zod.string(),zod.null()]).optional(),
+  "locale": zod.string().optional(),
+  "importBatchId": zod.union([zod.string(),zod.null()]).optional(),
+  "importedAt": zod.union([zod.string(),zod.null()]).optional(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']).optional()
 }),zod.null()]),
   "atc": zod.union([zod.object({
   "code": zod.string(),
@@ -403,8 +418,40 @@ export const NormalizeDrugNameResponse = zod.object({
   "english": zod.string(),
   "atc": zod.string(),
   "group": zod.string()
-})
-}),zod.null()])
+}),
+  "runtimeSource": zod.enum(['db', 'static', 'rxnorm', 'openfda', 'gemini', 'fallback']).optional(),
+  "confidence": zod.enum(['low', 'medium', 'high', 'verified']).optional(),
+  "confidenceScore": zod.number().optional(),
+  "provenance": zod.object({
+  "sourceKey": zod.string(),
+  "evidenceLevel": zod.string(),
+  "lastReviewed": zod.string().optional(),
+  "sourceLabel": zod.string().optional(),
+  "sourceType": zod.enum(['official', 'reference', 'demo', 'external']).optional(),
+  "sourceReliability": zod.enum(['high', 'medium', 'low']).optional(),
+  "sourceUrl": zod.union([zod.string(),zod.null()]).optional(),
+  "locale": zod.string().optional(),
+  "importBatchId": zod.union([zod.string(),zod.null()]).optional(),
+  "importedAt": zod.union([zod.string(),zod.null()]).optional(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']).optional()
+}).optional()
+}),zod.null()]),
+  "source": zod.enum(['db', 'static', 'rxnorm', 'openfda', 'gemini', 'fallback']),
+  "confidence": zod.union([zod.enum(['low', 'medium', 'high', 'verified']),zod.null()]),
+  "provenance": zod.union([zod.object({
+  "sourceKey": zod.string(),
+  "evidenceLevel": zod.string(),
+  "lastReviewed": zod.string().optional(),
+  "sourceLabel": zod.string().optional(),
+  "sourceType": zod.enum(['official', 'reference', 'demo', 'external']).optional(),
+  "sourceReliability": zod.enum(['high', 'medium', 'low']).optional(),
+  "sourceUrl": zod.union([zod.string(),zod.null()]).optional(),
+  "locale": zod.string().optional(),
+  "importBatchId": zod.union([zod.string(),zod.null()]).optional(),
+  "importedAt": zod.union([zod.string(),zod.null()]).optional(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']).optional()
+}),zod.null()]),
+  "warnings": zod.array(zod.string())
 })
 
 
