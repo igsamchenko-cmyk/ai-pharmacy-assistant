@@ -132,3 +132,15 @@ Rules:
 - copyrighted/proprietary rows are blocked and are never committed or approved.
 
 Review and runtime verification are documented in `docs/REVIEW_WORKFLOW.md`.
+
+## v0.8 Postgres Runtime Check
+
+After committing allowed non-copyright import rows, run:
+
+```bash
+KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:smoke
+```
+
+The smoke check requires `DATABASE_URL`, verifies that approved DB rows are
+runtime-visible, and confirms that `pending`, `rejected`, and `needs_review` rows
+remain hidden from normalize/search.

@@ -14,7 +14,11 @@
     "import:knowledge": "pnpm --filter @workspace/api-server run import:knowledge",
     "knowledge:backfill": "pnpm --filter @workspace/api-server run knowledge:backfill",
     "knowledge:runtime:verify": "pnpm --filter @workspace/api-server run knowledge:runtime:verify",
-    "knowledge:quality:report": "pnpm --filter @workspace/api-server run knowledge:quality:report"
+    "knowledge:quality:report": "pnpm --filter @workspace/api-server run knowledge:quality:report",
+    "db:dev:up": "node scripts/docker-dev.mjs up",
+    "db:dev:down": "node scripts/docker-dev.mjs down",
+    "dev:db-runtime": "node scripts/dev-db-runtime.mjs",
+    "knowledge:runtime:smoke": "pnpm --filter @workspace/api-server run knowledge:runtime:smoke"
   },
   "private": true,
   "devDependencies": {

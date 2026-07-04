@@ -47,6 +47,7 @@ export * from './interactionPair';
 export * from './interactionPairRiskLevel';
 export * from './interactionResult';
 export * from './knowledgeRuntimeStatus';
+export * from './knowledgeRuntimeStatusDbSchemaStatus';
 export * from './knowledgeRuntimeStatusProviderStatus';
 export * from './knowledgeRuntimeStatusProviderStatusDb';
 export * from './knowledgeRuntimeStatusProviderStatusStatic';

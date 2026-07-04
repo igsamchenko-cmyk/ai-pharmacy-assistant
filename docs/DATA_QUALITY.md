@@ -98,6 +98,7 @@ The data-quality page now calls `/knowledge/runtime/status`. It shows whether DB
 runtime is enabled and available, static fallback state, approved mapping count,
 pending/rejected/needs_review counts, the latest import batch and source
 distribution across DB, static, RxNorm, openFDA, Gemini and fallback.
+
 ## v0.6 Quality Report
 
 Use `pnpm knowledge:quality:report` to print a JSON report for CI or release
@@ -128,3 +129,16 @@ runtime mode and quality-report commands.
 `pnpm knowledge:quality:report` now emits a v0.7 JSON report with runtime and
 review-workflow diagnostics. DB-unavailable review diagnostics are warnings, not
 fatal errors, because static runtime remains active.
+
+## v0.8 Deployment Diagnostics
+
+The data-quality page now surfaces deployment-oriented runtime diagnostics:
+
+- DB runtime requested vs static mode;
+- DB provider status and schema status;
+- whether a database URL is configured, without displaying the URL;
+- static runtime/fallback state;
+- fallback reason, warnings, review counts, latest batch and source counts.
+
+Use `pnpm knowledge:quality:report` for the JSON version and
+`pnpm knowledge:runtime:smoke` for a real PostgreSQL runtime smoke check.

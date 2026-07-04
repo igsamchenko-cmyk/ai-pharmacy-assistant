@@ -461,9 +461,15 @@ export const NormalizeDrugNameResponse = zod.object({
  */
 export const GetKnowledgeRuntimeStatusResponse = zod.object({
   "runtimeMode": zod.enum(['static', 'db']),
-  "dbEnabled": zod.boolean(),
+  "dbEnabled": zod.boolean().describe('Backward-compatible alias for dbRuntimeRequested.'),
+  "dbRuntimeRequested": zod.boolean(),
+  "databaseUrlConfigured": zod.boolean(),
   "dbAvailable": zod.boolean(),
+  "dbSchemaStatus": zod.enum(['ready', 'not_requested', 'missing_database_url', 'unavailable']),
+  "schemaReady": zod.boolean(),
+  "staticRuntimeEnabled": zod.boolean(),
   "staticFallbackEnabled": zod.boolean(),
+  "fallbackReason": zod.union([zod.string(),zod.null()]),
   "approvedMappingsCount": zod.number(),
   "pendingCount": zod.number(),
   "rejectedCount": zod.number(),

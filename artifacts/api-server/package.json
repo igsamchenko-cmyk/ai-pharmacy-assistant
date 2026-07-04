@@ -16,7 +16,8 @@
     "knowledge:quality:report": "tsx src/scripts/knowledge-quality-report.ts",
     "validate:import": "tsx src/scripts/validate-import.ts",
     "import:preview": "tsx src/scripts/import-preview.ts",
-    "import:knowledge": "tsx src/scripts/import-knowledge.ts"
+    "import:knowledge": "tsx src/scripts/import-knowledge.ts",
+    "knowledge:runtime:smoke": "tsx src/scripts/knowledge-runtime-smoke.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",

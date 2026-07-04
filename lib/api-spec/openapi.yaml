@@ -1133,8 +1133,14 @@ components:
       required:
         - runtimeMode
         - dbEnabled
+        - dbRuntimeRequested
+        - databaseUrlConfigured
         - dbAvailable
+        - dbSchemaStatus
+        - schemaReady
+        - staticRuntimeEnabled
         - staticFallbackEnabled
+        - fallbackReason
         - approvedMappingsCount
         - pendingCount
         - rejectedCount
@@ -1149,10 +1155,26 @@ components:
           enum: [static, db]
         dbEnabled:
           type: boolean
+          description: Backward-compatible alias for dbRuntimeRequested.
+        dbRuntimeRequested:
+          type: boolean
+        databaseUrlConfigured:
+          type: boolean
         dbAvailable:
+          type: boolean
+        dbSchemaStatus:
+          type: string
+          enum: [ready, not_requested, missing_database_url, unavailable]
+        schemaReady:
+          type: boolean
+        staticRuntimeEnabled:
           type: boolean
         staticFallbackEnabled:
           type: boolean
+        fallbackReason:
+          oneOf:
+            - type: string
+            - type: "null"
         approvedMappingsCount:
           type: integer
         pendingCount:

@@ -11,7 +11,10 @@ import {
 } from "../backfill";
 import { buildKnowledgeSnapshot } from "../import/pipeline";
 import { buildKnowledgeQualityJsonReport } from "../qualityReport";
-import { snapshotToRuntimeRows, verifyKnowledgeRuntime } from "../runtimeVerify";
+import {
+  snapshotToRuntimeRows,
+  verifyKnowledgeRuntime,
+} from "../runtimeVerify";
 import { resolveRuntimeNameFromRows } from "../dbRuntime";
 
 describe("static knowledge backfill", () => {
@@ -46,14 +49,16 @@ describe("static knowledge backfill", () => {
   it("preserves interaction rule counts while enriching snapshots", () => {
     const base = buildKnowledgeSnapshot();
     const enriched = enrichSnapshotForBackfill(base, "batch-test");
-    expect(enriched.interactionRules).toHaveLength(base.interactionRules.length);
+    expect(enriched.interactionRules).toHaveLength(
+      base.interactionRules.length,
+    );
   });
 
   it("marks every backfilled mapping as approved", () => {
     const snapshot = buildStaticBackfillSnapshot("batch-test");
-    expect(snapshot.names.every((name) => name.reviewStatus === "approved")).toBe(
-      true,
-    );
+    expect(
+      snapshot.names.every((name) => name.reviewStatus === "approved"),
+    ).toBe(true);
   });
 
   it("marks every backfilled mapping as verified confidence", () => {
@@ -65,7 +70,9 @@ describe("static knowledge backfill", () => {
 
   it("sets confidence score to 100 for static mappings", () => {
     const snapshot = buildStaticBackfillSnapshot("batch-test");
-    expect(snapshot.names.every((name) => name.confidenceScore === 100)).toBe(true);
+    expect(snapshot.names.every((name) => name.confidenceScore === 100)).toBe(
+      true,
+    );
   });
 
   it("sets Ukrainian locale for static mappings", () => {
@@ -75,9 +82,9 @@ describe("static knowledge backfill", () => {
 
   it("attaches import batch metadata to every mapping", () => {
     const snapshot = buildStaticBackfillSnapshot("batch-test");
-    expect(snapshot.names.every((name) => name.importBatchId === "batch-test")).toBe(
-      true,
-    );
+    expect(
+      snapshot.names.every((name) => name.importBatchId === "batch-test"),
+    ).toBe(true);
   });
 
   it("keeps provenance source keys on every mapping", () => {
@@ -87,7 +94,9 @@ describe("static knowledge backfill", () => {
 
   it("keeps evidence levels on every mapping", () => {
     const snapshot = buildStaticBackfillSnapshot("batch-test");
-    expect(snapshot.names.every((name) => Boolean(name.evidenceLevel))).toBe(true);
+    expect(snapshot.names.every((name) => Boolean(name.evidenceLevel))).toBe(
+      true,
+    );
   });
 
   it("reports total row count across normalized tables", () => {
@@ -226,9 +235,9 @@ describe("static knowledge backfill", () => {
     expect(report.checks.staticFallbackAvailable).toBe(true);
   });
 
-  it("quality report includes v0.6 marker", async () => {
+  it("quality report includes v0.8 marker", async () => {
     const report = await buildKnowledgeQualityJsonReport();
-    expect(report.version).toBe("0.7");
+    expect(report.version).toBe("0.8");
   });
 
   it("quality report includes provenance coverage", async () => {

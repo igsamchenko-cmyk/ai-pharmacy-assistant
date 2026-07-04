@@ -83,3 +83,15 @@ pnpm -r test
 
 A row is visible in DB runtime only after it is `approved`; changing it back to
 `rejected` or `needs_review` hides it again.
+
+## v0.8 Runtime Deployment Boundary
+
+The PostgreSQL deployment profile does not change review semantics. Import commit
+stores allowed non-copyright rows with derived review status. Only `approved`
+rows are visible to DB runtime normalize/search. `pending`, `rejected`, and
+`needs_review` rows stay available for audit/review but are hidden from runtime.
+Copyrighted or proprietary rows remain blocked/dropped and must never be
+approved.
+
+`pnpm knowledge:runtime:smoke` verifies this approved-only boundary against a
+real configured DB and against synthetic non-approved rows.

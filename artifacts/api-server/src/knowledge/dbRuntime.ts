@@ -34,6 +34,12 @@ export type RuntimeReviewStatus =
 
 export type RuntimeConfidence = "low" | "medium" | "high" | "verified";
 
+export type RuntimeDbSchemaStatus =
+  | "ready"
+  | "not_requested"
+  | "missing_database_url"
+  | "unavailable";
+
 export interface RuntimeProvenance extends Provenance {
   sourceLabel?: string;
   sourceType?: SourceType;
@@ -61,8 +67,14 @@ export interface RuntimeResolveResult {
 export interface KnowledgeRuntimeStatus {
   runtimeMode: "static" | "db";
   dbEnabled: boolean;
+  dbRuntimeRequested: boolean;
+  databaseUrlConfigured: boolean;
   dbAvailable: boolean;
+  dbSchemaStatus: RuntimeDbSchemaStatus;
+  schemaReady: boolean;
+  staticRuntimeEnabled: boolean;
   staticFallbackEnabled: boolean;
+  fallbackReason: string | null;
   approvedMappingsCount: number;
   pendingCount: number;
   rejectedCount: number;
@@ -104,6 +116,20 @@ export interface RuntimeDbStore {
   listMappings(): Promise<DbMappingRow[]>;
 }
 
+interface LoadRowsResult {
+  rows: DbMappingRow[] | null;
+  dbSchemaStatus: RuntimeDbSchemaStatus;
+  fallbackReason: string | null;
+  warnings: string[];
+}
+
+const MISSING_DATABASE_URL_FALLBACK =
+  "DATABASE_URL is not configured; static runtime is active.";
+const DB_RUNTIME_UNAVAILABLE_FALLBACK =
+  "DB runtime is unavailable; static fallback is active.";
+const DB_RUNTIME_NOT_REQUESTED_FALLBACK =
+  "DB runtime is not requested; static runtime is active.";
+
 const DEFAULT_STATUS_COUNTS = {
   approved: 0,
   pending: 0,
@@ -128,7 +154,9 @@ function toIso(value: Date | string | null): string | null {
   return value instanceof Date ? value.toISOString() : value;
 }
 
-function staticEntry(entry: DictionaryEntry | null): RuntimeDictionaryEntry | null {
+function staticEntry(
+  entry: DictionaryEntry | null,
+): RuntimeDictionaryEntry | null {
   if (!entry) return null;
   return {
     ...entry,
@@ -216,32 +244,50 @@ async function createDefaultDbStore(): Promise<RuntimeDbStore> {
           sourceUrl: sources.url,
         })
         .from(names)
-        .innerJoin(
-          ingredients,
-          eq(names.ingredientInnKey, ingredients.innKey),
-        )
+        .innerJoin(ingredients, eq(names.ingredientInnKey, ingredients.innKey))
         .leftJoin(sources, eq(names.sourceKey, sources.key));
     },
   };
+}
+
+async function loadRowsWithDiagnostics(
+  store?: RuntimeDbStore,
+): Promise<LoadRowsResult> {
+  if (!process.env.DATABASE_URL && !store) {
+    return {
+      rows: null,
+      dbSchemaStatus: "missing_database_url",
+      fallbackReason: MISSING_DATABASE_URL_FALLBACK,
+      warnings: [MISSING_DATABASE_URL_FALLBACK],
+    };
+  }
+  try {
+    const dbStore = store ?? (await createDefaultDbStore());
+    return {
+      rows: await dbStore.listMappings(),
+      dbSchemaStatus: "ready",
+      fallbackReason: null,
+      warnings: [],
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.warn({ err: message }, "Knowledge DB runtime unavailable");
+    return {
+      rows: null,
+      dbSchemaStatus: "unavailable",
+      fallbackReason: DB_RUNTIME_UNAVAILABLE_FALLBACK,
+      warnings: [DB_RUNTIME_UNAVAILABLE_FALLBACK],
+    };
+  }
 }
 
 async function loadRows(
   warnings: string[],
   store?: RuntimeDbStore,
 ): Promise<DbMappingRow[] | null> {
-  if (!process.env.DATABASE_URL && !store) {
-    warnings.push("DATABASE_URL is not configured; DB runtime fell back to static.");
-    return null;
-  }
-  try {
-    const dbStore = store ?? (await createDefaultDbStore());
-    return await dbStore.listMappings();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    logger.warn({ err: message }, "Knowledge DB runtime unavailable");
-    warnings.push("DB runtime is unavailable; static fallback is active.");
-    return null;
-  }
+  const result = await loadRowsWithDiagnostics(store);
+  warnings.push(...result.warnings);
+  return result.rows;
 }
 
 function countRows(rows: readonly DbMappingRow[]) {
@@ -266,22 +312,35 @@ export async function getKnowledgeRuntimeStatus(
   store?: RuntimeDbStore,
 ): Promise<KnowledgeRuntimeStatus> {
   const dbEnabled = isDbRuntimeEnabled();
-  const warnings: string[] = [];
+  const databaseUrlConfigured = Boolean(process.env.DATABASE_URL);
   const staticCount = staticDictionaryProvider.listEntries().length;
-  let rows: DbMappingRow[] | null = null;
-  if (dbEnabled) rows = await loadRows(warnings, store);
+  const loadResult = dbEnabled
+    ? await loadRowsWithDiagnostics(store)
+    : {
+        rows: null,
+        dbSchemaStatus: "not_requested" as const,
+        fallbackReason: DB_RUNTIME_NOT_REQUESTED_FALLBACK,
+        warnings: [],
+      };
+  const rows = loadResult.rows;
   const counts = rows ? countRows(rows) : { ...DEFAULT_STATUS_COUNTS };
   return {
     runtimeMode: dbEnabled ? "db" : "static",
     dbEnabled,
+    dbRuntimeRequested: dbEnabled,
+    databaseUrlConfigured,
     dbAvailable: rows !== null,
+    dbSchemaStatus: loadResult.dbSchemaStatus,
+    schemaReady: rows !== null,
+    staticRuntimeEnabled: true,
     staticFallbackEnabled: true,
+    fallbackReason: loadResult.fallbackReason,
     approvedMappingsCount: counts.approved,
     pendingCount: counts.pending,
     rejectedCount: counts.rejected,
     needsReviewCount: counts.needs_review,
     lastImportBatch: rows ? lastBatch(rows) : null,
-    warnings,
+    warnings: loadResult.warnings,
     providerStatus: {
       db: dbEnabled ? (rows ? "active" : "unavailable") : "disabled",
       static: "active",
@@ -306,7 +365,9 @@ export async function resolveRuntimeName(
     const rows = await loadRows(warnings, store);
     if (rows) {
       const provider = createRuntimeProviderFromRows(rows);
-      const entry = provider.normalizeQuery(query) as RuntimeDictionaryEntry | null;
+      const entry = provider.normalizeQuery(
+        query,
+      ) as RuntimeDictionaryEntry | null;
       if (entry) return { entry, source: "db", warnings };
     }
   }
@@ -324,7 +385,9 @@ export function resolveRuntimeNameFromRows(
   rows: readonly DbMappingRow[],
 ): RuntimeResolveResult {
   const provider = createRuntimeProviderFromRows(rows);
-  const dbResult = provider.normalizeQuery(query) as RuntimeDictionaryEntry | null;
+  const dbResult = provider.normalizeQuery(
+    query,
+  ) as RuntimeDictionaryEntry | null;
   if (dbResult) return { entry: dbResult, source: "db", warnings: [] };
   const fallback = staticEntry(staticDictionaryProvider.normalizeQuery(query));
   return {

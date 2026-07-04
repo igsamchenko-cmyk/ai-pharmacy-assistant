@@ -5,15 +5,23 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
+import type { KnowledgeRuntimeStatusDbSchemaStatus } from './knowledgeRuntimeStatusDbSchemaStatus';
 import type { KnowledgeRuntimeStatusProviderStatus } from './knowledgeRuntimeStatusProviderStatus';
 import type { KnowledgeRuntimeStatusRuntimeMode } from './knowledgeRuntimeStatusRuntimeMode';
 import type { KnowledgeRuntimeStatusSourceDistribution } from './knowledgeRuntimeStatusSourceDistribution';
 
 export interface KnowledgeRuntimeStatus {
   runtimeMode: KnowledgeRuntimeStatusRuntimeMode;
+  /** Backward-compatible alias for dbRuntimeRequested. */
   dbEnabled: boolean;
+  dbRuntimeRequested: boolean;
+  databaseUrlConfigured: boolean;
   dbAvailable: boolean;
+  dbSchemaStatus: KnowledgeRuntimeStatusDbSchemaStatus;
+  schemaReady: boolean;
+  staticRuntimeEnabled: boolean;
   staticFallbackEnabled: boolean;
+  fallbackReason: string | null;
   approvedMappingsCount: number;
   pendingCount: number;
   rejectedCount: number;
