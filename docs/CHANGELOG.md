@@ -52,7 +52,8 @@
 - **Зразкові файли** (`data/import-samples/`): словник CSV+JSON, взаємодії,
   ATC — лише публічні генеричні дані.
 - **CLI**: `validate:import` (CI-гейт), `import:preview` (dry-run прев’ю),
-  `import:knowledge` (безпечний dry-run; `--commit` записує лише approved-рядки).
+  `import:knowledge` (безпечний dry-run; `--commit` зберігає дозволені
+  non-copyright рядки з derived review status; runtime бачить лише `approved`).
 - **Runtime-міст** (`knowledge/runtime.ts`, `dictionary/provider.ts`): статичний
   провайдер за замовчуванням; DB-провайдер за прапорцем `KNOWLEDGE_DB_RUNTIME`.
 - **Ендпоінт**: `GET /api/knowledge/import/preview`.
@@ -176,4 +177,5 @@ Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
   commands.
 - Kept OpenAPI as source of truth; no new endpoint was required for v0.6.
 - Preserved safety invariants: no diagnosis, no prescribing, approved-only DB
-  runtime mappings, static fallback, no secrets, and no copyrighted source data.
+  runtime mappings, static fallback, no secrets, and no copyrighted/proprietary
+  source data.

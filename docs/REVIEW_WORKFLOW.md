@@ -60,7 +60,7 @@ Dictionary import preview already reports the review distribution. `import:knowl
 - medium confidence rows become `pending`;
 - low confidence, typo-like or conflicting rows become `needs_review`;
 - unknown-source rows are `rejected` unless policy changes;
-- copyrighted rows are blocked and never enter the DB runtime path.
+- copyrighted/proprietary rows are blocked and never enter the DB runtime path.
 
 ## Who should approve
 

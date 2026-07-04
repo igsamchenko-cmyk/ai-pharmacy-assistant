@@ -69,7 +69,8 @@ ing-ibuprofen,Ібупрофен,Ibuprofen,en,english,who-inn,verified,M01AE01,
 5. чисті `verified`/`high` → `approved`;
 6. чисті `medium` → `pending`.
 
-**Підозрілі рядки ніколи не авто-схвалюються.** Лише `approved` завантажуються.
+**Підозрілі рядки ніколи не авто-схвалюються.** `--commit` зберігає дозволені
+non-copyright рядки з derived статусом; runtime бачить лише `approved`.
 
 ## CLI
 
@@ -82,7 +83,7 @@ pnpm validate:import
 # Прев’ю імпорту (dry-run): що нового, дублікати, конфлікти, розподіли:
 pnpm import:preview [файл.csv|файл.json]
 
-# Імпорт у БЗ. Безпечно за замовчуванням (dry-run). Запис лише approved-рядків:
+# Імпорт у БЗ. Безпечно за замовчуванням (dry-run). Зберігає дозволені non-copyright рядки:
 pnpm import:knowledge [файл] --commit   # потребує DATABASE_URL
 pnpm import:knowledge [файл] --force     # ігнорувати блокуючі проблеми
 ```

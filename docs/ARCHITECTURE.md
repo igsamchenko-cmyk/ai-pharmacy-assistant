@@ -104,8 +104,9 @@ Express API (artifacts/api-server)
 (`csv.ts`/`parse.ts`), guard пропрієтарних джерел (`guard.ts`), робочий процес
 рецензування (`review.ts`, підозрілі рядки не авто-схвалюються) та dry-run аналіз
 (`analyze.ts` → `ImportPreview` через інжектований `KnowledgeView`). CLI:
-`validate:import`, `import:preview`, `import:knowledge` (запис лише approved-рядків
-за `--commit`). Runtime-міст (`runtime.ts` + `dictionary/provider.ts`) залишає
+`validate:import`, `import:preview`, `import:knowledge` (`--commit` зберігає
+дозволені non-copyright рядки з derived `reviewStatus`). Runtime-міст
+(`runtime.ts` + `dictionary/provider.ts`) залишає
 статичний провайдер за замовчуванням, а DB-провайдер вмикається прапорцем
 `KNOWLEDGE_DB_RUNTIME`. Деталі — `docs/DICTIONARY_CONTRIBUTING.md`.
 
