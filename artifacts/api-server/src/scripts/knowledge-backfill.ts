@@ -107,7 +107,6 @@ class PostgresBackfillStore implements BackfillStore {
               locale: row.locale ?? "uk",
               confidence: row.confidence ?? "verified",
               confidenceScore: row.confidenceScore ?? 100,
-              reviewStatus: row.reviewStatus ?? "approved",
               importBatchId: row.importBatchId ?? null,
             },
           });

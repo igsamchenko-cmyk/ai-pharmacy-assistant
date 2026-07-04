@@ -31,3 +31,14 @@ KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify
 ```
 
 The command does not use AI services and does not require external API keys.
+
+## v0.7 Backfill and Review Decisions
+
+Static backfill still inserts static mappings as `approved` with verified
+confidence. When a DB row already exists, the DB backfill upsert does not
+overwrite an admin review decision. This prevents a later backfill from
+accidentally re-approving a row that an operator rejected or marked as
+`needs_review`.
+
+Run `KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify` after backfill to
+confirm approved rows are visible and static fallback still works.

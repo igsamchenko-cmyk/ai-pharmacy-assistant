@@ -135,3 +135,14 @@ metadata:
 Do not add copyrighted dictionary payloads. Add only project-owned examples,
 short factual identifiers, public classification references, or curated
 metadata that can be safely redistributed.
+
+## v0.7 Admin Review After Import
+
+After committing an import, operators review rows in `/review`. Approval should
+be done only after checking the cited source and provenance. Suspicious rows are
+not auto-approved: low confidence, typos and conflicts are routed to
+`needs_review`; medium-confidence rows stay `pending`; rejected rows remain
+visible for audit but ignored by runtime.
+
+Use notes to explain the decision. The audit log records approve/reject/
+needs-review actions with previous status, next status, reviewer and reason.

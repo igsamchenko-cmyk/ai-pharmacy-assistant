@@ -64,6 +64,26 @@ export const KNOWLEDGE_REVIEW_STATUSES = [
 export type KnowledgeReviewStatusValue =
   (typeof KNOWLEDGE_REVIEW_STATUSES)[number];
 
+export const KNOWLEDGE_REVIEW_ENTITY_TYPES = [
+  "ingredient_name",
+  "ingredient",
+  "atc",
+  "interaction_rule",
+  "source",
+  "other",
+] as const;
+export type KnowledgeReviewEntityTypeValue =
+  (typeof KNOWLEDGE_REVIEW_ENTITY_TYPES)[number];
+
+export const KNOWLEDGE_REVIEW_ACTIONS = [
+  "approved",
+  "rejected",
+  "marked_needs_review",
+  "note_changed",
+] as const;
+export type KnowledgeReviewActionValue =
+  (typeof KNOWLEDGE_REVIEW_ACTIONS)[number];
+
 export const KNOWLEDGE_CONFIDENCE_LEVELS = [
   "low",
   "medium",
@@ -123,8 +143,16 @@ export const knowledgeIngredientNamesTable = pgTable(
     confidence: text("confidence").notNull().default("verified"),
     confidenceScore: integer("confidence_score").notNull().default(100),
     reviewStatus: text("review_status").notNull().default("approved"),
+    conflictFlags: text("conflict_flags").notNull().default(""),
+    validationWarnings: text("validation_warnings").notNull().default(""),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewedBy: text("reviewed_by"),
+    reviewNote: text("review_note"),
     importBatchId: text("import_batch_id"),
     importedAt: timestamp("imported_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
@@ -133,6 +161,31 @@ export const knowledgeIngredientNamesTable = pgTable(
     index("knowledge_names_ingredient_idx").on(t.ingredientInnKey),
     index("knowledge_names_review_status_idx").on(t.reviewStatus),
     index("knowledge_names_import_batch_idx").on(t.importBatchId),
+  ],
+);
+
+/** Append-only audit trail for admin review decisions. */
+export const knowledgeReviewAuditLogTable = pgTable(
+  "knowledge_review_audit_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    entityType: text("entity_type").notNull().default("ingredient_name"),
+    entityId: text("entity_id").notNull(),
+    action: text("action").notNull(),
+    fromStatus: text("from_status"),
+    toStatus: text("to_status"),
+    note: text("note"),
+    reason: text("reason"),
+    reviewedBy: text("reviewed_by"),
+    importBatchId: text("import_batch_id"),
+    sourceKey: text("source_key"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("knowledge_review_audit_entity_idx").on(t.entityType, t.entityId),
+    index("knowledge_review_audit_created_idx").on(t.createdAt),
   ],
 );
 
@@ -205,3 +258,12 @@ export type InsertKnowledgeInteractionRule = z.infer<
 >;
 export type KnowledgeInteractionRule =
   typeof knowledgeInteractionRulesTable.$inferSelect;
+
+export const insertKnowledgeReviewAuditLogSchema = createInsertSchema(
+  knowledgeReviewAuditLogTable,
+).omit({ id: true, createdAt: true });
+export type InsertKnowledgeReviewAuditLog = z.infer<
+  typeof insertKnowledgeReviewAuditLogSchema
+>;
+export type KnowledgeReviewAuditLog =
+  typeof knowledgeReviewAuditLogTable.$inferSelect;

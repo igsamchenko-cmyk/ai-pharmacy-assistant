@@ -15,6 +15,22 @@ describe("safety.isTreatmentRequest", () => {
     expect(isTreatmentRequest("")).toBe(false);
     expect(isTreatmentRequest(undefined)).toBe(false);
   });
+
+  it("keeps v0.7 treatment-risk phrases blocked", () => {
+    expect(isTreatmentRequest("яка доза для дитини?")).toBe(true);
+    expect(isTreatmentRequest("можна дитині ібупрофен?")).toBe(true);
+    expect(isTreatmentRequest("чи можна скасувати препарат?")).toBe(true);
+  });
+
+  it("keeps emergency-like treatment requests blocked", () => {
+    expect(isTreatmentRequest("сильний біль у грудях що приймати терміново")).toBe(true);
+  });
+
+  it("keeps neutral pharmacist reference workflows allowed", () => {
+    expect(isTreatmentRequest("довідка про препарат ібупрофен")).toBe(false);
+    expect(isTreatmentRequest("порівняння ібупрофен та парацетамол")).toBe(false);
+    expect(isTreatmentRequest("підготувати питання до лікаря про інструкцію")).toBe(false);
+  });
 });
 
 describe("aiService.generateSummary (no AI key)", () => {

@@ -422,6 +422,183 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ImportPreview"
+  /knowledge/review/queue:
+    get:
+      operationId: listReviewQueue
+      tags: [knowledge]
+      summary: List knowledge import review queue
+      description: >-
+        Lists DB-backed imported knowledge mappings that can be reviewed by an
+        admin before they participate in runtime. If the DB is unavailable, the
+        endpoint returns an empty queue with warnings and static runtime remains
+        active.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/ReviewQueueStatus"
+        - name: conflictOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: sourceId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: locale
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Review queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewQueueResponse"
+  /knowledge/review/stats:
+    get:
+      operationId: getReviewStats
+      tags: [knowledge]
+      summary: Knowledge review workflow stats
+      description: >-
+        Returns counts for review statuses, conflicts, low-confidence mappings,
+        approved runtime rows and latest audit activity. Safe empty fallback is
+        returned when the DB review workflow is unavailable.
+      responses:
+        "200":
+          description: Review stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewStats"
+  /knowledge/review/{id}/approve:
+    post:
+      operationId: approveReviewItem
+      tags: [knowledge]
+      summary: Approve a review item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewActionBody"
+      responses:
+        "200":
+          description: Approved review item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewActionResponse"
+        "404":
+          description: Review item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: DB review workflow unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /knowledge/review/{id}/reject:
+    post:
+      operationId: rejectReviewItem
+      tags: [knowledge]
+      summary: Reject a review item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewActionBody"
+      responses:
+        "200":
+          description: Rejected review item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewActionResponse"
+        "404":
+          description: Review item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: DB review workflow unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /knowledge/review/{id}/needs-review:
+    post:
+      operationId: markReviewItemNeedsReview
+      tags: [knowledge]
+      summary: Mark a review item as needs_review
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewActionBody"
+      responses:
+        "200":
+          description: Review item marked as needs_review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewActionResponse"
+        "404":
+          description: Review item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: DB review workflow unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /atc/{code}:
     get:
       operationId: getAtcInfo
@@ -1267,6 +1444,242 @@ components:
           type: integer
         wouldSucceed:
           type: boolean
+    ReviewQueueStatus:
+      type: string
+      enum: [pending, approved, rejected, needs_review, all]
+    ReviewEntityType:
+      type: string
+      enum: [ingredient_name, ingredient, atc, interaction_rule, source, other]
+    ReviewStatusCounts:
+      type: object
+      required: [pending, approved, rejected, needs_review]
+      properties:
+        pending:
+          type: integer
+        approved:
+          type: integer
+        rejected:
+          type: integer
+        needs_review:
+          type: integer
+    ReviewQueueItem:
+      type: object
+      required:
+        - id
+        - entityType
+        - displayName
+        - normalizedName
+        - mappedIngredientId
+        - mappedIngredientName
+        - sourceId
+        - sourceName
+        - confidence
+        - confidenceScore
+        - locale
+        - mappingType
+        - reviewStatus
+        - conflictFlags
+        - validationWarnings
+        - createdAt
+        - updatedAt
+        - reviewedAt
+        - reviewedBy
+        - reviewNote
+        - importBatchId
+        - provenance
+      properties:
+        id:
+          type: string
+        entityType:
+          $ref: "#/components/schemas/ReviewEntityType"
+        displayName:
+          type: string
+        normalizedName:
+          type: string
+        mappedIngredientId:
+          oneOf:
+            - type: string
+            - type: "null"
+        mappedIngredientName:
+          oneOf:
+            - type: string
+            - type: "null"
+        sourceId:
+          type: string
+        sourceName:
+          oneOf:
+            - type: string
+            - type: "null"
+        confidence:
+          $ref: "#/components/schemas/RuntimeConfidence"
+        confidenceScore:
+          type: integer
+        locale:
+          type: string
+        mappingType:
+          type: string
+        reviewStatus:
+          $ref: "#/components/schemas/RuntimeReviewStatus"
+        conflictFlags:
+          type: array
+          items:
+            type: string
+        validationWarnings:
+          type: array
+          items:
+            type: string
+        createdAt:
+          oneOf:
+            - type: string
+            - type: "null"
+        updatedAt:
+          oneOf:
+            - type: string
+            - type: "null"
+        reviewedAt:
+          oneOf:
+            - type: string
+            - type: "null"
+        reviewedBy:
+          oneOf:
+            - type: string
+            - type: "null"
+        reviewNote:
+          oneOf:
+            - type: string
+            - type: "null"
+        importBatchId:
+          oneOf:
+            - type: string
+            - type: "null"
+        provenance:
+          $ref: "#/components/schemas/RuntimeProvenance"
+    ReviewQueueResponse:
+      type: object
+      required: [items, total, limit, offset, counts, conflictCount, warnings]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewQueueItem"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        counts:
+          $ref: "#/components/schemas/ReviewStatusCounts"
+        conflictCount:
+          type: integer
+        warnings:
+          type: array
+          items:
+            type: string
+    ReviewStats:
+      type: object
+      required:
+        - counts
+        - conflictCount
+        - lowConfidenceCount
+        - approvedRuntimeCount
+        - latestReviewActivity
+        - warnings
+      properties:
+        counts:
+          $ref: "#/components/schemas/ReviewStatusCounts"
+        conflictCount:
+          type: integer
+        lowConfidenceCount:
+          type: integer
+        approvedRuntimeCount:
+          type: integer
+        latestReviewActivity:
+          oneOf:
+            - type: string
+            - type: "null"
+        warnings:
+          type: array
+          items:
+            type: string
+    ReviewActionBody:
+      type: object
+      properties:
+        note:
+          type: string
+        reviewedBy:
+          type: string
+        reason:
+          type: string
+    ReviewAuditEntry:
+      type: object
+      required:
+        - id
+        - entityType
+        - entityId
+        - action
+        - fromStatus
+        - toStatus
+        - note
+        - reason
+        - reviewedBy
+        - importBatchId
+        - sourceKey
+        - createdAt
+      properties:
+        id:
+          type: string
+        entityType:
+          $ref: "#/components/schemas/ReviewEntityType"
+        entityId:
+          type: string
+        action:
+          type: string
+          enum: [approved, rejected, marked_needs_review, note_changed]
+        fromStatus:
+          oneOf:
+            - $ref: "#/components/schemas/RuntimeReviewStatus"
+            - type: "null"
+        toStatus:
+          oneOf:
+            - $ref: "#/components/schemas/RuntimeReviewStatus"
+            - type: "null"
+        note:
+          oneOf:
+            - type: string
+            - type: "null"
+        reason:
+          oneOf:
+            - type: string
+            - type: "null"
+        reviewedBy:
+          oneOf:
+            - type: string
+            - type: "null"
+        importBatchId:
+          oneOf:
+            - type: string
+            - type: "null"
+        sourceKey:
+          oneOf:
+            - type: string
+            - type: "null"
+        createdAt:
+          oneOf:
+            - type: string
+            - type: "null"
+    ReviewActionResponse:
+      type: object
+      required: [item, audit, warnings]
+      properties:
+        item:
+          $ref: "#/components/schemas/ReviewQueueItem"
+        audit:
+          $ref: "#/components/schemas/ReviewAuditEntry"
+        warnings:
+          type: array
+          items:
+            type: string
     KnowledgeSearchResult:
       type: object
       required:

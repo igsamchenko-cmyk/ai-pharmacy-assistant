@@ -113,3 +113,21 @@ conflicts are counted and skipped instead of overwritten.
 If `DATABASE_URL` is missing, the command performs a dry-run and exits
 successfully. Use `--require-db` when a release or deployment step must fail
 without a live database.
+
+## v0.7 Review-Aware Commit Flow
+
+`import:preview` continues to show how many rows will become `approved`,
+`pending`, `needs_review` or `rejected`. `import:knowledge -- --commit` now writes
+non-copyright rows with their derived review status instead of loading only
+approved rows. This makes suspicious rows visible to admins without making them
+runtime-visible.
+
+Rules:
+
+- clean high/verified rows may be approved automatically by policy;
+- medium-confidence rows are pending;
+- low-confidence, typo-like or conflicting rows go to `needs_review`;
+- unknown-source rows are rejected unless policy changes;
+- copyrighted rows are blocked and are never committed or approved.
+
+Review and runtime verification are documented in `docs/REVIEW_WORKFLOW.md`.

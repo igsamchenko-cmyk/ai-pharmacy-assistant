@@ -19,6 +19,7 @@ import Scan from "@/pages/scan";
 import History from "@/pages/history";
 import About from "@/pages/about";
 import DataQuality from "@/pages/data-quality";
+import ReviewQueue from "@/pages/review";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ function Router() {
           <Route path="/scan" component={Scan} />
           <Route path="/history" component={History} />
           <Route path="/data-quality" component={DataQuality} />
+          <Route path="/review" component={ReviewQueue} />
           <Route path="/about" component={About} />
           <Route component={NotFound} />
         </Switch>

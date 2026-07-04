@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Response } from "express";
 import {
   KnowledgeSearchQueryParams,
   KnowledgeSearchResponse,
@@ -12,6 +12,18 @@ import {
   CompareDrugsBody,
   CompareDrugsResponse,
   GetKnowledgeRuntimeStatusResponse,
+  ListReviewQueueQueryParams,
+  ListReviewQueueResponse,
+  GetReviewStatsResponse,
+  ApproveReviewItemParams,
+  ApproveReviewItemBody,
+  ApproveReviewItemResponse,
+  RejectReviewItemParams,
+  RejectReviewItemBody,
+  RejectReviewItemResponse,
+  MarkReviewItemNeedsReviewParams,
+  MarkReviewItemNeedsReviewBody,
+  MarkReviewItemNeedsReviewResponse,
 } from "@workspace/api-zod";
 import {
   knowledgeSearch,
@@ -26,9 +38,30 @@ import {
   readDictionarySampleCsv,
   resolveRuntimeName,
   getKnowledgeRuntimeStatus,
+  listReviewQueue,
+  getReviewStats,
+  applyReviewAction,
+  ReviewItemNotFoundError,
+  ReviewWorkflowUnavailableError,
+  REVIEW_WORKFLOW_UNAVAILABLE_WARNING,
 } from "../knowledge";
 
 const router: IRouter = Router();
+function parseBody<T>(schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false; error: { message: string } } }, body: unknown) {
+  return schema.safeParse(body ?? {});
+}
+
+function handleReviewError(error: unknown, res: Response): void {
+  if (error instanceof ReviewItemNotFoundError) {
+    res.status(404).json({ error: "Review item not found" });
+    return;
+  }
+  if (error instanceof ReviewWorkflowUnavailableError) {
+    res.status(503).json({ error: REVIEW_WORKFLOW_UNAVAILABLE_WARNING });
+    return;
+  }
+  throw error;
+}
 
 router.get("/knowledge/search", async (req, res): Promise<void> => {
   const parsed = KnowledgeSearchQueryParams.safeParse(req.query);
@@ -84,6 +117,91 @@ router.get("/knowledge/import/preview", (_req, res): void => {
   res.json(GetImportPreviewResponse.parse(preview));
 });
 
+
+router.get("/knowledge/review/queue", async (req, res): Promise<void> => {
+  const parsed = ListReviewQueueQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  res.json(ListReviewQueueResponse.parse(await listReviewQueue(parsed.data)));
+});
+
+router.get("/knowledge/review/stats", async (_req, res): Promise<void> => {
+  res.json(GetReviewStatsResponse.parse(await getReviewStats()));
+});
+
+router.post("/knowledge/review/:id/approve", async (req, res): Promise<void> => {
+  const params = ApproveReviewItemParams.safeParse(req.params);
+  const body = parseBody(ApproveReviewItemBody, req.body);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+  try {
+    const result = await applyReviewAction(
+      params.data.id,
+      "approved",
+      "approved",
+      body.data,
+    );
+    res.json(ApproveReviewItemResponse.parse(result));
+  } catch (error) {
+    handleReviewError(error, res);
+  }
+});
+
+router.post("/knowledge/review/:id/reject", async (req, res): Promise<void> => {
+  const params = RejectReviewItemParams.safeParse(req.params);
+  const body = parseBody(RejectReviewItemBody, req.body);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+  try {
+    const result = await applyReviewAction(
+      params.data.id,
+      "rejected",
+      "rejected",
+      body.data,
+    );
+    res.json(RejectReviewItemResponse.parse(result));
+  } catch (error) {
+    handleReviewError(error, res);
+  }
+});
+
+router.post("/knowledge/review/:id/needs-review", async (req, res): Promise<void> => {
+  const params = MarkReviewItemNeedsReviewParams.safeParse(req.params);
+  const body = parseBody(MarkReviewItemNeedsReviewBody, req.body);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+  try {
+    const result = await applyReviewAction(
+      params.data.id,
+      "needs_review",
+      "marked_needs_review",
+      body.data,
+    );
+    res.json(MarkReviewItemNeedsReviewResponse.parse(result));
+  } catch (error) {
+    handleReviewError(error, res);
+  }
+});
 router.get("/atc/:code", (req, res): void => {
   const info = getAtcInfo(req.params.code);
   if (!info) {

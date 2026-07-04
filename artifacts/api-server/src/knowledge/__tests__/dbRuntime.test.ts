@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from "vitest";
 import {
   getKnowledgeRuntimeStatus,
   resolveRuntimeName,
+  resolveRuntimeNameFromRows,
   type DbMappingRow,
   type RuntimeDbStore,
 } from "../dbRuntime";
@@ -319,6 +320,24 @@ describe("DB-backed knowledge runtime", () => {
     });
   });
 
+
+  it("makes a pending row visible after it is approved", () => {
+    const rows = [
+      mapping({ normalized: "transitionbrand", name: "TransitionBrand", reviewStatus: "pending" }),
+    ];
+    expect(resolveRuntimeNameFromRows("TransitionBrand", rows).source).toBe("fallback");
+    rows[0].reviewStatus = "approved";
+    expect(resolveRuntimeNameFromRows("TransitionBrand", rows).source).toBe("db");
+  });
+
+  it("hides an approved row after it is rejected", () => {
+    const rows = [
+      mapping({ normalized: "hidebrand", name: "HideBrand", reviewStatus: "approved" }),
+    ];
+    expect(resolveRuntimeNameFromRows("HideBrand", rows).source).toBe("db");
+    rows[0].reviewStatus = "rejected";
+    expect(resolveRuntimeNameFromRows("HideBrand", rows).source).toBe("fallback");
+  });
   it("returns importedAt as an ISO provenance string", async () => {
     await withRuntimeFlag("true", async () => {
       const result = await resolveRuntimeName("RuntimeBrand", store([mapping()]));

@@ -116,3 +116,15 @@ The report includes:
 The `/data-quality` page also shows the DB/static mode, DB provider status,
 approved mapping count, latest import batch, source coverage, and operator
 commands for schema push, backfill, runtime verification, and JSON report.
+
+## v0.7 Review Queue
+
+Data-quality visibility now includes the admin review workflow. Imported rows are
+classified as `pending`, `approved`, `rejected` or `needs_review`; only approved
+rows can affect DB runtime. Conflict flags and validation warnings are shown in
+`/review`, while `/data-quality` continues to show import-preview distributions,
+runtime mode and quality-report commands.
+
+`pnpm knowledge:quality:report` now emits a v0.7 JSON report with runtime and
+review-workflow diagnostics. DB-unavailable review diagnostics are warnings, not
+fatal errors, because static runtime remains active.

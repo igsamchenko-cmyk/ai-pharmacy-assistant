@@ -1,13 +1,14 @@
 /**
- * CLI: import an approved dictionary file into the knowledge DB.
+ * CLI: import a dictionary file into the knowledge DB review workflow.
  *
  *   pnpm --filter @workspace/api-server run import:knowledge [file] [--commit] [--force]
  *
  * Safe by default: parses, guards against copyrighted sources, analyzes and
  * derives a review status for every row, then prints the import plan WITHOUT
- * writing anything. Only rows that reach `approved` are eligible to load. Pass
- * `--commit` (requires DATABASE_URL) to upsert approved ingredients + name
- * mappings. Refuses to proceed on blocking problems unless `--force` is given.
+ * writing anything. Non-copyright rows are loaded with their review status; only
+ * `approved` rows can affect DB runtime. Pass `--commit` (requires DATABASE_URL)
+ * to upsert reviewable ingredients + name mappings. Refuses to proceed on
+ * blocking problems unless `--force` is given.
  */
 import { readFileSync } from "node:fs";
 import { normalize } from "../lib/text";
@@ -23,6 +24,17 @@ import {
   type ImportRow,
   type ParseResult,
 } from "../knowledge";
+
+interface ReviewableImportRow {
+  row: ImportRow;
+  reviewStatus: ReturnType<typeof deriveReviewStatus>;
+  conflictFlags: string[];
+  validationWarnings: string[];
+}
+
+function encodeList(values: readonly string[]): string {
+  return values.length > 0 ? JSON.stringify([...values]) : "";
+}
 
 function confidenceScore(confidence: ImportRow["confidence"]): number {
   switch (confidence) {
@@ -44,7 +56,7 @@ function loadFile(path: string): ParseResult {
     : parseImportCsv(text);
 }
 
-async function commit(approved: ImportRow[]): Promise<void> {
+async function commit(reviewable: ReviewableImportRow[]): Promise<void> {
   if (!process.env.DATABASE_URL) {
     console.log("❌ --commit потребує DATABASE_URL.");
     process.exit(1);
@@ -58,7 +70,8 @@ async function commit(approved: ImportRow[]): Promise<void> {
 
   await db.transaction(async (tx) => {
     const seenInn = new Set<string>();
-    for (const row of approved) {
+    for (const item of reviewable) {
+      const row = item.row;
       const innKey = normalize(row.canonicalInn);
       if (!seenInn.has(innKey)) {
         seenInn.add(innKey);
@@ -85,7 +98,9 @@ async function commit(approved: ImportRow[]): Promise<void> {
           locale: row.locale,
           confidence: row.confidence,
           confidenceScore: confidenceScore(row.confidence),
-          reviewStatus: "approved",
+          reviewStatus: item.reviewStatus,
+          conflictFlags: encodeList(item.conflictFlags),
+          validationWarnings: encodeList(item.validationWarnings),
           importBatchId,
         })
         .onConflictDoNothing({
@@ -93,7 +108,7 @@ async function commit(approved: ImportRow[]): Promise<void> {
         });
     }
   });
-  console.log(`✅ Завантажено ${approved.length} схвалених назв у базу.`);
+  console.log(`✅ Завантажено ${reviewable.length} рядків у чергу рев'ю/рантайм.`);
 }
 
 async function main(): Promise<void> {
@@ -114,27 +129,32 @@ async function main(): Promise<void> {
     findCopyrightedSources(rows).map((v) => v.row - 1),
   );
 
-  // Recompute per-row review status to select approved rows for loading.
+  // Recompute per-row review status to load safe rows into the admin workflow.
   const nameToInn = new Map(view.existingNameToInn);
-  const approved: ImportRow[] = [];
+  const reviewable: ReviewableImportRow[] = [];
   rows.forEach((row, idx) => {
     const nameKey = normalize(row.name);
     const innKey = normalize(row.canonicalInn);
     const prior = nameToInn.get(nameKey);
     const hasConflict = prior !== undefined && prior !== innKey;
+    const unknownSource = !view.isKnownSource(row.sourceId);
     if (prior === undefined) nameToInn.set(nameKey, innKey);
     if (copyrightRows.has(idx)) return; // never load copyrighted rows
-    const status = deriveReviewStatus(row, {
-      unknownSource: !view.isKnownSource(row.sourceId),
-      hasConflict,
-    });
-    if (status === "approved") approved.push(row);
+    const reviewStatus = deriveReviewStatus(row, { unknownSource, hasConflict });
+    const conflictFlags: string[] = [];
+    const validationWarnings: string[] = [];
+    if (hasConflict) conflictFlags.push("name_multiple_ingredients");
+    if (row.confidence === "low") validationWarnings.push("low_confidence_review");
+    if (row.nameType === "typo") validationWarnings.push("typo_requires_review");
+    if (unknownSource) validationWarnings.push("unknown_source_rejected");
+    if (reviewStatus === "pending") validationWarnings.push("human_review_pending");
+    reviewable.push({ row, reviewStatus, conflictFlags, validationWarnings });
   });
 
   console.log("=== Імпорт бази знань ===");
   console.log(`Файл:               ${file ?? "(вбудований зразок)"}`);
   console.log(`Рядків:             ${preview.rowsParsed}`);
-  console.log(`Схвалено (approved):${approved.length}`);
+  console.log(`Схвалено (approved):${preview.reviewDistribution.approved}`);
   console.log(`На перевірку:       ${preview.reviewDistribution.needs_review}`);
   console.log(`Очікують:           ${preview.reviewDistribution.pending}`);
   console.log(`Відхилено:          ${preview.reviewDistribution.rejected}`);
@@ -164,7 +184,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  await commit(approved);
+  await commit(reviewable);
 }
 
 main().catch((err) => {
