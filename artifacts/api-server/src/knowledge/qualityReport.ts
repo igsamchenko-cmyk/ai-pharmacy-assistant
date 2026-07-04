@@ -6,7 +6,7 @@ import { getKnowledgeRuntimeStatus } from "./dbRuntime";
 import { getReviewStats } from "./reviewWorkflow";
 
 export interface KnowledgeQualityJsonReport {
-  version: "0.7";
+  version: "0.8";
   timestamp: string;
   counts: ReturnType<typeof backfillCounts>;
   coverage: {
@@ -54,7 +54,7 @@ export async function buildKnowledgeQualityJsonReport(): Promise<KnowledgeQualit
   ).length;
 
   return {
-    version: "0.7",
+    version: "0.8",
     timestamp: new Date().toISOString(),
     counts,
     coverage: {
@@ -74,7 +74,9 @@ export async function buildKnowledgeQualityJsonReport(): Promise<KnowledgeQualit
   };
 }
 
-export async function writeKnowledgeQualityJsonReport(path: string): Promise<void> {
+export async function writeKnowledgeQualityJsonReport(
+  path: string,
+): Promise<void> {
   const report = await buildKnowledgeQualityJsonReport();
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, JSON.stringify(report, null, 2), "utf8");

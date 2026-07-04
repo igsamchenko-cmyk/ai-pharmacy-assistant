@@ -1,0 +1,57 @@
+# Local PostgreSQL Setup
+
+v0.8 adds an optional local PostgreSQL deployment profile for exercising the real
+DB-backed knowledge runtime. Static runtime remains the default, and the app must
+still run without PostgreSQL.
+
+## Environment
+
+Copy `.env.example` to `.env` for local use only. The checked-in values are safe
+Docker-development defaults and are not production credentials.
+
+Required local variables:
+
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_DB`
+- `POSTGRES_PORT`
+- `DATABASE_URL`
+- `KNOWLEDGE_DB_RUNTIME`
+- `RUN_DB_TESTS`
+
+Do not commit `.env` or any real deployment URL.
+
+## Docker Flow
+
+```bash
+pnpm db:dev:up
+pnpm db:push
+DATABASE_URL=postgresql://farmassist:farmassist_dev_password@localhost:5432/farmassist pnpm knowledge:backfill
+DATABASE_URL=postgresql://farmassist:farmassist_dev_password@localhost:5432/farmassist KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:smoke
+pnpm db:dev:down
+```
+
+On PowerShell, set environment variables before running the command:
+
+```powershell
+$env:DATABASE_URL="postgresql://farmassist:farmassist_dev_password@localhost:5432/farmassist"
+$env:KNOWLEDGE_DB_RUNTIME="true"
+pnpm knowledge:runtime:smoke
+```
+
+If Docker Compose is unavailable, `pnpm db:dev:up` and `pnpm db:dev:down` fail
+with a clear message. You can still run against any manually provisioned
+PostgreSQL database by setting `DATABASE_URL`.
+
+## Runtime Invariants
+
+- DB runtime is opt-in with `KNOWLEDGE_DB_RUNTIME=true`.
+- Runtime lookup uses only `approved` DB rows.
+- `pending`, `rejected`, and `needs_review` rows can be stored for audit/review
+  but are not runtime-visible.
+- Copyrighted or proprietary rows remain blocked/dropped by import guards and
+  must never become approved runtime data.
+- Static fallback remains enabled when DB runtime is disabled, unavailable, or
+  missing schema/data.
+- `/api/knowledge/runtime/status` reports DB availability and schema status but
+  never exposes the actual `DATABASE_URL`.

@@ -42,3 +42,20 @@ accidentally re-approving a row that an operator rejected or marked as
 
 Run `KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify` after backfill to
 confirm approved rows are visible and static fallback still works.
+
+## v0.8 Local PostgreSQL Backfill
+
+For local real-DB validation:
+
+```bash
+pnpm db:dev:up
+pnpm db:push
+pnpm knowledge:backfill
+KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:smoke
+```
+
+`pnpm knowledge:backfill` still dry-runs when `DATABASE_URL` is missing. With a
+DB URL, static backfill writes allowed static knowledge rows as approved, verified
+runtime data. This does not change import review behavior: imported allowed
+non-copyright rows may be stored as `approved`, `pending`, `needs_review`, or
+`rejected`; runtime lookup only reads `approved` rows.

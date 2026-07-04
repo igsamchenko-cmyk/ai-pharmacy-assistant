@@ -34,3 +34,25 @@ rows are filtered out before provider creation.
 `GET /knowledge/review/stats` reports approved runtime count, conflict count,
 low-confidence count and latest audit activity. Without a DB, review endpoints
 return safe empty data with the warning that static runtime remains active.
+
+## v0.8 PostgreSQL Deployment Profile
+
+The v0.8 local deployment profile adds `docker-compose.yml`, `.env.example`, and
+helper scripts:
+
+- `pnpm db:dev:up` starts local PostgreSQL with a healthcheck and persistent
+  Docker volume.
+- `pnpm db:dev:down` stops the local profile.
+- `pnpm db:push` applies the Drizzle schema.
+- `pnpm knowledge:backfill` writes static approved knowledge rows when
+  `DATABASE_URL` is configured, or performs a dry-run without DB.
+- `pnpm knowledge:runtime:smoke` requires `DATABASE_URL` and verifies real DB
+  runtime availability, approved-row lookup/search, approved-only filtering,
+  static fallback, and runtime status shape.
+- `pnpm dev:db-runtime` starts the API server with DB runtime requested and does
+  not print the database URL.
+
+`/api/knowledge/runtime/status` now reports `staticRuntimeEnabled`,
+`dbRuntimeRequested`, `databaseUrlConfigured`, `dbSchemaStatus`, `schemaReady`,
+`fallbackReason`, approved/review counts, latest batch, source distribution and
+warnings. It reports whether a URL is configured but never returns the URL.

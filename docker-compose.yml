@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai-pharmacy-assistant-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-farmassist}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-farmassist_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-farmassist}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER:-farmassist} -d $${POSTGRES_DB:-farmassist}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+volumes:
+  postgres-data:

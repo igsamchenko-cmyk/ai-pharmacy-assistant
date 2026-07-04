@@ -56,6 +56,7 @@
 
 Remaining work: migrations/backfill for existing deployed databases and admin UI
 for editing review statuses after import.
+
 ## v0.6 Release Checkpoint
 
 - Real static knowledge backfill into normalized DB tables.
@@ -78,3 +79,17 @@ for editing review statuses after import.
 
 Next: richer source coverage dashboards, persistent pagination/search for very
 large queues and role-based authentication for admin actions.
+
+## v0.8 Completed Direction
+
+- Optional Docker Compose PostgreSQL profile with safe local defaults, healthcheck
+  and persistent volume.
+- Root scripts for local DB up/down, schema push, DB runtime smoke and DB-runtime
+  API dev start.
+- Runtime status hardened with DB requested/configured/schema/fallback fields.
+- Real DB smoke check for approved-row normalize/search, approved-only invariant,
+  static fallback and status shape.
+- Data-quality deployment diagnostics without exposing database URLs.
+
+Next: hosted deployment playbooks, role-based admin authentication, and broader
+production observability around import/review activity.

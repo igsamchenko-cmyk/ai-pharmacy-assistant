@@ -66,17 +66,17 @@ Express API (artifacts/api-server)
 Єдина точка входу — `knowledge/index.ts` (фасад + `getKnowledgeEngineStats`).
 Складається з незалежних модулів:
 
-| Модуль        | Відповідальність                                                            |
-| ------------- | -------------------------------------------------------------------------- |
-| `dictionary`  | нормалізація назв → канонічна діюча речовина (UA/латина/англ.), 130 МНН     |
-| `atc`         | ATC-код → анатомічна / терапевтична класифікація (найдовший префікс)        |
-| `search`      | багатоетапний пошук: cache → dictionary → catalog → RxNorm → openFDA → AI   |
-| `compare`     | порівняння препаратів поруч + попарна перевірка взаємодій                   |
-| `barcode`     | абстракція резолвера GTIN (підключається; за замовч. «unconfigured»)        |
-| `import`      | пайплайн v0.3 + імпорт словника v0.4 (формат, парсери, guard, review, аналіз)|
-| `provenance`  | реєстр джерел (`SOURCES`) і провенанс для кожного мапування назв            |
-| `validation`  | перевірка цілісності БЗ → `QualityReport` (чиста, без БД)                   |
-| `runtime`     | прапорець джерела знань (`KNOWLEDGE_DB_RUNTIME`, за замовч. статичний)      |
+| Модуль       | Відповідальність                                                              |
+| ------------ | ----------------------------------------------------------------------------- |
+| `dictionary` | нормалізація назв → канонічна діюча речовина (UA/латина/англ.), 130 МНН       |
+| `atc`        | ATC-код → анатомічна / терапевтична класифікація (найдовший префікс)          |
+| `search`     | багатоетапний пошук: cache → dictionary → catalog → RxNorm → openFDA → AI     |
+| `compare`    | порівняння препаратів поруч + попарна перевірка взаємодій                     |
+| `barcode`    | абстракція резолвера GTIN (підключається; за замовч. «unconfigured»)          |
+| `import`     | пайплайн v0.3 + імпорт словника v0.4 (формат, парсери, guard, review, аналіз) |
+| `provenance` | реєстр джерел (`SOURCES`) і провенанс для кожного мапування назв              |
+| `validation` | перевірка цілісності БЗ → `QualityReport` (чиста, без БД)                     |
+| `runtime`    | прапорець джерела знань (`KNOWLEDGE_DB_RUNTIME`, за замовч. статичний)        |
 
 Кожен етап деградує безпечно: відсутній ключ OpenAI чи збій зовнішнього
 провайдера ніколи не кидає виняток — результат просто повідомляє, що вдалося
@@ -158,6 +158,7 @@ The runtime reads normalized `knowledge_ingredient_names` joined to
 `review_status='approved'` participate in user-facing search/normalize.
 Pending, rejected and needs_review rows are counted in diagnostics but ignored
 by runtime lookup.
+
 ## v0.6 Knowledge DB Runtime Hardening
 
 The knowledge system now has a dedicated backfill layer between static source
@@ -194,3 +195,18 @@ page uses generated React Query hooks from the OpenAPI contract.
 
 Runtime invariant: DB dictionary lookup still reads only approved mappings;
 static fallback remains enabled and is not made mandatory on the DB.
+
+## v0.8 PostgreSQL Runtime Deployment
+
+v0.8 adds an optional local PostgreSQL deployment profile around the existing
+Drizzle schema. The runtime architecture stays layered:
+
+1. Static dictionary is always available and remains the default runtime.
+2. DB dictionary provider is selected only when `KNOWLEDGE_DB_RUNTIME=true`.
+3. The DB provider filters to `approved` mappings before normalize/search.
+4. Static fallback is used when DB runtime is disabled, unavailable, missing
+   schema, or misses a query.
+
+The `/api/knowledge/runtime/status` contract is the operational boundary for
+runtime deployment diagnostics. OpenAPI remains the source of truth for generated
+client and Zod schemas.

@@ -73,7 +73,9 @@ function StatCard({ label, value }: { label: string; value: number }) {
 function TextStatCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-muted/50 rounded-xl p-4 text-center">
-      <div className="text-base font-bold text-foreground truncate">{value}</div>
+      <div className="text-base font-bold text-foreground truncate">
+        {value}
+      </div>
       <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
   );
@@ -90,8 +92,18 @@ function RuntimeStatusCard({ runtime }: { runtime: KnowledgeRuntimeStatus }) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <TextStatCard label="Mode" value={runtime.runtimeMode} />
           <TextStatCard
-            label="DB provider"
-            value={runtime.providerStatus.db}
+            label="DB requested"
+            value={runtime.dbRuntimeRequested ? "yes" : "no"}
+          />
+          <TextStatCard label="DB provider" value={runtime.providerStatus.db} />
+          <TextStatCard label="DB schema" value={runtime.dbSchemaStatus} />
+          <TextStatCard
+            label="DB URL"
+            value={runtime.databaseUrlConfigured ? "configured" : "missing"}
+          />
+          <TextStatCard
+            label="Static runtime"
+            value={runtime.staticRuntimeEnabled ? "enabled" : "off"}
           />
           <TextStatCard
             label="Static fallback"
@@ -110,17 +122,25 @@ function RuntimeStatusCard({ runtime }: { runtime: KnowledgeRuntimeStatus }) {
           <StatCard label="Needs review" value={runtime.needsReviewCount} />
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
-          {(["db", "static", "rxnorm", "openfda", "gemini", "fallback"] as const).map(
-            (key) => (
-              <div key={key} className="bg-muted/50 rounded-lg px-3 py-2 text-center">
-                <div className="text-lg font-bold text-foreground">
-                  {runtime.sourceDistribution[key]}
-                </div>
-                <div className="text-[11px] text-muted-foreground">{key}</div>
+          {(
+            ["db", "static", "rxnorm", "openfda", "gemini", "fallback"] as const
+          ).map((key) => (
+            <div
+              key={key}
+              className="bg-muted/50 rounded-lg px-3 py-2 text-center"
+            >
+              <div className="text-lg font-bold text-foreground">
+                {runtime.sourceDistribution[key]}
               </div>
-            ),
-          )}
+              <div className="text-[11px] text-muted-foreground">{key}</div>
+            </div>
+          ))}
         </div>
+        {runtime.fallbackReason && (
+          <div className="rounded-lg bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+            {runtime.fallbackReason}
+          </div>
+        )}
         {runtime.warnings.length > 0 && (
           <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
             {runtime.warnings.join(" ")}
@@ -131,9 +151,14 @@ function RuntimeStatusCard({ runtime }: { runtime: KnowledgeRuntimeStatus }) {
   );
 }
 
-function BackfillWorkflowCard({ runtime }: { runtime: KnowledgeRuntimeStatus | undefined }) {
+function BackfillWorkflowCard({
+  runtime,
+}: {
+  runtime: KnowledgeRuntimeStatus | undefined;
+}) {
   const mode = runtime?.runtimeMode ?? "static";
   const dbProvider = runtime?.providerStatus.db ?? "unknown";
+  const dbSchema = runtime?.dbSchemaStatus ?? "unknown";
   const approved = runtime?.approvedMappingsCount ?? 0;
   const lastBatch = runtime?.lastImportBatch ?? "none";
   const provenanceCoverage =
@@ -154,26 +179,30 @@ function BackfillWorkflowCard({ runtime }: { runtime: KnowledgeRuntimeStatus | u
           <GitCompareArrows className="w-5 h-5 text-primary" />
           Backfill and runtime workflow
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
           <TextStatCard label="Runtime mode" value={mode} />
           <TextStatCard label="DB status" value={dbProvider} />
+          <TextStatCard label="DB schema" value={dbSchema} />
           <StatCard label="Approved DB rows" value={approved} />
           <TextStatCard label="Last batch" value={lastBatch} />
-          <TextStatCard label="Source coverage" value={`${provenanceCoverage}%`} />
+          <TextStatCard
+            label="Source coverage"
+            value={`${provenanceCoverage}%`}
+          />
         </div>
         <div className="grid gap-2 text-sm text-muted-foreground">
           <div className="flex items-start gap-2">
             <ListChecks className="w-4 h-4 mt-0.5 text-primary shrink-0" />
             <span>
-              Run: pnpm db:push, pnpm knowledge:backfill,
-              KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify.
+              Run: pnpm db:dev:up, pnpm db:push, pnpm knowledge:backfill, pnpm
+              knowledge:runtime:smoke.
             </span>
           </div>
           <div className="flex items-start gap-2">
             <ListChecks className="w-4 h-4 mt-0.5 text-primary shrink-0" />
             <span>
-              Use pnpm knowledge:quality:report for JSON counts, provenance
-              coverage, runtime status, and warnings.
+              Runtime uses approved DB rows only. Pending, rejected, and
+              needs_review rows stay stored for audit and review.
             </span>
           </div>
         </div>
@@ -269,9 +298,7 @@ export default function DataQuality() {
             <Database className="w-6 h-6" />
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground">
-              Якість даних
-            </h1>
+            <h1 className="text-2xl font-bold text-foreground">Якість даних</h1>
             <p className="text-sm text-muted-foreground">
               Внутрішня панель: цілісність бази знань і провенанс джерел
             </p>
@@ -331,13 +358,18 @@ export default function DataQuality() {
 
           <Card className="bg-card/50">
             <CardContent className="p-5">
-              <h3 className="font-bold text-foreground mb-4">Обсяг бази знань</h3>
+              <h3 className="font-bold text-foreground mb-4">
+                Обсяг бази знань
+              </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <StatCard
                   label="Діючі речовини"
                   value={report.counts.ingredients}
                 />
-                <StatCard label="Назви (mappings)" value={report.counts.mappings} />
+                <StatCard
+                  label="Назви (mappings)"
+                  value={report.counts.mappings}
+                />
                 <StatCard
                   label="Правила взаємодій"
                   value={report.counts.interactionRules}
@@ -354,7 +386,9 @@ export default function DataQuality() {
 
           <Card className="bg-card/50">
             <CardContent className="p-5 space-y-4">
-              <h3 className="font-bold text-foreground">Покриття провенансом</h3>
+              <h3 className="font-bold text-foreground">
+                Покриття провенансом
+              </h3>
               <CoverageBar
                 label="Назви з джерелом"
                 pct={report.coverage.mappingProvenancePct}
@@ -386,16 +420,25 @@ export default function DataQuality() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <StatCard label="Рядків" value={preview.rowsParsed} />
-                  <StatCard label="Нові речовини" value={preview.newIngredients} />
+                  <StatCard
+                    label="Нові речовини"
+                    value={preview.newIngredients}
+                  />
                   <StatCard label="Нові назви" value={preview.newMappings} />
                   <StatCard label="Дублікати" value={preview.duplicates} />
-                  <StatCard label="Відсутні джерела" value={preview.missingSources} />
+                  <StatCard
+                    label="Відсутні джерела"
+                    value={preview.missingSources}
+                  />
                   <StatCard label="Некоректні ATC" value={preview.invalidAtc} />
                   <StatCard
                     label="Пропрієтарні"
                     value={preview.copyrightViolations}
                   />
-                  <StatCard label="Помилки розбору" value={preview.parseErrors} />
+                  <StatCard
+                    label="Помилки розбору"
+                    value={preview.parseErrors}
+                  />
                 </div>
 
                 <div>
@@ -431,16 +474,21 @@ export default function DataQuality() {
                     Розподіл рівнів довіри
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-                    {(["low", "medium", "high", "verified"] as const).map((k) => (
-                      <div key={k} className="bg-muted/50 rounded-lg px-3 py-2">
-                        <div className="text-lg font-bold text-foreground">
-                          {preview.confidenceDistribution[k]}
+                    {(["low", "medium", "high", "verified"] as const).map(
+                      (k) => (
+                        <div
+                          key={k}
+                          className="bg-muted/50 rounded-lg px-3 py-2"
+                        >
+                          <div className="text-lg font-bold text-foreground">
+                            {preview.confidenceDistribution[k]}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {k}
+                          </div>
                         </div>
-                        <div className="text-[11px] text-muted-foreground">
-                          {k}
-                        </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
 
@@ -524,7 +572,9 @@ export default function DataQuality() {
             Реєстр джерел ({sources.length})
           </h3>
           {sourcesQuery.isLoading && (
-            <p className="text-sm text-muted-foreground">Завантаження джерел…</p>
+            <p className="text-sm text-muted-foreground">
+              Завантаження джерел…
+            </p>
           )}
           <div className="space-y-3">
             {sources.map((source) => {

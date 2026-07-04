@@ -134,6 +134,7 @@ DATABASE_URL=... pnpm --filter @workspace/api-server run import:knowledge -- --c
 `/api/knowledge/normalize?q=...` and `/api/knowledge/search?q=...` include
 `source`, `confidence` and `provenance` fields so admins can confirm whether a
 result came from DB, static data or fallback behavior.
+
 ## v0.6 Real Data Backfill and DB Runtime Hardening
 
 The knowledge DB runtime remains optional. Static runtime data is still the
@@ -166,3 +167,22 @@ runtime. If `DATABASE_URL` or DB runtime is unavailable, the page reports that t
 review workflow is unavailable and static runtime remains active.
 
 See [`docs/REVIEW_WORKFLOW.md`](docs/REVIEW_WORKFLOW.md) for the operator flow.
+
+## v0.8 PostgreSQL Runtime Deployment Profile
+
+Local PostgreSQL runtime testing is now available without making Postgres
+mandatory:
+
+```bash
+pnpm db:dev:up
+pnpm db:push
+pnpm knowledge:backfill
+KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify
+KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:smoke
+pnpm db:dev:down
+```
+
+Use `.env.example` for safe local Docker defaults. The runtime remains static by
+default; DB lookup is opt-in and only approved rows are visible to normalize and
+search. Review-only rows stay stored for audit, and copyrighted/proprietary rows
+remain blocked. See `docs/POSTGRES_SETUP.md` and `docs/DB_RUNTIME.md`.

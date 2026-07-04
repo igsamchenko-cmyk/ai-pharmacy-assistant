@@ -5,7 +5,29 @@
 
 ## [Не випущено]
 
-Поки немає змін після v0.7.0.
+### Added
+
+- **PostgreSQL Runtime Deployment Profile**: optional local Docker Compose
+  PostgreSQL service with safe dev defaults, healthcheck, persistent volume and
+  `.env.example` runtime variables.
+- **Operational scripts**: `pnpm db:dev:up`, `pnpm db:dev:down`,
+  `pnpm db:push`, `pnpm knowledge:runtime:smoke`, and `pnpm dev:db-runtime`.
+- **Runtime smoke**: real DB check for schema availability, approved DB-backed
+  Ukrainian normalize/search, approved-only filtering, static fallback and
+  `/knowledge/runtime/status` shape.
+- **Runtime diagnostics**: status now reports DB requested/configured/schema
+  state, static runtime state, fallback reason, review counts, latest batch,
+  source distribution and warnings without exposing `DATABASE_URL`.
+- **Docs/UI**: Postgres setup guide and data-quality deployment diagnostics.
+
+### Unchanged
+
+- Static runtime remains the default and fallback.
+- PostgreSQL remains optional.
+- Runtime lookup uses only `approved` rows.
+- `pending`, `rejected`, and `needs_review` rows remain review/audit-only.
+- Copyrighted/proprietary data remains blocked, and medical safety behavior is
+  unchanged.
 
 ## v0.7.0 - Admin Review Workflow for Imports - 2026-07-04
 
@@ -141,6 +163,7 @@
 - Import commit now writes runtime metadata: locale, confidence, review status,
   import batch and timestamps.
 - Data-quality UI now shows runtime provider diagnostics.
+
 ## [v0.5.0] - 2026-07-03
 
 Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
@@ -166,6 +189,7 @@ Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
   database runtime enabled.
 - DB runtime is opt-in; unavailable DB falls back to static lookup without
   crashing.
+
 ## v0.6.0 - Real Data Backfill and DB Runtime Hardening
 
 - Added `pnpm knowledge:backfill` for idempotent static knowledge backfill into

@@ -330,6 +330,16 @@ export const KnowledgeRuntimeStatusRuntimeMode = {
   db: 'db',
 } as const;
 
+export type KnowledgeRuntimeStatusDbSchemaStatus = typeof KnowledgeRuntimeStatusDbSchemaStatus[keyof typeof KnowledgeRuntimeStatusDbSchemaStatus];
+
+
+export const KnowledgeRuntimeStatusDbSchemaStatus = {
+  ready: 'ready',
+  not_requested: 'not_requested',
+  missing_database_url: 'missing_database_url',
+  unavailable: 'unavailable',
+} as const;
+
 export type KnowledgeRuntimeStatusProviderStatusDb = typeof KnowledgeRuntimeStatusProviderStatusDb[keyof typeof KnowledgeRuntimeStatusProviderStatusDb];
 
 
@@ -362,9 +372,16 @@ export type KnowledgeRuntimeStatusSourceDistribution = {
 
 export interface KnowledgeRuntimeStatus {
   runtimeMode: KnowledgeRuntimeStatusRuntimeMode;
+  /** Backward-compatible alias for dbRuntimeRequested. */
   dbEnabled: boolean;
+  dbRuntimeRequested: boolean;
+  databaseUrlConfigured: boolean;
   dbAvailable: boolean;
+  dbSchemaStatus: KnowledgeRuntimeStatusDbSchemaStatus;
+  schemaReady: boolean;
+  staticRuntimeEnabled: boolean;
   staticFallbackEnabled: boolean;
+  fallbackReason: string | null;
   approvedMappingsCount: number;
   pendingCount: number;
   rejectedCount: number;
