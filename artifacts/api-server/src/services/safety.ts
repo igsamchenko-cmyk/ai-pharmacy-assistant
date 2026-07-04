@@ -40,6 +40,12 @@ const SYMPTOM_KEYWORDS = [
   "призначте",
   "пропишіть",
   "що допоможе від",
+  "яка доза",
+  "доза для",
+  "можна дитині",
+  "чи можна скасувати",
+  "скасувати препарат",
+  "скасувати ліки",
 ];
 
 export function isTreatmentRequest(text: string | undefined | null): boolean {

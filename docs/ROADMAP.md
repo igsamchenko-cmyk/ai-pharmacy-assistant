@@ -65,3 +65,16 @@ for editing review statuses after import.
 - JSON quality report for release checks.
 - Next: curated admin review workflow for pending imports and richer source
   coverage dashboards.
+
+## v0.7 Completed Direction
+
+- Admin review queue for imported knowledge mappings.
+- `/review` UI with status cards, filters, provenance, warnings, notes and
+  approve/reject/needs-review actions.
+- Review audit log for status transitions.
+- Review endpoints generated from OpenAPI.
+- Import commit writes reviewable non-copyright rows with derived statuses.
+- DB runtime remains approved-only with static fallback.
+
+Next: richer source coverage dashboards, persistent pagination/search for very
+large queues and role-based authentication for admin actions.

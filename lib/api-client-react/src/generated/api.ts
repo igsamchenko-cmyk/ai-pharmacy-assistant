@@ -43,11 +43,16 @@ import type {
   KnowledgeSearchParams,
   KnowledgeSearchResult,
   KnowledgeStats,
+  ListReviewQueueParams,
   NormalizeDrugNameParams,
   NormalizeResult,
   OcrResult,
   OcrScanInput,
   ProvenanceSourceList,
+  ReviewActionBody,
+  ReviewActionResponse,
+  ReviewQueueResponse,
+  ReviewStats,
   SearchDrugsParams
 } from './api.schemas';
 
@@ -1694,6 +1699,382 @@ export function useGetImportPreview<TData = Awaited<ReturnType<typeof getImportP
 
 
 
+
+export const getListReviewQueueUrl = (params?: ListReviewQueueParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/knowledge/review/queue?${stringifiedParams}` : `/api/knowledge/review/queue`
+}
+
+/**
+ * Lists DB-backed imported knowledge mappings that can be reviewed by an admin before they participate in runtime. If the DB is unavailable, the endpoint returns an empty queue with warnings and static runtime remains active.
+ * @summary List knowledge import review queue
+ */
+export const listReviewQueue = async (params?: ListReviewQueueParams, options?: RequestInit): Promise<ReviewQueueResponse> => {
+
+  return customFetch<ReviewQueueResponse>(getListReviewQueueUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListReviewQueueQueryKey = (params?: ListReviewQueueParams,) => {
+    return [
+    `/api/knowledge/review/queue`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListReviewQueueQueryOptions = <TData = Awaited<ReturnType<typeof listReviewQueue>>, TError = ErrorType<unknown>>(params?: ListReviewQueueParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReviewQueue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListReviewQueueQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listReviewQueue>>> = ({ signal }) => listReviewQueue(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listReviewQueue>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListReviewQueueQueryResult = NonNullable<Awaited<ReturnType<typeof listReviewQueue>>>
+export type ListReviewQueueQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List knowledge import review queue
+ */
+
+export function useListReviewQueue<TData = Awaited<ReturnType<typeof listReviewQueue>>, TError = ErrorType<unknown>>(
+ params?: ListReviewQueueParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReviewQueue>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListReviewQueueQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetReviewStatsUrl = () => {
+
+
+
+
+  return `/api/knowledge/review/stats`
+}
+
+/**
+ * Returns counts for review statuses, conflicts, low-confidence mappings, approved runtime rows and latest audit activity. Safe empty fallback is returned when the DB review workflow is unavailable.
+ * @summary Knowledge review workflow stats
+ */
+export const getReviewStats = async ( options?: RequestInit): Promise<ReviewStats> => {
+
+  return customFetch<ReviewStats>(getGetReviewStatsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetReviewStatsQueryKey = () => {
+    return [
+    `/api/knowledge/review/stats`
+    ] as const;
+    }
+
+
+export const getGetReviewStatsQueryOptions = <TData = Awaited<ReturnType<typeof getReviewStats>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReviewStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReviewStatsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReviewStats>>> = ({ signal }) => getReviewStats({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReviewStats>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetReviewStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getReviewStats>>>
+export type GetReviewStatsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Knowledge review workflow stats
+ */
+
+export function useGetReviewStats<TData = Awaited<ReturnType<typeof getReviewStats>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReviewStats>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetReviewStatsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getApproveReviewItemUrl = (id: string,) => {
+
+
+
+
+  return `/api/knowledge/review/${id}/approve`
+}
+
+/**
+ * @summary Approve a review item
+ */
+export const approveReviewItem = async (id: string,
+    reviewActionBody?: ReviewActionBody, options?: RequestInit): Promise<ReviewActionResponse> => {
+
+  return customFetch<ReviewActionResponse>(getApproveReviewItemUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reviewActionBody)
+  }
+);}
+
+
+
+
+export const getApproveReviewItemMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveReviewItem>>, TError,{id: string;data?: BodyType<ReviewActionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveReviewItem>>, TError,{id: string;data?: BodyType<ReviewActionBody>}, TContext> => {
+
+const mutationKey = ['approveReviewItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveReviewItem>>, {id: string;data?: BodyType<ReviewActionBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  approveReviewItem(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveReviewItemMutationResult = NonNullable<Awaited<ReturnType<typeof approveReviewItem>>>
+    export type ApproveReviewItemMutationBody = BodyType<ReviewActionBody> | undefined
+    export type ApproveReviewItemMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Approve a review item
+ */
+export const useApproveReviewItem = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveReviewItem>>, TError,{id: string;data?: BodyType<ReviewActionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveReviewItem>>,
+        TError,
+        {id: string;data?: BodyType<ReviewActionBody>},
+        TContext
+      > => {
+      return useMutation(getApproveReviewItemMutationOptions(options));
+    }
+
+export const getRejectReviewItemUrl = (id: string,) => {
+
+
+
+
+  return `/api/knowledge/review/${id}/reject`
+}
+
+/**
+ * @summary Reject a review item
+ */
+export const rejectReviewItem = async (id: string,
+    reviewActionBody?: ReviewActionBody, options?: RequestInit): Promise<ReviewActionResponse> => {
+
+  return customFetch<ReviewActionResponse>(getRejectReviewItemUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reviewActionBody)
+  }
+);}
+
+
+
+
+export const getRejectReviewItemMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectReviewItem>>, TError,{id: string;data?: BodyType<ReviewActionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectReviewItem>>, TError,{id: string;data?: BodyType<ReviewActionBody>}, TContext> => {
+
+const mutationKey = ['rejectReviewItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectReviewItem>>, {id: string;data?: BodyType<ReviewActionBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  rejectReviewItem(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectReviewItemMutationResult = NonNullable<Awaited<ReturnType<typeof rejectReviewItem>>>
+    export type RejectReviewItemMutationBody = BodyType<ReviewActionBody> | undefined
+    export type RejectReviewItemMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Reject a review item
+ */
+export const useRejectReviewItem = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectReviewItem>>, TError,{id: string;data?: BodyType<ReviewActionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejectReviewItem>>,
+        TError,
+        {id: string;data?: BodyType<ReviewActionBody>},
+        TContext
+      > => {
+      return useMutation(getRejectReviewItemMutationOptions(options));
+    }
+
+export const getMarkReviewItemNeedsReviewUrl = (id: string,) => {
+
+
+
+
+  return `/api/knowledge/review/${id}/needs-review`
+}
+
+/**
+ * @summary Mark a review item as needs_review
+ */
+export const markReviewItemNeedsReview = async (id: string,
+    reviewActionBody?: ReviewActionBody, options?: RequestInit): Promise<ReviewActionResponse> => {
+
+  return customFetch<ReviewActionResponse>(getMarkReviewItemNeedsReviewUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reviewActionBody)
+  }
+);}
+
+
+
+
+export const getMarkReviewItemNeedsReviewMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markReviewItemNeedsReview>>, TError,{id: string;data?: BodyType<ReviewActionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markReviewItemNeedsReview>>, TError,{id: string;data?: BodyType<ReviewActionBody>}, TContext> => {
+
+const mutationKey = ['markReviewItemNeedsReview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markReviewItemNeedsReview>>, {id: string;data?: BodyType<ReviewActionBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  markReviewItemNeedsReview(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkReviewItemNeedsReviewMutationResult = NonNullable<Awaited<ReturnType<typeof markReviewItemNeedsReview>>>
+    export type MarkReviewItemNeedsReviewMutationBody = BodyType<ReviewActionBody> | undefined
+    export type MarkReviewItemNeedsReviewMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Mark a review item as needs_review
+ */
+export const useMarkReviewItemNeedsReview = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markReviewItemNeedsReview>>, TError,{id: string;data?: BodyType<ReviewActionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markReviewItemNeedsReview>>,
+        TError,
+        {id: string;data?: BodyType<ReviewActionBody>},
+        TContext
+      > => {
+      return useMutation(getMarkReviewItemNeedsReviewMutationOptions(options));
+    }
 
 export const getGetAtcInfoUrl = (code: string,) => {
 

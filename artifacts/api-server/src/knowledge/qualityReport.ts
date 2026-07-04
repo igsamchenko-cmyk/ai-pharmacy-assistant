@@ -3,9 +3,10 @@ import { dirname } from "node:path";
 import { validateKnowledge } from "./validation";
 import { buildStaticBackfillSnapshot, backfillCounts } from "./backfill";
 import { getKnowledgeRuntimeStatus } from "./dbRuntime";
+import { getReviewStats } from "./reviewWorkflow";
 
 export interface KnowledgeQualityJsonReport {
-  version: "0.6";
+  version: "0.7";
   timestamp: string;
   counts: ReturnType<typeof backfillCounts>;
   coverage: {
@@ -15,6 +16,7 @@ export interface KnowledgeQualityJsonReport {
     approvedMappingPct: number;
   };
   runtime: Awaited<ReturnType<typeof getKnowledgeRuntimeStatus>>;
+  review: Awaited<ReturnType<typeof getReviewStats>>;
   warnings: string[];
   validation: ReturnType<typeof validateKnowledge>;
 }
@@ -28,6 +30,7 @@ export async function buildKnowledgeQualityJsonReport(): Promise<KnowledgeQualit
   const snapshot = buildStaticBackfillSnapshot();
   const counts = backfillCounts(snapshot);
   const runtime = await getKnowledgeRuntimeStatus();
+  const review = await getReviewStats();
   const namesWithProvenance = snapshot.names.filter(
     (name) => name.sourceKey && name.evidenceLevel,
   ).length;
@@ -51,7 +54,7 @@ export async function buildKnowledgeQualityJsonReport(): Promise<KnowledgeQualit
   ).length;
 
   return {
-    version: "0.6",
+    version: "0.7",
     timestamp: new Date().toISOString(),
     counts,
     coverage: {
@@ -61,7 +64,12 @@ export async function buildKnowledgeQualityJsonReport(): Promise<KnowledgeQualit
       approvedMappingPct: pct(approvedMappings, snapshot.names.length),
     },
     runtime,
-    warnings: [...validation.warnings.map((warning) => warning.message), ...runtime.warnings],
+    review,
+    warnings: [
+      ...validation.warnings.map((warning) => warning.message),
+      ...runtime.warnings,
+      ...review.warnings,
+    ],
     validation,
   };
 }

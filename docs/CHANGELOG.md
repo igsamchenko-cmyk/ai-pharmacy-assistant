@@ -4,6 +4,32 @@
 Проєкт поки без версійних релізів; зміни групуються у розділі «Не випущено».
 
 ## [Не випущено]
+### Додано (v0.7 — Admin Review Workflow)
+
+- **Черга рев'ю імпорту**: новий `/review` UI для адміністраторів зі статусами,
+  фільтрами, деталями рядка, провенансом, попередженнями, нотаткою та діями
+  Approve / Reject / Mark needs review.
+- **OpenAPI endpoints**: `GET /knowledge/review/queue`,
+  `GET /knowledge/review/stats`, `POST /knowledge/review/{id}/approve`,
+  `POST /knowledge/review/{id}/reject`,
+  `POST /knowledge/review/{id}/needs-review` з generated Zod і React Query
+  artifacts.
+- **Review metadata** у `knowledge_ingredient_names`: conflict flags,
+  validation warnings, reviewer, review note, reviewed/updated timestamps.
+- **Audit log** `knowledge_review_audit_log` для approve/reject/needs_review
+  transitions із попереднім/новим статусом, reviewer, reason/note, batch і source.
+- **Import integration**: `import:knowledge -- --commit` записує non-copyright
+  rows із derived review status; runtime бачить тільки `approved`.
+- **Quality report v0.7** включає review workflow stats і warnings.
+- **Документи**: додано `docs/REVIEW_WORKFLOW.md` і оновлено operational docs.
+
+### Незмінно
+
+- DB runtime лишається optional behind `KNOWLEDGE_DB_RUNTIME`.
+- Static fallback збережений.
+- `pending`, `rejected` і `needs_review` не впливають на runtime.
+- Copyright guard не послаблено.
+- Medical safety behavior не змінювався.
 
 ### Додано (v0.4 — Імпорт українського словника)
 
@@ -26,7 +52,8 @@
 - **Зразкові файли** (`data/import-samples/`): словник CSV+JSON, взаємодії,
   ATC — лише публічні генеричні дані.
 - **CLI**: `validate:import` (CI-гейт), `import:preview` (dry-run прев’ю),
-  `import:knowledge` (безпечний dry-run; `--commit` записує лише approved-рядки).
+  `import:knowledge` (безпечний dry-run; `--commit` зберігає дозволені
+  non-copyright рядки з derived review status; runtime бачить лише `approved`).
 - **Runtime-міст** (`knowledge/runtime.ts`, `dictionary/provider.ts`): статичний
   провайдер за замовчуванням; DB-провайдер за прапорцем `KNOWLEDGE_DB_RUNTIME`.
 - **Ендпоінт**: `GET /api/knowledge/import/preview`.
@@ -150,4 +177,5 @@ Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
   commands.
 - Kept OpenAPI as source of truth; no new endpoint was required for v0.6.
 - Preserved safety invariants: no diagnosis, no prescribing, approved-only DB
-  runtime mappings, static fallback, no secrets, and no copyrighted source data.
+  runtime mappings, static fallback, no secrets, and no copyrighted/proprietary
+  source data.

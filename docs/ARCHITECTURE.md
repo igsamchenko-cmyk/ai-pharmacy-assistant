@@ -104,8 +104,9 @@ Express API (artifacts/api-server)
 (`csv.ts`/`parse.ts`), guard пропрієтарних джерел (`guard.ts`), робочий процес
 рецензування (`review.ts`, підозрілі рядки не авто-схвалюються) та dry-run аналіз
 (`analyze.ts` → `ImportPreview` через інжектований `KnowledgeView`). CLI:
-`validate:import`, `import:preview`, `import:knowledge` (запис лише approved-рядків
-за `--commit`). Runtime-міст (`runtime.ts` + `dictionary/provider.ts`) залишає
+`validate:import`, `import:preview`, `import:knowledge` (`--commit` зберігає
+дозволені non-copyright рядки з derived `reviewStatus`). Runtime-міст
+(`runtime.ts` + `dictionary/provider.ts`) залишає
 статичний провайдер за замовчуванням, а DB-провайдер вмикається прапорцем
 `KNOWLEDGE_DB_RUNTIME`. Деталі — `docs/DICTIONARY_CONTRIBUTING.md`.
 
@@ -177,3 +178,19 @@ Flow:
 5. Runtime lookup reads only `approved` DB mappings; pending, rejected, and
    needs-review rows are not user-facing.
 6. DB errors fall back to static data and preserve source attribution.
+
+## v0.7 Admin Review Workflow
+
+The review workflow extends the normalized knowledge DB without replacing the
+static runtime. `knowledge_ingredient_names` remains the reviewable runtime-facing
+model for imported name mappings and now carries review metadata: conflict flags,
+validation warnings, reviewer, note and review timestamps. Review actions append
+to `knowledge_review_audit_log`.
+
+OpenAPI adds `/knowledge/review/queue`, `/knowledge/review/stats` and review
+action endpoints. The backend service degrades safely when `DATABASE_URL` is not
+configured, returning empty queue/stats with a warning. The frontend `/review`
+page uses generated React Query hooks from the OpenAPI contract.
+
+Runtime invariant: DB dictionary lookup still reads only approved mappings;
+static fallback remains enabled and is not made mandatory on the DB.

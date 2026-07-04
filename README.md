@@ -154,3 +154,15 @@ New operational commands:
 Every backfilled static mapping is written with source provenance, review status
 `approved`, confidence `verified`, confidence score `100`, locale `uk`, and a
 `static-backfill-YYYY-MM-DD` import batch id.
+
+## v0.7 Admin Review Workflow
+
+Imported dictionary rows now have an admin review workflow before they can affect
+DB runtime. The `/review` page and `/api/knowledge/review/*` endpoints expose the
+queue, status counts, conflict filters, approve/reject/needs-review actions and
+an audit trail. Only `approved` rows participate in DB-backed normalize/search;
+`pending`, `rejected` and `needs_review` rows remain auditable but are ignored by
+runtime. If `DATABASE_URL` or DB runtime is unavailable, the page reports that the
+review workflow is unavailable and static runtime remains active.
+
+See [`docs/REVIEW_WORKFLOW.md`](docs/REVIEW_WORKFLOW.md) for the operator flow.

@@ -69,7 +69,8 @@ ing-ibuprofen,Ібупрофен,Ibuprofen,en,english,who-inn,verified,M01AE01,
 5. чисті `verified`/`high` → `approved`;
 6. чисті `medium` → `pending`.
 
-**Підозрілі рядки ніколи не авто-схвалюються.** Лише `approved` завантажуються.
+**Підозрілі рядки ніколи не авто-схвалюються.** `--commit` зберігає дозволені
+non-copyright рядки з derived статусом; runtime бачить лише `approved`.
 
 ## CLI
 
@@ -82,7 +83,7 @@ pnpm validate:import
 # Прев’ю імпорту (dry-run): що нового, дублікати, конфлікти, розподіли:
 pnpm import:preview [файл.csv|файл.json]
 
-# Імпорт у БЗ. Безпечно за замовчуванням (dry-run). Запис лише approved-рядків:
+# Імпорт у БЗ. Безпечно за замовчуванням (dry-run). Зберігає дозволені non-copyright рядки:
 pnpm import:knowledge [файл] --commit   # потребує DATABASE_URL
 pnpm import:knowledge [файл] --force     # ігнорувати блокуючі проблеми
 ```
@@ -135,3 +136,14 @@ metadata:
 Do not add copyrighted dictionary payloads. Add only project-owned examples,
 short factual identifiers, public classification references, or curated
 metadata that can be safely redistributed.
+
+## v0.7 Admin Review After Import
+
+After committing an import, operators review rows in `/review`. Approval should
+be done only after checking the cited source and provenance. Suspicious rows are
+not auto-approved: low confidence, typos and conflicts are routed to
+`needs_review`; medium-confidence rows stay `pending`; rejected rows remain
+visible for audit but ignored by runtime.
+
+Use notes to explain the decision. The audit log records approve/reject/
+needs-review actions with previous status, next status, reviewer and reason.

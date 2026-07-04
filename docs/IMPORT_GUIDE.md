@@ -88,7 +88,7 @@ Preview imports before writing:
 pnpm --filter @workspace/api-server run import:preview
 ```
 
-Commit approved rows into runtime-readable tables:
+Commit allowed non-copyright rows into review/runtime-readable tables:
 
 ```bash
 DATABASE_URL=... pnpm --filter @workspace/api-server run import:knowledge -- --commit
@@ -96,7 +96,9 @@ DATABASE_URL=... pnpm --filter @workspace/api-server run import:knowledge -- --c
 
 Committed rows store ingredient, name mapping, locale, confidence, confidence
 score, review status, source/provenance, ATC where present, import batch id and
-timestamps. Only approved rows are active when `KNOWLEDGE_DB_RUNTIME=true`.
+timestamps. `approved` rows are runtime-visible when `KNOWLEDGE_DB_RUNTIME=true`;
+`pending`, `needs_review`, and `rejected` rows stay stored for review/audit only.
+
 ## v0.6 Static Backfill Workflow
 
 Recommended DB workflow:
@@ -113,3 +115,20 @@ conflicts are counted and skipped instead of overwritten.
 If `DATABASE_URL` is missing, the command performs a dry-run and exits
 successfully. Use `--require-db` when a release or deployment step must fail
 without a live database.
+
+## v0.7 Review-Aware Commit Flow
+
+`import:preview` continues to show how many rows will become `approved`,
+`pending`, `needs_review` or `rejected`. `import:knowledge -- --commit` now writes
+allowed non-copyright rows with their derived review status. This makes
+suspicious rows visible to admins without making them runtime-visible.
+
+Rules:
+
+- clean high/verified rows may be approved automatically by policy;
+- medium-confidence rows are pending;
+- low-confidence, typo-like or conflicting rows go to `needs_review`;
+- unknown-source rows are rejected unless policy changes;
+- copyrighted/proprietary rows are blocked and are never committed or approved.
+
+Review and runtime verification are documented in `docs/REVIEW_WORKFLOW.md`.

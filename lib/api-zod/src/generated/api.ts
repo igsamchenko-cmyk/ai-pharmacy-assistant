@@ -597,6 +597,301 @@ export const GetImportPreviewResponse = zod.object({
 
 
 /**
+ * Lists DB-backed imported knowledge mappings that can be reviewed by an admin before they participate in runtime. If the DB is unavailable, the endpoint returns an empty queue with warnings and static runtime remains active.
+ * @summary List knowledge import review queue
+ */
+export const listReviewQueueQueryLimitDefault = 50;
+export const listReviewQueueQueryLimitMax = 100;
+
+export const listReviewQueueQueryOffsetDefault = 0;
+export const listReviewQueueQueryOffsetMin = 0;
+
+
+
+export const ListReviewQueueQueryParams = zod.object({
+  "status": zod.enum(['pending', 'approved', 'rejected', 'needs_review', 'all']).optional(),
+  "conflictOnly": zod.coerce.boolean().optional(),
+  "sourceId": zod.coerce.string().optional(),
+  "locale": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().min(1).max(listReviewQueueQueryLimitMax).default(listReviewQueueQueryLimitDefault),
+  "offset": zod.coerce.number().min(listReviewQueueQueryOffsetMin).default(listReviewQueueQueryOffsetDefault)
+})
+
+export const ListReviewQueueResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "entityType": zod.enum(['ingredient_name', 'ingredient', 'atc', 'interaction_rule', 'source', 'other']),
+  "displayName": zod.string(),
+  "normalizedName": zod.string(),
+  "mappedIngredientId": zod.union([zod.string(),zod.null()]),
+  "mappedIngredientName": zod.union([zod.string(),zod.null()]),
+  "sourceId": zod.string(),
+  "sourceName": zod.union([zod.string(),zod.null()]),
+  "confidence": zod.enum(['low', 'medium', 'high', 'verified']),
+  "confidenceScore": zod.number(),
+  "locale": zod.string(),
+  "mappingType": zod.string(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']),
+  "conflictFlags": zod.array(zod.string()),
+  "validationWarnings": zod.array(zod.string()),
+  "createdAt": zod.union([zod.string(),zod.null()]),
+  "updatedAt": zod.union([zod.string(),zod.null()]),
+  "reviewedAt": zod.union([zod.string(),zod.null()]),
+  "reviewedBy": zod.union([zod.string(),zod.null()]),
+  "reviewNote": zod.union([zod.string(),zod.null()]),
+  "importBatchId": zod.union([zod.string(),zod.null()]),
+  "provenance": zod.object({
+  "sourceKey": zod.string(),
+  "evidenceLevel": zod.string(),
+  "lastReviewed": zod.string().optional(),
+  "sourceLabel": zod.string().optional(),
+  "sourceType": zod.enum(['official', 'reference', 'demo', 'external']).optional(),
+  "sourceReliability": zod.enum(['high', 'medium', 'low']).optional(),
+  "sourceUrl": zod.union([zod.string(),zod.null()]).optional(),
+  "locale": zod.string().optional(),
+  "importBatchId": zod.union([zod.string(),zod.null()]).optional(),
+  "importedAt": zod.union([zod.string(),zod.null()]).optional(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']).optional()
+})
+})),
+  "total": zod.number(),
+  "limit": zod.number(),
+  "offset": zod.number(),
+  "counts": zod.object({
+  "pending": zod.number(),
+  "approved": zod.number(),
+  "rejected": zod.number(),
+  "needs_review": zod.number()
+}),
+  "conflictCount": zod.number(),
+  "warnings": zod.array(zod.string())
+})
+
+
+/**
+ * Returns counts for review statuses, conflicts, low-confidence mappings, approved runtime rows and latest audit activity. Safe empty fallback is returned when the DB review workflow is unavailable.
+ * @summary Knowledge review workflow stats
+ */
+export const GetReviewStatsResponse = zod.object({
+  "counts": zod.object({
+  "pending": zod.number(),
+  "approved": zod.number(),
+  "rejected": zod.number(),
+  "needs_review": zod.number()
+}),
+  "conflictCount": zod.number(),
+  "lowConfidenceCount": zod.number(),
+  "approvedRuntimeCount": zod.number(),
+  "latestReviewActivity": zod.union([zod.string(),zod.null()]),
+  "warnings": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Approve a review item
+ */
+export const ApproveReviewItemParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ApproveReviewItemBody = zod.object({
+  "note": zod.string().optional(),
+  "reviewedBy": zod.string().optional(),
+  "reason": zod.string().optional()
+})
+
+export const ApproveReviewItemResponse = zod.object({
+  "item": zod.object({
+  "id": zod.string(),
+  "entityType": zod.enum(['ingredient_name', 'ingredient', 'atc', 'interaction_rule', 'source', 'other']),
+  "displayName": zod.string(),
+  "normalizedName": zod.string(),
+  "mappedIngredientId": zod.union([zod.string(),zod.null()]),
+  "mappedIngredientName": zod.union([zod.string(),zod.null()]),
+  "sourceId": zod.string(),
+  "sourceName": zod.union([zod.string(),zod.null()]),
+  "confidence": zod.enum(['low', 'medium', 'high', 'verified']),
+  "confidenceScore": zod.number(),
+  "locale": zod.string(),
+  "mappingType": zod.string(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']),
+  "conflictFlags": zod.array(zod.string()),
+  "validationWarnings": zod.array(zod.string()),
+  "createdAt": zod.union([zod.string(),zod.null()]),
+  "updatedAt": zod.union([zod.string(),zod.null()]),
+  "reviewedAt": zod.union([zod.string(),zod.null()]),
+  "reviewedBy": zod.union([zod.string(),zod.null()]),
+  "reviewNote": zod.union([zod.string(),zod.null()]),
+  "importBatchId": zod.union([zod.string(),zod.null()]),
+  "provenance": zod.object({
+  "sourceKey": zod.string(),
+  "evidenceLevel": zod.string(),
+  "lastReviewed": zod.string().optional(),
+  "sourceLabel": zod.string().optional(),
+  "sourceType": zod.enum(['official', 'reference', 'demo', 'external']).optional(),
+  "sourceReliability": zod.enum(['high', 'medium', 'low']).optional(),
+  "sourceUrl": zod.union([zod.string(),zod.null()]).optional(),
+  "locale": zod.string().optional(),
+  "importBatchId": zod.union([zod.string(),zod.null()]).optional(),
+  "importedAt": zod.union([zod.string(),zod.null()]).optional(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']).optional()
+})
+}),
+  "audit": zod.object({
+  "id": zod.string(),
+  "entityType": zod.enum(['ingredient_name', 'ingredient', 'atc', 'interaction_rule', 'source', 'other']),
+  "entityId": zod.string(),
+  "action": zod.enum(['approved', 'rejected', 'marked_needs_review', 'note_changed']),
+  "fromStatus": zod.union([zod.enum(['pending', 'approved', 'rejected', 'needs_review']),zod.null()]),
+  "toStatus": zod.union([zod.enum(['pending', 'approved', 'rejected', 'needs_review']),zod.null()]),
+  "note": zod.union([zod.string(),zod.null()]),
+  "reason": zod.union([zod.string(),zod.null()]),
+  "reviewedBy": zod.union([zod.string(),zod.null()]),
+  "importBatchId": zod.union([zod.string(),zod.null()]),
+  "sourceKey": zod.union([zod.string(),zod.null()]),
+  "createdAt": zod.union([zod.string(),zod.null()])
+}),
+  "warnings": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Reject a review item
+ */
+export const RejectReviewItemParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const RejectReviewItemBody = zod.object({
+  "note": zod.string().optional(),
+  "reviewedBy": zod.string().optional(),
+  "reason": zod.string().optional()
+})
+
+export const RejectReviewItemResponse = zod.object({
+  "item": zod.object({
+  "id": zod.string(),
+  "entityType": zod.enum(['ingredient_name', 'ingredient', 'atc', 'interaction_rule', 'source', 'other']),
+  "displayName": zod.string(),
+  "normalizedName": zod.string(),
+  "mappedIngredientId": zod.union([zod.string(),zod.null()]),
+  "mappedIngredientName": zod.union([zod.string(),zod.null()]),
+  "sourceId": zod.string(),
+  "sourceName": zod.union([zod.string(),zod.null()]),
+  "confidence": zod.enum(['low', 'medium', 'high', 'verified']),
+  "confidenceScore": zod.number(),
+  "locale": zod.string(),
+  "mappingType": zod.string(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']),
+  "conflictFlags": zod.array(zod.string()),
+  "validationWarnings": zod.array(zod.string()),
+  "createdAt": zod.union([zod.string(),zod.null()]),
+  "updatedAt": zod.union([zod.string(),zod.null()]),
+  "reviewedAt": zod.union([zod.string(),zod.null()]),
+  "reviewedBy": zod.union([zod.string(),zod.null()]),
+  "reviewNote": zod.union([zod.string(),zod.null()]),
+  "importBatchId": zod.union([zod.string(),zod.null()]),
+  "provenance": zod.object({
+  "sourceKey": zod.string(),
+  "evidenceLevel": zod.string(),
+  "lastReviewed": zod.string().optional(),
+  "sourceLabel": zod.string().optional(),
+  "sourceType": zod.enum(['official', 'reference', 'demo', 'external']).optional(),
+  "sourceReliability": zod.enum(['high', 'medium', 'low']).optional(),
+  "sourceUrl": zod.union([zod.string(),zod.null()]).optional(),
+  "locale": zod.string().optional(),
+  "importBatchId": zod.union([zod.string(),zod.null()]).optional(),
+  "importedAt": zod.union([zod.string(),zod.null()]).optional(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']).optional()
+})
+}),
+  "audit": zod.object({
+  "id": zod.string(),
+  "entityType": zod.enum(['ingredient_name', 'ingredient', 'atc', 'interaction_rule', 'source', 'other']),
+  "entityId": zod.string(),
+  "action": zod.enum(['approved', 'rejected', 'marked_needs_review', 'note_changed']),
+  "fromStatus": zod.union([zod.enum(['pending', 'approved', 'rejected', 'needs_review']),zod.null()]),
+  "toStatus": zod.union([zod.enum(['pending', 'approved', 'rejected', 'needs_review']),zod.null()]),
+  "note": zod.union([zod.string(),zod.null()]),
+  "reason": zod.union([zod.string(),zod.null()]),
+  "reviewedBy": zod.union([zod.string(),zod.null()]),
+  "importBatchId": zod.union([zod.string(),zod.null()]),
+  "sourceKey": zod.union([zod.string(),zod.null()]),
+  "createdAt": zod.union([zod.string(),zod.null()])
+}),
+  "warnings": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Mark a review item as needs_review
+ */
+export const MarkReviewItemNeedsReviewParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const MarkReviewItemNeedsReviewBody = zod.object({
+  "note": zod.string().optional(),
+  "reviewedBy": zod.string().optional(),
+  "reason": zod.string().optional()
+})
+
+export const MarkReviewItemNeedsReviewResponse = zod.object({
+  "item": zod.object({
+  "id": zod.string(),
+  "entityType": zod.enum(['ingredient_name', 'ingredient', 'atc', 'interaction_rule', 'source', 'other']),
+  "displayName": zod.string(),
+  "normalizedName": zod.string(),
+  "mappedIngredientId": zod.union([zod.string(),zod.null()]),
+  "mappedIngredientName": zod.union([zod.string(),zod.null()]),
+  "sourceId": zod.string(),
+  "sourceName": zod.union([zod.string(),zod.null()]),
+  "confidence": zod.enum(['low', 'medium', 'high', 'verified']),
+  "confidenceScore": zod.number(),
+  "locale": zod.string(),
+  "mappingType": zod.string(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']),
+  "conflictFlags": zod.array(zod.string()),
+  "validationWarnings": zod.array(zod.string()),
+  "createdAt": zod.union([zod.string(),zod.null()]),
+  "updatedAt": zod.union([zod.string(),zod.null()]),
+  "reviewedAt": zod.union([zod.string(),zod.null()]),
+  "reviewedBy": zod.union([zod.string(),zod.null()]),
+  "reviewNote": zod.union([zod.string(),zod.null()]),
+  "importBatchId": zod.union([zod.string(),zod.null()]),
+  "provenance": zod.object({
+  "sourceKey": zod.string(),
+  "evidenceLevel": zod.string(),
+  "lastReviewed": zod.string().optional(),
+  "sourceLabel": zod.string().optional(),
+  "sourceType": zod.enum(['official', 'reference', 'demo', 'external']).optional(),
+  "sourceReliability": zod.enum(['high', 'medium', 'low']).optional(),
+  "sourceUrl": zod.union([zod.string(),zod.null()]).optional(),
+  "locale": zod.string().optional(),
+  "importBatchId": zod.union([zod.string(),zod.null()]).optional(),
+  "importedAt": zod.union([zod.string(),zod.null()]).optional(),
+  "reviewStatus": zod.enum(['pending', 'approved', 'rejected', 'needs_review']).optional()
+})
+}),
+  "audit": zod.object({
+  "id": zod.string(),
+  "entityType": zod.enum(['ingredient_name', 'ingredient', 'atc', 'interaction_rule', 'source', 'other']),
+  "entityId": zod.string(),
+  "action": zod.enum(['approved', 'rejected', 'marked_needs_review', 'note_changed']),
+  "fromStatus": zod.union([zod.enum(['pending', 'approved', 'rejected', 'needs_review']),zod.null()]),
+  "toStatus": zod.union([zod.enum(['pending', 'approved', 'rejected', 'needs_review']),zod.null()]),
+  "note": zod.union([zod.string(),zod.null()]),
+  "reason": zod.union([zod.string(),zod.null()]),
+  "reviewedBy": zod.union([zod.string(),zod.null()]),
+  "importBatchId": zod.union([zod.string(),zod.null()]),
+  "sourceKey": zod.union([zod.string(),zod.null()]),
+  "createdAt": zod.union([zod.string(),zod.null()])
+}),
+  "warnings": zod.array(zod.string())
+})
+
+
+/**
  * @summary Resolve an ATC code to its classification
  */
 export const GetAtcInfoParams = zod.object({

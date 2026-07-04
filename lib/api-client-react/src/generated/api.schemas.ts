@@ -517,6 +517,117 @@ export interface ImportPreview {
   wouldSucceed: boolean;
 }
 
+export type ReviewQueueStatus = typeof ReviewQueueStatus[keyof typeof ReviewQueueStatus];
+
+
+export const ReviewQueueStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  needs_review: 'needs_review',
+  all: 'all',
+} as const;
+
+export type ReviewEntityType = typeof ReviewEntityType[keyof typeof ReviewEntityType];
+
+
+export const ReviewEntityType = {
+  ingredient_name: 'ingredient_name',
+  ingredient: 'ingredient',
+  atc: 'atc',
+  interaction_rule: 'interaction_rule',
+  source: 'source',
+  other: 'other',
+} as const;
+
+export interface ReviewStatusCounts {
+  pending: number;
+  approved: number;
+  rejected: number;
+  needs_review: number;
+}
+
+export interface ReviewQueueItem {
+  id: string;
+  entityType: ReviewEntityType;
+  displayName: string;
+  normalizedName: string;
+  mappedIngredientId: string | null;
+  mappedIngredientName: string | null;
+  sourceId: string;
+  sourceName: string | null;
+  confidence: RuntimeConfidence;
+  confidenceScore: number;
+  locale: string;
+  mappingType: string;
+  reviewStatus: RuntimeReviewStatus;
+  conflictFlags: string[];
+  validationWarnings: string[];
+  createdAt: string | null;
+  updatedAt: string | null;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
+  reviewNote: string | null;
+  importBatchId: string | null;
+  provenance: RuntimeProvenance;
+}
+
+export interface ReviewQueueResponse {
+  items: ReviewQueueItem[];
+  total: number;
+  limit: number;
+  offset: number;
+  counts: ReviewStatusCounts;
+  conflictCount: number;
+  warnings: string[];
+}
+
+export interface ReviewStats {
+  counts: ReviewStatusCounts;
+  conflictCount: number;
+  lowConfidenceCount: number;
+  approvedRuntimeCount: number;
+  latestReviewActivity: string | null;
+  warnings: string[];
+}
+
+export interface ReviewActionBody {
+  note?: string;
+  reviewedBy?: string;
+  reason?: string;
+}
+
+export type ReviewAuditEntryAction = typeof ReviewAuditEntryAction[keyof typeof ReviewAuditEntryAction];
+
+
+export const ReviewAuditEntryAction = {
+  approved: 'approved',
+  rejected: 'rejected',
+  marked_needs_review: 'marked_needs_review',
+  note_changed: 'note_changed',
+} as const;
+
+export interface ReviewAuditEntry {
+  id: string;
+  entityType: ReviewEntityType;
+  entityId: string;
+  action: ReviewAuditEntryAction;
+  fromStatus: RuntimeReviewStatus | null;
+  toStatus: RuntimeReviewStatus | null;
+  note: string | null;
+  reason: string | null;
+  reviewedBy: string | null;
+  importBatchId: string | null;
+  sourceKey: string | null;
+  createdAt: string | null;
+}
+
+export interface ReviewActionResponse {
+  item: ReviewQueueItem;
+  audit: ReviewAuditEntry;
+  warnings: string[];
+}
+
 export type KnowledgeSearchResultResolvedStage = typeof KnowledgeSearchResultResolvedStage[keyof typeof KnowledgeSearchResultResolvedStage];
 
 
@@ -593,5 +704,21 @@ skipExternal?: boolean;
 
 export type NormalizeDrugNameParams = {
 q: string;
+};
+
+export type ListReviewQueueParams = {
+status?: ReviewQueueStatus;
+conflictOnly?: boolean;
+sourceId?: string;
+locale?: string;
+/**
+ * @minimum 1
+ * @maximum 100
+ */
+limit?: number;
+/**
+ * @minimum 0
+ */
+offset?: number;
 };
 
