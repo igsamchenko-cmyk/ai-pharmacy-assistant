@@ -5,6 +5,10 @@
 
 ## [Не випущено]
 
+No changes after v0.8.0.
+
+## v0.8.0 - PostgreSQL Runtime Deployment Profile - 2026-07-04
+
 ### Added
 
 - **PostgreSQL Runtime Deployment Profile**: optional local Docker Compose
