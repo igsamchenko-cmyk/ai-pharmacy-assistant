@@ -428,6 +428,69 @@ export interface QualityIssue {
   subject: string;
 }
 
+export interface DictionaryBatchFileSummary {
+  fileName: string;
+  category: string;
+  rowsParsed: number;
+  parseErrors: number;
+  newIngredients: number;
+  newMappings: number;
+  duplicates: number;
+  conflicts: number;
+  missingSources: number;
+  invalidAtc: number;
+  copyrightViolations: number;
+  wouldSucceed: boolean;
+}
+
+export type DictionaryBatchQualitySummaryByCategory = {[key: string]: number};
+
+export type DictionaryBatchQualitySummaryByConfidence = {
+  low: number;
+  medium: number;
+  high: number;
+  verified: number;
+};
+
+export type DictionaryBatchQualitySummaryByReviewStatus = {
+  pending: number;
+  approved: number;
+  rejected: number;
+  needs_review: number;
+};
+
+export type DictionaryBatchQualitySummaryBySource = {[key: string]: number};
+
+export interface DictionaryBatchQualitySummary {
+  files: number;
+  totalRows: number;
+  totalNewIngredients: number;
+  totalNewMappings: number;
+  duplicates: number;
+  conflicts: number;
+  parseErrors: number;
+  missingSources: number;
+  invalidAtc: number;
+  copyrightViolations: number;
+  ukrainianRows: number;
+  englishRows: number;
+  latinRows: number;
+  transliterationRows: number;
+  atcRows: number;
+  sourceCoveragePct: number;
+  ukrainianCoveragePct: number;
+  atcCoveragePct: number;
+  suspiciousBrandLikeRows: number;
+  ambiguousAbbreviationRows: number;
+  normalizationConflictRows: number;
+  byCategory: DictionaryBatchQualitySummaryByCategory;
+  byConfidence: DictionaryBatchQualitySummaryByConfidence;
+  byReviewStatus: DictionaryBatchQualitySummaryByReviewStatus;
+  bySource: DictionaryBatchQualitySummaryBySource;
+  fileSummaries: DictionaryBatchFileSummary[];
+  wouldSucceed: boolean;
+}
+
 export type DataQualityReportCounts = {
   ingredients: number;
   mappings: number;
@@ -452,6 +515,7 @@ export interface DataQualityReport {
   generatedAt: string;
   counts: DataQualityReportCounts;
   coverage: DataQualityReportCoverage;
+  dictionaryBatches?: DictionaryBatchQualitySummary;
   errors: QualityIssue[];
   warnings: QualityIssue[];
 }

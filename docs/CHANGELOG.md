@@ -5,7 +5,27 @@
 
 ## [Не випущено]
 
-No changes after v0.8.0.
+### Added
+
+- **Ukrainian Drug Data Expansion**: added `data/dictionary-batches/` with 8
+  canonical CSV batch files and 508 auditable generic/INN/transliteration rows
+  generated from project-owned curated static seeds.
+- **Batch workflow**: added `pnpm knowledge:import:preview:all`,
+  `pnpm knowledge:import:validate:all` and `pnpm knowledge:batches:generate`.
+- **Quality diagnostics**: data-quality reports now include batch category,
+  source, confidence, review-status, Ukrainian and ATC coverage summaries.
+- **Search normalization**: improved casing, apostrophe and separator handling
+  for Ukrainian/Latin query variants.
+- **Docs**: added `docs/UKRAINIAN_DATA_STRATEGY.md` and
+  `docs/DICTIONARY_BATCHES.md`.
+
+### Unchanged
+
+- Static fallback remains default.
+- PostgreSQL remains optional.
+- Runtime lookup uses only `approved` rows.
+- Copyrighted/proprietary datasets remain blocked.
+- Medical safety behavior is unchanged.
 
 ## v0.8.0 - PostgreSQL Runtime Deployment Profile - 2026-07-04
 

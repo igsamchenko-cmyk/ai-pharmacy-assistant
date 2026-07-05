@@ -25,6 +25,7 @@ import type {
   ImportPreview,
   ImportConflict,
   KnowledgeRuntimeStatus,
+  DataQualityReport,
 } from "@workspace/api-client-react";
 
 const CONFLICT_TYPE_LABEL: Record<ImportConflict["type"], string> = {
@@ -44,6 +45,10 @@ const REVIEW_STATUS_LABEL: Record<
   needs_review: { label: "На перевірку", className: "text-blue-600" },
   rejected: { label: "Відхилено", className: "text-destructive" },
 };
+
+type DictionaryBatchSummary = NonNullable<
+  DataQualityReport["dictionaryBatches"]
+>;
 
 const SOURCE_TYPE_LABEL: Record<ProvenanceSource["type"], string> = {
   official: "Офіційне",
@@ -78,6 +83,121 @@ function TextStatCard({ label, value }: { label: string; value: string }) {
       </div>
       <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
+  );
+}
+
+function BatchCoverageCard({ batches }: { batches: DictionaryBatchSummary }) {
+  const topCategories = Object.entries(batches.byCategory)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6);
+  const topSources = Object.entries(batches.bySource)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
+
+  return (
+    <Card className="bg-card/50">
+      <CardContent className="p-5 space-y-4">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <Upload className="w-5 h-5 text-primary" />
+          Dictionary batch coverage
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label="Batch files" value={batches.files} />
+          <StatCard label="Rows" value={batches.totalRows} />
+          <StatCard label="New mappings" value={batches.totalNewMappings} />
+          <StatCard
+            label="New ingredients"
+            value={batches.totalNewIngredients}
+          />
+          <StatCard label="Duplicates" value={batches.duplicates} />
+          <StatCard label="Conflicts" value={batches.conflicts} />
+          <StatCard label="Missing sources" value={batches.missingSources} />
+          <StatCard label="Invalid ATC" value={batches.invalidAtc} />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <TextStatCard
+            label="Source coverage"
+            value={`${batches.sourceCoveragePct}%`}
+          />
+          <TextStatCard
+            label="UA coverage"
+            value={`${batches.ukrainianCoveragePct}%`}
+          />
+          <TextStatCard
+            label="ATC coverage"
+            value={`${batches.atcCoveragePct}%`}
+          />
+          <TextStatCard
+            label="Preview"
+            value={batches.wouldSucceed ? "ok" : "blocked"}
+          />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div>
+            <h4 className="text-sm font-semibold text-foreground mb-2">
+              Review status
+            </h4>
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                Object.keys(
+                  REVIEW_STATUS_LABEL,
+                ) as (keyof typeof REVIEW_STATUS_LABEL)[]
+              ).map((key) => (
+                <div
+                  key={key}
+                  className="bg-muted/50 rounded-lg px-3 py-2 text-center"
+                >
+                  <div
+                    className={`text-lg font-bold ${REVIEW_STATUS_LABEL[key].className}`}
+                  >
+                    {batches.byReviewStatus[key]}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {REVIEW_STATUS_LABEL[key].label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-foreground mb-2">
+              Top categories
+            </h4>
+            <div className="space-y-1">
+              {topCategories.map(([category, count]) => (
+                <div
+                  key={category}
+                  className="flex justify-between gap-3 text-sm"
+                >
+                  <span className="text-muted-foreground truncate">
+                    {category}
+                  </span>
+                  <span className="font-semibold text-foreground">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-foreground mb-2">
+              Sources
+            </h4>
+            <div className="space-y-1">
+              {topSources.map(([source, count]) => (
+                <div
+                  key={source}
+                  className="flex justify-between gap-3 text-sm"
+                >
+                  <span className="text-muted-foreground truncate">
+                    {source}
+                  </span>
+                  <span className="font-semibold text-foreground">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

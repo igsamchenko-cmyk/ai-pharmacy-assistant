@@ -93,3 +93,12 @@ large queues and role-based authentication for admin actions.
 
 Next: hosted deployment playbooks, role-based admin authentication, and broader
 production observability around import/review activity.
+
+## v0.9 Ukrainian Drug Data Expansion
+
+- Add repeatable dictionary batch files for Ukrainian generic, English, Latin and
+  deterministic transliteration mappings.
+- Keep DB runtime optional and approved-only.
+- Add preview/validate-all commands for batch review.
+- Extend quality diagnostics with category/source/confidence/review coverage.
+- Continue scaling toward larger safe mapping sets without proprietary sources.

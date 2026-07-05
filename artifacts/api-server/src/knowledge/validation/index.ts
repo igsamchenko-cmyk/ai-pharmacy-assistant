@@ -15,8 +15,15 @@ import {
 } from "../dictionary";
 import { getAtcInfo } from "../atc";
 import { isKnownSource } from "../provenance";
-import { interactionRules, type InteractionRule } from "../../data/interactions";
+import {
+  interactionRules,
+  type InteractionRule,
+} from "../../data/interactions";
 import { drugs, type DrugRecord } from "../../data/drugs";
+import {
+  buildDictionaryBatchSummary,
+  type DictionaryBatchQualitySummary,
+} from "../import/batches";
 
 export type IssueSeverity = "error" | "warning";
 
@@ -59,6 +66,7 @@ export interface QualityReport {
   coverage: QualityCoverage;
   errors: QualityIssue[];
   warnings: QualityIssue[];
+  dictionaryBatches?: DictionaryBatchQualitySummary;
 }
 
 function pct(part: number, total: number): number {
@@ -176,7 +184,11 @@ export function runQualityChecks(input: ValidationInput): QualityReport {
         subject: `${r.a}|${r.b}`,
       });
     }
-    if (!r.explanation.trim() || !r.whatToCheck.trim() || !r.whenToSeeDoctor.trim()) {
+    if (
+      !r.explanation.trim() ||
+      !r.whatToCheck.trim() ||
+      !r.whenToSeeDoctor.trim()
+    ) {
       errors.push({
         code: "rule.missing_text",
         severity: "error",
@@ -285,9 +297,13 @@ export function runQualityChecks(input: ValidationInput): QualityReport {
 
 /** Validate the live static knowledge base. */
 export function validateKnowledge(): QualityReport {
-  return runQualityChecks({
+  const report = runQualityChecks({
     entries: listDictionaryEntries(),
     rules: interactionRules,
     catalog: drugs,
   });
+  return {
+    ...report,
+    dictionaryBatches: buildDictionaryBatchSummary(),
+  };
 }

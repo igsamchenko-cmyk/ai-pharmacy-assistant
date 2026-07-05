@@ -1,0 +1,61 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-ascorbic-acid,Аскорбінова кислота,Ascorbic acid,en,english,public_generic_inn,verified,A11GA01,v0.9 curated generic batch
+ing-ascorbic-acid,Аскорбінова кислота,Acidum ascorbicum,la,latin,public_generic_inn,verified,A11GA01,v0.9 curated generic batch
+ing-ascorbic-acid,Аскорбінова кислота,askorbinova kyslota,uk-Latn,transliteration,project_generated_transliteration,high,A11GA01,v0.9 deterministic transliteration
+ing-ascorbic-acid,Аскорбінова кислота,Аскорбінова кислота,uk,ukrainian,public_generic_inn,verified,A11GA01,v0.9 curated generic batch
+ing-dexamethasone,Дексаметазон,Dexamethasone,en,english,public_generic_inn,verified,H02AB02,v0.9 curated generic batch
+ing-dexamethasone,Дексаметазон,Dexamethasonum,la,latin,public_generic_inn,verified,H02AB02,v0.9 curated generic batch
+ing-dexamethasone,Дексаметазон,deksametazon,uk-Latn,transliteration,project_generated_transliteration,high,H02AB02,v0.9 deterministic transliteration
+ing-dexamethasone,Дексаметазон,Дексаметазон,uk,ukrainian,public_generic_inn,verified,H02AB02,v0.9 curated generic batch
+ing-dexpanthenol,Декспантенол,Dexpanthenol,en,english,public_generic_inn,verified,D03AX03,v0.9 curated generic batch
+ing-dexpanthenol,Декспантенол,Dexpanthenolum,la,latin,public_generic_inn,verified,D03AX03,v0.9 curated generic batch
+ing-dexpanthenol,Декспантенол,dekspantenol,uk-Latn,transliteration,project_generated_transliteration,high,D03AX03,v0.9 deterministic transliteration
+ing-dexpanthenol,Декспантенол,Декспантенол,uk,ukrainian,public_generic_inn,verified,D03AX03,v0.9 curated generic batch
+ing-iron-polymaltose,Заліза (III) гідроксид полімальтозат,Iron polymaltose,en,english,public_generic_inn,verified,B03AB05,v0.9 curated generic batch
+ing-iron-polymaltose,Заліза (III) гідроксид полімальтозат,Ferri hydroxidum polymaltosum,la,latin,public_generic_inn,verified,B03AB05,v0.9 curated generic batch
+ing-iron-polymaltose,Заліза (III) гідроксид полімальтозат,zaliza iii hidroksyd polimaltozat,uk-Latn,transliteration,project_generated_transliteration,high,B03AB05,v0.9 deterministic transliteration
+ing-iron-polymaltose,Заліза (III) гідроксид полімальтозат,Заліза (III) гідроксид полімальтозат,uk,ukrainian,public_generic_inn,verified,B03AB05,v0.9 curated generic batch
+ing-ferrous-sulfate,Заліза сульфат,Ferrous sulfate,en,english,public_generic_inn,verified,B03AA07,v0.9 curated generic batch
+ing-ferrous-sulfate,Заліза сульфат,Ferrosi sulfas,la,latin,public_generic_inn,verified,B03AA07,v0.9 curated generic batch
+ing-ferrous-sulfate,Заліза сульфат,zaliza sulfat,uk-Latn,transliteration,project_generated_transliteration,high,B03AA07,v0.9 deterministic transliteration
+ing-ferrous-sulfate,Заліза сульфат,Заліза сульфат,uk,ukrainian,public_generic_inn,verified,B03AA07,v0.9 curated generic batch
+ing-potassium-magnesium-aspartate,Калію та магнію аспарагінат,Potassium/magnesium aspartate,en,english,public_generic_inn,verified,A12CC,v0.9 curated generic batch
+ing-potassium-magnesium-aspartate,Калію та магнію аспарагінат,Kalii et magnesii asparaginas,la,latin,public_generic_inn,verified,A12CC,v0.9 curated generic batch
+ing-potassium-magnesium-aspartate,Калію та магнію аспарагінат,kaliiu ta mahniiu asparahinat,uk-Latn,transliteration,project_generated_transliteration,high,A12CC,v0.9 deterministic transliteration
+ing-potassium-magnesium-aspartate,Калію та магнію аспарагінат,Калію та магнію аспарагінат,uk,ukrainian,public_generic_inn,verified,A12CC,v0.9 curated generic batch
+ing-colecalciferol,Колекальциферол,Colecalciferol,en,english,public_generic_inn,verified,A11CC05,v0.9 curated generic batch
+ing-colecalciferol,Колекальциферол,Colecalciferolum,la,latin,public_generic_inn,verified,A11CC05,v0.9 curated generic batch
+ing-colecalciferol,Колекальциферол,kolekaltsyferol,uk-Latn,transliteration,project_generated_transliteration,high,A11CC05,v0.9 deterministic transliteration
+ing-colecalciferol,Колекальциферол,Колекальциферол,uk,ukrainian,public_generic_inn,verified,A11CC05,v0.9 curated generic batch
+ing-lidocaine,Лідокаїн,Lidocaine,en,english,public_generic_inn,verified,N01BB02,v0.9 curated generic batch
+ing-lidocaine,Лідокаїн,Lidocainum,la,latin,public_generic_inn,verified,N01BB02,v0.9 curated generic batch
+ing-lidocaine,Лідокаїн,lidokain,uk-Latn,transliteration,project_generated_transliteration,high,N01BB02,v0.9 deterministic transliteration
+ing-lidocaine,Лідокаїн,Лідокаїн,uk,ukrainian,public_generic_inn,verified,N01BB02,v0.9 curated generic batch
+ing-magnesium-pyridoxine,Магнію лактат + піридоксин,Magnesium + pyridoxine,en,english,public_generic_inn,verified,A12CC,v0.9 curated generic batch
+ing-magnesium-pyridoxine,Магнію лактат + піридоксин,Magnesii lactas + Pyridoxinum,la,latin,public_generic_inn,verified,A12CC,v0.9 curated generic batch
+ing-magnesium-pyridoxine,Магнію лактат + піридоксин,mahniiu laktat pirydoksyn,uk-Latn,transliteration,project_generated_transliteration,high,A12CC,v0.9 deterministic transliteration
+ing-magnesium-pyridoxine,Магнію лактат + піридоксин,Магнію лактат + піридоксин,uk,ukrainian,public_generic_inn,verified,A12CC,v0.9 curated generic batch
+ing-methylprednisolone,Метилпреднізолон,Methylprednisolone,en,english,public_generic_inn,verified,H02AB04,v0.9 curated generic batch
+ing-methylprednisolone,Метилпреднізолон,Methylprednisolonum,la,latin,public_generic_inn,verified,H02AB04,v0.9 curated generic batch
+ing-methylprednisolone,Метилпреднізолон,metylprednizolon,uk-Latn,transliteration,project_generated_transliteration,high,H02AB04,v0.9 deterministic transliteration
+ing-methylprednisolone,Метилпреднізолон,Метилпреднізолон,uk,ukrainian,public_generic_inn,verified,H02AB04,v0.9 curated generic batch
+ing-povidone-iodine,Повідон-йод,Povidone-iodine,en,english,public_generic_inn,verified,D08AG02,v0.9 curated generic batch
+ing-povidone-iodine,Повідон-йод,Povidonum iodinatum,la,latin,public_generic_inn,verified,D08AG02,v0.9 curated generic batch
+ing-povidone-iodine,Повідон-йод,povidon iod,uk-Latn,transliteration,project_generated_transliteration,high,D08AG02,v0.9 deterministic transliteration
+ing-povidone-iodine,Повідон-йод,Повідон-йод,uk,ukrainian,public_generic_inn,verified,D08AG02,v0.9 curated generic batch
+ing-prednisolone,Преднізолон,Prednisolone,en,english,public_generic_inn,verified,H02AB06,v0.9 curated generic batch
+ing-prednisolone,Преднізолон,Prednisolonum,la,latin,public_generic_inn,verified,H02AB06,v0.9 curated generic batch
+ing-prednisolone,Преднізолон,prednizolon,uk-Latn,transliteration,project_generated_transliteration,high,H02AB06,v0.9 deterministic transliteration
+ing-prednisolone,Преднізолон,Преднізолон,uk,ukrainian,public_generic_inn,verified,H02AB06,v0.9 curated generic batch
+ing-folic-acid,Фолієва кислота,Folic acid,en,english,public_generic_inn,verified,B03BB01,v0.9 curated generic batch
+ing-folic-acid,Фолієва кислота,Acidum folicum,la,latin,public_generic_inn,verified,B03BB01,v0.9 curated generic batch
+ing-folic-acid,Фолієва кислота,foliieva kyslota,uk-Latn,transliteration,project_generated_transliteration,high,B03BB01,v0.9 deterministic transliteration
+ing-folic-acid,Фолієва кислота,Фолієва кислота,uk,ukrainian,public_generic_inn,verified,B03BB01,v0.9 curated generic batch
+ing-chlorhexidine,Хлоргексидин,Chlorhexidine,en,english,public_generic_inn,verified,D08AC02,v0.9 curated generic batch
+ing-chlorhexidine,Хлоргексидин,Chlorhexidinum,la,latin,public_generic_inn,verified,D08AC02,v0.9 curated generic batch
+ing-chlorhexidine,Хлоргексидин,khlorheksydyn,uk-Latn,transliteration,project_generated_transliteration,high,D08AC02,v0.9 deterministic transliteration
+ing-chlorhexidine,Хлоргексидин,Хлоргексидин,uk,ukrainian,public_generic_inn,verified,D08AC02,v0.9 curated generic batch
+ing-cyanocobalamin,Ціанокобаламін,Cyanocobalamin,en,english,public_generic_inn,verified,B03BA01,v0.9 curated generic batch
+ing-cyanocobalamin,Ціанокобаламін,Cyanocobalaminum,la,latin,public_generic_inn,verified,B03BA01,v0.9 curated generic batch
+ing-cyanocobalamin,Ціанокобаламін,tsianokobalamin,uk-Latn,transliteration,project_generated_transliteration,high,B03BA01,v0.9 deterministic transliteration
+ing-cyanocobalamin,Ціанокобаламін,Ціанокобаламін,uk,ukrainian,public_generic_inn,verified,B03BA01,v0.9 curated generic batch

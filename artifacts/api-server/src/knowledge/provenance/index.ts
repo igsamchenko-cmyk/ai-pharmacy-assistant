@@ -38,7 +38,11 @@ export interface Source {
  * - theoretical: plausible/class-based, needs verification
  * - demo:       illustrative demo data, not validated
  */
-export type EvidenceLevel = "established" | "reference" | "theoretical" | "demo";
+export type EvidenceLevel =
+  | "established"
+  | "reference"
+  | "theoretical"
+  | "demo";
 
 export interface Provenance {
   sourceKey: string;
@@ -70,6 +74,42 @@ const SOURCE_LIST: Source[] = [
     type: "reference",
     reliability: "medium",
     note: "Референсні правила взаємодій рівня класів; потребують перевірки за інструкцією.",
+  },
+  {
+    key: "project_static_curated",
+    label: "Project-owned curated generic dictionary",
+    type: "reference",
+    reliability: "high",
+    note: "Curated generic-name mappings maintained in this repository; no proprietary catalog payloads.",
+  },
+  {
+    key: "project_generated_transliteration",
+    label: "Project-generated Ukrainian transliterations",
+    type: "reference",
+    reliability: "medium",
+    note: "Deterministic Ukrainian-to-Latin search variants generated from curated generic names.",
+  },
+  {
+    key: "public_generic_inn",
+    label: "Public generic INN / MNN naming",
+    type: "reference",
+    reliability: "high",
+    note: "Public generic names used for auditable INN/MNN dictionary rows.",
+  },
+  {
+    key: "rxnorm_reference",
+    label: "RxNorm reference mapping candidate",
+    type: "external",
+    reliability: "high",
+    url: "https://www.nlm.nih.gov/research/umls/rxnorm/",
+    note: "Public RxNorm-derived generic-name reference; use for non-proprietary generic mappings only.",
+  },
+  {
+    key: "manual_review_candidate",
+    label: "Manual review candidate",
+    type: "demo",
+    reliability: "low",
+    note: "Project-owned candidate rows that must remain pending or needs_review until a reviewer approves them.",
   },
   {
     key: "demo-catalog",
@@ -131,6 +171,9 @@ export function provenanceForNameKind(kind: NameKind): Provenance {
     case "brand":
       return { sourceKey: "demo-catalog", evidenceLevel: "demo" };
     case "synonym":
-      return { sourceKey: "pharmacology-reference", evidenceLevel: "reference" };
+      return {
+        sourceKey: "pharmacology-reference",
+        evidenceLevel: "reference",
+      };
   }
 }

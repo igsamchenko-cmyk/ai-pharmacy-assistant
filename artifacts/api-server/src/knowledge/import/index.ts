@@ -70,3 +70,4 @@ export * from "./guard";
 export * from "./review";
 export * from "./analyze";
 export * from "./samples";
+export * from "./batches";

@@ -18,7 +18,10 @@
     "db:dev:up": "node scripts/docker-dev.mjs up",
     "db:dev:down": "node scripts/docker-dev.mjs down",
     "dev:db-runtime": "node scripts/dev-db-runtime.mjs",
-    "knowledge:runtime:smoke": "pnpm --filter @workspace/api-server run knowledge:runtime:smoke"
+    "knowledge:runtime:smoke": "pnpm --filter @workspace/api-server run knowledge:runtime:smoke",
+    "knowledge:import:preview:all": "pnpm --filter @workspace/api-server run import:preview:all",
+    "knowledge:import:validate:all": "pnpm --filter @workspace/api-server run import:validate:all",
+    "knowledge:batches:generate": "pnpm --filter @workspace/api-server run generate:dictionary-batches"
   },
   "private": true,
   "devDependencies": {
