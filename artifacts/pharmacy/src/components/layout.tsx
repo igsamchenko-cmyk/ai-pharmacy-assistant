@@ -12,6 +12,7 @@ import {
   Info,
   Database,
   ClipboardList,
+  FlaskConical,
   Moon,
   Sun,
 } from "lucide-react";
@@ -45,6 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     navByHref.get("/hospital")!,
     { href: "/review", icon: ClipboardList, label: "Рев'ю" },
     { href: "/data-quality", icon: Database, label: "Дані" },
+    { href: "/beta-dashboard", icon: FlaskConical, label: "Beta" },
   ];
 
   return (
@@ -99,6 +101,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="p-4 border-t border-border flex flex-col gap-2">
+          <Link
+            href="/beta-dashboard"
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium ${location === "/beta-dashboard" ? "bg-primary text-primary-foreground" : "hover:bg-accent text-foreground"}`}
+            data-testid="nav-beta-dashboard"
+          >
+            <FlaskConical className="w-5 h-5" />
+            Beta Dashboard
+          </Link>
           <Link
             href="/data-quality"
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium ${location === "/data-quality" ? "bg-primary text-primary-foreground" : "hover:bg-accent text-foreground"}`}

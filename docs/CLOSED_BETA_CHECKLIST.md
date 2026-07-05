@@ -89,3 +89,8 @@ FarmAssist v1.0 closed beta means controlled personal/internal daily testing by 
 - Emergency triage.
 - Clinical completeness of interactions, contraindications, or dosing.
 
+
+
+## Beta Dashboard
+
+Use `/beta-dashboard` during manual closed-beta passes to run readiness, scenario, search-quality, safety, interaction, data-quality and diagnostics checks from the UI. Export JSON after a pass when attaching operator evidence. Keep the terminal validation list for release gates.

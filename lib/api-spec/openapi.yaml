@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: beta
+    description: Closed beta validation dashboard
   - name: diagnostics
     description: Internal diagnostics and release readiness status
   - name: drugs
@@ -38,6 +40,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /beta/dashboard/status:
+    get:
+      operationId: getBetaDashboardStatus
+      tags: [beta]
+      summary: Beta dashboard status
+      description: >-
+        Returns a sanitized closed-beta testing summary for the in-app beta
+        dashboard. It uses internal safe validation functions only and never
+        exposes secrets, DATABASE_URL values or server filesystem paths.
+      responses:
+        "200":
+          description: Beta dashboard status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BetaDashboardStatus"
+  /beta/dashboard/run:
+    post:
+      operationId: runBetaDashboardCheck
+      tags: [beta]
+      summary: Run a predefined beta dashboard check
+      description: >-
+        Runs one of the fixed safe validation checks. The request is limited to
+        an enum and does not execute user-provided shell commands.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BetaDashboardRunRequest"
+      responses:
+        "200":
+          description: Beta dashboard check result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BetaDashboardRunResponse"
+        "400":
+          description: Invalid check type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /diagnostics:
     get:
       operationId: getDiagnostics
@@ -685,6 +730,192 @@ components:
           type: string
       required:
         - error
+    BetaDashboardCheckType:
+      type: string
+      enum:
+        - readiness
+        - scenarios
+        - search_quality
+        - safety
+        - interactions
+        - data_quality
+        - diagnostics
+        - full_safe_check
+    BetaDashboardRunStatus:
+      type: string
+      enum: [ok, warning, failed]
+    BetaDashboardRunRequest:
+      type: object
+      required:
+        - checkType
+      properties:
+        checkType:
+          $ref: "#/components/schemas/BetaDashboardCheckType"
+    BetaDashboardRunResponse:
+      type: object
+      required:
+        - checkType
+        - status
+        - score
+        - passed
+        - failed
+        - warnings
+        - summary
+        - details
+        - generatedAt
+        - durationMs
+      properties:
+        checkType:
+          $ref: "#/components/schemas/BetaDashboardCheckType"
+        status:
+          $ref: "#/components/schemas/BetaDashboardRunStatus"
+        score:
+          oneOf:
+            - type: integer
+            - type: "null"
+        passed:
+          type: integer
+        failed:
+          type: integer
+        warnings:
+          type: array
+          items:
+            type: string
+        summary:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        generatedAt:
+          type: string
+          format: date-time
+        durationMs:
+          type: integer
+    BetaDashboardStatus:
+      type: object
+      required:
+        - generatedAt
+        - status
+        - readiness
+        - scenarios
+        - searchQuality
+        - runtime
+        - dataQuality
+        - reviewQueue
+        - diagnostics
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/BetaDashboardRunStatus"
+        readiness:
+          type: object
+          required: [score, ready, summary, warnings]
+          properties:
+            score:
+              type: integer
+            ready:
+              type: boolean
+            summary:
+              type: string
+            warnings:
+              type: array
+              items:
+                type: string
+        scenarios:
+          type: object
+          required: [passed, failed, total, warnings]
+          properties:
+            passed:
+              type: integer
+            failed:
+              type: integer
+            total:
+              type: integer
+            warnings:
+              type: array
+              items:
+                type: string
+        searchQuality:
+          type: object
+          required: [totalQueries, hitRatePct, topResultAccuracyPct, missesCount, warnings]
+          properties:
+            totalQueries:
+              type: integer
+            hitRatePct:
+              type: integer
+            topResultAccuracyPct:
+              type: integer
+            missesCount:
+              type: integer
+            warnings:
+              type: array
+              items:
+                type: string
+        runtime:
+          type: object
+          required: [mode, dbConfigured, dbAvailable, staticFallbackEnabled, warnings]
+          properties:
+            mode:
+              type: string
+              enum: [static, db]
+            dbConfigured:
+              type: boolean
+            dbAvailable:
+              type: boolean
+            staticFallbackEnabled:
+              type: boolean
+            warnings:
+              type: array
+              items:
+                type: string
+        dataQuality:
+          type: object
+          required: [mappingsCount, sourceCoveragePct, atcCoveragePct, conflicts, ok, warnings]
+          properties:
+            mappingsCount:
+              type: integer
+            sourceCoveragePct:
+              type: integer
+            atcCoveragePct:
+              type: integer
+            conflicts:
+              type: integer
+            ok:
+              type: boolean
+            warnings:
+              type: array
+              items:
+                type: string
+        reviewQueue:
+          type: object
+          required: [pending, needsReview, approved, rejected, warnings]
+          properties:
+            pending:
+              type: integer
+            needsReview:
+              type: integer
+            approved:
+              type: integer
+            rejected:
+              type: integer
+            warnings:
+              type: array
+              items:
+                type: string
+        diagnostics:
+          type: object
+          required: [releaseLabel, version, warnings]
+          properties:
+            releaseLabel:
+              type: string
+            version:
+              type: string
+            warnings:
+              type: array
+              items:
+                type: string
     DiagnosticsReportStatus:
       type: object
       required:

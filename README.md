@@ -216,3 +216,8 @@ rows remain review/audit-only. See `docs/DICTIONARY_BATCHES.md` and
 - Use `docs/FEEDBACK_POLICY.md` before collecting beta reports; reports must not contain patient-identifiable data or secrets.
 - DB runtime remains optional behind `KNOWLEDGE_DB_RUNTIME=true`; static fallback must keep working.
 - FarmAssist remains a reference tool only and must not be used for diagnosis, treatment selection, pediatric dosing, cancellation of medication, or emergency triage.
+
+
+## Beta Dashboard
+
+Closed beta operators can use `/beta-dashboard` to run predefined safe validation checks from the UI: readiness, scenarios, search quality, safety, interactions, data quality and runtime diagnostics. The dashboard never executes arbitrary shell commands and never exposes provider keys or `DATABASE_URL`. See `docs/BETA_DASHBOARD.md`.

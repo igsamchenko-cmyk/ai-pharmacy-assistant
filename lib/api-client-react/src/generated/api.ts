@@ -24,6 +24,9 @@ import type {
   AiSummaryInput,
   AnalogResult,
   AtcInfo,
+  BetaDashboardRunRequest,
+  BetaDashboardRunResponse,
+  BetaDashboardStatus,
   CompareInput,
   CompareResult,
   DataQualityReport,
@@ -161,6 +164,155 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
+
+export const getGetBetaDashboardStatusUrl = () => {
+
+
+
+
+  return `/api/beta/dashboard/status`
+}
+
+/**
+ * Returns a sanitized closed-beta testing summary for the in-app beta dashboard. It uses internal safe validation functions only and never exposes secrets, DATABASE_URL values or server filesystem paths.
+ * @summary Beta dashboard status
+ */
+export const getBetaDashboardStatus = async ( options?: RequestInit): Promise<BetaDashboardStatus> => {
+
+  return customFetch<BetaDashboardStatus>(getGetBetaDashboardStatusUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetBetaDashboardStatusQueryKey = () => {
+    return [
+    `/api/beta/dashboard/status`
+    ] as const;
+    }
+
+
+export const getGetBetaDashboardStatusQueryOptions = <TData = Awaited<ReturnType<typeof getBetaDashboardStatus>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBetaDashboardStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBetaDashboardStatusQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBetaDashboardStatus>>> = ({ signal }) => getBetaDashboardStatus({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBetaDashboardStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBetaDashboardStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getBetaDashboardStatus>>>
+export type GetBetaDashboardStatusQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Beta dashboard status
+ */
+
+export function useGetBetaDashboardStatus<TData = Awaited<ReturnType<typeof getBetaDashboardStatus>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBetaDashboardStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBetaDashboardStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRunBetaDashboardCheckUrl = () => {
+
+
+
+
+  return `/api/beta/dashboard/run`
+}
+
+/**
+ * Runs one of the fixed safe validation checks. The request is limited to an enum and does not execute user-provided shell commands.
+ * @summary Run a predefined beta dashboard check
+ */
+export const runBetaDashboardCheck = async (betaDashboardRunRequest: BetaDashboardRunRequest, options?: RequestInit): Promise<BetaDashboardRunResponse> => {
+
+  return customFetch<BetaDashboardRunResponse>(getRunBetaDashboardCheckUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(betaDashboardRunRequest)
+  }
+);}
+
+
+
+
+export const getRunBetaDashboardCheckMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runBetaDashboardCheck>>, TError,{data: BodyType<BetaDashboardRunRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runBetaDashboardCheck>>, TError,{data: BodyType<BetaDashboardRunRequest>}, TContext> => {
+
+const mutationKey = ['runBetaDashboardCheck'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runBetaDashboardCheck>>, {data: BodyType<BetaDashboardRunRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  runBetaDashboardCheck(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunBetaDashboardCheckMutationResult = NonNullable<Awaited<ReturnType<typeof runBetaDashboardCheck>>>
+    export type RunBetaDashboardCheckMutationBody = BodyType<BetaDashboardRunRequest>
+    export type RunBetaDashboardCheckMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Run a predefined beta dashboard check
+ */
+export const useRunBetaDashboardCheck = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runBetaDashboardCheck>>, TError,{data: BodyType<BetaDashboardRunRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof runBetaDashboardCheck>>,
+        TError,
+        {data: BodyType<BetaDashboardRunRequest>},
+        TContext
+      > => {
+      return useMutation(getRunBetaDashboardCheckMutationOptions(options));
+    }
 
 export const getGetDiagnosticsUrl = () => {
 

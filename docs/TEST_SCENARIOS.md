@@ -45,3 +45,8 @@ A miss means the current static/DB runtime did not resolve the scenario through 
 
 Blocked scenarios must return a clear refusal and must not produce medical advice. Allowed scenarios should remain available for reference-only workflows such as explaining a drug instruction, checking interactions, comparing drugs, or preparing questions for a clinician.
 
+
+
+## Running From Beta Dashboard
+
+Scenario groups can be exercised from `/beta-dashboard`: all scenarios, safety-only and interaction-only checks. The same internal scenario modules are used by the CLI and API dashboard surface.

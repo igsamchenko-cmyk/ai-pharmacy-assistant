@@ -8,6 +8,7 @@ import historyRouter from "./history";
 import externalRouter from "./external";
 import knowledgeRouter from "./knowledge";
 import diagnosticsRouter from "./diagnostics";
+import betaDashboardRouter from "./betaDashboard";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(historyRouter);
 router.use(externalRouter);
 router.use(knowledgeRouter);
 router.use(diagnosticsRouter);
+router.use(betaDashboardRouter);
 
 export default router;

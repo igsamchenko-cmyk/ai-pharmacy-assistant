@@ -18,6 +18,84 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * Returns a sanitized closed-beta testing summary for the in-app beta dashboard. It uses internal safe validation functions only and never exposes secrets, DATABASE_URL values or server filesystem paths.
+ * @summary Beta dashboard status
+ */
+export const GetBetaDashboardStatusResponse = zod.object({
+  "generatedAt": zod.coerce.date(),
+  "status": zod.enum(['ok', 'warning', 'failed']),
+  "readiness": zod.object({
+  "score": zod.number(),
+  "ready": zod.boolean(),
+  "summary": zod.string(),
+  "warnings": zod.array(zod.string())
+}),
+  "scenarios": zod.object({
+  "passed": zod.number(),
+  "failed": zod.number(),
+  "total": zod.number(),
+  "warnings": zod.array(zod.string())
+}),
+  "searchQuality": zod.object({
+  "totalQueries": zod.number(),
+  "hitRatePct": zod.number(),
+  "topResultAccuracyPct": zod.number(),
+  "missesCount": zod.number(),
+  "warnings": zod.array(zod.string())
+}),
+  "runtime": zod.object({
+  "mode": zod.enum(['static', 'db']),
+  "dbConfigured": zod.boolean(),
+  "dbAvailable": zod.boolean(),
+  "staticFallbackEnabled": zod.boolean(),
+  "warnings": zod.array(zod.string())
+}),
+  "dataQuality": zod.object({
+  "mappingsCount": zod.number(),
+  "sourceCoveragePct": zod.number(),
+  "atcCoveragePct": zod.number(),
+  "conflicts": zod.number(),
+  "ok": zod.boolean(),
+  "warnings": zod.array(zod.string())
+}),
+  "reviewQueue": zod.object({
+  "pending": zod.number(),
+  "needsReview": zod.number(),
+  "approved": zod.number(),
+  "rejected": zod.number(),
+  "warnings": zod.array(zod.string())
+}),
+  "diagnostics": zod.object({
+  "releaseLabel": zod.string(),
+  "version": zod.string(),
+  "warnings": zod.array(zod.string())
+})
+})
+
+
+/**
+ * Runs one of the fixed safe validation checks. The request is limited to an enum and does not execute user-provided shell commands.
+ * @summary Run a predefined beta dashboard check
+ */
+export const RunBetaDashboardCheckBody = zod.object({
+  "checkType": zod.enum(['readiness', 'scenarios', 'search_quality', 'safety', 'interactions', 'data_quality', 'diagnostics', 'full_safe_check'])
+})
+
+export const RunBetaDashboardCheckResponse = zod.object({
+  "checkType": zod.enum(['readiness', 'scenarios', 'search_quality', 'safety', 'interactions', 'data_quality', 'diagnostics', 'full_safe_check']),
+  "status": zod.enum(['ok', 'warning', 'failed']),
+  "score": zod.union([zod.number(),zod.null()]),
+  "passed": zod.number(),
+  "failed": zod.number(),
+  "warnings": zod.array(zod.string()),
+  "summary": zod.string(),
+  "details": zod.record(zod.string(), zod.unknown()),
+  "generatedAt": zod.coerce.date(),
+  "durationMs": zod.number()
+})
+
+
+/**
  * Returns sanitized diagnostics for the internal data-quality panel, including release metadata, runtime/provider booleans, knowledge counts and report availability. Does not expose secrets, database URLs or server filesystem paths.
  * @summary Diagnostics and release readiness status
  */
