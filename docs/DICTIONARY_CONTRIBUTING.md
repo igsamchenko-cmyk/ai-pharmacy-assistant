@@ -176,3 +176,7 @@ Allowed source IDs for v0.9 batch rows include:
 Do not copy commercial drug catalogs, proprietary medicine databases, package
 leaflet payloads, distributor feeds or branded lists. If a brand/trade mapping is
 uncertain, keep it out of approved batches or mark it as a review candidate.
+
+## v1.0 Closed Beta Dictionary Feedback
+
+Search misses from `pnpm knowledge:search:report` or local beta feedback are candidates, not automatic mappings. Review each miss for spelling, language variant, ambiguity, permitted source, ATC, provenance, confidence, and review status. Add only non-proprietary entries and keep ambiguous brand/INN mappings out of approved runtime until reviewed.

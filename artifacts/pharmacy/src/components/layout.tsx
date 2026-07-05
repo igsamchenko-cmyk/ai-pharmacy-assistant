@@ -36,12 +36,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/history", icon: Clock, label: "Історія" },
   ];
 
-  // Bottom bar on phones keeps only the most-used destinations to stay legible.
-  const mobileNavItems = navItems.filter((item) =>
-    ["/", "/search", "/hospital", "/interactions", "/ai", "/history"].includes(
-      item.href,
-    ),
-  );
+  // Bottom bar on phones keeps the closed-beta daily workflow one tap away.
+  const navByHref = new Map(navItems.map((item) => [item.href, item]));
+  const mobileNavItems = [
+    navByHref.get("/search")!,
+    navByHref.get("/interactions")!,
+    navByHref.get("/compare")!,
+    navByHref.get("/hospital")!,
+    { href: "/review", icon: ClipboardList, label: "Рев'ю" },
+    { href: "/data-quality", icon: Database, label: "Дані" },
+  ];
 
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground pb-20 md:pb-0 md:flex-row">

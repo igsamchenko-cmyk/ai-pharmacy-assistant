@@ -14,14 +14,16 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
-import { Search as SearchIcon, Pill, Activity } from "lucide-react";
+import { Search as SearchIcon, Pill, Database, Gauge } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/hooks/use-debounce";
+import { DEMO_LABEL } from "@/lib/constants";
+import { ReportIssueButton } from "@/components/report-issue-button";
 
 export default function SearchPage() {
   const [q, setQ] = useState("");
-  const debouncedQ = useDebounce(q, 300);
+  const debouncedQ = useDebounce(q, 180);
   const [field, setField] = useState<SearchDrugsField>("all");
 
   const {
@@ -38,12 +40,14 @@ export default function SearchPage() {
     },
   );
 
+  const isUpdating = q.trim() !== debouncedQ.trim();
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold text-primary">Пошук препарату</h1>
         <p className="text-sm text-muted-foreground">
-          Знайдіть потрібний препарат у демо-базі.
+          Знайдіть препарат у демо-базі за брендом, МНН, ATC, формою або дозуванням.
         </p>
       </div>
 
@@ -52,12 +56,13 @@ export default function SearchPage() {
           <span className="sr-only">Пошук препарату за назвою або МНН</span>
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
-            placeholder="Введіть назву або МНН..."
+            placeholder="Назва, МНН, ATC або дозування..."
             className="pl-9 bg-card"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             aria-label="Пошук препарату за назвою або МНН"
             data-testid="input-search-q"
+            autoFocus
           />
         </label>
         <Select
@@ -81,45 +86,71 @@ export default function SearchPage() {
         </Select>
       </div>
 
+      {isUpdating && (
+        <p className="text-xs text-muted-foreground">Оновлення результатів…</p>
+      )}
+
       <div className="space-y-3">
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-xl" />
+            <Skeleton key={i} className="h-28 w-full rounded-xl" />
           ))
         ) : isError ? (
-          <div className="text-center py-12 px-4 text-destructive border-2 border-dashed border-destructive/30 rounded-xl">
-            <p>
-              Не вдалося виконати пошук. Перевірте зʼєднання і спробуйте ще раз.
+          <div className="py-8 px-4 text-destructive border-2 border-dashed border-destructive/30 rounded-xl space-y-3">
+            <p className="font-medium">Не вдалося виконати пошук.</p>
+            <p className="text-sm text-muted-foreground">
+              Перевірте з'єднання або скористайтеся локальною демо-базою після відновлення API.
             </p>
+            <ReportIssueButton
+              type="ui_bug"
+              context={`search-error:${debouncedQ || "empty"}`}
+              compact
+            />
           </div>
         ) : !results?.length && debouncedQ ? (
-          <div className="text-center py-12 px-4 text-muted-foreground border-2 border-dashed border-border rounded-xl">
-            <SearchIcon className="w-8 h-8 mx-auto mb-3 opacity-20" />
-            <p>Нічого не знайдено за запитом "{debouncedQ}"</p>
+          <div className="py-10 px-4 text-muted-foreground border-2 border-dashed border-border rounded-xl space-y-3">
+            <SearchIcon className="w-8 h-8 opacity-20" />
+            <div>
+              <p className="font-medium text-foreground">
+                Нічого не знайдено за запитом "{debouncedQ}"
+              </p>
+              <p className="text-sm mt-1">
+                Спробуйте МНН, бренд без дозування або латинську/англійську назву. Якщо це реальний beta miss, збережіть звіт.
+              </p>
+            </div>
+            <ReportIssueButton
+              type="search_miss"
+              context={`search-miss:${debouncedQ}`}
+              sourceSnapshot={{ field, query: debouncedQ }}
+              compact
+            />
           </div>
         ) : !results?.length && !debouncedQ ? (
-          <div className="text-center py-12 px-4 text-muted-foreground">
-            <p className="text-sm">Почніть вводити текст для пошуку.</p>
+          <div className="py-10 px-4 text-muted-foreground border border-dashed border-border rounded-xl">
+            <p className="text-sm">
+              Почніть з прикладів: Нурофен, Парацетамол, Амоксиклав, Warfarin.
+            </p>
           </div>
         ) : (
           results?.map((drug, i) => (
-            <Link
+            <Card
               key={drug.id}
-              href={`/drug/${drug.id}`}
-              data-testid={`link-drug-${drug.id}`}
+              className="hover:border-primary/40 transition-colors animate-in slide-in-from-bottom-2 fade-in"
+              style={{
+                animationFillMode: "both",
+                animationDelay: `${i * 40}ms`,
+              }}
             >
-              <Card
-                className="hover:border-primary/40 transition-colors animate-in slide-in-from-bottom-2 fade-in"
-                style={{
-                  animationFillMode: "both",
-                  animationDelay: `${i * 50}ms`,
-                }}
-              >
-                <CardContent className="p-4 flex gap-4">
-                  <div className="bg-accent/30 p-3 rounded-lg flex items-center justify-center shrink-0">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex gap-4">
+                  <div className="bg-accent/30 p-3 rounded-lg flex items-center justify-center shrink-0 self-start">
                     <Pill className="w-6 h-6 text-primary" />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <Link
+                    href={`/drug/${drug.id}`}
+                    data-testid={`link-drug-${drug.id}`}
+                    className="flex-1 min-w-0 block"
+                  >
                     <h3 className="font-bold text-foreground truncate">
                       {drug.brandName}
                     </h3>
@@ -141,11 +172,31 @@ export default function SearchPage() {
                           {drug.atcCode}
                         </Badge>
                       )}
+                      <Badge variant="outline" className="text-[10px] gap-1">
+                        <Database className="w-3 h-3" />
+                        локальний каталог
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px] gap-1">
+                        <Gauge className="w-3 h-3" />
+                        confidence: {DEMO_LABEL}
+                      </Badge>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+                  </Link>
+                </div>
+                <ReportIssueButton
+                  type="wrong_mapping"
+                  context={`drug-result:${drug.id}:query:${debouncedQ || "empty"}`}
+                  sourceSnapshot={{
+                    id: drug.id,
+                    brandName: drug.brandName,
+                    inn: drug.inn,
+                    atcCode: drug.atcCode,
+                    source: drug.source,
+                  }}
+                  compact
+                />
+              </CardContent>
+            </Card>
           ))
         )}
       </div>

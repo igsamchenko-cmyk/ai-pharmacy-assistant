@@ -20,7 +20,10 @@
     "knowledge:runtime:smoke": "tsx src/scripts/knowledge-runtime-smoke.ts",
     "import:preview:all": "tsx src/scripts/import-preview-all-batches.ts",
     "import:validate:all": "tsx src/scripts/validate-dictionary-batches.ts",
-    "generate:dictionary-batches": "tsx src/scripts/generate-dictionary-batches.ts"
+    "generate:dictionary-batches": "tsx src/scripts/generate-dictionary-batches.ts",
+    "knowledge:search:report": "tsx src/scripts/knowledge-search-report.ts",
+    "beta:scenarios": "tsx src/scripts/beta-scenarios.ts",
+    "beta:readiness": "tsx src/scripts/beta-readiness.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",

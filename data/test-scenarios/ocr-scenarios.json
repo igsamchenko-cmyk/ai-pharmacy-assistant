@@ -1,0 +1,36 @@
+{
+  "version": "1.0-beta",
+  "category": "ocr",
+  "scenarios": [
+    {
+      "id": "ocr-nurofen-package",
+      "description": "OCR-like package text with brand, active ingredient and strength.",
+      "text": "Nurofen Нурофен таблетки, вкриті оболонкою 200 мг. Діюча речовина: ібупрофен.",
+      "expected": {
+        "detectedName": "Ібупрофен",
+        "drugIds": ["ibuprofen-200", "nurofen-200"],
+        "containsDosage": "200 мг"
+      }
+    },
+    {
+      "id": "ocr-amoxiclav-package",
+      "description": "Protected antibiotic OCR text with Ukrainian brand and generic composition.",
+      "text": "Амоксиклав 625 мг: амоксицилін 500 мг + клавуланова кислота 125 мг, таблетки.",
+      "expected": {
+        "detectedName": "Амоксицилін",
+        "drugIds": ["amoxiclav-625"],
+        "containsDosage": "625 мг"
+      }
+    },
+    {
+      "id": "ocr-loratadine-ascorbic",
+      "description": "Shelf-note text containing two low-risk common products.",
+      "text": "Лоратадин 10 мг таблетки поруч із Аскорбінова кислота 500 мг.",
+      "expected": {
+        "detectedName": "Лоратадин",
+        "drugIds": ["loratadine-10", "ascorbic-acid"],
+        "containsDosage": "10 мг"
+      }
+    }
+  ]
+}

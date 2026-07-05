@@ -68,3 +68,12 @@ Runtime invariant remains the same: DB-backed normalize/search reads only
 `approved` mappings. `pending`, `rejected` and `needs_review` rows are kept
 for audit/review and are not runtime-visible. Static fallback remains default and
 available when DB runtime is disabled, missing or failing.
+
+## v1.0 Closed Beta Runtime Diagnostics
+
+Closed beta must work in static mode and may optionally test DB mode.
+
+- Static runtime is default.
+- DB runtime is requested only with `KNOWLEDGE_DB_RUNTIME=true`.
+- `/api/diagnostics` reports `dbConfigured`, runtime mode, provider status, schema status, and approved mapping counts without exposing `DATABASE_URL`.
+- `pnpm beta:readiness` treats absent DB as static-fallback readiness, not as a failure.

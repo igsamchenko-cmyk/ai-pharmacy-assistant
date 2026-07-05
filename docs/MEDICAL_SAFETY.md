@@ -68,3 +68,13 @@ AI-відповіді та в інших місцях:
 - Історія містить лише дії користувача (запити, перевірки) і зберігається локально у
   базі даних розгортання.
 - Ключі та секрети не зберігаються в коді та репозиторії.
+
+## v1.0 Closed Beta Safety Invariants
+
+Closed beta keeps the medical safety layer intact.
+
+Still blocked: treatment requests such as `що приймати при...`, `чим лікувати...`, pediatric dose requests, medication cancellation requests, symptoms plus treatment selection, and emergency-like treatment requests.
+
+Still allowed: drug reference, interaction checks, instruction explanation, drug comparison, and preparing questions for a doctor.
+
+Blocked messages must be clear, explain that FarmAssist is a reference tool, suggest a doctor/pharmacist for clinical questions, and mention emergency help for urgent symptoms. Every drug/AI reference keeps the global disclaimer.

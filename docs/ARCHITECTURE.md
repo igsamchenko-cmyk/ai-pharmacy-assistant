@@ -223,3 +223,13 @@ atc_code, notes`. The API server discovers them through
 Runtime behavior is unchanged: static dictionary remains default, DB runtime is
 optional behind `KNOWLEDGE_DB_RUNTIME=true`, and DB lookup still reads only rows
 with `review_status='approved'`.
+
+## v1.0 Closed Beta Architecture Notes
+
+Closed beta readiness keeps the v0.9 architecture intact. Scenario validation, search-quality reporting, readiness reporting, diagnostics, and feedback are added as small surfaces around the existing knowledge/search/runtime modules.
+
+- Static knowledge remains the default runtime.
+- DB runtime remains opt-in with `KNOWLEDGE_DB_RUNTIME=true`.
+- `/api/diagnostics` exposes sanitized booleans/counts only, never DB URLs or provider keys.
+- Feedback is frontend-local and does not affect review status or runtime mappings.
+- Scenario/report CLIs live in the API package and use local/static fallback in CI.

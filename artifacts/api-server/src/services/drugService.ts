@@ -29,7 +29,7 @@ export function getDrugsByIds(ids: string[]): DrugRecord[] {
 
 function fieldMatcher(q: string, field: string): (d: DrugRecord) => boolean {
   const inField = (value: string | null): boolean =>
-    value != null && value.toLowerCase().includes(q);
+    value != null && normalize(value).includes(q);
 
   switch (field) {
     case "brand":
@@ -76,8 +76,8 @@ export function findDrugsInText(text: string): {
   const haystack = normalize(text);
   const matches = drugs.filter(
     (d) =>
-      haystack.includes(d.brandName.toLowerCase()) ||
-      haystack.includes(d.inn.toLowerCase()),
+      haystack.includes(normalize(d.brandName)) ||
+      haystack.includes(normalize(d.inn)),
   );
   return { detectedName: matches[0]?.brandName ?? null, matches };
 }

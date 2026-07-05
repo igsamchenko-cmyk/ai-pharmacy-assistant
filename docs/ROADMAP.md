@@ -102,3 +102,7 @@ production observability around import/review activity.
 - Add preview/validate-all commands for batch review.
 - Extend quality diagnostics with category/source/confidence/review coverage.
 - Continue scaling toward larger safe mapping sets without proprietary sources.
+
+## v1.0 Closed Beta Readiness
+
+v1.0 focuses on controlled internal daily testing rather than SaaS features. Scope includes scenario validation, search-quality reporting, safe local feedback, diagnostics/version visibility, clearer safety states, mobile workflow access, and operator release checklists. Public accounts, billing, mandatory DB runtime, and proprietary dataset imports remain out of scope.

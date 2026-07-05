@@ -7,6 +7,7 @@ import ocrRouter from "./ocr";
 import historyRouter from "./history";
 import externalRouter from "./external";
 import knowledgeRouter from "./knowledge";
+import diagnosticsRouter from "./diagnostics";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(ocrRouter);
 router.use(historyRouter);
 router.use(externalRouter);
 router.use(knowledgeRouter);
+router.use(diagnosticsRouter);
 
 export default router;

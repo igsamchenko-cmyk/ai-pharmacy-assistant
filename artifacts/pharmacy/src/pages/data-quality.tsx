@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GlobalDisclaimer } from "@/components/disclaimer";
@@ -12,6 +13,7 @@ import {
   Upload,
   ListChecks,
   GitCompareArrows,
+  ServerCog,
 } from "lucide-react";
 import {
   useGetDataQuality,
@@ -19,6 +21,11 @@ import {
   useGetImportPreview,
   useGetKnowledgeRuntimeStatus,
 } from "@workspace/api-client-react";
+import { ReportIssueButton } from "@/components/report-issue-button";
+import {
+  fetchDiagnostics,
+  type DiagnosticsPanelData,
+} from "@/lib/diagnostics";
 import type {
   QualityIssue,
   ProvenanceSource,
@@ -27,7 +34,6 @@ import type {
   KnowledgeRuntimeStatus,
   DataQualityReport,
 } from "@workspace/api-client-react";
-
 const CONFLICT_TYPE_LABEL: Record<ImportConflict["type"], string> = {
   name_multiple_ingredients: "Назва → кілька речовин",
   brand_conflicting_inn: "Бренд → суперечлива МНН",
@@ -271,6 +277,118 @@ function RuntimeStatusCard({ runtime }: { runtime: KnowledgeRuntimeStatus }) {
   );
 }
 
+function boolLabel(value: boolean): string {
+  return value ? "yes" : "no";
+}
+
+function reportStatusLabel(status: { exists: boolean; updatedAt: string | null }): string {
+  if (!status.exists) return "not written";
+  return status.updatedAt ? status.updatedAt.slice(0, 10) : "available";
+}
+
+function DiagnosticsCard({
+  diagnostics,
+  loading,
+  error,
+}: {
+  diagnostics: DiagnosticsPanelData | null;
+  loading: boolean;
+  error: boolean;
+}) {
+  if (loading) {
+    return (
+      <Card className="bg-card/50">
+        <CardContent className="p-5 text-sm text-muted-foreground">
+          Завантаження diagnostics…
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !diagnostics) {
+    return (
+      <Card className="bg-card/50 border-amber-500/30">
+        <CardContent className="p-5 text-sm text-amber-700">
+          Diagnostics panel тимчасово недоступна.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-card/50">
+      <CardContent className="p-5 space-y-4">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <ServerCog className="w-5 h-5 text-primary" />
+          Diagnostics / version
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <TextStatCard label="Release" value={diagnostics.app.releaseLabel} />
+          <TextStatCard label="Version" value={diagnostics.app.version} />
+          <TextStatCard label="Runtime" value={diagnostics.runtime.mode} />
+          <TextStatCard
+            label="DB configured"
+            value={boolLabel(diagnostics.runtime.dbConfigured)}
+          />
+          <TextStatCard
+            label="Gemini configured"
+            value={boolLabel(diagnostics.providers.geminiConfigured)}
+          />
+          <TextStatCard
+            label="OpenAI enabled"
+            value={boolLabel(diagnostics.providers.openAiEnabled)}
+          />
+          <TextStatCard
+            label="DB provider"
+            value={diagnostics.runtime.dbProvider}
+          />
+          <TextStatCard
+            label="DB schema"
+            value={diagnostics.runtime.dbSchemaStatus}
+          />
+          <StatCard
+            label="Dictionary batches"
+            value={diagnostics.knowledge.dictionaryBatchCount}
+          />
+          <StatCard
+            label="Mappings"
+            value={diagnostics.knowledge.mappingsCount}
+          />
+          <StatCard
+            label="Interactions"
+            value={diagnostics.knowledge.interactionRulesCount}
+          />
+          <StatCard
+            label="Approved DB rows"
+            value={diagnostics.knowledge.approvedDbMappingsCount}
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <TextStatCard
+            label="Quality report"
+            value={reportStatusLabel(diagnostics.reports.quality)}
+          />
+          <TextStatCard
+            label="Search report"
+            value={reportStatusLabel(diagnostics.reports.searchQuality)}
+          />
+          <TextStatCard
+            label="Readiness report"
+            value={reportStatusLabel(diagnostics.reports.readiness)}
+          />
+        </div>
+        <div className="rounded-lg bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+          Scenario coverage: {diagnostics.references.scenarioDocs} · Checklist: {diagnostics.references.checklistDocs}
+        </div>
+        {diagnostics.warnings.length > 0 && (
+          <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
+            {diagnostics.warnings.join(" ")}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 function BackfillWorkflowCard({
   runtime,
 }: {
@@ -385,6 +503,28 @@ export default function DataQuality() {
   const sourcesQuery = useListKnowledgeSources();
   const importPreview = useGetImportPreview();
   const runtimeQuery = useGetKnowledgeRuntimeStatus();
+  const [diagnostics, setDiagnostics] = useState<DiagnosticsPanelData | null>(null);
+  const [diagnosticsLoading, setDiagnosticsLoading] = useState(true);
+  const [diagnosticsError, setDiagnosticsError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetchDiagnostics()
+      .then((data) => {
+        if (!active) return;
+        setDiagnostics(data);
+        setDiagnosticsError(false);
+      })
+      .catch(() => {
+        if (active) setDiagnosticsError(true);
+      })
+      .finally(() => {
+        if (active) setDiagnosticsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const report = quality.data;
   const sources = sourcesQuery.data?.sources ?? [];
@@ -438,6 +578,16 @@ export default function DataQuality() {
 
       <GlobalDisclaimer />
 
+      <ReportIssueButton
+        type="other"
+        context="data-quality-page"
+        sourceSnapshot={{
+          qualityLoaded: Boolean(report),
+          runtimeMode: runtime?.runtimeMode ?? "unknown",
+        }}
+        compact
+      />
+
       {quality.isLoading && (
         <p className="text-sm text-muted-foreground">Завантаження звіту…</p>
       )}
@@ -473,6 +623,12 @@ export default function DataQuality() {
           </Card>
 
           {runtime && <RuntimeStatusCard runtime={runtime} />}
+
+          <DiagnosticsCard
+            diagnostics={diagnostics}
+            loading={diagnosticsLoading}
+            error={diagnosticsError}
+          />
 
           <BackfillWorkflowCard runtime={runtime} />
 

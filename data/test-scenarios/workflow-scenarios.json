@@ -1,0 +1,73 @@
+{
+  "version": "1.0-beta",
+  "category": "workflow",
+  "scenarios": [
+    {
+      "id": "workflow-counter-search-compare",
+      "description": "Counter workflow: find two analgesics, compare them, keep advice out of scope.",
+      "steps": [
+        {
+          "type": "search",
+          "query": "Нурофен",
+          "expectHit": true,
+          "expectTopCatalogId": "nurofen-200"
+        },
+        {
+          "type": "search",
+          "query": "Парацетамол",
+          "expectHit": true,
+          "expectTopCatalogId": "panadol-500"
+        },
+        {
+          "type": "interaction",
+          "drugIds": ["ibuprofen-200", "paracetamol-500"],
+          "expectPairCount": 0
+        },
+        {
+          "type": "safety",
+          "query": "що приймати при температурі",
+          "expectBlocked": true
+        }
+      ]
+    },
+    {
+      "id": "workflow-anticoagulant-warning",
+      "description": "Hospital workflow: identify a critical interaction and keep disclaimer-driven escalation.",
+      "steps": [
+        {
+          "type": "search",
+          "query": "Warfarin",
+          "expectHit": true,
+          "expectTopCatalogId": "warfarin-5"
+        },
+        {
+          "type": "search",
+          "query": "Ibuprofenum",
+          "expectHit": true,
+          "expectTopCatalogId": "ibuprofen-200"
+        },
+        {
+          "type": "interaction",
+          "drugIds": ["warfarin-5", "ibuprofen-200"],
+          "expectSeverity": "critical"
+        }
+      ]
+    },
+    {
+      "id": "workflow-ocr-review-feedback",
+      "description": "Daily beta workflow: OCR text finds a product and a miss is reported safely.",
+      "steps": [
+        {
+          "type": "ocr",
+          "text": "Амоксиклав 625 мг таблетки",
+          "expectDetectedId": "amoxiclav-625"
+        },
+        {
+          "type": "search",
+          "query": "невідомий препарат бета",
+          "expectHit": false
+        }
+      ]
+    }
+  ]
+}

@@ -162,3 +162,12 @@ Blocking issues remain parse errors, missing/unknown sources, invalid ATC,
 proprietary/copyright source tokens and hard name-to-multiple-ingredient
 conflicts. Brand-like or ambiguous short rows are reported for review discipline
 and should not be approved automatically.
+
+## v1.0 Closed Beta Data Quality
+
+For closed beta, data quality is checked with both static validation and workflow scenarios:
+
+- `pnpm knowledge:quality:report` checks provenance, ATC coverage, source coverage, review status, and dictionary batch coverage.
+- `pnpm knowledge:search:report` evaluates search hit rate, top-result accuracy, normalization success, Ukrainian query coverage, misses, ambiguous queries, and recommended dictionary additions.
+- `/data-quality` includes a diagnostics/version panel with runtime mode, DB/Gemini/OpenAI configured flags, batch and mapping counts, and report status.
+- Generated report JSON under `artifacts/reports/*.json` is ignored unless intentionally committed as a sample.

@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GlobalDisclaimer } from "@/components/disclaimer";
 import { DrugSearchSelect } from "@/components/drug-search-select";
+import { ReportIssueButton } from "@/components/report-issue-button";
 import { useQueryClient } from "@tanstack/react-query";
 import { X, GitCompare, AlertTriangle, ShieldCheck } from "lucide-react";
 
@@ -81,6 +82,10 @@ export default function Interactions() {
     critical: "Критичний ризик",
   };
 
+  const selectedContext = selectedDrugs
+    .map((drug) => `${drug.id}:${drug.brandName}`)
+    .join(", ");
+
   return (
     <div className="space-y-6 animate-in fade-in pb-10">
       <div className="space-y-1">
@@ -89,7 +94,7 @@ export default function Interactions() {
           Взаємодії препаратів
         </h1>
         <p className="text-sm text-muted-foreground">
-          Додайте від 2 до 5 препаратів для перевірки їх сумісності.
+          Додайте від 2 до 5 препаратів для довідкової перевірки сумісності.
         </p>
       </div>
 
@@ -138,8 +143,13 @@ export default function Interactions() {
         </Button>
 
         {checkInteractions.isError && (
-          <div className="text-center py-4 px-4 text-sm text-destructive border border-destructive/30 rounded-lg">
-            Не вдалося перевірити взаємодії. Спробуйте ще раз.
+          <div className="py-4 px-4 text-sm text-destructive border border-destructive/30 rounded-lg space-y-2">
+            <p>Не вдалося перевірити взаємодії. Спробуйте ще раз.</p>
+            <ReportIssueButton
+              type="ui_bug"
+              context={`interaction-error:${selectedContext}`}
+              compact
+            />
           </div>
         )}
       </div>
@@ -156,13 +166,21 @@ export default function Interactions() {
                 <ShieldCheck className="w-12 h-12 text-green-500" />
                 <div>
                   <p className="font-bold text-green-700">
-                    Значущих взаємодій не виявлено
+                    У демо-правилах значущих взаємодій не знайдено
                   </p>
                   <p className="text-sm text-green-700/80 mt-1">
-                    Препарати можна приймати разом, але завжди слідкуйте за
-                    реакцією організму.
+                    Це не підтверджує клінічну безпеку комбінації. Перевірте офіційні інструкції та локальні протоколи.
                   </p>
                 </div>
+                <ReportIssueButton
+                  type="interaction_issue"
+                  context={`interaction-no-pair:${selectedContext}`}
+                  sourceSnapshot={{
+                    drugIds: selectedDrugs.map((drug) => drug.id),
+                    pairCount: 0,
+                  }}
+                  compact
+                />
               </CardContent>
             </Card>
           ) : (
@@ -209,6 +227,17 @@ export default function Interactions() {
                         </p>
                       </div>
                     </div>
+                    <ReportIssueButton
+                      type="interaction_issue"
+                      context={`interaction-pair:${pair.drugAId}:${pair.drugBId}`}
+                      sourceSnapshot={{
+                        drugAId: pair.drugAId,
+                        drugBId: pair.drugBId,
+                        riskLevel: pair.riskLevel,
+                        explanation: pair.explanation,
+                      }}
+                      compact
+                    />
                   </CardContent>
                 </Card>
               ))}

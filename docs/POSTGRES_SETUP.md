@@ -72,3 +72,7 @@ pnpm db:dev:down
 ```
 
 Do not commit secrets or expose `DATABASE_URL` in reports or UI.
+
+## v1.0 Closed Beta PostgreSQL Notes
+
+PostgreSQL is optional for closed beta. If Docker/PostgreSQL is available, configure `DATABASE_URL` locally, run `pnpm db:push`, `pnpm knowledge:backfill`, and `pnpm knowledge:runtime:verify`, then optionally run DB smoke. If DB is unavailable, continue with static fallback and record the warning from `pnpm beta:readiness`.

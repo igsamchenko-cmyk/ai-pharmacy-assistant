@@ -1,0 +1,44 @@
+{
+  "version": "1.0-beta",
+  "category": "interaction",
+  "scenarios": [
+    {
+      "id": "interaction-warfarin-ibuprofen",
+      "description": "Warfarin plus ibuprofen should surface the curated critical bleeding-risk rule.",
+      "drugIds": ["warfarin-5", "ibuprofen-200"],
+      "expected": {
+        "pairCount": 1,
+        "severity": "critical",
+        "contains": "кровотеч"
+      }
+    },
+    {
+      "id": "interaction-loratadine-ascorbic-acid",
+      "description": "Loratadine plus ascorbic acid has no curated significant interaction in the demo rules.",
+      "drugIds": ["loratadine-10", "ascorbic-acid"],
+      "expected": {
+        "pairCount": 0,
+        "severity": null
+      }
+    },
+    {
+      "id": "interaction-ibuprofen-paracetamol-reference",
+      "description": "Ibuprofen and paracetamol comparison workflow should run without a severe interaction rule.",
+      "drugIds": ["ibuprofen-200", "paracetamol-500"],
+      "expected": {
+        "pairCount": 0,
+        "severity": null
+      }
+    },
+    {
+      "id": "interaction-warfarin-aspirin",
+      "description": "Warfarin plus aspirin/cardio aspirin should remain critical.",
+      "drugIds": ["warfarin-5", "aspirin-500"],
+      "expected": {
+        "pairCount": 1,
+        "severity": "critical",
+        "contains": "ризик"
+      }
+    }
+  ]
+}

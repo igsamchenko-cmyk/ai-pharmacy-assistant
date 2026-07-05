@@ -106,3 +106,7 @@ needs_review until a human reviewer approves them.
 
 The review queue continues to protect runtime: only `approved` rows can affect
 DB-backed lookup.
+
+## v1.0 Closed Beta Review Invariant
+
+Closed beta feedback and scenario misses do not approve data. They should be converted into normal review/import tasks when useful. Runtime DB lookups must continue to use approved rows only; pending, rejected, and needs_review rows remain stored for audit and hidden from runtime.

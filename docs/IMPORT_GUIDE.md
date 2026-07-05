@@ -166,3 +166,16 @@ DATABASE_URL=... pnpm import:knowledge data/dictionary-batches/0001-core-analges
 
 `import:knowledge -- --commit` stores allowed non-copyright rows with derived
 `reviewStatus`; runtime visibility still requires `approved`.
+
+## v1.0 Closed Beta Import Checks
+
+Before beta tagging, run:
+
+```bash
+pnpm knowledge:import:preview:all
+pnpm knowledge:import:validate:all
+pnpm knowledge:backfill
+pnpm knowledge:runtime:verify
+```
+
+Do not import copyrighted/proprietary datasets. New rows should come from permitted references, preserve provenance, and enter the review workflow before they can affect DB runtime. Static fallback must remain available even when DB import/backfill is skipped.

@@ -1,0 +1,94 @@
+{
+  "version": "1.0-beta",
+  "category": "search",
+  "scenarios": [
+    {
+      "id": "search-nurofen-brand",
+      "query": "Нурофен",
+      "description": "Brand query used at the pharmacy counter.",
+      "expected": {
+        "hit": true,
+        "topCatalogId": "nurofen-200",
+        "normalizedInn": "Ібупрофен",
+        "normalizedEnglish": "Ibuprofen",
+        "resolvedStage": "dictionary",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "search-paracetamol-inn",
+      "query": "Парацетамол",
+      "description": "Common Ukrainian INN query.",
+      "expected": {
+        "hit": true,
+        "topCatalogId": "panadol-500",
+        "normalizedInn": "Парацетамол",
+        "normalizedEnglish": "Paracetamol",
+        "resolvedStage": "dictionary",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "search-amoxiclav-brand",
+      "query": "Амоксиклав",
+      "description": "Protected penicillin brand query.",
+      "expected": {
+        "hit": true,
+        "topCatalogId": "amoxiclav-625",
+        "normalizedInn": "Амоксицилін + клавуланова кислота",
+        "normalizedEnglish": "Amoxicillin + clavulanic acid",
+        "resolvedStage": "dictionary",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "search-latin-ibuprofen",
+      "query": "Ibuprofenum",
+      "description": "Latin prescription/package variant.",
+      "expected": {
+        "hit": true,
+        "topCatalogId": "ibuprofen-200",
+        "normalizedInn": "Ібупрофен",
+        "normalizedEnglish": "Ibuprofen",
+        "resolvedStage": "dictionary",
+        "ukrainian": false
+      }
+    },
+    {
+      "id": "search-english-ascorbic",
+      "query": "Ascorbic acid",
+      "description": "English active ingredient variant.",
+      "expected": {
+        "hit": true,
+        "topCatalogId": "ascorbic-acid",
+        "normalizedInn": "Аскорбінова кислота",
+        "normalizedEnglish": "Ascorbic acid",
+        "resolvedStage": "dictionary",
+        "ukrainian": false
+      }
+    },
+    {
+      "id": "search-ukrainian-typo-ish-brand",
+      "query": "Панадол 500",
+      "description": "Brand with dosage-like text should still hit local catalog.",
+      "expected": {
+        "hit": true,
+        "topCatalogId": "panadol-500",
+        "normalizedInn": "Парацетамол",
+        "normalizedEnglish": "Paracetamol",
+        "resolvedStage": "dictionary",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "search-unknown-demo-miss",
+      "query": "невідомий препарат бета",
+      "description": "Unknown product should be reported as a safe miss, not a crash.",
+      "expected": {
+        "hit": false,
+        "resolvedStage": "ai",
+        "ukrainian": true
+      }
+    }
+  ]
+}

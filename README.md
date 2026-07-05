@@ -207,3 +207,12 @@ commit allowed rows through the existing `import:knowledge -- --commit` path; DB
 runtime still exposes only `approved` rows. Pending, rejected and needs_review
 rows remain review/audit-only. See `docs/DICTIONARY_BATCHES.md` and
 `docs/UKRAINIAN_DATA_STRATEGY.md`.
+
+## v1.0 Closed Beta Checklist
+
+- Run `pnpm beta:scenarios`, `pnpm knowledge:search:report`, and `pnpm beta:readiness` before tagging.
+- Use `docs/CLOSED_BETA_CHECKLIST.md` for operator setup, safety, data-quality, deployment, and limitation checks.
+- Use `docs/TEST_SCENARIOS.md` to validate realistic Ukrainian search, interaction, OCR, safety, and workflow scenarios.
+- Use `docs/FEEDBACK_POLICY.md` before collecting beta reports; reports must not contain patient-identifiable data or secrets.
+- DB runtime remains optional behind `KNOWLEDGE_DB_RUNTIME=true`; static fallback must keep working.
+- FarmAssist remains a reference tool only and must not be used for diagnosis, treatment selection, pediatric dosing, cancellation of medication, or emergency triage.

@@ -232,3 +232,13 @@ Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
 - Preserved safety invariants: no diagnosis, no prescribing, approved-only DB
   runtime mappings, static fallback, no secrets, and no copyrighted/proprietary
   source data.
+
+## v1.0.0-beta - Closed Beta Readiness
+
+- Added closed beta checklist, test scenario docs, feedback policy, and release readiness guide.
+- Added structured scenario fixtures for search, interactions, safety, OCR, and workflows.
+- Added `pnpm beta:scenarios`, `pnpm knowledge:search:report`, and `pnpm beta:readiness`.
+- Added local-only feedback reporting on search, interaction, and data-quality surfaces.
+- Added sanitized diagnostics/version data and `/data-quality` panel.
+- Improved search/OCR normalization for local catalog matching.
+- Hardened blocked safety messaging while preserving reference-only allowed workflows.
