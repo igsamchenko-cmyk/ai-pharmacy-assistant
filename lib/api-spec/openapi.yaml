@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: diagnostics
+    description: Internal diagnostics and release readiness status
   - name: drugs
     description: Drug search and details
   - name: analogs
@@ -36,6 +38,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /diagnostics:
+    get:
+      operationId: getDiagnostics
+      tags: [diagnostics]
+      summary: Diagnostics and release readiness status
+      description: >-
+        Returns sanitized diagnostics for the internal data-quality panel,
+        including release metadata, runtime/provider booleans, knowledge counts
+        and report availability. Does not expose secrets, database URLs or
+        server filesystem paths.
+      responses:
+        "200":
+          description: Sanitized diagnostics panel data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticsPanelData"
   /drugs:
     get:
       operationId: searchDrugs
@@ -666,6 +685,113 @@ components:
           type: string
       required:
         - error
+    DiagnosticsReportStatus:
+      type: object
+      required:
+        - exists
+        - updatedAt
+      properties:
+        exists:
+          type: boolean
+        updatedAt:
+          type: ["string", "null"]
+          format: date-time
+    DiagnosticsPanelData:
+      type: object
+      required:
+        - app
+        - runtime
+        - providers
+        - knowledge
+        - reports
+        - references
+        - warnings
+      properties:
+        app:
+          type: object
+          required: [name, releaseLabel, version]
+          properties:
+            name:
+              type: string
+              enum: [FarmAssist]
+            releaseLabel:
+              type: string
+            version:
+              type: string
+        runtime:
+          type: object
+          required:
+            - mode
+            - dbConfigured
+            - dbRuntimeRequested
+            - dbSchemaStatus
+            - dbProvider
+            - staticFallbackEnabled
+          properties:
+            mode:
+              type: string
+              enum: [static, db]
+            dbConfigured:
+              type: boolean
+            dbRuntimeRequested:
+              type: boolean
+            dbSchemaStatus:
+              type: string
+            dbProvider:
+              type: string
+            staticFallbackEnabled:
+              type: boolean
+        providers:
+          type: object
+          required: [geminiConfigured, openAiConfigured, openAiEnabled]
+          properties:
+            geminiConfigured:
+              type: boolean
+            openAiConfigured:
+              type: boolean
+            openAiEnabled:
+              type: boolean
+        knowledge:
+          type: object
+          required:
+            - dictionaryBatchCount
+            - mappingsCount
+            - ingredientsCount
+            - interactionRulesCount
+            - approvedDbMappingsCount
+          properties:
+            dictionaryBatchCount:
+              type: integer
+            mappingsCount:
+              type: integer
+            ingredientsCount:
+              type: integer
+            interactionRulesCount:
+              type: integer
+            approvedDbMappingsCount:
+              type: integer
+        reports:
+          type: object
+          required: [quality, searchQuality, readiness]
+          properties:
+            quality:
+              $ref: "#/components/schemas/DiagnosticsReportStatus"
+            searchQuality:
+              $ref: "#/components/schemas/DiagnosticsReportStatus"
+            readiness:
+              $ref: "#/components/schemas/DiagnosticsReportStatus"
+        references:
+          type: object
+          required: [scenarioDocs, checklistDocs]
+          properties:
+            scenarioDocs:
+              type: string
+            checklistDocs:
+              type: string
+        warnings:
+          type: array
+          items:
+            type: string
     DataSourceStatus:
       type: object
       required:

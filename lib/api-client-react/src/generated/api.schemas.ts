@@ -13,6 +13,77 @@ export interface ErrorResponse {
   error: string;
 }
 
+export interface DiagnosticsReportStatus {
+  exists: boolean;
+  /** @nullable */
+  updatedAt: string | null;
+}
+
+export type DiagnosticsPanelDataAppName = typeof DiagnosticsPanelDataAppName[keyof typeof DiagnosticsPanelDataAppName];
+
+
+export const DiagnosticsPanelDataAppName = {
+  FarmAssist: 'FarmAssist',
+} as const;
+
+export type DiagnosticsPanelDataApp = {
+  name: DiagnosticsPanelDataAppName;
+  releaseLabel: string;
+  version: string;
+};
+
+export type DiagnosticsPanelDataRuntimeMode = typeof DiagnosticsPanelDataRuntimeMode[keyof typeof DiagnosticsPanelDataRuntimeMode];
+
+
+export const DiagnosticsPanelDataRuntimeMode = {
+  static: 'static',
+  db: 'db',
+} as const;
+
+export type DiagnosticsPanelDataRuntime = {
+  mode: DiagnosticsPanelDataRuntimeMode;
+  dbConfigured: boolean;
+  dbRuntimeRequested: boolean;
+  dbSchemaStatus: string;
+  dbProvider: string;
+  staticFallbackEnabled: boolean;
+};
+
+export type DiagnosticsPanelDataProviders = {
+  geminiConfigured: boolean;
+  openAiConfigured: boolean;
+  openAiEnabled: boolean;
+};
+
+export type DiagnosticsPanelDataKnowledge = {
+  dictionaryBatchCount: number;
+  mappingsCount: number;
+  ingredientsCount: number;
+  interactionRulesCount: number;
+  approvedDbMappingsCount: number;
+};
+
+export type DiagnosticsPanelDataReports = {
+  quality: DiagnosticsReportStatus;
+  searchQuality: DiagnosticsReportStatus;
+  readiness: DiagnosticsReportStatus;
+};
+
+export type DiagnosticsPanelDataReferences = {
+  scenarioDocs: string;
+  checklistDocs: string;
+};
+
+export interface DiagnosticsPanelData {
+  app: DiagnosticsPanelDataApp;
+  runtime: DiagnosticsPanelDataRuntime;
+  providers: DiagnosticsPanelDataProviders;
+  knowledge: DiagnosticsPanelDataKnowledge;
+  reports: DiagnosticsPanelDataReports;
+  references: DiagnosticsPanelDataReferences;
+  warnings: string[];
+}
+
 export type DataSourceStatusCategory = typeof DataSourceStatusCategory[keyof typeof DataSourceStatusCategory];
 
 

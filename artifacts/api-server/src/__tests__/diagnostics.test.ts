@@ -40,6 +40,16 @@ describe("diagnostics panel data", () => {
     expect(data.knowledge.mappingsCount).toBeGreaterThan(0);
   });
 
+  it("never exposes report filesystem paths", async () => {
+    const data = await buildDiagnosticsPanelData();
+    expect(data.reports.quality).not.toHaveProperty("path");
+    expect(data.reports.searchQuality).not.toHaveProperty("path");
+    expect(data.reports.readiness).not.toHaveProperty("path");
+    const json = JSON.stringify(data.reports);
+    expect(json).not.toContain("artifacts/reports");
+    expect(json).not.toMatch(/[A-Za-z]:\\/);
+  });
+
   it("links to closed beta docs by path only", async () => {
     const data = await buildDiagnosticsPanelData();
     expect(data.references.scenarioDocs).toBe("docs/TEST_SCENARIOS.md");

@@ -7,7 +7,6 @@ import { getKnowledgeEngineStats } from "./knowledge";
 import { getKnowledgeRuntimeStatus } from "./knowledge/dbRuntime";
 
 export interface DiagnosticsReportStatus {
-  path: string;
   exists: boolean;
   updatedAt: string | null;
 }
@@ -66,12 +65,11 @@ async function reportStatus(path: string): Promise<DiagnosticsReportStatus> {
   try {
     const info = await stat(path);
     return {
-      path,
       exists: true,
       updatedAt: info.mtime.toISOString(),
     };
   } catch {
-    return { path, exists: false, updatedAt: null };
+    return { exists: false, updatedAt: null };
   }
 }
 

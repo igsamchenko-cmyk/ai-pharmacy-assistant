@@ -230,6 +230,6 @@ Closed beta readiness keeps the v0.9 architecture intact. Scenario validation, s
 
 - Static knowledge remains the default runtime.
 - DB runtime remains opt-in with `KNOWLEDGE_DB_RUNTIME=true`.
-- `/api/diagnostics` exposes sanitized booleans/counts only, never DB URLs or provider keys.
+- `/api/diagnostics` exposes sanitized booleans/counts only, never DB URLs, provider keys, or server filesystem paths.
 - Feedback is frontend-local and does not affect review status or runtime mappings.
 - Scenario/report CLIs live in the API package and use local/static fallback in CI.

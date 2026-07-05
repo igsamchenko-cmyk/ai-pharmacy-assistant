@@ -75,5 +75,5 @@ Closed beta must work in static mode and may optionally test DB mode.
 
 - Static runtime is default.
 - DB runtime is requested only with `KNOWLEDGE_DB_RUNTIME=true`.
-- `/api/diagnostics` reports `dbConfigured`, runtime mode, provider status, schema status, and approved mapping counts without exposing `DATABASE_URL`.
+- `/api/diagnostics` reports `dbConfigured`, runtime mode, provider status, schema status, and approved mapping counts without exposing `DATABASE_URL` or server filesystem paths.
 - `pnpm beta:readiness` treats absent DB as static-fallback readiness, not as a failure.

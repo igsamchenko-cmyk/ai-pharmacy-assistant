@@ -18,6 +18,58 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * Returns sanitized diagnostics for the internal data-quality panel, including release metadata, runtime/provider booleans, knowledge counts and report availability. Does not expose secrets, database URLs or server filesystem paths.
+ * @summary Diagnostics and release readiness status
+ */
+export const GetDiagnosticsResponse = zod.object({
+  "app": zod.object({
+  "name": zod.enum(['FarmAssist']),
+  "releaseLabel": zod.string(),
+  "version": zod.string()
+}),
+  "runtime": zod.object({
+  "mode": zod.enum(['static', 'db']),
+  "dbConfigured": zod.boolean(),
+  "dbRuntimeRequested": zod.boolean(),
+  "dbSchemaStatus": zod.string(),
+  "dbProvider": zod.string(),
+  "staticFallbackEnabled": zod.boolean()
+}),
+  "providers": zod.object({
+  "geminiConfigured": zod.boolean(),
+  "openAiConfigured": zod.boolean(),
+  "openAiEnabled": zod.boolean()
+}),
+  "knowledge": zod.object({
+  "dictionaryBatchCount": zod.number(),
+  "mappingsCount": zod.number(),
+  "ingredientsCount": zod.number(),
+  "interactionRulesCount": zod.number(),
+  "approvedDbMappingsCount": zod.number()
+}),
+  "reports": zod.object({
+  "quality": zod.object({
+  "exists": zod.boolean(),
+  "updatedAt": zod.coerce.date().nullable()
+}),
+  "searchQuality": zod.object({
+  "exists": zod.boolean(),
+  "updatedAt": zod.coerce.date().nullable()
+}),
+  "readiness": zod.object({
+  "exists": zod.boolean(),
+  "updatedAt": zod.coerce.date().nullable()
+})
+}),
+  "references": zod.object({
+  "scenarioDocs": zod.string(),
+  "checklistDocs": zod.string()
+}),
+  "warnings": zod.array(zod.string())
+})
+
+
+/**
  * Search the demo drug database by various fields.
  * @summary Search drugs
  */

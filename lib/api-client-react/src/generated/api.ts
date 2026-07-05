@@ -28,6 +28,7 @@ import type {
   CompareResult,
   DataQualityReport,
   DataSourcesResponse,
+  DiagnosticsPanelData,
   Drug,
   DrugStats,
   ErrorResponse,
@@ -149,6 +150,84 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getHealthCheckQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetDiagnosticsUrl = () => {
+
+
+
+
+  return `/api/diagnostics`
+}
+
+/**
+ * Returns sanitized diagnostics for the internal data-quality panel, including release metadata, runtime/provider booleans, knowledge counts and report availability. Does not expose secrets, database URLs or server filesystem paths.
+ * @summary Diagnostics and release readiness status
+ */
+export const getDiagnostics = async ( options?: RequestInit): Promise<DiagnosticsPanelData> => {
+
+  return customFetch<DiagnosticsPanelData>(getGetDiagnosticsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDiagnosticsQueryKey = () => {
+    return [
+    `/api/diagnostics`
+    ] as const;
+    }
+
+
+export const getGetDiagnosticsQueryOptions = <TData = Awaited<ReturnType<typeof getDiagnostics>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDiagnostics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDiagnosticsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDiagnostics>>> = ({ signal }) => getDiagnostics({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDiagnostics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDiagnosticsQueryResult = NonNullable<Awaited<ReturnType<typeof getDiagnostics>>>
+export type GetDiagnosticsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Diagnostics and release readiness status
+ */
+
+export function useGetDiagnostics<TData = Awaited<ReturnType<typeof getDiagnostics>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDiagnostics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDiagnosticsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
