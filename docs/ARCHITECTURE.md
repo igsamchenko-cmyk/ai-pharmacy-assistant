@@ -233,3 +233,8 @@ Closed beta readiness keeps the v0.9 architecture intact. Scenario validation, s
 - `/api/diagnostics` exposes sanitized booleans/counts only, never DB URLs, provider keys, or server filesystem paths.
 - Feedback is frontend-local and does not affect review status or runtime mappings.
 - Scenario/report CLIs live in the API package and use local/static fallback in CI.
+
+
+## Beta Dashboard API
+
+`/api/beta/dashboard/status` and `/api/beta/dashboard/run` expose a fixed enum of safe validation checks for the UI. The backend reuses beta/readiness/search-quality/data-quality/runtime modules and does not execute user-provided shell commands. Responses are sanitized and omit secrets, raw environment values, `DATABASE_URL` and filesystem paths.

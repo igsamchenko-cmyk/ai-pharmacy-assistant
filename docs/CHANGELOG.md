@@ -5,6 +5,11 @@
 
 ## [Не випущено]
 
+### Added
+
+- In-app Beta Dashboard at `/beta-dashboard` with safe predefined validation checks, sanitized API endpoints and JSON export.
+
+
 ## v1.0.0 - Closed Beta Readiness - 2026-07-05
 
 ### Added

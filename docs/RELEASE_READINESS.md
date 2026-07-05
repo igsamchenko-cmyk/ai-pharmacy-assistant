@@ -50,3 +50,8 @@ Generated JSON is written to `artifacts/reports/beta-readiness-report.json` and 
 - Confirm known limitations are acceptable for controlled beta use.
 - Tag only after the PR is merged and CI is green.
 
+
+
+## In-App Beta Dashboard
+
+The `/beta-dashboard` page provides a UI checkpoint for the safe beta checks. It complements, but does not replace, CI/terminal validation. It does not run arbitrary shell commands and reports static fallback safely when DB is unavailable.

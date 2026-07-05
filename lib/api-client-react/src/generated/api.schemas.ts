@@ -13,6 +13,121 @@ export interface ErrorResponse {
   error: string;
 }
 
+export type BetaDashboardCheckType = typeof BetaDashboardCheckType[keyof typeof BetaDashboardCheckType];
+
+
+export const BetaDashboardCheckType = {
+  readiness: 'readiness',
+  scenarios: 'scenarios',
+  search_quality: 'search_quality',
+  safety: 'safety',
+  interactions: 'interactions',
+  data_quality: 'data_quality',
+  diagnostics: 'diagnostics',
+  full_safe_check: 'full_safe_check',
+} as const;
+
+export type BetaDashboardRunStatus = typeof BetaDashboardRunStatus[keyof typeof BetaDashboardRunStatus];
+
+
+export const BetaDashboardRunStatus = {
+  ok: 'ok',
+  warning: 'warning',
+  failed: 'failed',
+} as const;
+
+export interface BetaDashboardRunRequest {
+  checkType: BetaDashboardCheckType;
+}
+
+export type BetaDashboardRunResponseDetails = { [key: string]: unknown };
+
+export interface BetaDashboardRunResponse {
+  checkType: BetaDashboardCheckType;
+  status: BetaDashboardRunStatus;
+  score: number | null;
+  passed: number;
+  failed: number;
+  warnings: string[];
+  summary: string;
+  details: BetaDashboardRunResponseDetails;
+  generatedAt: string;
+  durationMs: number;
+}
+
+export type BetaDashboardStatusReadiness = {
+  score: number;
+  ready: boolean;
+  summary: string;
+  warnings: string[];
+};
+
+export type BetaDashboardStatusScenarios = {
+  passed: number;
+  failed: number;
+  total: number;
+  warnings: string[];
+};
+
+export type BetaDashboardStatusSearchQuality = {
+  totalQueries: number;
+  hitRatePct: number;
+  topResultAccuracyPct: number;
+  missesCount: number;
+  warnings: string[];
+};
+
+export type BetaDashboardStatusRuntimeMode = typeof BetaDashboardStatusRuntimeMode[keyof typeof BetaDashboardStatusRuntimeMode];
+
+
+export const BetaDashboardStatusRuntimeMode = {
+  static: 'static',
+  db: 'db',
+} as const;
+
+export type BetaDashboardStatusRuntime = {
+  mode: BetaDashboardStatusRuntimeMode;
+  dbConfigured: boolean;
+  dbAvailable: boolean;
+  staticFallbackEnabled: boolean;
+  warnings: string[];
+};
+
+export type BetaDashboardStatusDataQuality = {
+  mappingsCount: number;
+  sourceCoveragePct: number;
+  atcCoveragePct: number;
+  conflicts: number;
+  ok: boolean;
+  warnings: string[];
+};
+
+export type BetaDashboardStatusReviewQueue = {
+  pending: number;
+  needsReview: number;
+  approved: number;
+  rejected: number;
+  warnings: string[];
+};
+
+export type BetaDashboardStatusDiagnostics = {
+  releaseLabel: string;
+  version: string;
+  warnings: string[];
+};
+
+export interface BetaDashboardStatus {
+  generatedAt: string;
+  status: BetaDashboardRunStatus;
+  readiness: BetaDashboardStatusReadiness;
+  scenarios: BetaDashboardStatusScenarios;
+  searchQuality: BetaDashboardStatusSearchQuality;
+  runtime: BetaDashboardStatusRuntime;
+  dataQuality: BetaDashboardStatusDataQuality;
+  reviewQueue: BetaDashboardStatusReviewQueue;
+  diagnostics: BetaDashboardStatusDiagnostics;
+}
+
 export interface DiagnosticsReportStatus {
   exists: boolean;
   /** @nullable */

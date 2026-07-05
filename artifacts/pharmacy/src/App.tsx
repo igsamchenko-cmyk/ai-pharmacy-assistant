@@ -20,6 +20,7 @@ import History from "@/pages/history";
 import About from "@/pages/about";
 import DataQuality from "@/pages/data-quality";
 import ReviewQueue from "@/pages/review";
+import BetaDashboard from "@/pages/beta-dashboard";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ function Router() {
           <Route path="/history" component={History} />
           <Route path="/data-quality" component={DataQuality} />
           <Route path="/review" component={ReviewQueue} />
+          <Route path="/beta-dashboard" component={BetaDashboard} />
           <Route path="/about" component={About} />
           <Route component={NotFound} />
         </Switch>
