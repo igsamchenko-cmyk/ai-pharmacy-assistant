@@ -235,9 +235,11 @@ describe("static knowledge backfill", () => {
     expect(report.checks.staticFallbackAvailable).toBe(true);
   });
 
-  it("quality report includes v0.8 marker", async () => {
+  it("quality report includes v0.9 marker and batch summary", async () => {
     const report = await buildKnowledgeQualityJsonReport();
-    expect(report.version).toBe("0.8");
+    expect(report.version).toBe("0.9");
+    expect(report.dictionaryBatches.files).toBe(8);
+    expect(report.dictionaryBatches.totalRows).toBeGreaterThanOrEqual(500);
   });
 
   it("quality report includes provenance coverage", async () => {

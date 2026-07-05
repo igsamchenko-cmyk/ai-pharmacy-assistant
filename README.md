@@ -186,3 +186,24 @@ Use `.env.example` for safe local Docker defaults. The runtime remains static by
 default; DB lookup is opt-in and only approved rows are visible to normalize and
 search. Review-only rows stay stored for audit, and copyrighted/proprietary rows
 remain blocked. See `docs/POSTGRES_SETUP.md` and `docs/DB_RUNTIME.md`.
+
+## v0.9 Ukrainian Drug Data Expansion
+
+The project now ships auditable dictionary batch files under
+`data/dictionary-batches/`. They use the existing canonical import columns and
+expand safe Ukrainian search coverage with project-owned generic names, English
+and Latin INN variants, deterministic Ukrainian transliterations, explicit
+source IDs, confidence and review policy.
+
+Safe preview commands:
+
+```bash
+pnpm knowledge:import:preview:all
+pnpm knowledge:import:validate:all
+```
+
+The batches do not make PostgreSQL mandatory. With `DATABASE_URL`, operators can
+commit allowed rows through the existing `import:knowledge -- --commit` path; DB
+runtime still exposes only `approved` rows. Pending, rejected and needs_review
+rows remain review/audit-only. See `docs/DICTIONARY_BATCHES.md` and
+`docs/UKRAINIAN_DATA_STRATEGY.md`.

@@ -95,3 +95,14 @@ approved.
 
 `pnpm knowledge:runtime:smoke` verifies this approved-only boundary against a
 real configured DB and against synthetic non-approved rows.
+
+## v0.9 Batch Review Notes
+
+v0.9 batch files are designed for reviewable growth. Generic Ukrainian, English
+and Latin INN rows may be approved when source and ATC checks are clean.
+Deterministic transliterations can be approved when unambiguous. Low-confidence,
+brand-like, abbreviation-heavy or conflicting rows must stay pending or
+needs_review until a human reviewer approves them.
+
+The review queue continues to protect runtime: only `approved` rows can affect
+DB-backed lookup.

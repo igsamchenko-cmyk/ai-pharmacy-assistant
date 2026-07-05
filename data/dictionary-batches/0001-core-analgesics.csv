@@ -1,0 +1,74 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-aceclofenac,Ацеклофенак,Aceclofenac,en,english,public_generic_inn,verified,M01AB16,v0.9 curated generic batch
+ing-aceclofenac,Ацеклофенак,Aceclofenacum,la,latin,public_generic_inn,verified,M01AB16,v0.9 curated generic batch
+ing-aceclofenac,Ацеклофенак,atseklofenak,uk-Latn,transliteration,project_generated_transliteration,high,M01AB16,v0.9 deterministic transliteration
+ing-aceclofenac,Ацеклофенак,Ацеклофенак,uk,ukrainian,public_generic_inn,verified,M01AB16,v0.9 curated generic batch
+ing-acetylsalicylic-acid,Ацетилсаліцилова кислота,Acetylsalicylic acid,en,english,public_generic_inn,verified,N02BA01,v0.9 curated generic batch
+ing-acetylsalicylic-acid,Ацетилсаліцилова кислота,Acidum acetylsalicylicum,la,latin,public_generic_inn,verified,N02BA01,v0.9 curated generic batch
+ing-acetylsalicylic-acid,Ацетилсаліцилова кислота,atsetylsalitsylova kyslota,uk-Latn,transliteration,project_generated_transliteration,high,N02BA01,v0.9 deterministic transliteration
+ing-acetylsalicylic-acid,Ацетилсаліцилова кислота,Ацетилсаліцилова кислота,uk,ukrainian,public_generic_inn,verified,N02BA01,v0.9 curated generic batch
+ing-dexketoprofen,Декскетопрофен,Dexketoprofen,en,english,public_generic_inn,verified,M01AE17,v0.9 curated generic batch
+ing-dexketoprofen,Декскетопрофен,Dexketoprofenum,la,latin,public_generic_inn,verified,M01AE17,v0.9 curated generic batch
+ing-dexketoprofen,Декскетопрофен,deksketoprofen,uk-Latn,transliteration,project_generated_transliteration,high,M01AE17,v0.9 deterministic transliteration
+ing-dexketoprofen,Декскетопрофен,Декскетопрофен,uk,ukrainian,public_generic_inn,verified,M01AE17,v0.9 curated generic batch
+ing-diclofenac,Диклофенак,Diclofenac,en,english,public_generic_inn,verified,M01AB05,v0.9 curated generic batch
+ing-diclofenac,Диклофенак,Diclofenacum,la,latin,public_generic_inn,verified,M01AB05,v0.9 curated generic batch
+ing-diclofenac,Диклофенак,dyklofenak,uk-Latn,transliteration,project_generated_transliteration,high,M01AB05,v0.9 deterministic transliteration
+ing-diclofenac,Диклофенак,Диклофенак,uk,ukrainian,public_generic_inn,verified,M01AB05,v0.9 curated generic batch
+ing-ibuprofen,Ібупрофен,Ibuprofen,en,english,public_generic_inn,verified,M01AE01,v0.9 curated generic batch
+ing-ibuprofen,Ібупрофен,Ibuprofenum,la,latin,public_generic_inn,verified,M01AE01,v0.9 curated generic batch
+ing-ibuprofen,Ібупрофен,Ібупрофен,uk,ukrainian,public_generic_inn,verified,M01AE01,v0.9 curated generic batch
+ing-indometacin,Індометацин,Indometacin,en,english,public_generic_inn,verified,M01AB01,v0.9 curated generic batch
+ing-indometacin,Індометацин,Indometacinum,la,latin,public_generic_inn,verified,M01AB01,v0.9 curated generic batch
+ing-indometacin,Індометацин,indometatsyn,uk-Latn,transliteration,project_generated_transliteration,high,M01AB01,v0.9 deterministic transliteration
+ing-indometacin,Індометацин,Індометацин,uk,ukrainian,public_generic_inn,verified,M01AB01,v0.9 curated generic batch
+ing-ketoprofen,Кетопрофен,Ketoprofen,en,english,public_generic_inn,verified,M01AE03,v0.9 curated generic batch
+ing-ketoprofen,Кетопрофен,Ketoprofenum,la,latin,public_generic_inn,verified,M01AE03,v0.9 curated generic batch
+ing-ketoprofen,Кетопрофен,Кетопрофен,uk,ukrainian,public_generic_inn,verified,M01AE03,v0.9 curated generic batch
+ing-ketorolac,Кеторолак,Ketorolac,en,english,public_generic_inn,verified,M01AB15,v0.9 curated generic batch
+ing-ketorolac,Кеторолак,Ketorolacum,la,latin,public_generic_inn,verified,M01AB15,v0.9 curated generic batch
+ing-ketorolac,Кеторолак,ketorolak,uk-Latn,transliteration,project_generated_transliteration,high,M01AB15,v0.9 deterministic transliteration
+ing-ketorolac,Кеторолак,Кеторолак,uk,ukrainian,public_generic_inn,verified,M01AB15,v0.9 curated generic batch
+ing-meloxicam,Мелоксикам,Meloxicam,en,english,public_generic_inn,verified,M01AC06,v0.9 curated generic batch
+ing-meloxicam,Мелоксикам,Meloxicamum,la,latin,public_generic_inn,verified,M01AC06,v0.9 curated generic batch
+ing-meloxicam,Мелоксикам,meloksykam,uk-Latn,transliteration,project_generated_transliteration,high,M01AC06,v0.9 deterministic transliteration
+ing-meloxicam,Мелоксикам,Мелоксикам,uk,ukrainian,public_generic_inn,verified,M01AC06,v0.9 curated generic batch
+ing-metamizole,Метамізол натрію,Metamizole,en,english,public_generic_inn,verified,N02BB02,v0.9 curated generic batch
+ing-metamizole,Метамізол натрію,Metamizolum natricum,la,latin,public_generic_inn,verified,N02BB02,v0.9 curated generic batch
+ing-metamizole,Метамізол натрію,metamizol natriiu,uk-Latn,transliteration,project_generated_transliteration,high,N02BB02,v0.9 deterministic transliteration
+ing-metamizole,Метамізол натрію,Метамізол натрію,uk,ukrainian,public_generic_inn,verified,N02BB02,v0.9 curated generic batch
+ing-naproxen,Напроксен,Naproxen,en,english,public_generic_inn,verified,M01AE02,v0.9 curated generic batch
+ing-naproxen,Напроксен,Naproxenum,la,latin,public_generic_inn,verified,M01AE02,v0.9 curated generic batch
+ing-naproxen,Напроксен,naproksen,uk-Latn,transliteration,project_generated_transliteration,high,M01AE02,v0.9 deterministic transliteration
+ing-naproxen,Напроксен,Напроксен,uk,ukrainian,public_generic_inn,verified,M01AE02,v0.9 curated generic batch
+ing-nimesulide,Німесулід,Nimesulide,en,english,public_generic_inn,verified,M01AX17,v0.9 curated generic batch
+ing-nimesulide,Німесулід,Nimesulidum,la,latin,public_generic_inn,verified,M01AX17,v0.9 curated generic batch
+ing-nimesulide,Німесулід,nimesulid,uk-Latn,transliteration,project_generated_transliteration,high,M01AX17,v0.9 deterministic transliteration
+ing-nimesulide,Німесулід,Німесулід,uk,ukrainian,public_generic_inn,verified,M01AX17,v0.9 curated generic batch
+ing-paracetamol,Парацетамол,Paracetamol,en,english,public_generic_inn,verified,N02BE01,v0.9 curated generic batch
+ing-paracetamol,Парацетамол,Paracetamolum,la,latin,public_generic_inn,verified,N02BE01,v0.9 curated generic batch
+ing-paracetamol,Парацетамол,paratsetamol,uk-Latn,transliteration,project_generated_transliteration,high,N02BE01,v0.9 deterministic transliteration
+ing-paracetamol,Парацетамол,Парацетамол,uk,ukrainian,public_generic_inn,verified,N02BE01,v0.9 curated generic batch
+ing-sildenafil,Силденафіл,Sildenafil,en,english,public_generic_inn,verified,G04BE03,v0.9 curated generic batch
+ing-sildenafil,Силденафіл,Sildenafilum,la,latin,public_generic_inn,verified,G04BE03,v0.9 curated generic batch
+ing-sildenafil,Силденафіл,syldenafil,uk-Latn,transliteration,project_generated_transliteration,high,G04BE03,v0.9 deterministic transliteration
+ing-sildenafil,Силденафіл,Силденафіл,uk,ukrainian,public_generic_inn,verified,G04BE03,v0.9 curated generic batch
+ing-tamsulosin,Тамсулозин,Tamsulosin,en,english,public_generic_inn,verified,G04CA02,v0.9 curated generic batch
+ing-tamsulosin,Тамсулозин,Tamsulosinum,la,latin,public_generic_inn,verified,G04CA02,v0.9 curated generic batch
+ing-tamsulosin,Тамсулозин,tamsulozyn,uk-Latn,transliteration,project_generated_transliteration,high,G04CA02,v0.9 deterministic transliteration
+ing-tamsulosin,Тамсулозин,Тамсулозин,uk,ukrainian,public_generic_inn,verified,G04CA02,v0.9 curated generic batch
+ing-tizanidine,Тизанідин,Tizanidine,en,english,public_generic_inn,verified,M03BX02,v0.9 curated generic batch
+ing-tizanidine,Тизанідин,Tizanidinum,la,latin,public_generic_inn,verified,M03BX02,v0.9 curated generic batch
+ing-tizanidine,Тизанідин,tyzanidyn,uk-Latn,transliteration,project_generated_transliteration,high,M03BX02,v0.9 deterministic transliteration
+ing-tizanidine,Тизанідин,Тизанідин,uk,ukrainian,public_generic_inn,verified,M03BX02,v0.9 curated generic batch
+ing-tolperisone,Толперизон,Tolperisone,en,english,public_generic_inn,verified,M03BX04,v0.9 curated generic batch
+ing-tolperisone,Толперизон,Tolperisonum,la,latin,public_generic_inn,verified,M03BX04,v0.9 curated generic batch
+ing-tolperisone,Толперизон,tolperyzon,uk-Latn,transliteration,project_generated_transliteration,high,M03BX04,v0.9 deterministic transliteration
+ing-tolperisone,Толперизон,Толперизон,uk,ukrainian,public_generic_inn,verified,M03BX04,v0.9 curated generic batch
+ing-tramadol,Трамадол,Tramadol,en,english,public_generic_inn,verified,N02AX02,v0.9 curated generic batch
+ing-tramadol,Трамадол,Tramadolum,la,latin,public_generic_inn,verified,N02AX02,v0.9 curated generic batch
+ing-tramadol,Трамадол,Трамадол,uk,ukrainian,public_generic_inn,verified,N02AX02,v0.9 curated generic batch
+ing-celecoxib,Целекоксиб,Celecoxib,en,english,public_generic_inn,verified,M01AH01,v0.9 curated generic batch
+ing-celecoxib,Целекоксиб,Celecoxibum,la,latin,public_generic_inn,verified,M01AH01,v0.9 curated generic batch
+ing-celecoxib,Целекоксиб,tselekoksyb,uk-Latn,transliteration,project_generated_transliteration,high,M01AH01,v0.9 deterministic transliteration
+ing-celecoxib,Целекоксиб,Целекоксиб,uk,ukrainian,public_generic_inn,verified,M01AH01,v0.9 curated generic batch

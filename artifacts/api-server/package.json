@@ -17,7 +17,10 @@
     "validate:import": "tsx src/scripts/validate-import.ts",
     "import:preview": "tsx src/scripts/import-preview.ts",
     "import:knowledge": "tsx src/scripts/import-knowledge.ts",
-    "knowledge:runtime:smoke": "tsx src/scripts/knowledge-runtime-smoke.ts"
+    "knowledge:runtime:smoke": "tsx src/scripts/knowledge-runtime-smoke.ts",
+    "import:preview:all": "tsx src/scripts/import-preview-all-batches.ts",
+    "import:validate:all": "tsx src/scripts/validate-dictionary-batches.ts",
+    "generate:dictionary-batches": "tsx src/scripts/generate-dictionary-batches.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",

@@ -8,17 +8,17 @@
 
 Колонки (snake_case на диску; порядок для CSV фіксований):
 
-| Колонка         | Обовʼязкова | Опис                                                            |
-| --------------- | ----------- | --------------------------------------------------------------- |
-| `ingredient_id` | так         | Стабільний ідентифікатор діючої речовини у вашому наборі.       |
-| `canonical_inn` | так         | Канонічна МНН (українською), напр. `Ібупрофен`.                 |
-| `name`          | так         | Назва, яку додаємо (бренд/латина/англ./синонім тощо).           |
-| `locale`        | так         | Локаль назви (`uk`, `la`, `en`, …).                             |
-| `name_type`     | так         | Тип назви (див. нижче).                                         |
-| `source_id`     | так         | Ключ джерела (провенанс). Пропрієтарні джерела заборонені.      |
-| `confidence`    | так         | `low` \| `medium` \| `high` \| `verified`.                      |
-| `atc_code`      | ні          | ATC-код (за наявності); перевіряється проти відомих класів.     |
-| `notes`         | ні          | Довільний коментар (також сканується guard-ом).                 |
+| Колонка         | Обовʼязкова | Опис                                                        |
+| --------------- | ----------- | ----------------------------------------------------------- |
+| `ingredient_id` | так         | Стабільний ідентифікатор діючої речовини у вашому наборі.   |
+| `canonical_inn` | так         | Канонічна МНН (українською), напр. `Ібупрофен`.             |
+| `name`          | так         | Назва, яку додаємо (бренд/латина/англ./синонім тощо).       |
+| `locale`        | так         | Локаль назви (`uk`, `la`, `en`, …).                         |
+| `name_type`     | так         | Тип назви (див. нижче).                                     |
+| `source_id`     | так         | Ключ джерела (провенанс). Пропрієтарні джерела заборонені.  |
+| `confidence`    | так         | `low` \| `medium` \| `high` \| `verified`.                  |
+| `atc_code`      | ні          | ATC-код (за наявності); перевіряється проти відомих класів. |
+| `notes`         | ні          | Довільний коментар (також сканується guard-ом).             |
 
 **`name_type`**: `brand`, `generic`, `synonym`, `transliteration`, `typo`,
 `latin`, `english`, `ukrainian`.
@@ -40,11 +40,19 @@ ing-ibuprofen,Ібупрофен,Ibuprofen,en,english,who-inn,verified,M01AE01,
 Масив рядків або обʼєкт `{ "rows": [ … ] }`:
 
 ```json
-{ "rows": [
-  { "ingredient_id": "ing-paracetamol", "canonical_inn": "Парацетамол",
-    "name": "Paracetamol", "locale": "en", "name_type": "english",
-    "source_id": "who-inn", "confidence": "verified" }
-] }
+{
+  "rows": [
+    {
+      "ingredient_id": "ing-paracetamol",
+      "canonical_inn": "Парацетамол",
+      "name": "Paracetamol",
+      "locale": "en",
+      "name_type": "english",
+      "source_id": "who-inn",
+      "confidence": "verified"
+    }
+  ]
+}
 ```
 
 ## Правила безпеки даних
@@ -122,6 +130,7 @@ diagnostics but are ignored by `/knowledge/normalize` and `/knowledge/search`.
 After committing, verify with `/knowledge/runtime/status` and a
 `/knowledge/normalize?q=...` query; DB-backed results include source,
 confidence and provenance metadata.
+
 ## v0.6 Backfill Metadata Rules
 
 Static dictionary entries that are backfilled to the DB must keep explicit
@@ -147,3 +156,23 @@ visible for audit but ignored by runtime.
 
 Use notes to explain the decision. The audit log records approve/reject/
 needs-review actions with previous status, next status, reviewer and reason.
+
+## v0.9 Batch Contribution Rules
+
+Add larger dictionary expansions as small CSV batches in
+`data/dictionary-batches/`. Keep one prioritized therapeutic area per file when
+possible and keep the canonical columns unchanged.
+
+Allowed source IDs for v0.9 batch rows include:
+
+- `project_static_curated`: project-owned curated generic rows.
+- `project_generated_transliteration`: deterministic Ukrainian transliteration
+  variants.
+- `public_generic_inn`: public generic INN/MNN naming.
+- `rxnorm_reference`: public RxNorm generic-name reference rows.
+- `manual_review_candidate`: project-owned candidates that must remain pending
+  or needs_review until reviewed.
+
+Do not copy commercial drug catalogs, proprietary medicine databases, package
+leaflet payloads, distributor feeds or branded lists. If a brand/trade mapping is
+uncertain, keep it out of approved batches or mark it as a review candidate.

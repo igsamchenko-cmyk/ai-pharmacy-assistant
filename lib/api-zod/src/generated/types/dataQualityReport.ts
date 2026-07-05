@@ -7,6 +7,7 @@
  */
 import type { DataQualityReportCounts } from './dataQualityReportCounts';
 import type { DataQualityReportCoverage } from './dataQualityReportCoverage';
+import type { DictionaryBatchQualitySummary } from './dictionaryBatchQualitySummary';
 import type { QualityIssue } from './qualityIssue';
 
 export interface DataQualityReport {
@@ -14,6 +15,7 @@ export interface DataQualityReport {
   generatedAt: string;
   counts: DataQualityReportCounts;
   coverage: DataQualityReportCoverage;
+  dictionaryBatches?: DictionaryBatchQualitySummary;
   errors: QualityIssue[];
   warnings: QualityIssue[];
 }

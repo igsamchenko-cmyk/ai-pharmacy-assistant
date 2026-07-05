@@ -1,0 +1,71 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-ambroxol,Амброксол,Ambroxol,en,english,public_generic_inn,verified,R05CB06,v0.9 curated generic batch
+ing-ambroxol,Амброксол,Ambroxolum,la,latin,public_generic_inn,verified,R05CB06,v0.9 curated generic batch
+ing-ambroxol,Амброксол,ambroksol,uk-Latn,transliteration,project_generated_transliteration,high,R05CB06,v0.9 deterministic transliteration
+ing-ambroxol,Амброксол,Амброксол,uk,ukrainian,public_generic_inn,verified,R05CB06,v0.9 curated generic batch
+ing-acetylcysteine,Ацетилцистеїн,Acetylcysteine,en,english,public_generic_inn,verified,R05CB01,v0.9 curated generic batch
+ing-acetylcysteine,Ацетилцистеїн,Acetylcysteinum,la,latin,public_generic_inn,verified,R05CB01,v0.9 curated generic batch
+ing-acetylcysteine,Ацетилцистеїн,atsetyltsystein,uk-Latn,transliteration,project_generated_transliteration,high,R05CB01,v0.9 deterministic transliteration
+ing-acetylcysteine,Ацетилцистеїн,Ацетилцистеїн,uk,ukrainian,public_generic_inn,verified,R05CB01,v0.9 curated generic batch
+ing-bromhexine,Бромгексин,Bromhexine,en,english,public_generic_inn,verified,R05CB02,v0.9 curated generic batch
+ing-bromhexine,Бромгексин,Bromhexinum,la,latin,public_generic_inn,verified,R05CB02,v0.9 curated generic batch
+ing-bromhexine,Бромгексин,bromheksyn,uk-Latn,transliteration,project_generated_transliteration,high,R05CB02,v0.9 deterministic transliteration
+ing-bromhexine,Бромгексин,Бромгексин,uk,ukrainian,public_generic_inn,verified,R05CB02,v0.9 curated generic batch
+ing-budesonide,Будесонід,Budesonide,en,english,public_generic_inn,verified,R03BA02,v0.9 curated generic batch
+ing-budesonide,Будесонід,Budesonidum,la,latin,public_generic_inn,verified,R03BA02,v0.9 curated generic batch
+ing-budesonide,Будесонід,budesonid,uk-Latn,transliteration,project_generated_transliteration,high,R03BA02,v0.9 deterministic transliteration
+ing-budesonide,Будесонід,Будесонід,uk,ukrainian,public_generic_inn,verified,R03BA02,v0.9 curated generic batch
+ing-desloratadine,Дезлоратадин,Desloratadine,en,english,public_generic_inn,verified,R06AX27,v0.9 curated generic batch
+ing-desloratadine,Дезлоратадин,Desloratadinum,la,latin,public_generic_inn,verified,R06AX27,v0.9 curated generic batch
+ing-desloratadine,Дезлоратадин,dezloratadyn,uk-Latn,transliteration,project_generated_transliteration,high,R06AX27,v0.9 deterministic transliteration
+ing-desloratadine,Дезлоратадин,Дезлоратадин,uk,ukrainian,public_generic_inn,verified,R06AX27,v0.9 curated generic batch
+ing-dimetindene,Диметинден,Dimetindene,en,english,public_generic_inn,verified,R06AB03,v0.9 curated generic batch
+ing-dimetindene,Диметинден,Dimetindenum,la,latin,public_generic_inn,verified,R06AB03,v0.9 curated generic batch
+ing-dimetindene,Диметинден,dymetynden,uk-Latn,transliteration,project_generated_transliteration,high,R06AB03,v0.9 deterministic transliteration
+ing-dimetindene,Диметинден,Диметинден,uk,ukrainian,public_generic_inn,verified,R06AB03,v0.9 curated generic batch
+ing-carbocisteine,Карбоцистеїн,Carbocisteine,en,english,public_generic_inn,verified,R05CB03,v0.9 curated generic batch
+ing-carbocisteine,Карбоцистеїн,Carbocisteinum,la,latin,public_generic_inn,verified,R05CB03,v0.9 curated generic batch
+ing-carbocisteine,Карбоцистеїн,karbotsystein,uk-Latn,transliteration,project_generated_transliteration,high,R05CB03,v0.9 deterministic transliteration
+ing-carbocisteine,Карбоцистеїн,Карбоцистеїн,uk,ukrainian,public_generic_inn,verified,R05CB03,v0.9 curated generic batch
+ing-codeine,Кодеїн,Codeine,en,english,public_generic_inn,verified,R05DA04,v0.9 curated generic batch
+ing-codeine,Кодеїн,Codeinum,la,latin,public_generic_inn,verified,R05DA04,v0.9 curated generic batch
+ing-codeine,Кодеїн,kodein,uk-Latn,transliteration,project_generated_transliteration,high,R05DA04,v0.9 deterministic transliteration
+ing-codeine,Кодеїн,Кодеїн,uk,ukrainian,public_generic_inn,verified,R05DA04,v0.9 curated generic batch
+ing-xylometazoline,Ксилометазолін,Xylometazoline,en,english,public_generic_inn,verified,R01AA07,v0.9 curated generic batch
+ing-xylometazoline,Ксилометазолін,Xylometazolinum,la,latin,public_generic_inn,verified,R01AA07,v0.9 curated generic batch
+ing-xylometazoline,Ксилометазолін,ksylometazolin,uk-Latn,transliteration,project_generated_transliteration,high,R01AA07,v0.9 deterministic transliteration
+ing-xylometazoline,Ксилометазолін,Ксилометазолін,uk,ukrainian,public_generic_inn,verified,R01AA07,v0.9 curated generic batch
+ing-levocetirizine,Левоцетиризин,Levocetirizine,en,english,public_generic_inn,verified,R06AE09,v0.9 curated generic batch
+ing-levocetirizine,Левоцетиризин,Levocetirizinum,la,latin,public_generic_inn,verified,R06AE09,v0.9 curated generic batch
+ing-levocetirizine,Левоцетиризин,levotsetyryzyn,uk-Latn,transliteration,project_generated_transliteration,high,R06AE09,v0.9 deterministic transliteration
+ing-levocetirizine,Левоцетиризин,Левоцетиризин,uk,ukrainian,public_generic_inn,verified,R06AE09,v0.9 curated generic batch
+ing-loratadine,Лоратадин,Loratadine,en,english,public_generic_inn,verified,R06AX13,v0.9 curated generic batch
+ing-loratadine,Лоратадин,Loratadinum,la,latin,public_generic_inn,verified,R06AX13,v0.9 curated generic batch
+ing-loratadine,Лоратадин,loratadyn,uk-Latn,transliteration,project_generated_transliteration,high,R06AX13,v0.9 deterministic transliteration
+ing-loratadine,Лоратадин,Лоратадин,uk,ukrainian,public_generic_inn,verified,R06AX13,v0.9 curated generic batch
+ing-montelukast,Монтелукаст,Montelukast,en,english,public_generic_inn,verified,R03DC03,v0.9 curated generic batch
+ing-montelukast,Монтелукаст,Montelukastum,la,latin,public_generic_inn,verified,R03DC03,v0.9 curated generic batch
+ing-montelukast,Монтелукаст,Монтелукаст,uk,ukrainian,public_generic_inn,verified,R03DC03,v0.9 curated generic batch
+ing-oxymetazoline,Оксиметазолін,Oxymetazoline,en,english,public_generic_inn,verified,R01AA05,v0.9 curated generic batch
+ing-oxymetazoline,Оксиметазолін,Oxymetazolinum,la,latin,public_generic_inn,verified,R01AA05,v0.9 curated generic batch
+ing-oxymetazoline,Оксиметазолін,oksymetazolin,uk-Latn,transliteration,project_generated_transliteration,high,R01AA05,v0.9 deterministic transliteration
+ing-oxymetazoline,Оксиметазолін,Оксиметазолін,uk,ukrainian,public_generic_inn,verified,R01AA05,v0.9 curated generic batch
+ing-salbutamol,Сальбутамол,Salbutamol,en,english,public_generic_inn,verified,R03AC02,v0.9 curated generic batch
+ing-salbutamol,Сальбутамол,Salbutamolum,la,latin,public_generic_inn,verified,R03AC02,v0.9 curated generic batch
+ing-salbutamol,Сальбутамол,Сальбутамол,uk,ukrainian,public_generic_inn,verified,R03AC02,v0.9 curated generic batch
+ing-fexofenadine,Фексофенадин,Fexofenadine,en,english,public_generic_inn,verified,R06AX26,v0.9 curated generic batch
+ing-fexofenadine,Фексофенадин,Fexofenadinum,la,latin,public_generic_inn,verified,R06AX26,v0.9 curated generic batch
+ing-fexofenadine,Фексофенадин,feksofenadyn,uk-Latn,transliteration,project_generated_transliteration,high,R06AX26,v0.9 deterministic transliteration
+ing-fexofenadine,Фексофенадин,Фексофенадин,uk,ukrainian,public_generic_inn,verified,R06AX26,v0.9 curated generic batch
+ing-fenspiride,Фенспірид,Fenspiride,en,english,public_generic_inn,verified,R03DX03,v0.9 curated generic batch
+ing-fenspiride,Фенспірид,Fenspiridum,la,latin,public_generic_inn,verified,R03DX03,v0.9 curated generic batch
+ing-fenspiride,Фенспірид,fenspiryd,uk-Latn,transliteration,project_generated_transliteration,high,R03DX03,v0.9 deterministic transliteration
+ing-fenspiride,Фенспірид,Фенспірид,uk,ukrainian,public_generic_inn,verified,R03DX03,v0.9 curated generic batch
+ing-chloropyramine,Хлоропірамін,Chloropyramine,en,english,public_generic_inn,verified,R06AC03,v0.9 curated generic batch
+ing-chloropyramine,Хлоропірамін,Chloropyraminum,la,latin,public_generic_inn,verified,R06AC03,v0.9 curated generic batch
+ing-chloropyramine,Хлоропірамін,khloropiramin,uk-Latn,transliteration,project_generated_transliteration,high,R06AC03,v0.9 deterministic transliteration
+ing-chloropyramine,Хлоропірамін,Хлоропірамін,uk,ukrainian,public_generic_inn,verified,R06AC03,v0.9 curated generic batch
+ing-cetirizine,Цетиризин,Cetirizine,en,english,public_generic_inn,verified,R06AE07,v0.9 curated generic batch
+ing-cetirizine,Цетиризин,Cetirizinum,la,latin,public_generic_inn,verified,R06AE07,v0.9 curated generic batch
+ing-cetirizine,Цетиризин,tsetyryzyn,uk-Latn,transliteration,project_generated_transliteration,high,R06AE07,v0.9 deterministic transliteration
+ing-cetirizine,Цетиризин,Цетиризин,uk,ukrainian,public_generic_inn,verified,R06AE07,v0.9 curated generic batch

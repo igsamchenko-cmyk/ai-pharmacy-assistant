@@ -1,0 +1,101 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-amiodarone,Аміодарон,Amiodarone,en,english,public_generic_inn,verified,C01BD01,v0.9 curated generic batch
+ing-amiodarone,Аміодарон,Amiodaronum,la,latin,public_generic_inn,verified,C01BD01,v0.9 curated generic batch
+ing-amiodarone,Аміодарон,amiodaron,uk-Latn,transliteration,project_generated_transliteration,high,C01BD01,v0.9 deterministic transliteration
+ing-amiodarone,Аміодарон,Аміодарон,uk,ukrainian,public_generic_inn,verified,C01BD01,v0.9 curated generic batch
+ing-amlodipine,Амлодипін,Amlodipine,en,english,public_generic_inn,verified,C08CA01,v0.9 curated generic batch
+ing-amlodipine,Амлодипін,Amlodipinum,la,latin,public_generic_inn,verified,C08CA01,v0.9 curated generic batch
+ing-amlodipine,Амлодипін,amlodypin,uk-Latn,transliteration,project_generated_transliteration,high,C08CA01,v0.9 deterministic transliteration
+ing-amlodipine,Амлодипін,Амлодипін,uk,ukrainian,public_generic_inn,verified,C08CA01,v0.9 curated generic batch
+ing-atorvastatin,Аторвастатин,Atorvastatin,en,english,public_generic_inn,verified,C10AA05,v0.9 curated generic batch
+ing-atorvastatin,Аторвастатин,Atorvastatinum,la,latin,public_generic_inn,verified,C10AA05,v0.9 curated generic batch
+ing-atorvastatin,Аторвастатин,atorvastatyn,uk-Latn,transliteration,project_generated_transliteration,high,C10AA05,v0.9 deterministic transliteration
+ing-atorvastatin,Аторвастатин,Аторвастатин,uk,ukrainian,public_generic_inn,verified,C10AA05,v0.9 curated generic batch
+ing-bisoprolol,Бісопролол,Bisoprolol,en,english,public_generic_inn,verified,C07AB07,v0.9 curated generic batch
+ing-bisoprolol,Бісопролол,Bisoprololum,la,latin,public_generic_inn,verified,C07AB07,v0.9 curated generic batch
+ing-bisoprolol,Бісопролол,Бісопролол,uk,ukrainian,public_generic_inn,verified,C07AB07,v0.9 curated generic batch
+ing-valsartan,Валсартан,Valsartan,en,english,public_generic_inn,verified,C09CA03,v0.9 curated generic batch
+ing-valsartan,Валсартан,Valsartanum,la,latin,public_generic_inn,verified,C09CA03,v0.9 curated generic batch
+ing-valsartan,Валсартан,Валсартан,uk,ukrainian,public_generic_inn,verified,C09CA03,v0.9 curated generic batch
+ing-heparin-topical,Гепарин натрію,Heparin (topical),en,english,public_generic_inn,verified,C05BA03,v0.9 curated generic batch
+ing-heparin-topical,Гепарин натрію,Heparinum natricum,la,latin,public_generic_inn,verified,C05BA03,v0.9 curated generic batch
+ing-heparin-topical,Гепарин натрію,heparyn natriiu,uk-Latn,transliteration,project_generated_transliteration,high,C05BA03,v0.9 deterministic transliteration
+ing-heparin-topical,Гепарин натрію,Гепарин натрію,uk,ukrainian,public_generic_inn,verified,C05BA03,v0.9 curated generic batch
+ing-hydrochlorothiazide,Гідрохлортіазид,Hydrochlorothiazide,en,english,public_generic_inn,verified,C03AA03,v0.9 curated generic batch
+ing-hydrochlorothiazide,Гідрохлортіазид,Hydrochlorothiazidum,la,latin,public_generic_inn,verified,C03AA03,v0.9 curated generic batch
+ing-hydrochlorothiazide,Гідрохлортіазид,hidrokhlortiazyd,uk-Latn,transliteration,project_generated_transliteration,high,C03AA03,v0.9 deterministic transliteration
+ing-hydrochlorothiazide,Гідрохлортіазид,Гідрохлортіазид,uk,ukrainian,public_generic_inn,verified,C03AA03,v0.9 curated generic batch
+ing-digoxin,Дигоксин,Digoxin,en,english,public_generic_inn,verified,C01AA05,v0.9 curated generic batch
+ing-digoxin,Дигоксин,Digoxinum,la,latin,public_generic_inn,verified,C01AA05,v0.9 curated generic batch
+ing-digoxin,Дигоксин,dyhoksyn,uk-Latn,transliteration,project_generated_transliteration,high,C01AA05,v0.9 deterministic transliteration
+ing-digoxin,Дигоксин,Дигоксин,uk,ukrainian,public_generic_inn,verified,C01AA05,v0.9 curated generic batch
+ing-enalapril,Еналаприл,Enalapril,en,english,public_generic_inn,verified,C09AA02,v0.9 curated generic batch
+ing-enalapril,Еналаприл,Enalaprilum,la,latin,public_generic_inn,verified,C09AA02,v0.9 curated generic batch
+ing-enalapril,Еналаприл,enalapryl,uk-Latn,transliteration,project_generated_transliteration,high,C09AA02,v0.9 deterministic transliteration
+ing-enalapril,Еналаприл,Еналаприл,uk,ukrainian,public_generic_inn,verified,C09AA02,v0.9 curated generic batch
+ing-isosorbide-dinitrate,Ізосорбіду динітрат,Isosorbide dinitrate,en,english,public_generic_inn,verified,C01DA08,v0.9 curated generic batch
+ing-isosorbide-dinitrate,Ізосорбіду динітрат,Isosorbidi dinitras,la,latin,public_generic_inn,verified,C01DA08,v0.9 curated generic batch
+ing-isosorbide-dinitrate,Ізосорбіду динітрат,izosorbidu dynitrat,uk-Latn,transliteration,project_generated_transliteration,high,C01DA08,v0.9 deterministic transliteration
+ing-isosorbide-dinitrate,Ізосорбіду динітрат,Ізосорбіду динітрат,uk,ukrainian,public_generic_inn,verified,C01DA08,v0.9 curated generic batch
+ing-indapamide,Індапамід,Indapamide,en,english,public_generic_inn,verified,C03BA11,v0.9 curated generic batch
+ing-indapamide,Індапамід,Indapamidum,la,latin,public_generic_inn,verified,C03BA11,v0.9 curated generic batch
+ing-indapamide,Індапамід,indapamid,uk-Latn,transliteration,project_generated_transliteration,high,C03BA11,v0.9 deterministic transliteration
+ing-indapamide,Індапамід,Індапамід,uk,ukrainian,public_generic_inn,verified,C03BA11,v0.9 curated generic batch
+ing-candesartan,Кандесартан,Candesartan,en,english,public_generic_inn,verified,C09CA06,v0.9 curated generic batch
+ing-candesartan,Кандесартан,Candesartanum,la,latin,public_generic_inn,verified,C09CA06,v0.9 curated generic batch
+ing-candesartan,Кандесартан,kandesartan,uk-Latn,transliteration,project_generated_transliteration,high,C09CA06,v0.9 deterministic transliteration
+ing-candesartan,Кандесартан,Кандесартан,uk,ukrainian,public_generic_inn,verified,C09CA06,v0.9 curated generic batch
+ing-carvedilol,Карведилол,Carvedilol,en,english,public_generic_inn,verified,C07AG02,v0.9 curated generic batch
+ing-carvedilol,Карведилол,Carvedilolum,la,latin,public_generic_inn,verified,C07AG02,v0.9 curated generic batch
+ing-carvedilol,Карведилол,karvedylol,uk-Latn,transliteration,project_generated_transliteration,high,C07AG02,v0.9 deterministic transliteration
+ing-carvedilol,Карведилол,Карведилол,uk,ukrainian,public_generic_inn,verified,C07AG02,v0.9 curated generic batch
+ing-lisinopril,Лізиноприл,Lisinopril,en,english,public_generic_inn,verified,C09AA03,v0.9 curated generic batch
+ing-lisinopril,Лізиноприл,Lisinoprilum,la,latin,public_generic_inn,verified,C09AA03,v0.9 curated generic batch
+ing-lisinopril,Лізиноприл,lizynopryl,uk-Latn,transliteration,project_generated_transliteration,high,C09AA03,v0.9 deterministic transliteration
+ing-lisinopril,Лізиноприл,Лізиноприл,uk,ukrainian,public_generic_inn,verified,C09AA03,v0.9 curated generic batch
+ing-losartan,Лозартан,Losartan,en,english,public_generic_inn,verified,C09CA01,v0.9 curated generic batch
+ing-losartan,Лозартан,Losartanum,la,latin,public_generic_inn,verified,C09CA01,v0.9 curated generic batch
+ing-losartan,Лозартан,lozartan,uk-Latn,transliteration,project_generated_transliteration,high,C09CA01,v0.9 deterministic transliteration
+ing-losartan,Лозартан,Лозартан,uk,ukrainian,public_generic_inn,verified,C09CA01,v0.9 curated generic batch
+ing-metoprolol,Метопролол,Metoprolol,en,english,public_generic_inn,verified,C07AB02,v0.9 curated generic batch
+ing-metoprolol,Метопролол,Metoprololum,la,latin,public_generic_inn,verified,C07AB02,v0.9 curated generic batch
+ing-metoprolol,Метопролол,Метопролол,uk,ukrainian,public_generic_inn,verified,C07AB02,v0.9 curated generic batch
+ing-nebivolol,Небіволол,Nebivolol,en,english,public_generic_inn,verified,C07AB12,v0.9 curated generic batch
+ing-nebivolol,Небіволол,Nebivololum,la,latin,public_generic_inn,verified,C07AB12,v0.9 curated generic batch
+ing-nebivolol,Небіволол,Небіволол,uk,ukrainian,public_generic_inn,verified,C07AB12,v0.9 curated generic batch
+ing-nitroglycerin,Нітрогліцерин,Nitroglycerin,en,english,public_generic_inn,verified,C01DA02,v0.9 curated generic batch
+ing-nitroglycerin,Нітрогліцерин,Nitroglycerinum,la,latin,public_generic_inn,verified,C01DA02,v0.9 curated generic batch
+ing-nitroglycerin,Нітрогліцерин,nitrohlitseryn,uk-Latn,transliteration,project_generated_transliteration,high,C01DA02,v0.9 deterministic transliteration
+ing-nitroglycerin,Нітрогліцерин,Нітрогліцерин,uk,ukrainian,public_generic_inn,verified,C01DA02,v0.9 curated generic batch
+ing-nifedipine,Ніфедипін,Nifedipine,en,english,public_generic_inn,verified,C08CA05,v0.9 curated generic batch
+ing-nifedipine,Ніфедипін,Nifedipinum,la,latin,public_generic_inn,verified,C08CA05,v0.9 curated generic batch
+ing-nifedipine,Ніфедипін,nifedypin,uk-Latn,transliteration,project_generated_transliteration,high,C08CA05,v0.9 deterministic transliteration
+ing-nifedipine,Ніфедипін,Ніфедипін,uk,ukrainian,public_generic_inn,verified,C08CA05,v0.9 curated generic batch
+ing-perindopril,Періндоприл,Perindopril,en,english,public_generic_inn,verified,C09AA04,v0.9 curated generic batch
+ing-perindopril,Періндоприл,Perindoprilum,la,latin,public_generic_inn,verified,C09AA04,v0.9 curated generic batch
+ing-perindopril,Періндоприл,perindopryl,uk-Latn,transliteration,project_generated_transliteration,high,C09AA04,v0.9 deterministic transliteration
+ing-perindopril,Періндоприл,Періндоприл,uk,ukrainian,public_generic_inn,verified,C09AA04,v0.9 curated generic batch
+ing-ramipril,Раміприл,Ramipril,en,english,public_generic_inn,verified,C09AA05,v0.9 curated generic batch
+ing-ramipril,Раміприл,Ramiprilum,la,latin,public_generic_inn,verified,C09AA05,v0.9 curated generic batch
+ing-ramipril,Раміприл,ramipryl,uk-Latn,transliteration,project_generated_transliteration,high,C09AA05,v0.9 deterministic transliteration
+ing-ramipril,Раміприл,Раміприл,uk,ukrainian,public_generic_inn,verified,C09AA05,v0.9 curated generic batch
+ing-rosuvastatin,Розувастатин,Rosuvastatin,en,english,public_generic_inn,verified,C10AA07,v0.9 curated generic batch
+ing-rosuvastatin,Розувастатин,Rosuvastatinum,la,latin,public_generic_inn,verified,C10AA07,v0.9 curated generic batch
+ing-rosuvastatin,Розувастатин,rozuvastatyn,uk-Latn,transliteration,project_generated_transliteration,high,C10AA07,v0.9 deterministic transliteration
+ing-rosuvastatin,Розувастатин,Розувастатин,uk,ukrainian,public_generic_inn,verified,C10AA07,v0.9 curated generic batch
+ing-simvastatin,Симвастатин,Simvastatin,en,english,public_generic_inn,verified,C10AA01,v0.9 curated generic batch
+ing-simvastatin,Симвастатин,Simvastatinum,la,latin,public_generic_inn,verified,C10AA01,v0.9 curated generic batch
+ing-simvastatin,Симвастатин,symvastatyn,uk-Latn,transliteration,project_generated_transliteration,high,C10AA01,v0.9 deterministic transliteration
+ing-simvastatin,Симвастатин,Симвастатин,uk,ukrainian,public_generic_inn,verified,C10AA01,v0.9 curated generic batch
+ing-spironolactone,Спіронолактон,Spironolactone,en,english,public_generic_inn,verified,C03DA01,v0.9 curated generic batch
+ing-spironolactone,Спіронолактон,Spironolactonum,la,latin,public_generic_inn,verified,C03DA01,v0.9 curated generic batch
+ing-spironolactone,Спіронолактон,spironolakton,uk-Latn,transliteration,project_generated_transliteration,high,C03DA01,v0.9 deterministic transliteration
+ing-spironolactone,Спіронолактон,Спіронолактон,uk,ukrainian,public_generic_inn,verified,C03DA01,v0.9 curated generic batch
+ing-torasemide,Торасемід,Torasemide,en,english,public_generic_inn,verified,C03CA04,v0.9 curated generic batch
+ing-torasemide,Торасемід,Torasemidum,la,latin,public_generic_inn,verified,C03CA04,v0.9 curated generic batch
+ing-torasemide,Торасемід,torasemid,uk-Latn,transliteration,project_generated_transliteration,high,C03CA04,v0.9 deterministic transliteration
+ing-torasemide,Торасемід,Торасемід,uk,ukrainian,public_generic_inn,verified,C03CA04,v0.9 curated generic batch
+ing-furosemide,Фуросемід,Furosemide,en,english,public_generic_inn,verified,C03CA01,v0.9 curated generic batch
+ing-furosemide,Фуросемід,Furosemidum,la,latin,public_generic_inn,verified,C03CA01,v0.9 curated generic batch
+ing-furosemide,Фуросемід,furosemid,uk-Latn,transliteration,project_generated_transliteration,high,C03CA01,v0.9 deterministic transliteration
+ing-furosemide,Фуросемід,Фуросемід,uk,ukrainian,public_generic_inn,verified,C03CA01,v0.9 curated generic batch

@@ -1282,6 +1282,157 @@ components:
           type: string
         subject:
           type: string
+    DictionaryBatchFileSummary:
+      type: object
+      required:
+        - fileName
+        - category
+        - rowsParsed
+        - parseErrors
+        - newIngredients
+        - newMappings
+        - duplicates
+        - conflicts
+        - missingSources
+        - invalidAtc
+        - copyrightViolations
+        - wouldSucceed
+      properties:
+        fileName:
+          type: string
+        category:
+          type: string
+        rowsParsed:
+          type: integer
+        parseErrors:
+          type: integer
+        newIngredients:
+          type: integer
+        newMappings:
+          type: integer
+        duplicates:
+          type: integer
+        conflicts:
+          type: integer
+        missingSources:
+          type: integer
+        invalidAtc:
+          type: integer
+        copyrightViolations:
+          type: integer
+        wouldSucceed:
+          type: boolean
+    DictionaryBatchQualitySummary:
+      type: object
+      required:
+        - files
+        - totalRows
+        - totalNewIngredients
+        - totalNewMappings
+        - duplicates
+        - conflicts
+        - parseErrors
+        - missingSources
+        - invalidAtc
+        - copyrightViolations
+        - ukrainianRows
+        - englishRows
+        - latinRows
+        - transliterationRows
+        - atcRows
+        - sourceCoveragePct
+        - ukrainianCoveragePct
+        - atcCoveragePct
+        - suspiciousBrandLikeRows
+        - ambiguousAbbreviationRows
+        - normalizationConflictRows
+        - byCategory
+        - byConfidence
+        - byReviewStatus
+        - bySource
+        - fileSummaries
+        - wouldSucceed
+      properties:
+        files:
+          type: integer
+        totalRows:
+          type: integer
+        totalNewIngredients:
+          type: integer
+        totalNewMappings:
+          type: integer
+        duplicates:
+          type: integer
+        conflicts:
+          type: integer
+        parseErrors:
+          type: integer
+        missingSources:
+          type: integer
+        invalidAtc:
+          type: integer
+        copyrightViolations:
+          type: integer
+        ukrainianRows:
+          type: integer
+        englishRows:
+          type: integer
+        latinRows:
+          type: integer
+        transliterationRows:
+          type: integer
+        atcRows:
+          type: integer
+        sourceCoveragePct:
+          type: number
+        ukrainianCoveragePct:
+          type: number
+        atcCoveragePct:
+          type: number
+        suspiciousBrandLikeRows:
+          type: integer
+        ambiguousAbbreviationRows:
+          type: integer
+        normalizationConflictRows:
+          type: integer
+        byCategory:
+          type: object
+          additionalProperties:
+            type: integer
+        byConfidence:
+          type: object
+          required: [low, medium, high, verified]
+          properties:
+            low:
+              type: integer
+            medium:
+              type: integer
+            high:
+              type: integer
+            verified:
+              type: integer
+        byReviewStatus:
+          type: object
+          required: [pending, approved, rejected, needs_review]
+          properties:
+            pending:
+              type: integer
+            approved:
+              type: integer
+            rejected:
+              type: integer
+            needs_review:
+              type: integer
+        bySource:
+          type: object
+          additionalProperties:
+            type: integer
+        fileSummaries:
+          type: array
+          items:
+            $ref: "#/components/schemas/DictionaryBatchFileSummary"
+        wouldSucceed:
+          type: boolean
     DataQualityReport:
       type: object
       required:
@@ -1343,6 +1494,8 @@ components:
               type: integer
             drugAtcPct:
               type: number
+        dictionaryBatches:
+          $ref: "#/components/schemas/DictionaryBatchQualitySummary"
         errors:
           type: array
           items:

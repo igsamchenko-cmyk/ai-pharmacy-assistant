@@ -1,0 +1,25 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-apixaban,Апіксабан,Apixaban,en,english,public_generic_inn,verified,B01AF02,v0.9 curated generic batch
+ing-apixaban,Апіксабан,Apixabanum,la,latin,public_generic_inn,verified,B01AF02,v0.9 curated generic batch
+ing-apixaban,Апіксабан,apiksaban,uk-Latn,transliteration,project_generated_transliteration,high,B01AF02,v0.9 deterministic transliteration
+ing-apixaban,Апіксабан,Апіксабан,uk,ukrainian,public_generic_inn,verified,B01AF02,v0.9 curated generic batch
+ing-warfarin,Варфарин,Warfarin,en,english,public_generic_inn,verified,B01AA03,v0.9 curated generic batch
+ing-warfarin,Варфарин,Warfarinum,la,latin,public_generic_inn,verified,B01AA03,v0.9 curated generic batch
+ing-warfarin,Варфарин,varfaryn,uk-Latn,transliteration,project_generated_transliteration,high,B01AA03,v0.9 deterministic transliteration
+ing-warfarin,Варфарин,Варфарин,uk,ukrainian,public_generic_inn,verified,B01AA03,v0.9 curated generic batch
+ing-dabigatran,Дабігатран,Dabigatran,en,english,public_generic_inn,verified,B01AE07,v0.9 curated generic batch
+ing-dabigatran,Дабігатран,Dabigatranum,la,latin,public_generic_inn,verified,B01AE07,v0.9 curated generic batch
+ing-dabigatran,Дабігатран,dabihatran,uk-Latn,transliteration,project_generated_transliteration,high,B01AE07,v0.9 deterministic transliteration
+ing-dabigatran,Дабігатран,Дабігатран,uk,ukrainian,public_generic_inn,verified,B01AE07,v0.9 curated generic batch
+ing-enoxaparin,Еноксапарин,Enoxaparin,en,english,public_generic_inn,verified,B01AB05,v0.9 curated generic batch
+ing-enoxaparin,Еноксапарин,Enoxaparinum,la,latin,public_generic_inn,verified,B01AB05,v0.9 curated generic batch
+ing-enoxaparin,Еноксапарин,enoksaparyn,uk-Latn,transliteration,project_generated_transliteration,high,B01AB05,v0.9 deterministic transliteration
+ing-enoxaparin,Еноксапарин,Еноксапарин,uk,ukrainian,public_generic_inn,verified,B01AB05,v0.9 curated generic batch
+ing-clopidogrel,Клопідогрель,Clopidogrel,en,english,public_generic_inn,verified,B01AC04,v0.9 curated generic batch
+ing-clopidogrel,Клопідогрель,Clopidogrelum,la,latin,public_generic_inn,verified,B01AC04,v0.9 curated generic batch
+ing-clopidogrel,Клопідогрель,klopidohrel,uk-Latn,transliteration,project_generated_transliteration,high,B01AC04,v0.9 deterministic transliteration
+ing-clopidogrel,Клопідогрель,Клопідогрель,uk,ukrainian,public_generic_inn,verified,B01AC04,v0.9 curated generic batch
+ing-rivaroxaban,Ривароксабан,Rivaroxaban,en,english,public_generic_inn,verified,B01AF01,v0.9 curated generic batch
+ing-rivaroxaban,Ривароксабан,Rivaroxabanum,la,latin,public_generic_inn,verified,B01AF01,v0.9 curated generic batch
+ing-rivaroxaban,Ривароксабан,ryvaroksaban,uk-Latn,transliteration,project_generated_transliteration,high,B01AF01,v0.9 deterministic transliteration
+ing-rivaroxaban,Ривароксабан,Ривароксабан,uk,ukrainian,public_generic_inn,verified,B01AF01,v0.9 curated generic batch

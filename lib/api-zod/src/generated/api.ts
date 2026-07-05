@@ -537,6 +537,58 @@ export const GetDataQualityResponse = zod.object({
   "drugsWithValidAtc": zod.number(),
   "drugAtcPct": zod.number()
 }),
+  "dictionaryBatches": zod.object({
+  "files": zod.number(),
+  "totalRows": zod.number(),
+  "totalNewIngredients": zod.number(),
+  "totalNewMappings": zod.number(),
+  "duplicates": zod.number(),
+  "conflicts": zod.number(),
+  "parseErrors": zod.number(),
+  "missingSources": zod.number(),
+  "invalidAtc": zod.number(),
+  "copyrightViolations": zod.number(),
+  "ukrainianRows": zod.number(),
+  "englishRows": zod.number(),
+  "latinRows": zod.number(),
+  "transliterationRows": zod.number(),
+  "atcRows": zod.number(),
+  "sourceCoveragePct": zod.number(),
+  "ukrainianCoveragePct": zod.number(),
+  "atcCoveragePct": zod.number(),
+  "suspiciousBrandLikeRows": zod.number(),
+  "ambiguousAbbreviationRows": zod.number(),
+  "normalizationConflictRows": zod.number(),
+  "byCategory": zod.record(zod.string(), zod.number()),
+  "byConfidence": zod.object({
+  "low": zod.number(),
+  "medium": zod.number(),
+  "high": zod.number(),
+  "verified": zod.number()
+}),
+  "byReviewStatus": zod.object({
+  "pending": zod.number(),
+  "approved": zod.number(),
+  "rejected": zod.number(),
+  "needs_review": zod.number()
+}),
+  "bySource": zod.record(zod.string(), zod.number()),
+  "fileSummaries": zod.array(zod.object({
+  "fileName": zod.string(),
+  "category": zod.string(),
+  "rowsParsed": zod.number(),
+  "parseErrors": zod.number(),
+  "newIngredients": zod.number(),
+  "newMappings": zod.number(),
+  "duplicates": zod.number(),
+  "conflicts": zod.number(),
+  "missingSources": zod.number(),
+  "invalidAtc": zod.number(),
+  "copyrightViolations": zod.number(),
+  "wouldSucceed": zod.boolean()
+})),
+  "wouldSucceed": zod.boolean()
+}).optional(),
   "errors": zod.array(zod.object({
   "code": zod.string(),
   "severity": zod.enum(['error', 'warning']),

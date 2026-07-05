@@ -210,3 +210,16 @@ Drizzle schema. The runtime architecture stays layered:
 The `/api/knowledge/runtime/status` contract is the operational boundary for
 runtime deployment diagnostics. OpenAPI remains the source of truth for generated
 client and Zod schemas.
+
+## v0.9 Dictionary Batch Layer
+
+`data/dictionary-batches/*.csv` is a data layer on top of the existing import
+pipeline, not a second format. Batch files use the canonical dictionary columns:
+`ingredient_id, canonical_inn, name, locale, name_type, source_id, confidence,
+atc_code, notes`. The API server discovers them through
+`knowledge/import/batches.ts`, parses with the existing CSV parser, previews with
+`analyzeImport`, and exposes aggregate diagnostics through the quality report.
+
+Runtime behavior is unchanged: static dictionary remains default, DB runtime is
+optional behind `KNOWLEDGE_DB_RUNTIME=true`, and DB lookup still reads only rows
+with `review_status='approved'`.

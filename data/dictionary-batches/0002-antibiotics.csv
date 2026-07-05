@@ -1,0 +1,60 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-azithromycin,Азитроміцин,Azithromycin,en,english,public_generic_inn,verified,J01FA10,v0.9 curated generic batch
+ing-azithromycin,Азитроміцин,Azithromycinum,la,latin,public_generic_inn,verified,J01FA10,v0.9 curated generic batch
+ing-azithromycin,Азитроміцин,azytromitsyn,uk-Latn,transliteration,project_generated_transliteration,high,J01FA10,v0.9 deterministic transliteration
+ing-azithromycin,Азитроміцин,Азитроміцин,uk,ukrainian,public_generic_inn,verified,J01FA10,v0.9 curated generic batch
+ing-amoxicillin,Амоксицилін,Amoxicillin,en,english,public_generic_inn,verified,J01CA04,v0.9 curated generic batch
+ing-amoxicillin,Амоксицилін,Amoxicillinum,la,latin,public_generic_inn,verified,J01CA04,v0.9 curated generic batch
+ing-amoxicillin,Амоксицилін,amoksytsylin,uk-Latn,transliteration,project_generated_transliteration,high,J01CA04,v0.9 deterministic transliteration
+ing-amoxicillin,Амоксицилін,Амоксицилін,uk,ukrainian,public_generic_inn,verified,J01CA04,v0.9 curated generic batch
+ing-amoxicillin-clavulanic-acid,Амоксицилін + клавуланова кислота,Amoxicillin + clavulanic acid,en,english,public_generic_inn,verified,J01CR02,v0.9 curated generic batch
+ing-amoxicillin-clavulanic-acid,Амоксицилін + клавуланова кислота,Amoxicillinum + Acidum clavulanicum,la,latin,public_generic_inn,verified,J01CR02,v0.9 curated generic batch
+ing-amoxicillin-clavulanic-acid,Амоксицилін + клавуланова кислота,amoksytsylin klavulanova kyslota,uk-Latn,transliteration,project_generated_transliteration,high,J01CR02,v0.9 deterministic transliteration
+ing-amoxicillin-clavulanic-acid,Амоксицилін + клавуланова кислота,Амоксицилін + клавуланова кислота,uk,ukrainian,public_generic_inn,verified,J01CR02,v0.9 curated generic batch
+ing-aciclovir,Ацикловір,Aciclovir,en,english,public_generic_inn,verified,J05AB01,v0.9 curated generic batch
+ing-aciclovir,Ацикловір,Aciclovirum,la,latin,public_generic_inn,verified,J05AB01,v0.9 curated generic batch
+ing-aciclovir,Ацикловір,atsyklovir,uk-Latn,transliteration,project_generated_transliteration,high,J05AB01,v0.9 deterministic transliteration
+ing-aciclovir,Ацикловір,Ацикловір,uk,ukrainian,public_generic_inn,verified,J05AB01,v0.9 curated generic batch
+ing-doxycycline,Доксициклін,Doxycycline,en,english,public_generic_inn,verified,J01AA02,v0.9 curated generic batch
+ing-doxycycline,Доксициклін,Doxycyclinum,la,latin,public_generic_inn,verified,J01AA02,v0.9 curated generic batch
+ing-doxycycline,Доксициклін,doksytsyklin,uk-Latn,transliteration,project_generated_transliteration,high,J01AA02,v0.9 deterministic transliteration
+ing-doxycycline,Доксициклін,Доксициклін,uk,ukrainian,public_generic_inn,verified,J01AA02,v0.9 curated generic batch
+ing-clarithromycin,Кларитроміцин,Clarithromycin,en,english,public_generic_inn,verified,J01FA09,v0.9 curated generic batch
+ing-clarithromycin,Кларитроміцин,Clarithromycinum,la,latin,public_generic_inn,verified,J01FA09,v0.9 curated generic batch
+ing-clarithromycin,Кларитроміцин,klarytromitsyn,uk-Latn,transliteration,project_generated_transliteration,high,J01FA09,v0.9 deterministic transliteration
+ing-clarithromycin,Кларитроміцин,Кларитроміцин,uk,ukrainian,public_generic_inn,verified,J01FA09,v0.9 curated generic batch
+ing-levofloxacin,Левофлоксацин,Levofloxacin,en,english,public_generic_inn,verified,J01MA12,v0.9 curated generic batch
+ing-levofloxacin,Левофлоксацин,Levofloxacinum,la,latin,public_generic_inn,verified,J01MA12,v0.9 curated generic batch
+ing-levofloxacin,Левофлоксацин,levofloksatsyn,uk-Latn,transliteration,project_generated_transliteration,high,J01MA12,v0.9 deterministic transliteration
+ing-levofloxacin,Левофлоксацин,Левофлоксацин,uk,ukrainian,public_generic_inn,verified,J01MA12,v0.9 curated generic batch
+ing-metronidazole,Метронідазол,Metronidazole,en,english,public_generic_inn,verified,J01XD01,v0.9 curated generic batch
+ing-metronidazole,Метронідазол,Metronidazolum,la,latin,public_generic_inn,verified,J01XD01,v0.9 curated generic batch
+ing-metronidazole,Метронідазол,metronidazol,uk-Latn,transliteration,project_generated_transliteration,high,J01XD01,v0.9 deterministic transliteration
+ing-metronidazole,Метронідазол,Метронідазол,uk,ukrainian,public_generic_inn,verified,J01XD01,v0.9 curated generic batch
+ing-oseltamivir,Осельтамівір,Oseltamivir,en,english,public_generic_inn,verified,J05AH02,v0.9 curated generic batch
+ing-oseltamivir,Осельтамівір,Oseltamivirum,la,latin,public_generic_inn,verified,J05AH02,v0.9 curated generic batch
+ing-oseltamivir,Осельтамівір,Осельтамівір,uk,ukrainian,public_generic_inn,verified,J05AH02,v0.9 curated generic batch
+ing-fluconazole,Флуконазол,Fluconazole,en,english,public_generic_inn,verified,J02AC01,v0.9 curated generic batch
+ing-fluconazole,Флуконазол,Fluconazolum,la,latin,public_generic_inn,verified,J02AC01,v0.9 curated generic batch
+ing-fluconazole,Флуконазол,flukonazol,uk-Latn,transliteration,project_generated_transliteration,high,J02AC01,v0.9 deterministic transliteration
+ing-fluconazole,Флуконазол,Флуконазол,uk,ukrainian,public_generic_inn,verified,J02AC01,v0.9 curated generic batch
+ing-fosfomycin,Фосфоміцин,Fosfomycin,en,english,public_generic_inn,verified,J01XX01,v0.9 curated generic batch
+ing-fosfomycin,Фосфоміцин,Fosfomycinum,la,latin,public_generic_inn,verified,J01XX01,v0.9 curated generic batch
+ing-fosfomycin,Фосфоміцин,fosfomitsyn,uk-Latn,transliteration,project_generated_transliteration,high,J01XX01,v0.9 deterministic transliteration
+ing-fosfomycin,Фосфоміцин,Фосфоміцин,uk,ukrainian,public_generic_inn,verified,J01XX01,v0.9 curated generic batch
+ing-cefixime,Цефіксим,Cefixime,en,english,public_generic_inn,verified,J01DD08,v0.9 curated generic batch
+ing-cefixime,Цефіксим,Cefiximum,la,latin,public_generic_inn,verified,J01DD08,v0.9 curated generic batch
+ing-cefixime,Цефіксим,tsefiksym,uk-Latn,transliteration,project_generated_transliteration,high,J01DD08,v0.9 deterministic transliteration
+ing-cefixime,Цефіксим,Цефіксим,uk,ukrainian,public_generic_inn,verified,J01DD08,v0.9 curated generic batch
+ing-ceftriaxone,Цефтріаксон,Ceftriaxone,en,english,public_generic_inn,verified,J01DD04,v0.9 curated generic batch
+ing-ceftriaxone,Цефтріаксон,Ceftriaxonum,la,latin,public_generic_inn,verified,J01DD04,v0.9 curated generic batch
+ing-ceftriaxone,Цефтріаксон,tseftriakson,uk-Latn,transliteration,project_generated_transliteration,high,J01DD04,v0.9 deterministic transliteration
+ing-ceftriaxone,Цефтріаксон,Цефтріаксон,uk,ukrainian,public_generic_inn,verified,J01DD04,v0.9 curated generic batch
+ing-cefuroxime,Цефуроксим,Cefuroxime,en,english,public_generic_inn,verified,J01DC02,v0.9 curated generic batch
+ing-cefuroxime,Цефуроксим,Cefuroximum,la,latin,public_generic_inn,verified,J01DC02,v0.9 curated generic batch
+ing-cefuroxime,Цефуроксим,tsefuroksym,uk-Latn,transliteration,project_generated_transliteration,high,J01DC02,v0.9 deterministic transliteration
+ing-cefuroxime,Цефуроксим,Цефуроксим,uk,ukrainian,public_generic_inn,verified,J01DC02,v0.9 curated generic batch
+ing-ciprofloxacin,Ципрофлоксацин,Ciprofloxacin,en,english,public_generic_inn,verified,J01MA02,v0.9 curated generic batch
+ing-ciprofloxacin,Ципрофлоксацин,Ciprofloxacinum,la,latin,public_generic_inn,verified,J01MA02,v0.9 curated generic batch
+ing-ciprofloxacin,Ципрофлоксацин,tsyprofloksatsyn,uk-Latn,transliteration,project_generated_transliteration,high,J01MA02,v0.9 deterministic transliteration
+ing-ciprofloxacin,Ципрофлоксацин,Ципрофлоксацин,uk,ukrainian,public_generic_inn,verified,J01MA02,v0.9 curated generic batch

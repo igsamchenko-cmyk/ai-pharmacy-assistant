@@ -1,0 +1,44 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-amitriptyline,Амітриптилін,Amitriptyline,en,english,public_generic_inn,verified,N06AA09,v0.9 curated generic batch
+ing-amitriptyline,Амітриптилін,Amitriptylinum,la,latin,public_generic_inn,verified,N06AA09,v0.9 curated generic batch
+ing-amitriptyline,Амітриптилін,amitryptylin,uk-Latn,transliteration,project_generated_transliteration,high,N06AA09,v0.9 deterministic transliteration
+ing-amitriptyline,Амітриптилін,Амітриптилін,uk,ukrainian,public_generic_inn,verified,N06AA09,v0.9 curated generic batch
+ing-betahistine,Бетагістин,Betahistine,en,english,public_generic_inn,verified,N07CA01,v0.9 curated generic batch
+ing-betahistine,Бетагістин,Betahistinum,la,latin,public_generic_inn,verified,N07CA01,v0.9 curated generic batch
+ing-betahistine,Бетагістин,betahistyn,uk-Latn,transliteration,project_generated_transliteration,high,N07CA01,v0.9 deterministic transliteration
+ing-betahistine,Бетагістин,Бетагістин,uk,ukrainian,public_generic_inn,verified,N07CA01,v0.9 curated generic batch
+ing-valproic-acid,Вальпроєва кислота,Valproic acid,en,english,public_generic_inn,verified,N03AG01,v0.9 curated generic batch
+ing-valproic-acid,Вальпроєва кислота,Acidum valproicum,la,latin,public_generic_inn,verified,N03AG01,v0.9 curated generic batch
+ing-valproic-acid,Вальпроєва кислота,valproieva kyslota,uk-Latn,transliteration,project_generated_transliteration,high,N03AG01,v0.9 deterministic transliteration
+ing-valproic-acid,Вальпроєва кислота,Вальпроєва кислота,uk,ukrainian,public_generic_inn,verified,N03AG01,v0.9 curated generic batch
+ing-gabapentin,Габапентин,Gabapentin,en,english,public_generic_inn,verified,N03AX12,v0.9 curated generic batch
+ing-gabapentin,Габапентин,Gabapentinum,la,latin,public_generic_inn,verified,N03AX12,v0.9 curated generic batch
+ing-gabapentin,Габапентин,habapentyn,uk-Latn,transliteration,project_generated_transliteration,high,N03AX12,v0.9 deterministic transliteration
+ing-gabapentin,Габапентин,Габапентин,uk,ukrainian,public_generic_inn,verified,N03AX12,v0.9 curated generic batch
+ing-gidazepam,Гідазепам,Gidazepam,en,english,public_generic_inn,verified,N05BA,v0.9 curated generic batch
+ing-gidazepam,Гідазепам,Gidazepamum,la,latin,public_generic_inn,verified,N05BA,v0.9 curated generic batch
+ing-gidazepam,Гідазепам,hidazepam,uk-Latn,transliteration,project_generated_transliteration,high,N05BA,v0.9 deterministic transliteration
+ing-gidazepam,Гідазепам,Гідазепам,uk,ukrainian,public_generic_inn,verified,N05BA,v0.9 curated generic batch
+ing-diazepam,Діазепам,Diazepam,en,english,public_generic_inn,verified,N05BA01,v0.9 curated generic batch
+ing-diazepam,Діазепам,Diazepamum,la,latin,public_generic_inn,verified,N05BA01,v0.9 curated generic batch
+ing-diazepam,Діазепам,Діазепам,uk,ukrainian,public_generic_inn,verified,N05BA01,v0.9 curated generic batch
+ing-escitalopram,Есциталопрам,Escitalopram,en,english,public_generic_inn,verified,N06AB10,v0.9 curated generic batch
+ing-escitalopram,Есциталопрам,Escitalopramum,la,latin,public_generic_inn,verified,N06AB10,v0.9 curated generic batch
+ing-escitalopram,Есциталопрам,estsytalopram,uk-Latn,transliteration,project_generated_transliteration,high,N06AB10,v0.9 deterministic transliteration
+ing-escitalopram,Есциталопрам,Есциталопрам,uk,ukrainian,public_generic_inn,verified,N06AB10,v0.9 curated generic batch
+ing-carbamazepine,Карбамазепін,Carbamazepine,en,english,public_generic_inn,verified,N03AF01,v0.9 curated generic batch
+ing-carbamazepine,Карбамазепін,Carbamazepinum,la,latin,public_generic_inn,verified,N03AF01,v0.9 curated generic batch
+ing-carbamazepine,Карбамазепін,karbamazepin,uk-Latn,transliteration,project_generated_transliteration,high,N03AF01,v0.9 deterministic transliteration
+ing-carbamazepine,Карбамазепін,Карбамазепін,uk,ukrainian,public_generic_inn,verified,N03AF01,v0.9 curated generic batch
+ing-pregabalin,Прегабалін,Pregabalin,en,english,public_generic_inn,verified,N03AX16,v0.9 curated generic batch
+ing-pregabalin,Прегабалін,Pregabalinum,la,latin,public_generic_inn,verified,N03AX16,v0.9 curated generic batch
+ing-pregabalin,Прегабалін,prehabalin,uk-Latn,transliteration,project_generated_transliteration,high,N03AX16,v0.9 deterministic transliteration
+ing-pregabalin,Прегабалін,Прегабалін,uk,ukrainian,public_generic_inn,verified,N03AX16,v0.9 curated generic batch
+ing-sertraline,Сертралін,Sertraline,en,english,public_generic_inn,verified,N06AB06,v0.9 curated generic batch
+ing-sertraline,Сертралін,Sertralinum,la,latin,public_generic_inn,verified,N06AB06,v0.9 curated generic batch
+ing-sertraline,Сертралін,sertralin,uk-Latn,transliteration,project_generated_transliteration,high,N06AB06,v0.9 deterministic transliteration
+ing-sertraline,Сертралін,Сертралін,uk,ukrainian,public_generic_inn,verified,N06AB06,v0.9 curated generic batch
+ing-fluoxetine,Флуоксетин,Fluoxetine,en,english,public_generic_inn,verified,N06AB03,v0.9 curated generic batch
+ing-fluoxetine,Флуоксетин,Fluoxetinum,la,latin,public_generic_inn,verified,N06AB03,v0.9 curated generic batch
+ing-fluoxetine,Флуоксетин,fluoksetyn,uk-Latn,transliteration,project_generated_transliteration,high,N06AB03,v0.9 deterministic transliteration
+ing-fluoxetine,Флуоксетин,Флуоксетин,uk,ukrainian,public_generic_inn,verified,N06AB03,v0.9 curated generic batch

@@ -1,0 +1,80 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-bisacodyl,Бісакодил,Bisacodyl,en,english,public_generic_inn,verified,A06AB02,v0.9 curated generic batch
+ing-bisacodyl,Бісакодил,Bisacodylum,la,latin,public_generic_inn,verified,A06AB02,v0.9 curated generic batch
+ing-bisacodyl,Бісакодил,bisakodyl,uk-Latn,transliteration,project_generated_transliteration,high,A06AB02,v0.9 deterministic transliteration
+ing-bisacodyl,Бісакодил,Бісакодил,uk,ukrainian,public_generic_inn,verified,A06AB02,v0.9 curated generic batch
+ing-gliclazide,Гліклазид,Gliclazide,en,english,public_generic_inn,verified,A10BB09,v0.9 curated generic batch
+ing-gliclazide,Гліклазид,Gliclazidum,la,latin,public_generic_inn,verified,A10BB09,v0.9 curated generic batch
+ing-gliclazide,Гліклазид,hliklazyd,uk-Latn,transliteration,project_generated_transliteration,high,A10BB09,v0.9 deterministic transliteration
+ing-gliclazide,Гліклазид,Гліклазид,uk,ukrainian,public_generic_inn,verified,A10BB09,v0.9 curated generic batch
+ing-glimepiride,Глімепірид,Glimepiride,en,english,public_generic_inn,verified,A10BB12,v0.9 curated generic batch
+ing-glimepiride,Глімепірид,Glimepiridum,la,latin,public_generic_inn,verified,A10BB12,v0.9 curated generic batch
+ing-glimepiride,Глімепірид,hlimepiryd,uk-Latn,transliteration,project_generated_transliteration,high,A10BB12,v0.9 deterministic transliteration
+ing-glimepiride,Глімепірид,Глімепірид,uk,ukrainian,public_generic_inn,verified,A10BB12,v0.9 curated generic batch
+ing-domperidone,Домперидон,Domperidone,en,english,public_generic_inn,verified,A03FA03,v0.9 curated generic batch
+ing-domperidone,Домперидон,Domperidonum,la,latin,public_generic_inn,verified,A03FA03,v0.9 curated generic batch
+ing-domperidone,Домперидон,domperydon,uk-Latn,transliteration,project_generated_transliteration,high,A03FA03,v0.9 deterministic transliteration
+ing-domperidone,Домперидон,Домперидон,uk,ukrainian,public_generic_inn,verified,A03FA03,v0.9 curated generic batch
+ing-drotaverine,Дротаверин,Drotaverine,en,english,public_generic_inn,verified,A03AD02,v0.9 curated generic batch
+ing-drotaverine,Дротаверин,Drotaverinum,la,latin,public_generic_inn,verified,A03AD02,v0.9 curated generic batch
+ing-drotaverine,Дротаверин,drotaveryn,uk-Latn,transliteration,project_generated_transliteration,high,A03AD02,v0.9 deterministic transliteration
+ing-drotaverine,Дротаверин,Дротаверин,uk,ukrainian,public_generic_inn,verified,A03AD02,v0.9 curated generic batch
+ing-esomeprazole,Езомепразол,Esomeprazole,en,english,public_generic_inn,verified,A02BC05,v0.9 curated generic batch
+ing-esomeprazole,Езомепразол,Esomeprazolum,la,latin,public_generic_inn,verified,A02BC05,v0.9 curated generic batch
+ing-esomeprazole,Езомепразол,ezomeprazol,uk-Latn,transliteration,project_generated_transliteration,high,A02BC05,v0.9 deterministic transliteration
+ing-esomeprazole,Езомепразол,Езомепразол,uk,ukrainian,public_generic_inn,verified,A02BC05,v0.9 curated generic batch
+ing-empagliflozin,Емпагліфлозин,Empagliflozin,en,english,public_generic_inn,verified,A10BK03,v0.9 curated generic batch
+ing-empagliflozin,Емпагліфлозин,Empagliflozinum,la,latin,public_generic_inn,verified,A10BK03,v0.9 curated generic batch
+ing-empagliflozin,Емпагліфлозин,empahliflozyn,uk-Latn,transliteration,project_generated_transliteration,high,A10BK03,v0.9 deterministic transliteration
+ing-empagliflozin,Емпагліфлозин,Емпагліфлозин,uk,ukrainian,public_generic_inn,verified,A10BK03,v0.9 curated generic batch
+ing-lactulose,Лактулоза,Lactulose,en,english,public_generic_inn,verified,A06AD11,v0.9 curated generic batch
+ing-lactulose,Лактулоза,Lactulosum,la,latin,public_generic_inn,verified,A06AD11,v0.9 curated generic batch
+ing-lactulose,Лактулоза,laktuloza,uk-Latn,transliteration,project_generated_transliteration,high,A06AD11,v0.9 deterministic transliteration
+ing-lactulose,Лактулоза,Лактулоза,uk,ukrainian,public_generic_inn,verified,A06AD11,v0.9 curated generic batch
+ing-levothyroxine,Левотироксин натрію,Levothyroxine,en,english,public_generic_inn,verified,H03AA01,v0.9 curated generic batch
+ing-levothyroxine,Левотироксин натрію,Levothyroxinum natricum,la,latin,public_generic_inn,verified,H03AA01,v0.9 curated generic batch
+ing-levothyroxine,Левотироксин натрію,levotyroksyn natriiu,uk-Latn,transliteration,project_generated_transliteration,high,H03AA01,v0.9 deterministic transliteration
+ing-levothyroxine,Левотироксин натрію,Левотироксин натрію,uk,ukrainian,public_generic_inn,verified,H03AA01,v0.9 curated generic batch
+ing-loperamide,Лоперамід,Loperamide,en,english,public_generic_inn,verified,A07DA03,v0.9 curated generic batch
+ing-loperamide,Лоперамід,Loperamidum,la,latin,public_generic_inn,verified,A07DA03,v0.9 curated generic batch
+ing-loperamide,Лоперамід,loperamid,uk-Latn,transliteration,project_generated_transliteration,high,A07DA03,v0.9 deterministic transliteration
+ing-loperamide,Лоперамід,Лоперамід,uk,ukrainian,public_generic_inn,verified,A07DA03,v0.9 curated generic batch
+ing-metoclopramide,Метоклопрамід,Metoclopramide,en,english,public_generic_inn,verified,A03FA01,v0.9 curated generic batch
+ing-metoclopramide,Метоклопрамід,Metoclopramidum,la,latin,public_generic_inn,verified,A03FA01,v0.9 curated generic batch
+ing-metoclopramide,Метоклопрамід,metoklopramid,uk-Latn,transliteration,project_generated_transliteration,high,A03FA01,v0.9 deterministic transliteration
+ing-metoclopramide,Метоклопрамід,Метоклопрамід,uk,ukrainian,public_generic_inn,verified,A03FA01,v0.9 curated generic batch
+ing-metformin,Метформін,Metformin,en,english,public_generic_inn,verified,A10BA02,v0.9 curated generic batch
+ing-metformin,Метформін,Metforminum,la,latin,public_generic_inn,verified,A10BA02,v0.9 curated generic batch
+ing-metformin,Метформін,Метформін,uk,ukrainian,public_generic_inn,verified,A10BA02,v0.9 curated generic batch
+ing-nifuroxazide,Ніфуроксазид,Nifuroxazide,en,english,public_generic_inn,verified,A07AX03,v0.9 curated generic batch
+ing-nifuroxazide,Ніфуроксазид,Nifuroxazidum,la,latin,public_generic_inn,verified,A07AX03,v0.9 curated generic batch
+ing-nifuroxazide,Ніфуроксазид,nifuroksazyd,uk-Latn,transliteration,project_generated_transliteration,high,A07AX03,v0.9 deterministic transliteration
+ing-nifuroxazide,Ніфуроксазид,Ніфуроксазид,uk,ukrainian,public_generic_inn,verified,A07AX03,v0.9 curated generic batch
+ing-omeprazole,Омепразол,Omeprazole,en,english,public_generic_inn,verified,A02BC01,v0.9 curated generic batch
+ing-omeprazole,Омепразол,Omeprazolum,la,latin,public_generic_inn,verified,A02BC01,v0.9 curated generic batch
+ing-omeprazole,Омепразол,omeprazol,uk-Latn,transliteration,project_generated_transliteration,high,A02BC01,v0.9 deterministic transliteration
+ing-omeprazole,Омепразол,Омепразол,uk,ukrainian,public_generic_inn,verified,A02BC01,v0.9 curated generic batch
+ing-pancreatin,Панкреатин,Pancreatin,en,english,public_generic_inn,verified,A09AA02,v0.9 curated generic batch
+ing-pancreatin,Панкреатин,Pancreatinum,la,latin,public_generic_inn,verified,A09AA02,v0.9 curated generic batch
+ing-pancreatin,Панкреатин,pankreatyn,uk-Latn,transliteration,project_generated_transliteration,high,A09AA02,v0.9 deterministic transliteration
+ing-pancreatin,Панкреатин,Панкреатин,uk,ukrainian,public_generic_inn,verified,A09AA02,v0.9 curated generic batch
+ing-pantoprazole,Пантопразол,Pantoprazole,en,english,public_generic_inn,verified,A02BC02,v0.9 curated generic batch
+ing-pantoprazole,Пантопразол,Pantoprazolum,la,latin,public_generic_inn,verified,A02BC02,v0.9 curated generic batch
+ing-pantoprazole,Пантопразол,pantoprazol,uk-Latn,transliteration,project_generated_transliteration,high,A02BC02,v0.9 deterministic transliteration
+ing-pantoprazole,Пантопразол,Пантопразол,uk,ukrainian,public_generic_inn,verified,A02BC02,v0.9 curated generic batch
+ing-rabeprazole,Рабепразол,Rabeprazole,en,english,public_generic_inn,verified,A02BC04,v0.9 curated generic batch
+ing-rabeprazole,Рабепразол,Rabeprazolum,la,latin,public_generic_inn,verified,A02BC04,v0.9 curated generic batch
+ing-rabeprazole,Рабепразол,rabeprazol,uk-Latn,transliteration,project_generated_transliteration,high,A02BC04,v0.9 deterministic transliteration
+ing-rabeprazole,Рабепразол,Рабепразол,uk,ukrainian,public_generic_inn,verified,A02BC04,v0.9 curated generic batch
+ing-simethicone,Симетикон,Simethicone,en,english,public_generic_inn,verified,A03AX13,v0.9 curated generic batch
+ing-simethicone,Симетикон,Simeticonum,la,latin,public_generic_inn,verified,A03AX13,v0.9 curated generic batch
+ing-simethicone,Симетикон,symetykon,uk-Latn,transliteration,project_generated_transliteration,high,A03AX13,v0.9 deterministic transliteration
+ing-simethicone,Симетикон,Симетикон,uk,ukrainian,public_generic_inn,verified,A03AX13,v0.9 curated generic batch
+ing-ursodeoxycholic-acid,Урсодезоксихолева кислота,Ursodeoxycholic acid,en,english,public_generic_inn,verified,A05AA02,v0.9 curated generic batch
+ing-ursodeoxycholic-acid,Урсодезоксихолева кислота,Acidum ursodeoxycholicum,la,latin,public_generic_inn,verified,A05AA02,v0.9 curated generic batch
+ing-ursodeoxycholic-acid,Урсодезоксихолева кислота,ursodezoksykholeva kyslota,uk-Latn,transliteration,project_generated_transliteration,high,A05AA02,v0.9 deterministic transliteration
+ing-ursodeoxycholic-acid,Урсодезоксихолева кислота,Урсодезоксихолева кислота,uk,ukrainian,public_generic_inn,verified,A05AA02,v0.9 curated generic batch
+ing-famotidine,Фамотидин,Famotidine,en,english,public_generic_inn,verified,A02BA03,v0.9 curated generic batch
+ing-famotidine,Фамотидин,Famotidinum,la,latin,public_generic_inn,verified,A02BA03,v0.9 curated generic batch
+ing-famotidine,Фамотидин,famotydyn,uk-Latn,transliteration,project_generated_transliteration,high,A02BA03,v0.9 deterministic transliteration
+ing-famotidine,Фамотидин,Фамотидин,uk,ukrainian,public_generic_inn,verified,A02BA03,v0.9 curated generic batch

@@ -144,3 +144,25 @@ KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:smoke
 The smoke check requires `DATABASE_URL`, verifies that approved DB rows are
 runtime-visible, and confirms that `pending`, `rejected`, and `needs_review` rows
 remain hidden from normalize/search.
+
+## Previewing Dictionary Batches
+
+Dictionary expansion batches live in `data/dictionary-batches/` and use the
+same canonical import format as the sample dictionary import. Preview all batch
+files without a database:
+
+```bash
+pnpm knowledge:import:preview:all
+pnpm knowledge:import:validate:all
+```
+
+These commands never commit rows. They report what would be imported, review
+status distribution, conflicts, duplicates, source coverage and ATC coverage. To
+commit a reviewed file when `DATABASE_URL` is configured, use the existing path:
+
+```bash
+DATABASE_URL=... pnpm import:knowledge data/dictionary-batches/0001-core-analgesics.csv --commit
+```
+
+`import:knowledge -- --commit` stores allowed non-copyright rows with derived
+`reviewStatus`; runtime visibility still requires `approved`.

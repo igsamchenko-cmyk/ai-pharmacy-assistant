@@ -56,3 +56,15 @@ helper scripts:
 `dbRuntimeRequested`, `databaseUrlConfigured`, `dbSchemaStatus`, `schemaReady`,
 `fallbackReason`, approved/review counts, latest batch, source distribution and
 warnings. It reports whether a URL is configured but never returns the URL.
+
+## v0.9 Batch Import and DB Runtime
+
+Dictionary batches are optional DB import inputs. They can be previewed without
+`DATABASE_URL`; when a database is configured, operators may commit reviewed
+batch files through `import:knowledge -- --commit`. The commit path stores
+allowed non-copyright rows with derived review status.
+
+Runtime invariant remains the same: DB-backed normalize/search reads only
+`approved` mappings. `pending`, `rejected` and `needs_review` rows are kept
+for audit/review and are not runtime-visible. Static fallback remains default and
+available when DB runtime is disabled, missing or failing.

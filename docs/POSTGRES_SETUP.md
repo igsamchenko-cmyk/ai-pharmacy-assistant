@@ -55,3 +55,20 @@ PostgreSQL database by setting `DATABASE_URL`.
   missing schema/data.
 - `/api/knowledge/runtime/status` reports DB availability and schema status but
   never exposes the actual `DATABASE_URL`.
+
+## v0.9 Batch Smoke Path
+
+PostgreSQL remains optional for dictionary expansion. Before committing any batch
+rows to a local DB, run:
+
+```bash
+pnpm knowledge:import:preview:all
+pnpm knowledge:import:validate:all
+pnpm db:dev:up
+pnpm db:push
+DATABASE_URL=... pnpm import:knowledge data/dictionary-batches/0001-core-analgesics.csv --commit
+DATABASE_URL=... KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:smoke
+pnpm db:dev:down
+```
+
+Do not commit secrets or expose `DATABASE_URL` in reports or UI.

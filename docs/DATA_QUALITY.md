@@ -142,3 +142,23 @@ The data-quality page now surfaces deployment-oriented runtime diagnostics:
 
 Use `pnpm knowledge:quality:report` for the JSON version and
 `pnpm knowledge:runtime:smoke` for a real PostgreSQL runtime smoke check.
+
+## v0.9 Batch Quality Diagnostics
+
+v0.9 adds dictionary-batch diagnostics to the quality surface. The report now
+summarizes batch file count, total rows, new mappings, duplicates, conflicts,
+source coverage, Ukrainian coverage, ATC coverage, confidence distribution,
+review-status distribution, source distribution and per-category counts.
+
+Use:
+
+```bash
+pnpm knowledge:import:preview:all
+pnpm knowledge:import:validate:all
+pnpm knowledge:quality:report
+```
+
+Blocking issues remain parse errors, missing/unknown sources, invalid ATC,
+proprietary/copyright source tokens and hard name-to-multiple-ingredient
+conflicts. Brand-like or ambiguous short rows are reported for review discipline
+and should not be approved automatically.
