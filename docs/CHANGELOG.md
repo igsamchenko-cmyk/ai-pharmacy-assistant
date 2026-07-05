@@ -5,6 +5,34 @@
 
 ## [Не випущено]
 
+## v1.0.0 - Closed Beta Readiness - 2026-07-05
+
+### Added
+
+- Closed beta checklist, release readiness guide, feedback policy and structured
+  test scenario documentation.
+- Scenario fixtures and CLI gates for search, interactions, safety, OCR and
+  workflow coverage.
+- pnpm beta:scenarios, pnpm beta:readiness and
+  pnpm knowledge:search:report release checks.
+- Local-only feedback reporting on search, interaction and data-quality
+  surfaces.
+- Sanitized diagnostics/version API and data-quality panel visibility without
+  exposing provider keys, DATABASE_URL or server filesystem paths.
+
+### Changed
+
+- Improved search and OCR normalization for local/static catalog matching.
+- Hardened blocked safety messaging while preserving reference-only workflows.
+
+### Validation
+
+- Readiness score: 93.
+- Beta scenarios: 24/24 passed.
+- Search report: 100% hit rate, 0 misses.
+- Tests: 384 passed, 1 skipped.
+- Typecheck and production build passed.
+
 ### Added
 
 - **Ukrainian Drug Data Expansion**: added `data/dictionary-batches/` with 8
