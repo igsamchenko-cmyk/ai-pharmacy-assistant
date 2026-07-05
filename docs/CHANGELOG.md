@@ -5,10 +5,19 @@
 
 ## [Не випущено]
 
+## v1.1.0 - In-App Beta Test Dashboard - 2026-07-05
+
 ### Added
 
 - In-app Beta Dashboard at `/beta-dashboard` with safe predefined validation checks, sanitized API endpoints and JSON export.
 
+### Validation
+
+- Readiness score: 93.
+- Beta scenarios: 24/24 passed.
+- Search report: 100% hit rate, 100% top-result accuracy, 0 misses.
+- Tests: 392 passed, 1 skipped.
+- Typecheck and production build passed.
 
 ## v1.0.0 - Closed Beta Readiness - 2026-07-05
 
