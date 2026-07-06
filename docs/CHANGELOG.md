@@ -284,7 +284,7 @@ Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
 - Added sanitized diagnostics/version data and `/data-quality` panel.
 - Improved search/OCR normalization for local catalog matching.
 - Hardened blocked safety messaging while preserving reference-only allowed workflows.
-## v1.3.0 - Real Online Deployment Readiness - Unreleased
+## v1.3.0 - Real Online Deployment Readiness - 2026-07-06
 
 ### Added
 
