@@ -5,6 +5,16 @@
 
 ## [Не випущено]
 
+## v1.3.1 - Render Build Configuration Fix - 2026-07-06
+
+### Fixed
+
+- Pinned Render to Node `24.14.1` and repo-managed `pnpm@11.10.0` so Corepack and Render builds use deterministic tool versions.
+- Documented the Render `NODE_VERSION` setting in deployment docs and the production environment template.
+
+### Safety
+
+- No app behavior, auth rules, DB fallback behavior or medical safety boundaries changed.
 ## v1.1.0 - In-App Beta Test Dashboard - 2026-07-05
 
 ### Added
