@@ -106,3 +106,8 @@ production observability around import/review activity.
 ## v1.0 Closed Beta Readiness
 
 v1.0 focuses on controlled internal daily testing rather than SaaS features. Scope includes scenario validation, search-quality reporting, safe local feedback, diagnostics/version visibility, clearer safety states, mobile workflow access, and operator release checklists. Public accounts, billing, mandatory DB runtime, and proprietary dataset imports remain out of scope.
+## v1.2 Done
+
+- Online private beta access with invite-only auth, roles, protected backend and
+  frontend routes, safe diagnostics auth status and one-service Render
+  deployment profile.

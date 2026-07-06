@@ -76,3 +76,16 @@ Do not commit secrets or expose `DATABASE_URL` in reports or UI.
 ## v1.0 Closed Beta PostgreSQL Notes
 
 PostgreSQL is optional for closed beta. If Docker/PostgreSQL is available, configure `DATABASE_URL` locally, run `pnpm db:push`, `pnpm knowledge:backfill`, and `pnpm knowledge:runtime:verify`, then optionally run DB smoke. If DB is unavailable, continue with static fallback and record the warning from `pnpm beta:readiness`.
+## v1.2 Online Private Beta Notes
+
+`DATABASE_URL` is optional for private beta access. Without it, the app still
+serves static knowledge and local auth. Enable DB runtime only after:
+
+```bash
+pnpm db:push
+pnpm knowledge:backfill --require-db
+KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify --strict
+```
+
+Never commit `DATABASE_URL`; configure it in Render/Supabase environment
+settings.

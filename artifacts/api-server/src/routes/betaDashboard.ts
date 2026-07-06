@@ -8,8 +8,10 @@ import {
   buildBetaDashboardStatus,
   runBetaDashboardCheck,
 } from "../beta/dashboard";
+import { requireRole } from "../auth";
 
 const router: IRouter = Router();
+router.use(requireRole("user"));
 
 router.get("/beta/dashboard/status", async (_req, res): Promise<void> => {
   const status = await buildBetaDashboardStatus();

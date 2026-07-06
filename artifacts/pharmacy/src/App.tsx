@@ -6,8 +6,12 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
+import { AuthProvider } from "@/lib/auth";
+import { ProtectedRoute } from "@/components/protected-route";
 
 import Home from "@/pages/home";
+import LoginPage from "@/pages/login";
+import AccessDenied from "@/pages/access-denied";
 import SearchPage from "@/pages/search";
 import DrugDetail from "@/pages/drug-detail";
 import Analogs from "@/pages/analogs";
@@ -23,6 +27,23 @@ import ReviewQueue from "@/pages/review";
 import BetaDashboard from "@/pages/beta-dashboard";
 
 const queryClient = new QueryClient();
+const ProtectedSearch = () => <ProtectedRoute component={SearchPage} />;
+const ProtectedDrugDetail = () => <ProtectedRoute component={DrugDetail} />;
+const ProtectedAnalogs = () => <ProtectedRoute component={Analogs} />;
+const ProtectedInteractions = () => <ProtectedRoute component={Interactions} />;
+const ProtectedCompare = () => <ProtectedRoute component={Compare} />;
+const ProtectedHospital = () => <ProtectedRoute component={Hospital} />;
+const ProtectedAiReference = () => <ProtectedRoute component={AiReference} />;
+const ProtectedScan = () => <ProtectedRoute component={Scan} />;
+const ProtectedHistory = () => <ProtectedRoute component={History} />;
+const ProtectedDataQuality = () => (
+  <ProtectedRoute component={DataQuality} minRole="reviewer" />
+);
+const ProtectedReviewQueue = () => (
+  <ProtectedRoute component={ReviewQueue} minRole="reviewer" />
+);
+const ProtectedBetaDashboard = () => <ProtectedRoute component={BetaDashboard} />;
+const AccessDeniedRoute = () => <AccessDenied />;
 
 function Router() {
   return (
@@ -30,18 +51,20 @@ function Router() {
       <ErrorBoundary>
         <Switch>
           <Route path="/" component={Home} />
-          <Route path="/search" component={SearchPage} />
-          <Route path="/drug/:id" component={DrugDetail} />
-          <Route path="/analogs/:id" component={Analogs} />
-          <Route path="/interactions" component={Interactions} />
-          <Route path="/compare" component={Compare} />
-          <Route path="/hospital" component={Hospital} />
-          <Route path="/ai" component={AiReference} />
-          <Route path="/scan" component={Scan} />
-          <Route path="/history" component={History} />
-          <Route path="/data-quality" component={DataQuality} />
-          <Route path="/review" component={ReviewQueue} />
-          <Route path="/beta-dashboard" component={BetaDashboard} />
+          <Route path="/login" component={LoginPage} />
+          <Route path="/access-denied" component={AccessDeniedRoute} />
+          <Route path="/search" component={ProtectedSearch} />
+          <Route path="/drug/:id" component={ProtectedDrugDetail} />
+          <Route path="/analogs/:id" component={ProtectedAnalogs} />
+          <Route path="/interactions" component={ProtectedInteractions} />
+          <Route path="/compare" component={ProtectedCompare} />
+          <Route path="/hospital" component={ProtectedHospital} />
+          <Route path="/ai" component={ProtectedAiReference} />
+          <Route path="/scan" component={ProtectedScan} />
+          <Route path="/history" component={ProtectedHistory} />
+          <Route path="/data-quality" component={ProtectedDataQuality} />
+          <Route path="/review" component={ProtectedReviewQueue} />
+          <Route path="/beta-dashboard" component={ProtectedBetaDashboard} />
           <Route path="/about" component={About} />
           <Route component={NotFound} />
         </Switch>
@@ -54,12 +77,14 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

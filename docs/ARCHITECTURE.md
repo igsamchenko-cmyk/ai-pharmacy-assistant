@@ -238,3 +238,25 @@ Closed beta readiness keeps the v0.9 architecture intact. Scenario validation, s
 ## Beta Dashboard API
 
 `/api/beta/dashboard/status` and `/api/beta/dashboard/run` expose a fixed enum of safe validation checks for the UI. The backend reuses beta/readiness/search-quality/data-quality/runtime modules and does not execute user-provided shell commands. Responses are sanitized and omit secrets, raw environment values, `DATABASE_URL` and filesystem paths.
+## v1.2 Online Private Beta Access
+
+Auth is an API-layer concern backed by the OpenAPI contract. The local provider
+uses invite-only email allow lists and opaque HttpOnly session cookies. It does
+not require PostgreSQL and does not store secrets in the repo.
+
+Route policy:
+
+- public: health and auth session/login/logout;
+- user: search, drug cards, interactions, compare, hospital mode, OCR, history,
+  beta dashboard and normal knowledge lookup;
+- reviewer: diagnostics, data quality, import preview, runtime status and
+  review queue;
+- admin: approve/reject review actions.
+
+`AUTH_REQUIRED=false` activates local beta mode and grants development access
+without weakening production private beta settings. Production uses
+`AUTH_REQUIRED=true` and `INVITE_ONLY=true`.
+
+In production, the Express server serves `artifacts/pharmacy/dist/public` when
+present, allowing a single Render Web Service to serve both API and frontend
+direct routes.

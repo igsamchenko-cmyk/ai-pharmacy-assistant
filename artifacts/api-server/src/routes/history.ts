@@ -10,13 +10,24 @@ import {
   createHistory,
   deleteHistory,
   clearHistory,
+  HistoryUnavailableError,
 } from "../services/historyService";
+import { requireRole } from "../auth";
 
 const router: IRouter = Router();
+router.use(requireRole("user"));
 
 router.get("/history", async (_req, res): Promise<void> => {
-  const rows = await listHistory();
-  res.json(ListHistoryResponse.parse(rows));
+  try {
+    const rows = await listHistory();
+    res.json(ListHistoryResponse.parse(rows));
+  } catch (error) {
+    if (error instanceof HistoryUnavailableError) {
+      res.status(503).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
 });
 
 router.post("/history", async (req, res): Promise<void> => {
@@ -25,17 +36,33 @@ router.post("/history", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const row = await createHistory({
-    type: parsed.data.type,
-    title: parsed.data.title,
-    detail: parsed.data.detail,
-  });
-  res.status(201).json(CreateHistoryResponse.parse(row));
+  try {
+    const row = await createHistory({
+      type: parsed.data.type,
+      title: parsed.data.title,
+      detail: parsed.data.detail,
+    });
+    res.status(201).json(CreateHistoryResponse.parse(row));
+  } catch (error) {
+    if (error instanceof HistoryUnavailableError) {
+      res.status(503).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
 });
 
 router.delete("/history", async (_req, res): Promise<void> => {
-  await clearHistory();
-  res.sendStatus(204);
+  try {
+    await clearHistory();
+    res.sendStatus(204);
+  } catch (error) {
+    if (error instanceof HistoryUnavailableError) {
+      res.status(503).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
 });
 
 router.delete("/history/:id", async (req, res): Promise<void> => {
@@ -44,12 +71,20 @@ router.delete("/history/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const deleted = await deleteHistory(params.data.id);
-  if (!deleted) {
+  try {
+    const deleted = await deleteHistory(params.data.id);
+    if (!deleted) {
     res.status(404).json({ error: "Запис не знайдено" });
-    return;
+      return;
+    }
+    res.sendStatus(204);
+  } catch (error) {
+    if (error instanceof HistoryUnavailableError) {
+      res.status(503).json({ error: error.message });
+      return;
+    }
+    throw error;
   }
-  res.sendStatus(204);
 });
 
 export default router;

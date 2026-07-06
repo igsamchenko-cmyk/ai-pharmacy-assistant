@@ -28,3 +28,9 @@ Use **Export JSON** to download a combined local report containing the current d
 ## What still belongs to CI or terminal
 
 The dashboard is a convenience layer for predefined safe checks. Release validation still includes the full terminal/CI command list from `docs/RELEASE_READINESS.md`, including typecheck, tests and production build.
+## v1.2 Access
+
+`/beta-dashboard` is now an authenticated user route. In local beta mode
+(`AUTH_REQUIRED=false`) it remains accessible for development. In private beta
+deployment, invite users through `ALLOWED_EMAILS`; reviewers and admins can also
+see diagnostics and data-quality surfaces.

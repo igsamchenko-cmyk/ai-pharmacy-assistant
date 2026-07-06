@@ -24,6 +24,10 @@ import type {
   AiSummaryInput,
   AnalogResult,
   AtcInfo,
+  AuthLoginRequest,
+  AuthLoginResponse,
+  AuthLogoutResponse,
+  AuthSession,
   BetaDashboardRunRequest,
   BetaDashboardRunResponse,
   BetaDashboardStatus,
@@ -86,6 +90,226 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetAuthSessionUrl = () => {
+
+
+
+
+  return `/api/auth/session`
+}
+
+/**
+ * Returns the current private-beta auth state. This response is sanitized and never includes session cookies, tokens, passwords, raw environment values or provider secrets.
+ * @summary Current auth session
+ */
+export const getAuthSession = async ( options?: RequestInit): Promise<AuthSession> => {
+
+  return customFetch<AuthSession>(getGetAuthSessionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAuthSessionQueryKey = () => {
+    return [
+    `/api/auth/session`
+    ] as const;
+    }
+
+
+export const getGetAuthSessionQueryOptions = <TData = Awaited<ReturnType<typeof getAuthSession>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuthSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAuthSessionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthSession>>> = ({ signal }) => getAuthSession({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAuthSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAuthSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getAuthSession>>>
+export type GetAuthSessionQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Current auth session
+ */
+
+export function useGetAuthSession<TData = Awaited<ReturnType<typeof getAuthSession>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAuthSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAuthSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getLoginAuthUrl = () => {
+
+
+
+
+  return `/api/auth/login`
+}
+
+/**
+ * Creates a local invite-only session when local auth is enabled. When INVITE_ONLY is true, email must be present in ADMIN_EMAILS or ALLOWED_EMAILS. Supabase provider mode is reserved for deployment wiring and does not expose keys.
+ * @summary Login to private beta
+ */
+export const loginAuth = async (authLoginRequest: AuthLoginRequest, options?: RequestInit): Promise<AuthLoginResponse> => {
+
+  return customFetch<AuthLoginResponse>(getLoginAuthUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(authLoginRequest)
+  }
+);}
+
+
+
+
+export const getLoginAuthMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginAuth>>, TError,{data: BodyType<AuthLoginRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof loginAuth>>, TError,{data: BodyType<AuthLoginRequest>}, TContext> => {
+
+const mutationKey = ['loginAuth'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginAuth>>, {data: BodyType<AuthLoginRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  loginAuth(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoginAuthMutationResult = NonNullable<Awaited<ReturnType<typeof loginAuth>>>
+    export type LoginAuthMutationBody = BodyType<AuthLoginRequest>
+    export type LoginAuthMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Login to private beta
+ */
+export const useLoginAuth = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginAuth>>, TError,{data: BodyType<AuthLoginRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof loginAuth>>,
+        TError,
+        {data: BodyType<AuthLoginRequest>},
+        TContext
+      > => {
+      return useMutation(getLoginAuthMutationOptions(options));
+    }
+
+export const getLogoutAuthUrl = () => {
+
+
+
+
+  return `/api/auth/logout`
+}
+
+/**
+ * Clears the local session cookie when present.
+ * @summary Logout from private beta
+ */
+export const logoutAuth = async ( options?: RequestInit): Promise<AuthLogoutResponse> => {
+
+  return customFetch<AuthLogoutResponse>(getLogoutAuthUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getLogoutAuthMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutAuth>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logoutAuth>>, TError,void, TContext> => {
+
+const mutationKey = ['logoutAuth'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logoutAuth>>, void> = () => {
+
+
+          return  logoutAuth(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutAuthMutationResult = NonNullable<Awaited<ReturnType<typeof logoutAuth>>>
+
+    export type LogoutAuthMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Logout from private beta
+ */
+export const useLogoutAuth = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logoutAuth>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof logoutAuth>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLogoutAuthMutationOptions(options));
+    }
 
 export const getHealthCheckUrl = () => {
 

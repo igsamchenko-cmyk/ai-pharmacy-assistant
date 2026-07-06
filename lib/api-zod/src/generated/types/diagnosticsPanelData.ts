@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { DiagnosticsPanelDataApp } from './diagnosticsPanelDataApp';
+import type { DiagnosticsPanelDataAuth } from './diagnosticsPanelDataAuth';
 import type { DiagnosticsPanelDataKnowledge } from './diagnosticsPanelDataKnowledge';
 import type { DiagnosticsPanelDataProviders } from './diagnosticsPanelDataProviders';
 import type { DiagnosticsPanelDataReferences } from './diagnosticsPanelDataReferences';
@@ -15,6 +16,7 @@ import type { DiagnosticsPanelDataRuntime } from './diagnosticsPanelDataRuntime'
 export interface DiagnosticsPanelData {
   app: DiagnosticsPanelDataApp;
   runtime: DiagnosticsPanelDataRuntime;
+  auth: DiagnosticsPanelDataAuth;
   providers: DiagnosticsPanelDataProviders;
   knowledge: DiagnosticsPanelDataKnowledge;
   reports: DiagnosticsPanelDataReports;

@@ -8,8 +8,10 @@ import {
   getExternalReference,
   getSourceStatuses,
 } from "../services/externalDataService";
+import { requireRole } from "../auth";
 
 const router: IRouter = Router();
+router.use(requireRole("user"));
 
 router.get("/sources", (_req, res): void => {
   res.json(ListDataSourcesResponse.parse({ sources: getSourceStatuses() }));

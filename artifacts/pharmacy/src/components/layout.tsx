@@ -17,6 +17,7 @@ import {
   Sun,
 } from "lucide-react";
 import { useThemeContext } from "./theme-provider";
+import { AuthStatus } from "./auth-status";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -75,6 +76,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           )}
         </button>
       </header>
+      <div className="md:hidden border-b border-border bg-card px-4 py-3">
+        <AuthStatus />
+      </div>
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-card border-r border-border shrink-0 fixed h-full z-40">
@@ -101,6 +105,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className="p-4 border-t border-border flex flex-col gap-2">
+          <AuthStatus />
           <Link
             href="/beta-dashboard"
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium ${location === "/beta-dashboard" ? "bg-primary text-primary-foreground" : "hover:bg-accent text-foreground"}`}

@@ -8,6 +8,8 @@ servers:
   - url: /api
     description: Base API path
 tags:
+  - name: auth
+    description: Invite-only private beta authentication
   - name: health
     description: Health operations
   - name: beta
@@ -27,6 +29,70 @@ tags:
   - name: history
     description: User activity history
 paths:
+  /auth/session:
+    get:
+      operationId: getAuthSession
+      tags: [auth]
+      summary: Current auth session
+      description: >-
+        Returns the current private-beta auth state. This response is sanitized
+        and never includes session cookies, tokens, passwords, raw environment
+        values or provider secrets.
+      responses:
+        "200":
+          description: Current auth session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+  /auth/login:
+    post:
+      operationId: loginAuth
+      tags: [auth]
+      summary: Login to private beta
+      description: >-
+        Creates a local invite-only session when local auth is enabled. When
+        INVITE_ONLY is true, email must be present in ADMIN_EMAILS or
+        ALLOWED_EMAILS. Supabase provider mode is reserved for deployment
+        wiring and does not expose keys.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthLoginRequest"
+      responses:
+        "200":
+          description: Login accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthLoginResponse"
+        "400":
+          description: Invalid login request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Invite-only access denied or disabled user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/logout:
+    post:
+      operationId: logoutAuth
+      tags: [auth]
+      summary: Logout from private beta
+      description: Clears the local session cookie when present.
+      responses:
+        "200":
+          description: Logout completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthLogoutResponse"
   /healthz:
     get:
       operationId: healthCheck
@@ -716,6 +782,90 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
+    AuthProvider:
+      type: string
+      enum: [local, supabase, disabled]
+    AuthMode:
+      type: string
+      enum: [local_beta, private_beta, supabase, disabled]
+    AuthRole:
+      type: string
+      enum: [admin, reviewer, user, none]
+    AuthUser:
+      type: object
+      required: [email, role, disabled]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: ["string", "null"]
+        role:
+          $ref: "#/components/schemas/AuthRole"
+        disabled:
+          type: boolean
+    AuthSession:
+      type: object
+      required:
+        - authenticated
+        - authRequired
+        - inviteOnly
+        - provider
+        - mode
+        - role
+        - user
+        - supabaseConfigured
+        - warnings
+      properties:
+        authenticated:
+          type: boolean
+        authRequired:
+          type: boolean
+        inviteOnly:
+          type: boolean
+        provider:
+          $ref: "#/components/schemas/AuthProvider"
+        mode:
+          $ref: "#/components/schemas/AuthMode"
+        role:
+          $ref: "#/components/schemas/AuthRole"
+        user:
+          oneOf:
+            - $ref: "#/components/schemas/AuthUser"
+            - type: "null"
+        supabaseConfigured:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            type: string
+    AuthLoginRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: ["string", "null"]
+        password:
+          type: ["string", "null"]
+        token:
+          type: ["string", "null"]
+    AuthLoginResponse:
+      type: object
+      required: [session]
+      properties:
+        session:
+          $ref: "#/components/schemas/AuthSession"
+    AuthLogoutResponse:
+      type: object
+      required: [ok, session]
+      properties:
+        ok:
+          type: boolean
+        session:
+          $ref: "#/components/schemas/AuthSession"
     HealthStatus:
       type: object
       properties:
@@ -932,6 +1082,7 @@ components:
       required:
         - app
         - runtime
+        - auth
         - providers
         - knowledge
         - reports
@@ -972,6 +1123,39 @@ components:
               type: string
             staticFallbackEnabled:
               type: boolean
+        auth:
+          type: object
+          required:
+            - configured
+            - required
+            - inviteOnly
+            - provider
+            - mode
+            - currentRole
+            - supabaseConfigured
+            - localBetaMode
+            - warnings
+          properties:
+            configured:
+              type: boolean
+            required:
+              type: boolean
+            inviteOnly:
+              type: boolean
+            provider:
+              $ref: "#/components/schemas/AuthProvider"
+            mode:
+              $ref: "#/components/schemas/AuthMode"
+            currentRole:
+              $ref: "#/components/schemas/AuthRole"
+            supabaseConfigured:
+              type: boolean
+            localBetaMode:
+              type: boolean
+            warnings:
+              type: array
+              items:
+                type: string
         providers:
           type: object
           required: [geminiConfigured, openAiConfigured, openAiEnabled]

@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: farmassist-private-beta
+    runtime: node
+    plan: free
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && PORT=5173 BASE_PATH=/ pnpm run build
+    startCommand: cd artifacts/api-server && node --enable-source-maps ./dist/index.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AUTH_PROVIDER
+        value: local
+      - key: AUTH_REQUIRED
+        value: "true"
+      - key: INVITE_ONLY
+        value: "true"
+      - key: KNOWLEDGE_DB_RUNTIME
+        value: "false"
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: ALLOWED_EMAILS
+        sync: false
+      - key: DISABLED_EMAILS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
