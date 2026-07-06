@@ -70,3 +70,21 @@ registration or multi-instance deployment.
 Diagnostics expose only safe booleans/status. They must not expose
 `DATABASE_URL`, provider keys, Supabase keys, auth tokens, JWT contents, raw env
 values or server filesystem paths.
+
+## v1.3 Online Access Notes
+
+For the real online private beta, users can open the deployed URL from any PC,
+go to `/login`, and enter an invited email. There is no public self-service
+registration. Access is granted only by environment configuration:
+
+- admins in `ADMIN_EMAILS`;
+- users or reviewers in `ALLOWED_EMAILS`;
+- blocked accounts in `DISABLED_EMAILS`.
+
+If a user sees access denied, verify the exact email spelling, role suffix,
+disabled list and deployed environment values. Redeploy or restart the service
+if the host does not apply environment changes immediately.
+
+Run `pnpm deploy:verify` with `DEPLOYMENT_URL` and an invited reviewer/admin
+email to confirm auth mode, protected-route behavior and sanitized diagnostics
+after deployment.

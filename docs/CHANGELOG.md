@@ -284,6 +284,33 @@ Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
 - Added sanitized diagnostics/version data and `/data-quality` panel.
 - Improved search/OCR normalization for local catalog matching.
 - Hardened blocked safety messaging while preserving reference-only allowed workflows.
+## v1.3.0 - Real Online Deployment Readiness - Unreleased
+
+### Added
+
+- Deployment checklist for creating the Render Web Service, connecting the
+  GitHub repo, configuring env vars, attaching PostgreSQL, and verifying login,
+  beta dashboard, diagnostics and safety scenarios.
+- Placeholder-only `.env.production.example` for private beta production
+  settings.
+- `pnpm deploy:verify` smoke check for deployed health, auth mode, protected API
+  behavior, beta dashboard API, runtime status and diagnostics redaction.
+- Production static-serving tests that confirm direct `/beta-dashboard` routing
+  and `/api` precedence over SPA fallback.
+
+### Changed
+
+- Render and deployment docs now describe the real online deployment path,
+  including DB push/backfill/verify and access from any PC.
+- `OPENAI_ENABLED` is accepted as a deployment alias while OpenAI remains
+  disabled by default.
+
+### Safety
+
+- No new product features were added.
+- Static fallback, zero-key fallback, invite-only access and medical safety
+  boundaries remain intact.
+
 ## v1.2.0 - Online Private Beta Access - 2026-07-06
 
 ### Added

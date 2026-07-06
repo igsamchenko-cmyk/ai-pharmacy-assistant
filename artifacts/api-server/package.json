@@ -23,7 +23,8 @@
     "generate:dictionary-batches": "tsx src/scripts/generate-dictionary-batches.ts",
     "knowledge:search:report": "tsx src/scripts/knowledge-search-report.ts",
     "beta:scenarios": "tsx src/scripts/beta-scenarios.ts",
-    "beta:readiness": "tsx src/scripts/beta-readiness.ts"
+    "beta:readiness": "tsx src/scripts/beta-readiness.ts",
+    "deploy:verify": "tsx src/scripts/deploy-verify.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",

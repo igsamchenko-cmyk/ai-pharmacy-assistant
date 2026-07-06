@@ -18,6 +18,7 @@
     "knowledge:search:report": "pnpm --filter @workspace/api-server run knowledge:search:report",
     "beta:scenarios": "pnpm --filter @workspace/api-server run beta:scenarios",
     "beta:readiness": "pnpm --filter @workspace/api-server run beta:readiness",
+    "deploy:verify": "pnpm --filter @workspace/api-server run deploy:verify",
     "db:dev:up": "node scripts/docker-dev.mjs up",
     "db:dev:down": "node scripts/docker-dev.mjs down",
     "dev:db-runtime": "node scripts/dev-db-runtime.mjs",

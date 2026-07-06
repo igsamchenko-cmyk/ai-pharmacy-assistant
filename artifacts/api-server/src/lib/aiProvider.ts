@@ -5,11 +5,12 @@
  * key (no Replit AI proxy):
  *  - Gemini  (GEMINI_API_KEY)  — PRIMARY when configured.
  *  - OpenAI  (OPENAI_API_KEY)  — opt-in only, disabled by default. Enable by
- *    setting ENABLE_OPENAI to a truthy value.
+ *    setting ENABLE_OPENAI or OPENAI_ENABLED to a truthy value.
  *
- * All selection is pure and driven by env so it can be unit-tested without
- * touching the network. When no provider is configured the callers must fall
- * back to demo data instead of failing.
+ * AI_PROVIDER can prefer "gemini" or "openai", but it never enables a provider
+ * without its required key/flag. All selection is pure and driven by env so it
+ * can be unit-tested without touching the network. When no provider is
+ * configured the callers must fall back to demo data instead of failing.
  */
 
 export type AiProvider = "gemini" | "openai";
@@ -22,6 +23,10 @@ function nonEmpty(value: string | undefined): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function preferredAiProvider(env: Env): AiProvider {
+  return env.AI_PROVIDER?.trim().toLowerCase() === "openai" ? "openai" : "gemini";
+}
+
 export function hasGeminiKey(env: Env = process.env): boolean {
   return nonEmpty(env.GEMINI_API_KEY);
 }
@@ -32,7 +37,7 @@ export function hasOpenAiKey(env: Env = process.env): boolean {
 
 /** OpenAI is disabled by default; opt in with ENABLE_OPENAI=true. */
 export function isOpenAiEnabled(env: Env = process.env): boolean {
-  const value = env.ENABLE_OPENAI;
+  const value = env.ENABLE_OPENAI ?? env.OPENAI_ENABLED;
   return typeof value === "string" && TRUTHY.has(value.trim().toLowerCase());
 }
 
@@ -43,8 +48,18 @@ export function isOpenAiEnabled(env: Env = process.env): boolean {
  */
 export function aiProviderChain(env: Env = process.env): AiProvider[] {
   const chain: AiProvider[] = [];
-  if (hasGeminiKey(env)) chain.push("gemini");
-  if (isOpenAiEnabled(env) && hasOpenAiKey(env)) chain.push("openai");
+  const geminiAvailable = hasGeminiKey(env);
+  const openAiAvailable = isOpenAiEnabled(env) && hasOpenAiKey(env);
+  const preferred = preferredAiProvider(env);
+
+  if (preferred === "openai") {
+    if (openAiAvailable) chain.push("openai");
+    if (geminiAvailable) chain.push("gemini");
+    return chain;
+  }
+
+  if (geminiAvailable) chain.push("gemini");
+  if (openAiAvailable) chain.push("openai");
   return chain;
 }
 

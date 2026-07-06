@@ -32,13 +32,30 @@ describe("aiProvider selection", () => {
     ).toEqual(["openai"]);
   });
 
+  it("accepts OPENAI_ENABLED as a deployment alias", () => {
+    expect(
+      aiProviderChain({ OPENAI_ENABLED: "true", OPENAI_API_KEY: "o-key" }),
+    ).toEqual(["openai"]);
+  });
+
   it("prefers Gemini and falls back to OpenAI when both are available", () => {
     const env = {
+      AI_PROVIDER: "gemini",
       GEMINI_API_KEY: "g-key",
       OPENAI_API_KEY: "o-key",
       ENABLE_OPENAI: "1",
     };
     expect(aiProviderChain(env)).toEqual(["gemini", "openai"]);
+  });
+
+  it("can prefer OpenAI only when it is explicitly enabled and keyed", () => {
+    const env = {
+      AI_PROVIDER: "openai",
+      GEMINI_API_KEY: "g-key",
+      OPENAI_API_KEY: "o-key",
+      OPENAI_ENABLED: "true",
+    };
+    expect(aiProviderChain(env)).toEqual(["openai", "gemini"]);
   });
 
   it("treats common truthy strings as enabling OpenAI", () => {

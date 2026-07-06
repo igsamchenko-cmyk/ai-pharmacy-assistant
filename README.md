@@ -1,5 +1,20 @@
 # AI Pharmacy Assistant (FarmAssist)
 
+## v1.3 Real Online Deployment Readiness
+
+FarmAssist now includes an operator checklist, production env placeholder file
+and deployment smoke verification for a real online private beta. This release
+does not add product features: it hardens deployment instructions, confirms API
+and SPA routing, and keeps invite-only auth, static fallback and medical safety
+boundaries intact.
+
+Deployment operators should use:
+
+- `render.yaml` for the Render Web Service profile.
+- `.env.production.example` for placeholder-only production env names.
+- `docs/DEPLOYMENT_CHECKLIST.md` before and after first deployment.
+- `pnpm deploy:verify` after a service URL is available.
+
 ## v1.2 Online Private Beta Access
 
 FarmAssist can now be deployed as a private online beta with invite-only local

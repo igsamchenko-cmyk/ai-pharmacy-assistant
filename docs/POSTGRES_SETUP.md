@@ -89,3 +89,19 @@ KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify --strict
 
 Never commit `DATABASE_URL`; configure it in Render/Supabase environment
 settings.
+
+## v1.3 Hosted Deployment Notes
+
+For real online private beta deployment, attach a hosted PostgreSQL database and
+store its URL only in Render/Supabase environment settings. Then run from a
+trusted operator machine:
+
+```bash
+DATABASE_URL=... pnpm db:push
+DATABASE_URL=... pnpm knowledge:backfill --require-db
+DATABASE_URL=... KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify --strict
+```
+
+If the hosted DB is not ready, keep the web service online with static fallback
+and rerun the DB steps later. The app must continue to work without DB runtime,
+and diagnostics must never show the raw `DATABASE_URL`.
