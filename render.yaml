@@ -6,6 +6,8 @@ services:
     buildCommand: corepack enable && pnpm install --frozen-lockfile && PORT=5173 BASE_PATH=/ pnpm run build
     startCommand: cd artifacts/api-server && node --enable-source-maps ./dist/index.mjs
     envVars:
+      - key: NODE_VERSION
+        value: 24.14.1
       - key: NODE_ENV
         value: production
       - key: AUTH_PROVIDER

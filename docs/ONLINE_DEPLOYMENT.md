@@ -21,7 +21,8 @@ corepack enable && pnpm install --frozen-lockfile && PORT=5173 BASE_PATH=/ pnpm 
 cd artifacts/api-server && node --enable-source-maps ./dist/index.mjs
 ```
 
-Render must provide `PORT`. The API server refuses to start without a valid
+Render must use Node `24.14.1`; `package.json` pins `pnpm@11.10.0` for
+Corepack. Render must provide `PORT`. The API server refuses to start without a valid
 `PORT`, so deployment does not silently bind to the wrong port.
 
 ## Environment
@@ -30,6 +31,7 @@ Use `.env.production.example` as the placeholder list. Set real values only in
 Render, never in git:
 
 ```text
+NODE_VERSION=24.14.1
 NODE_ENV=production
 AUTH_PROVIDER=local
 AUTH_REQUIRED=true

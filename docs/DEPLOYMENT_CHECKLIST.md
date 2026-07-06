@@ -20,12 +20,14 @@ corepack enable && pnpm install --frozen-lockfile && PORT=5173 BASE_PATH=/ pnpm 
 cd artifacts/api-server && node --enable-source-maps ./dist/index.mjs
 ```
 
+- Confirm Render uses Node `24.14.1` and the repo-pinned `pnpm@11.10.0`.
 - Confirm Render provides `PORT`; the API server requires it at startup.
 
 ## Set Environment Variables
 
 Set values in Render environment settings:
 
+- `NODE_VERSION=24.14.1`
 - `NODE_ENV=production`
 - `AUTH_PROVIDER=local`
 - `AUTH_REQUIRED=true`
