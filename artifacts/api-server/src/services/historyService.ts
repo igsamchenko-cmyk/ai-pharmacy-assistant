@@ -1,10 +1,14 @@
 import { desc, eq } from "drizzle-orm";
-import {
-  db,
-  historyTable,
-  type History,
-  type HistoryType,
-} from "@workspace/db";
+import type {
+  History,
+  HistoryType,
+} from "@workspace/db/schema";
+
+export class HistoryUnavailableError extends Error {
+  constructor() {
+    super("History storage is unavailable because DATABASE_URL is not configured.");
+  }
+}
 
 export interface HistoryDto {
   id: string;
@@ -24,7 +28,18 @@ function toDto(row: History): HistoryDto {
   };
 }
 
+async function loadHistoryDb() {
+  if (!process.env.DATABASE_URL) throw new HistoryUnavailableError();
+  try {
+    const { db, historyTable } = await import("@workspace/db");
+    return { db, historyTable };
+  } catch {
+    throw new HistoryUnavailableError();
+  }
+}
+
 export async function listHistory(): Promise<HistoryDto[]> {
+  const { db, historyTable } = await loadHistoryDb();
   const rows = await db
     .select()
     .from(historyTable)
@@ -37,6 +52,7 @@ export async function createHistory(entry: {
   title: string;
   detail?: string;
 }): Promise<HistoryDto> {
+  const { db, historyTable } = await loadHistoryDb();
   const [row] = await db
     .insert(historyTable)
     .values({
@@ -49,6 +65,7 @@ export async function createHistory(entry: {
 }
 
 export async function deleteHistory(id: string): Promise<boolean> {
+  const { db, historyTable } = await loadHistoryDb();
   const rows = await db
     .delete(historyTable)
     .where(eq(historyTable.id, id))
@@ -57,5 +74,6 @@ export async function deleteHistory(id: string): Promise<boolean> {
 }
 
 export async function clearHistory(): Promise<void> {
+  const { db, historyTable } = await loadHistoryDb();
   await db.delete(historyTable);
 }

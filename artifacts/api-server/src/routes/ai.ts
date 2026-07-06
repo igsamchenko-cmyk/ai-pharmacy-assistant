@@ -4,8 +4,10 @@ import {
   CreateAiSummaryResponse,
 } from "@workspace/api-zod";
 import { generateSummary } from "../services/aiService";
+import { requireRole } from "../auth";
 
 const router: IRouter = Router();
+router.use(requireRole("user"));
 
 router.post("/ai/summary", async (req, res): Promise<void> => {
   const parsed = CreateAiSummaryBody.safeParse(req.body);

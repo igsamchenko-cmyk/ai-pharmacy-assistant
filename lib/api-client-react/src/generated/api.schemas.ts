@@ -5,6 +5,74 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
+export type AuthProvider = typeof AuthProvider[keyof typeof AuthProvider];
+
+
+export const AuthProvider = {
+  local: 'local',
+  supabase: 'supabase',
+  disabled: 'disabled',
+} as const;
+
+export type AuthMode = typeof AuthMode[keyof typeof AuthMode];
+
+
+export const AuthMode = {
+  local_beta: 'local_beta',
+  private_beta: 'private_beta',
+  supabase: 'supabase',
+  disabled: 'disabled',
+} as const;
+
+export type AuthRole = typeof AuthRole[keyof typeof AuthRole];
+
+
+export const AuthRole = {
+  admin: 'admin',
+  reviewer: 'reviewer',
+  user: 'user',
+  none: 'none',
+} as const;
+
+export interface AuthUser {
+  email: string;
+  /** @nullable */
+  name?: string | null;
+  role: AuthRole;
+  disabled: boolean;
+}
+
+export interface AuthSession {
+  authenticated: boolean;
+  authRequired: boolean;
+  inviteOnly: boolean;
+  provider: AuthProvider;
+  mode: AuthMode;
+  role: AuthRole;
+  user: AuthUser | null;
+  supabaseConfigured: boolean;
+  warnings: string[];
+}
+
+export interface AuthLoginRequest {
+  email: string;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  password?: string | null;
+  /** @nullable */
+  token?: string | null;
+}
+
+export interface AuthLoginResponse {
+  session: AuthSession;
+}
+
+export interface AuthLogoutResponse {
+  ok: boolean;
+  session: AuthSession;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -164,6 +232,18 @@ export type DiagnosticsPanelDataRuntime = {
   staticFallbackEnabled: boolean;
 };
 
+export type DiagnosticsPanelDataAuth = {
+  configured: boolean;
+  required: boolean;
+  inviteOnly: boolean;
+  provider: AuthProvider;
+  mode: AuthMode;
+  currentRole: AuthRole;
+  supabaseConfigured: boolean;
+  localBetaMode: boolean;
+  warnings: string[];
+};
+
 export type DiagnosticsPanelDataProviders = {
   geminiConfigured: boolean;
   openAiConfigured: boolean;
@@ -192,6 +272,7 @@ export type DiagnosticsPanelDataReferences = {
 export interface DiagnosticsPanelData {
   app: DiagnosticsPanelDataApp;
   runtime: DiagnosticsPanelDataRuntime;
+  auth: DiagnosticsPanelDataAuth;
   providers: DiagnosticsPanelDataProviders;
   knowledge: DiagnosticsPanelDataKnowledge;
   reports: DiagnosticsPanelDataReports;

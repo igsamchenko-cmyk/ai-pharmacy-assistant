@@ -284,3 +284,29 @@ Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
 - Added sanitized diagnostics/version data and `/data-quality` panel.
 - Improved search/OCR normalization for local catalog matching.
 - Hardened blocked safety messaging while preserving reference-only allowed workflows.
+## v1.2.0 - Online Private Beta Access - 2026-07-06
+
+### Added
+
+- Invite-only local auth with HttpOnly session cookie, login/logout/session API
+  and roles: admin, reviewer and user.
+- OpenAPI auth contract and generated React/Zod client artifacts.
+- Backend access control for protected API routes, reviewer diagnostics/data
+  quality/review routes and admin approve/reject actions.
+- Login page, access denied page, current user badge, role badge, logout button
+  and local beta mode indicator.
+- Production static frontend serving from the API server for one-service Render
+  deployment and direct `/beta-dashboard` routing.
+- Render deployment profile plus online deployment and auth access-control docs.
+
+### Security
+
+- Diagnostics expose only safe booleans/status for auth, DB and providers.
+- No `DATABASE_URL`, API keys, Supabase keys, auth tokens, JWT contents, raw env
+  values or filesystem paths are exposed.
+- Public registration and billing are not added.
+
+### Safety
+
+- Medical safety layer remains informational-only: no diagnosis, treatment or
+  dosing recommendations.

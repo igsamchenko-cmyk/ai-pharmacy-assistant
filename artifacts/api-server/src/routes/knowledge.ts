@@ -45,6 +45,7 @@ import {
   ReviewWorkflowUnavailableError,
   REVIEW_WORKFLOW_UNAVAILABLE_WARNING,
 } from "../knowledge";
+import { requireRole } from "../auth";
 
 const router: IRouter = Router();
 function parseBody<T>(schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false; error: { message: string } } }, body: unknown) {
@@ -63,7 +64,7 @@ function handleReviewError(error: unknown, res: Response): void {
   throw error;
 }
 
-router.get("/knowledge/search", async (req, res): Promise<void> => {
+router.get("/knowledge/search", requireRole("user"), async (req, res): Promise<void> => {
   const parsed = KnowledgeSearchQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -75,7 +76,7 @@ router.get("/knowledge/search", async (req, res): Promise<void> => {
   res.json(KnowledgeSearchResponse.parse(result));
 });
 
-router.get("/knowledge/normalize", async (req, res): Promise<void> => {
+router.get("/knowledge/normalize", requireRole("user"), async (req, res): Promise<void> => {
   const parsed = NormalizeDrugNameQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -95,30 +96,30 @@ router.get("/knowledge/normalize", async (req, res): Promise<void> => {
   );
 });
 
-router.get("/knowledge/runtime/status", async (_req, res): Promise<void> => {
+router.get("/knowledge/runtime/status", requireRole("reviewer"), async (_req, res): Promise<void> => {
   res.json(GetKnowledgeRuntimeStatusResponse.parse(await getKnowledgeRuntimeStatus()));
 });
 
-router.get("/knowledge/stats", (_req, res): void => {
+router.get("/knowledge/stats", requireRole("user"), (_req, res): void => {
   res.json(GetKnowledgeStatsResponse.parse(getKnowledgeEngineStats()));
 });
 
-router.get("/knowledge/quality", (_req, res): void => {
+router.get("/knowledge/quality", requireRole("reviewer"), (_req, res): void => {
   res.json(GetDataQualityResponse.parse(validateKnowledge()));
 });
 
-router.get("/knowledge/sources", (_req, res): void => {
+router.get("/knowledge/sources", requireRole("reviewer"), (_req, res): void => {
   res.json(ListKnowledgeSourcesResponse.parse({ sources: listSources() }));
 });
 
-router.get("/knowledge/import/preview", (_req, res): void => {
+router.get("/knowledge/import/preview", requireRole("reviewer"), (_req, res): void => {
   const { rows, errors } = parseImportCsv(readDictionarySampleCsv());
   const preview = analyzeImport(rows, liveKnowledgeView(), errors);
   res.json(GetImportPreviewResponse.parse(preview));
 });
 
 
-router.get("/knowledge/review/queue", async (req, res): Promise<void> => {
+router.get("/knowledge/review/queue", requireRole("reviewer"), async (req, res): Promise<void> => {
   const parsed = ListReviewQueueQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -127,11 +128,11 @@ router.get("/knowledge/review/queue", async (req, res): Promise<void> => {
   res.json(ListReviewQueueResponse.parse(await listReviewQueue(parsed.data)));
 });
 
-router.get("/knowledge/review/stats", async (_req, res): Promise<void> => {
+router.get("/knowledge/review/stats", requireRole("reviewer"), async (_req, res): Promise<void> => {
   res.json(GetReviewStatsResponse.parse(await getReviewStats()));
 });
 
-router.post("/knowledge/review/:id/approve", async (req, res): Promise<void> => {
+router.post("/knowledge/review/:id/approve", requireRole("admin"), async (req, res): Promise<void> => {
   const params = ApproveReviewItemParams.safeParse(req.params);
   const body = parseBody(ApproveReviewItemBody, req.body);
   if (!params.success) {
@@ -155,7 +156,7 @@ router.post("/knowledge/review/:id/approve", async (req, res): Promise<void> => 
   }
 });
 
-router.post("/knowledge/review/:id/reject", async (req, res): Promise<void> => {
+router.post("/knowledge/review/:id/reject", requireRole("admin"), async (req, res): Promise<void> => {
   const params = RejectReviewItemParams.safeParse(req.params);
   const body = parseBody(RejectReviewItemBody, req.body);
   if (!params.success) {
@@ -179,7 +180,7 @@ router.post("/knowledge/review/:id/reject", async (req, res): Promise<void> => {
   }
 });
 
-router.post("/knowledge/review/:id/needs-review", async (req, res): Promise<void> => {
+router.post("/knowledge/review/:id/needs-review", requireRole("reviewer"), async (req, res): Promise<void> => {
   const params = MarkReviewItemNeedsReviewParams.safeParse(req.params);
   const body = parseBody(MarkReviewItemNeedsReviewBody, req.body);
   if (!params.success) {
@@ -202,8 +203,9 @@ router.post("/knowledge/review/:id/needs-review", async (req, res): Promise<void
     handleReviewError(error, res);
   }
 });
-router.get("/atc/:code", (req, res): void => {
-  const info = getAtcInfo(req.params.code);
+router.get("/atc/:code", requireRole("user"), (req, res): void => {
+  const code = Array.isArray(req.params.code) ? req.params.code[0] : req.params.code;
+  const info = getAtcInfo(code);
   if (!info) {
     res.status(404).json({ error: "Невідомий ATC-код" });
     return;
@@ -211,7 +213,7 @@ router.get("/atc/:code", (req, res): void => {
   res.json(GetAtcInfoResponse.parse(info));
 });
 
-router.post("/compare", (req, res): void => {
+router.post("/compare", requireRole("user"), (req, res): void => {
   const parsed = CompareDrugsBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

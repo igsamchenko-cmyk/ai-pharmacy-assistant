@@ -4,8 +4,10 @@ import {
   CheckInteractionsResponse,
 } from "@workspace/api-zod";
 import { checkInteractions } from "../services/interactionService";
+import { requireRole } from "../auth";
 
 const router: IRouter = Router();
+router.use(requireRole("user"));
 
 router.post("/interactions/check", async (req, res): Promise<void> => {
   const parsed = CheckInteractionsBody.safeParse(req.body);

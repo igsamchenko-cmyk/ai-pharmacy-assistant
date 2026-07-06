@@ -1,5 +1,26 @@
 # AI Pharmacy Assistant (FarmAssist)
 
+## v1.2 Online Private Beta Access
+
+FarmAssist can now be deployed as a private online beta with invite-only local
+auth. Local development remains open by default with `AUTH_REQUIRED=false`.
+
+Private beta deployment uses `AUTH_PROVIDER=local`, `AUTH_REQUIRED=true`,
+`INVITE_ONLY=true`, `ADMIN_EMAILS` and `ALLOWED_EMAILS`.
+
+The API server can serve the built frontend in production, so one Render Web
+Service can provide both `/api/*` and direct app routes such as
+`/beta-dashboard`. See `docs/ONLINE_DEPLOYMENT.md` and
+`docs/AUTH_ACCESS_CONTROL.md`.
+
+Roles:
+
+- `user`: search, drug cards, interactions, compare, hospital mode and beta
+  dashboard.
+- `reviewer`: data quality, diagnostics, runtime status, import preview and
+  review queue.
+- `admin`: reviewer access plus approve/reject actions.
+
 Довідковий веб-застосунок для фармацевтів та медичних працівників: швидкий пошук
 лікарських засобів, підбір аналогів, перевірка взаємодій, AI-довідка, розпізнавання
 упаковки та історія запитів. Інтерфейс повністю українською мовою, mobile-first.

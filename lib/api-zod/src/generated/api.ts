@@ -9,6 +9,84 @@ import * as zod from 'zod';
 
 
 /**
+ * Returns the current private-beta auth state. This response is sanitized and never includes session cookies, tokens, passwords, raw environment values or provider secrets.
+ * @summary Current auth session
+ */
+export const GetAuthSessionResponse = zod.object({
+  "authenticated": zod.boolean(),
+  "authRequired": zod.boolean(),
+  "inviteOnly": zod.boolean(),
+  "provider": zod.enum(['local', 'supabase', 'disabled']),
+  "mode": zod.enum(['local_beta', 'private_beta', 'supabase', 'disabled']),
+  "role": zod.enum(['admin', 'reviewer', 'user', 'none']),
+  "user": zod.union([zod.object({
+  "email": zod.string().email(),
+  "name": zod.string().nullish(),
+  "role": zod.enum(['admin', 'reviewer', 'user', 'none']),
+  "disabled": zod.boolean()
+}),zod.null()]),
+  "supabaseConfigured": zod.boolean(),
+  "warnings": zod.array(zod.string())
+})
+
+
+/**
+ * Creates a local invite-only session when local auth is enabled. When INVITE_ONLY is true, email must be present in ADMIN_EMAILS or ALLOWED_EMAILS. Supabase provider mode is reserved for deployment wiring and does not expose keys.
+ * @summary Login to private beta
+ */
+export const LoginAuthBody = zod.object({
+  "email": zod.string().email(),
+  "name": zod.string().nullish(),
+  "password": zod.string().nullish(),
+  "token": zod.string().nullish()
+})
+
+export const LoginAuthResponse = zod.object({
+  "session": zod.object({
+  "authenticated": zod.boolean(),
+  "authRequired": zod.boolean(),
+  "inviteOnly": zod.boolean(),
+  "provider": zod.enum(['local', 'supabase', 'disabled']),
+  "mode": zod.enum(['local_beta', 'private_beta', 'supabase', 'disabled']),
+  "role": zod.enum(['admin', 'reviewer', 'user', 'none']),
+  "user": zod.union([zod.object({
+  "email": zod.string().email(),
+  "name": zod.string().nullish(),
+  "role": zod.enum(['admin', 'reviewer', 'user', 'none']),
+  "disabled": zod.boolean()
+}),zod.null()]),
+  "supabaseConfigured": zod.boolean(),
+  "warnings": zod.array(zod.string())
+})
+})
+
+
+/**
+ * Clears the local session cookie when present.
+ * @summary Logout from private beta
+ */
+export const LogoutAuthResponse = zod.object({
+  "ok": zod.boolean(),
+  "session": zod.object({
+  "authenticated": zod.boolean(),
+  "authRequired": zod.boolean(),
+  "inviteOnly": zod.boolean(),
+  "provider": zod.enum(['local', 'supabase', 'disabled']),
+  "mode": zod.enum(['local_beta', 'private_beta', 'supabase', 'disabled']),
+  "role": zod.enum(['admin', 'reviewer', 'user', 'none']),
+  "user": zod.union([zod.object({
+  "email": zod.string().email(),
+  "name": zod.string().nullish(),
+  "role": zod.enum(['admin', 'reviewer', 'user', 'none']),
+  "disabled": zod.boolean()
+}),zod.null()]),
+  "supabaseConfigured": zod.boolean(),
+  "warnings": zod.array(zod.string())
+})
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */
@@ -112,6 +190,17 @@ export const GetDiagnosticsResponse = zod.object({
   "dbSchemaStatus": zod.string(),
   "dbProvider": zod.string(),
   "staticFallbackEnabled": zod.boolean()
+}),
+  "auth": zod.object({
+  "configured": zod.boolean(),
+  "required": zod.boolean(),
+  "inviteOnly": zod.boolean(),
+  "provider": zod.enum(['local', 'supabase', 'disabled']),
+  "mode": zod.enum(['local_beta', 'private_beta', 'supabase', 'disabled']),
+  "currentRole": zod.enum(['admin', 'reviewer', 'user', 'none']),
+  "supabaseConfigured": zod.boolean(),
+  "localBetaMode": zod.boolean(),
+  "warnings": zod.array(zod.string())
 }),
   "providers": zod.object({
   "geminiConfigured": zod.boolean(),

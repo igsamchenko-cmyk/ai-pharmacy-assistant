@@ -1,5 +1,7 @@
 import { stat } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import type { Request } from "express";
+import { buildAuthDiagnostics, type AuthDiagnostics } from "./auth";
 import { hasGeminiKey, hasOpenAiKey, isOpenAiEnabled } from "./lib/aiProvider";
 import { buildStaticBackfillSnapshot, backfillCounts } from "./knowledge/backfill";
 import { buildDictionaryBatchSummary } from "./knowledge/import/batches";
@@ -25,6 +27,7 @@ export interface DiagnosticsPanelData {
     dbProvider: string;
     staticFallbackEnabled: boolean;
   };
+  auth: AuthDiagnostics;
   providers: {
     geminiConfigured: boolean;
     openAiConfigured: boolean;
@@ -75,6 +78,7 @@ async function reportStatus(path: string): Promise<DiagnosticsReportStatus> {
 
 export async function buildDiagnosticsPanelData(
   env: NodeJS.ProcessEnv = process.env,
+  req: Request | null = null,
 ): Promise<DiagnosticsPanelData> {
   const runtime = await getKnowledgeRuntimeStatus();
   const stats = getKnowledgeEngineStats();
@@ -95,6 +99,7 @@ export async function buildDiagnosticsPanelData(
       dbProvider: runtime.providerStatus.db,
       staticFallbackEnabled: runtime.staticFallbackEnabled,
     },
+    auth: buildAuthDiagnostics(req, env),
     providers: {
       geminiConfigured: hasGeminiKey(env),
       openAiConfigured: hasOpenAiKey(env),

@@ -1,8 +1,10 @@
 import { Router, type IRouter } from "express";
 import { ScanPackageBody, ScanPackageResponse } from "@workspace/api-zod";
 import { scanPackage } from "../services/ocrService";
+import { requireRole } from "../auth";
 
 const router: IRouter = Router();
+router.use(requireRole("user"));
 
 router.post("/ocr/scan", async (req, res): Promise<void> => {
   const parsed = ScanPackageBody.safeParse(req.body);

@@ -77,3 +77,8 @@ Closed beta must work in static mode and may optionally test DB mode.
 - DB runtime is requested only with `KNOWLEDGE_DB_RUNTIME=true`.
 - `/api/diagnostics` reports `dbConfigured`, runtime mode, provider status, schema status, and approved mapping counts without exposing `DATABASE_URL` or server filesystem paths.
 - `pnpm beta:readiness` treats absent DB as static-fallback readiness, not as a failure.
+## v1.2 Auth Interaction
+
+PostgreSQL remains optional. Auth does not require the DB: local private beta
+sessions are stored in memory, while DB runtime stays behind
+`KNOWLEDGE_DB_RUNTIME`. Reviewer/admin DB tools are protected by role checks.
