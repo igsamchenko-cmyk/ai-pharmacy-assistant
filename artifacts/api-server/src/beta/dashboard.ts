@@ -113,7 +113,11 @@ function statusFromOk(ok: boolean, warnings: string[]): BetaDashboardRunStatus {
 }
 
 function stringifyError(error: unknown): string {
-  if (error instanceof Error) return error.message;
+  if (error instanceof Error) {
+    return error.message
+      .replace(/[A-Za-z]:\\[^\s"'`]+/g, "[path]")
+      .replace(/\/(?:opt|tmp|var|home|Users)\/[^\s"'`]+/g, "[path]");
+  }
   return "Beta dashboard check failed.";
 }
 

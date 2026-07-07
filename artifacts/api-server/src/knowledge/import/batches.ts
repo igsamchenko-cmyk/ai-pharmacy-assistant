@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { normalize } from "../../lib/text";
+import { findDataSubdir } from "../../lib/dataPath";
 import { parseImportCsv, type ImportRowError } from "./parse";
 import {
   CONFIDENCE_LEVELS,
@@ -70,19 +70,12 @@ export interface DictionaryBatchQualitySummary {
 }
 
 function candidateDirs(): string[] {
-  const cwd = process.cwd();
-  let fileDir = cwd;
-  try {
-    fileDir = dirname(fileURLToPath(import.meta.url));
-  } catch {
-    // cwd candidates cover test and bundled execution.
-  }
+  const resolved = findDataSubdir("dictionary-batches", {
+    moduleUrl: import.meta.url,
+  });
   return [
-    resolve(cwd, DICTIONARY_BATCHES_DIR),
-    resolve(cwd, "../../", DICTIONARY_BATCHES_DIR),
-    resolve(cwd, "../../../", DICTIONARY_BATCHES_DIR),
-    resolve(fileDir, "../../../../", DICTIONARY_BATCHES_DIR),
-    resolve(fileDir, "../../../../../", DICTIONARY_BATCHES_DIR),
+    ...(resolved ? [resolved] : []),
+    resolve(process.cwd(), DICTIONARY_BATCHES_DIR),
   ];
 }
 
