@@ -1,9 +1,91 @@
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { runBetaDashboardCheck } from "../dashboard";
 import {
   loadBetaScenarioSet,
   runBetaScenarios,
+  ScenarioFilesUnavailableError,
   type BetaScenarioSet,
 } from "../scenarios";
+
+const TEST_DIR = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(TEST_DIR, "../../../../..");
+const API_SERVER_DIR = resolve(REPO_ROOT, "artifacts/api-server");
+
+const MINIMAL_SCENARIO_FILES = {
+  "search-scenarios.json": {
+    version: "test",
+    category: "search",
+    scenarios: [
+      {
+        id: "env-search",
+        query: "Нурофен",
+        expected: { hit: true },
+      },
+    ],
+  },
+  "interaction-scenarios.json": {
+    version: "test",
+    category: "interaction",
+    scenarios: [],
+  },
+  "safety-scenarios.json": {
+    version: "test",
+    category: "safety",
+    scenarios: [],
+  },
+  "ocr-scenarios.json": {
+    version: "test",
+    category: "ocr",
+    scenarios: [],
+  },
+  "workflow-scenarios.json": {
+    version: "test",
+    category: "workflow",
+    scenarios: [],
+  },
+} as const;
+
+async function createTempDataDir(
+  files: Partial<typeof MINIMAL_SCENARIO_FILES> = MINIMAL_SCENARIO_FILES,
+): Promise<string> {
+  const dataDir = await mkdtemp(join(tmpdir(), "farmassist-data-"));
+  const scenarioDir = join(dataDir, "test-scenarios");
+  await mkdir(scenarioDir, { recursive: true });
+  for (const [fileName, body] of Object.entries(files)) {
+    await writeFile(join(scenarioDir, fileName), JSON.stringify(body), "utf8");
+  }
+  return dataDir;
+}
+
+async function withEnv<T>(
+  key: string,
+  value: string | undefined,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const original = process.env[key];
+  if (value === undefined) delete process.env[key];
+  else process.env[key] = value;
+  try {
+    return await fn();
+  } finally {
+    if (original === undefined) delete process.env[key];
+    else process.env[key] = original;
+  }
+}
+
+async function withCwd<T>(cwd: string, fn: () => Promise<T>): Promise<T> {
+  const original = process.cwd();
+  process.chdir(cwd);
+  try {
+    return await fn();
+  } finally {
+    process.chdir(original);
+  }
+}
 
 describe("closed beta scenario fixtures", () => {
   it("loads all scenario categories from data/test-scenarios", async () => {
@@ -13,6 +95,71 @@ describe("closed beta scenario fixtures", () => {
     expect(scenarios.safety.length).toBeGreaterThan(0);
     expect(scenarios.ocr.length).toBeGreaterThan(0);
     expect(scenarios.workflow.length).toBeGreaterThan(0);
+  });
+
+  it("resolves scenario files from the repository root", async () => {
+    await withCwd(REPO_ROOT, async () => {
+      const scenarios = await loadBetaScenarioSet();
+      expect(scenarios.search.length).toBeGreaterThan(0);
+      expect(scenarios.workflow.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("resolves scenario files when cwd is artifacts/api-server", async () => {
+    await withCwd(API_SERVER_DIR, async () => {
+      const scenarios = await loadBetaScenarioSet();
+      expect(scenarios.search.length).toBeGreaterThan(0);
+      expect(scenarios.interaction.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("supports FARMASSIST_DATA_DIR for scenario files", async () => {
+    const dataDir = await createTempDataDir();
+    try {
+      await withEnv("FARMASSIST_DATA_DIR", dataDir, async () => {
+        const scenarios = await loadBetaScenarioSet();
+        expect(scenarios.search).toHaveLength(1);
+        expect(scenarios.search[0].id).toBe("env-search");
+      });
+    } finally {
+      await rm(dataDir, { recursive: true, force: true });
+    }
+  });
+
+  it("returns a sanitized error when scenario files are missing", async () => {
+    const dataDir = await createTempDataDir({
+      "search-scenarios.json": MINIMAL_SCENARIO_FILES["search-scenarios.json"],
+    });
+    try {
+      await withEnv("FARMASSIST_DATA_DIR", dataDir, async () => {
+        await expect(loadBetaScenarioSet()).rejects.toBeInstanceOf(
+          ScenarioFilesUnavailableError,
+        );
+        await expect(loadBetaScenarioSet()).rejects.not.toThrow(dataDir);
+        await expect(loadBetaScenarioSet()).rejects.not.toThrow(/[A-Za-z]:\\/);
+      });
+    } finally {
+      await rm(dataDir, { recursive: true, force: true });
+    }
+  });
+
+  it("does not expose filesystem paths when full safe check cannot load scenarios", async () => {
+    const dataDir = await createTempDataDir({
+      "search-scenarios.json": MINIMAL_SCENARIO_FILES["search-scenarios.json"],
+    });
+    try {
+      await withEnv("FARMASSIST_DATA_DIR", dataDir, async () => {
+        const result = await runBetaDashboardCheck("full_safe_check");
+        const json = JSON.stringify(result);
+        expect(result.status).toBe("failed");
+        expect(json).toContain("Scenario files unavailable");
+        expect(json).not.toContain(dataDir);
+        expect(json).not.toContain("/opt/render/project");
+        expect(json).not.toMatch(/[A-Za-z]:\\/);
+      });
+    } finally {
+      await rm(dataDir, { recursive: true, force: true });
+    }
   });
 
   it("runs the committed beta scenarios successfully", async () => {

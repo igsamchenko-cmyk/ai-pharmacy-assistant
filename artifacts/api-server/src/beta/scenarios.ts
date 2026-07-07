@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { knowledgeSearch, type SearchStage } from "../knowledge/search";
 import { findDrugsInText } from "../services/drugService";
@@ -7,6 +6,7 @@ import { checkInteractions } from "../services/interactionService";
 import { isTreatmentRequest } from "../services/safety";
 import type { RiskLevel } from "../data/interactions";
 import type { RuntimeKnowledgeSource } from "../knowledge/dbRuntime";
+import { findDataSubdir, DATA_DIR_ENV } from "../lib/dataPath";
 
 export type ScenarioCategory =
   | "search"
@@ -134,9 +134,14 @@ export interface BetaScenarioRunReport {
   results: ScenarioCheckResult[];
 }
 
-const DEFAULT_SCENARIO_DIR = fileURLToPath(
-  new URL("../../../../data/test-scenarios", import.meta.url),
-);
+export class ScenarioFilesUnavailableError extends Error {
+  constructor() {
+    super(
+      `Scenario files unavailable. Configure ${DATA_DIR_ENV} or ensure data/test-scenarios is present.`,
+    );
+    this.name = "ScenarioFilesUnavailableError";
+  }
+}
 
 const EMPTY_SET: BetaScenarioSet = {
   search: [],
@@ -177,15 +182,21 @@ async function readScenarioFile<TScenario>(
   directory: string,
   category: ScenarioCategory,
 ): Promise<TScenario[]> {
-  const raw = await readFile(join(directory, CATEGORY_FILES[category]), "utf8");
+  let raw: string;
+  try {
+    raw = await readFile(join(directory, CATEGORY_FILES[category]), "utf8");
+  } catch {
+    throw new ScenarioFilesUnavailableError();
+  }
   const parsed: unknown = JSON.parse(raw);
   assertScenarioFile<TScenario>(parsed, category);
   return parsed.scenarios;
 }
 
 export async function loadBetaScenarioSet(
-  directory = DEFAULT_SCENARIO_DIR,
+  directory = findDataSubdir("test-scenarios", { moduleUrl: import.meta.url }),
 ): Promise<BetaScenarioSet> {
+  if (!directory) throw new ScenarioFilesUnavailableError();
   const [search, interaction, safety, ocr, workflow] = await Promise.all([
     readScenarioFile<SearchScenario>(directory, "search"),
     readScenarioFile<InteractionScenario>(directory, "interaction"),
