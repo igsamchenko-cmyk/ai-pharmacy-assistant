@@ -1,7 +1,12 @@
-﻿# Beta Dashboard
+# Beta Dashboard
 
 The in-app Beta Dashboard is available at `/beta-dashboard`. It is an internal closed-beta testing surface for operators who want to run the same safe validation flows from the UI without running many terminal commands manually.
 
+## First online use after deployment
+
+After logging in to the Render URL, the home dashboard has a prominent **Відкрити панель тестування** button and a **Run full beta check** shortcut to this page. Start with the search examples on the home dashboard, then open `/beta-dashboard` to run readiness, scenarios, search quality, data quality, diagnostics and the full safe check.
+
+The dashboard and home runtime status show only sanitized booleans/counts. When `DATABASE_URL` is not configured, static fallback mode remains valid for the first online smoke. When Gemini is not configured, AI/OCR can remain in fallback/demo mode until a private key is added in Render.
 ## What the dashboard can run
 
 - Beta readiness score.

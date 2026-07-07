@@ -5,6 +5,25 @@
 
 ## [Не випущено]
 
+## v1.4.0 - Usable Online Dashboard - 2026-07-07
+
+### Added
+
+- Reworked the post-login home page into an online private-beta dashboard with quick cards for search, interactions, compare, hospital mode, Beta Dashboard, data quality and review queue.
+- Added visible search, interaction and compare examples for first online smoke testing.
+- Added safe runtime status UI for static fallback/DB runtime, PostgreSQL, Gemini, OpenAI, local private-beta auth and current role without exposing env values.
+- Added DB/Gemini limitation messages and useful static-fallback empty states.
+
+### Changed
+
+- Made sidebar and mobile navigation role-aware so reviewer/admin routes are not promoted to basic users.
+- Search links can prefill the query from `?q=` for dashboard examples.
+
+### Safety
+
+- PostgreSQL and Gemini remain optional.
+- Static fallback remains active when DB runtime is unavailable.
+- Medical safety copy and protected-route requirements remain unchanged.
 ## v1.3.1 - Render Build Configuration Fix - 2026-07-06
 
 ### Fixed

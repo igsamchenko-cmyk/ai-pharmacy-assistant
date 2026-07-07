@@ -103,6 +103,14 @@ If access is denied:
 - confirm `AUTH_REQUIRED=true` and `INVITE_ONLY=true`;
 - redeploy/restart if the host does not apply env changes automatically.
 
+## First online use after deployment
+
+1. Open the deployed Render URL, for example `https://farmassist-private-beta.onrender.com`.
+2. Log in with an invited address. Render must have `AUTH_PROVIDER=local`, `AUTH_REQUIRED=true`, `INVITE_ONLY=true`, and the email listed in `ADMIN_EMAILS` or `ALLOWED_EMAILS`.
+3. The post-login home page should show large cards for search, interactions, compare, hospital mode and Beta Dashboard. Reviewer/admin accounts also see data quality and review queue shortcuts.
+4. Use the visible search examples (`Нурофен`, `Парацетамол`, `Ібупрофен`, `Амоксиклав`, `Варфарин`, `Цефтріаксон`, `Лозартан`) to confirm the static fallback catalog works before PostgreSQL is configured.
+5. Open `/beta-dashboard` and use the full safe check from that page for an in-app smoke report.
+6. If PostgreSQL is absent, the app should show that static fallback mode is active and review/DB runtime workflows are limited. If Gemini is absent, AI/OCR may remain in fallback/demo mode. Do not add real secret values to git while resolving either status.
 ## Deployment Smoke Check
 
 After deployment:

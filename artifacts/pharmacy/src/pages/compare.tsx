@@ -15,10 +15,16 @@ import { RiskBadge } from "@/components/drug-badges";
 import { useQueryClient } from "@tanstack/react-query";
 import { X, Columns3, ShieldCheck } from "lucide-react";
 
+function exampleFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  const value = new URLSearchParams(window.location.search).get("example");
+  return value ? decodeURIComponent(value) : null;
+}
 export default function Compare() {
   const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
   const [result, setResult] = useState<CompareResult | null>(null);
   const queryClient = useQueryClient();
+  const example = exampleFromUrl();
 
   const compareDrugs = useCompareDrugs();
   const createHistory = useCreateHistory();
@@ -81,6 +87,17 @@ export default function Compare() {
 
       <GlobalDisclaimer />
 
+      {example && selectedDrugs.length === 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4 text-sm space-y-1">
+            <p className="font-semibold text-foreground">Приклад для порівняння: {example}</p>
+            <p className="text-muted-foreground">
+              Додайте ці препарати через пошук нижче, щоб порівняти їх у static fallback каталозі.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="space-y-4">
         <DrugSearchSelect
           onSelect={handleAdd}
@@ -120,6 +137,14 @@ export default function Compare() {
         >
           {compareDrugs.isPending ? "Порівняння..." : "Порівняти"}
         </Button>
+
+        {selectedDrugs.length === 0 && !result && (
+          <Card className="bg-card/50 border-dashed">
+            <CardContent className="p-4 text-sm text-muted-foreground">
+              Натисніть приклад на головній сторінці або додайте 2 препарати. Порівняння доступне без PostgreSQL через static fallback.
+            </CardContent>
+          </Card>
+        )}
 
         {compareDrugs.isError && (
           <div className="text-center py-4 px-4 text-sm text-destructive border border-destructive/30 rounded-lg">

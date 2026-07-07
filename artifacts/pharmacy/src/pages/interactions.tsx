@@ -17,9 +17,15 @@ import { ReportIssueButton } from "@/components/report-issue-button";
 import { useQueryClient } from "@tanstack/react-query";
 import { X, GitCompare, AlertTriangle, ShieldCheck } from "lucide-react";
 
+function exampleFromUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  const value = new URLSearchParams(window.location.search).get("example");
+  return value ? decodeURIComponent(value) : null;
+}
 export default function Interactions() {
   const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
   const queryClient = useQueryClient();
+  const example = exampleFromUrl();
 
   const checkInteractions = useCheckInteractions();
   const createHistory = useCreateHistory();
@@ -100,6 +106,17 @@ export default function Interactions() {
 
       <GlobalDisclaimer />
 
+      {example && selectedDrugs.length === 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4 text-sm space-y-1">
+            <p className="font-semibold text-foreground">Приклад для перевірки: {example}</p>
+            <p className="text-muted-foreground">
+              Додайте ці препарати через пошук нижче, щоб запустити довідкову перевірку взаємодій.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="space-y-4">
         <DrugSearchSelect
           onSelect={handleAdd}
@@ -141,6 +158,14 @@ export default function Interactions() {
             ? "Перевірка..."
             : "Перевірити взаємодії"}
         </Button>
+
+        {selectedDrugs.length === 0 && !checkInteractions.data && (
+          <Card className="bg-card/50 border-dashed">
+            <CardContent className="p-4 text-sm text-muted-foreground">
+              Натисніть приклад на головній сторінці або додайте 2 препарати, щоб перевірити роботу взаємодій. Static fallback залишається активним без PostgreSQL.
+            </CardContent>
+          </Card>
+        )}
 
         {checkInteractions.isError && (
           <div className="py-4 px-4 text-sm text-destructive border border-destructive/30 rounded-lg space-y-2">

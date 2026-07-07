@@ -1,5 +1,17 @@
 # AI Pharmacy Assistant (FarmAssist)
 
+## v1.4 Usable Online Dashboard
+
+After private-beta login, `/` now opens a usable operator dashboard instead of a sparse home screen. It links directly to search, interactions, compare, hospital mode, `/beta-dashboard`, data quality and review workflows according to the current role. It also shows safe runtime status booleans for static fallback/DB runtime, PostgreSQL, Gemini, OpenAI, local private-beta auth and current role.
+
+### First online use after deployment
+
+1. Open the deployed Render URL, for example `https://farmassist-private-beta.onrender.com`.
+2. Log in with an invited email from Render `ADMIN_EMAILS` or `ALLOWED_EMAILS`.
+3. Use the home dashboard quick cards to open search, interactions, compare or hospital mode.
+4. Click search examples such as `Нурофен`, `Парацетамол`, `Ібупрофен`, `Амоксиклав`, `Варфарин`, `Цефтріаксон` or `Лозартан` to verify static fallback search.
+5. Open **Beta Dashboard / Панель тестування** and use **Run full beta check** from that page when reviewer/admin validation is needed.
+6. If PostgreSQL is not configured, the UI should say static fallback mode is active. If Gemini is not configured, AI/OCR may stay in fallback/demo mode. These are expected for the first online smoke test.
 ## v1.3 Real Online Deployment Readiness
 
 FarmAssist now includes an operator checklist, production env placeholder file

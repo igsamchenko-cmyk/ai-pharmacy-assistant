@@ -21,8 +21,13 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { DEMO_LABEL } from "@/lib/constants";
 import { ReportIssueButton } from "@/components/report-issue-button";
 
+function initialQueryFromUrl(): string {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("q") ?? "";
+}
+
 export default function SearchPage() {
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(initialQueryFromUrl);
   const debouncedQ = useDebounce(q, 180);
   const [field, setField] = useState<SearchDrugsField>("all");
 
@@ -128,7 +133,7 @@ export default function SearchPage() {
         ) : !results?.length && !debouncedQ ? (
           <div className="py-10 px-4 text-muted-foreground border border-dashed border-border rounded-xl">
             <p className="text-sm">
-              Почніть з прикладів: Нурофен, Парацетамол, Амоксиклав, Warfarin.
+              База PostgreSQL ще не підключена, але пошук працює через static fallback. Натисніть приклад на головній сторінці або введіть назву препарату.
             </p>
           </div>
         ) : (

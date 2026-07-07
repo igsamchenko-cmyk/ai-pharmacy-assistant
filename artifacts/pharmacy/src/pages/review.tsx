@@ -261,8 +261,13 @@ export default function ReviewQueue() {
 
       {!queue.isLoading && items.length === 0 && (
         <Card className="bg-card/50">
-          <CardContent className="p-6 text-center text-sm text-muted-foreground">
-            Немає рядків для вибраних фільтрів.
+          <CardContent className="p-6 text-center text-sm text-muted-foreground space-y-2">
+            <p className="font-medium text-foreground">
+              Черга рев’ю буде активна після підключення DB.
+            </p>
+            <p>
+              Зараз PostgreSQL може бути не підключено, тому static runtime залишається активним, а review workflow повертає безпечний порожній стан.
+            </p>
           </CardContent>
         </Card>
       )}
