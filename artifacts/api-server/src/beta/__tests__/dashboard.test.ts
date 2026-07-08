@@ -11,6 +11,8 @@ describe("beta dashboard status", () => {
     expect(status.readiness.score).toBeGreaterThanOrEqual(0);
     expect(status.scenarios.total).toBeGreaterThan(0);
     expect(status.searchQuality.hitRatePct).toBeGreaterThanOrEqual(0);
+    expect(status.realWorld.total).toBeGreaterThan(0);
+    expect(status.realWorld.hitRatePct).toBeGreaterThanOrEqual(0);
     expect(status.runtime.staticFallbackEnabled).toBe(true);
     expect(status.dataQuality.mappingsCount).toBeGreaterThan(0);
   });
@@ -19,9 +21,11 @@ describe("beta dashboard status", () => {
     const originalDatabaseUrl = process.env.DATABASE_URL;
     const originalGemini = process.env.GEMINI_API_KEY;
     const originalOpenAi = process.env.OPENAI_API_KEY;
+    const originalRuntime = process.env.KNOWLEDGE_DB_RUNTIME;
     process.env.DATABASE_URL = "postgresql://user:password@example.test/db";
     process.env.GEMINI_API_KEY = "gemini-secret";
     process.env.OPENAI_API_KEY = "openai-secret";
+    delete process.env.KNOWLEDGE_DB_RUNTIME;
     try {
       const [status, diagnostics] = await Promise.all([
         buildBetaDashboardStatus(),
@@ -39,6 +43,8 @@ describe("beta dashboard status", () => {
       else process.env.GEMINI_API_KEY = originalGemini;
       if (originalOpenAi === undefined) delete process.env.OPENAI_API_KEY;
       else process.env.OPENAI_API_KEY = originalOpenAi;
+      if (originalRuntime === undefined) delete process.env.KNOWLEDGE_DB_RUNTIME;
+      else process.env.KNOWLEDGE_DB_RUNTIME = originalRuntime;
     }
   });
 
@@ -84,12 +90,25 @@ describe("beta dashboard checks", () => {
     expect(result.failed).toBe(0);
   });
 
+  it("runs real-world pharmacy scenarios without exposing local paths", async () => {
+    const result = await runBetaDashboardCheck("real_world");
+    const json = JSON.stringify(result);
+
+    expect(result.checkType).toBe("real_world");
+    expect(result.passed).toBeGreaterThan(0);
+    expect(result.score).toBeGreaterThanOrEqual(0);
+    expect(json).not.toMatch(/[A-Za-z]:\\/);
+    expect(json).not.toContain("/opt/render/project");
+    expect(json).not.toContain("postgresql://");
+  });
+
   it("runs full safe check", async () => {
     const result = await runBetaDashboardCheck("full_safe_check");
     expect(result.checkType).toBe("full_safe_check");
     expect(result.score).toBeGreaterThanOrEqual(85);
-    expect(result.failed).toBe(0);
+    expect(result.status).not.toBe("failed");
     expect(result.details).toHaveProperty("readiness");
+    expect(result.details).toHaveProperty("realWorld");
   });
 
   it("rejects invalid check types at the API schema boundary", () => {

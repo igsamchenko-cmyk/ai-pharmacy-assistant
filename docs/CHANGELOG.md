@@ -5,6 +5,31 @@
 
 ## [Не випущено]
 
+## v1.4.0 - Real-World Pharmacy Testing & Data Expansion - 2026-07-08
+
+### Added
+
+- Added 39 real-world pharmacy search scenarios for Ukrainian, Latin, English,
+  brand, typo and transliteration lookup coverage.
+- Added `data/dictionary-batches/0009-real-world-pharmacy.csv` with 42
+  auditable rows for real-world pharmacy query normalization.
+- Added `pnpm knowledge:real-world:report` for real-world search validation.
+- Added the Beta Dashboard `real_world` check.
+- Added search miss UX for "Не знайдено — повідомити про проблему" so beta
+  misses can be captured without changing runtime safety.
+
+### Validation
+
+- Real-world report: 37/39 passed, 2 review misses, 95% hit rate and 100%
+  top-result accuracy.
+
+### Safety
+
+- Medical safety behavior is unchanged.
+- Runtime lookup remains approved-only.
+- `pending` and `needs_review` mappings remain hidden from user-facing runtime
+  lookup until reviewed and approved.
+
 ## v1.3.1 - Render Build Configuration Fix - 2026-07-06
 
 ### Fixed

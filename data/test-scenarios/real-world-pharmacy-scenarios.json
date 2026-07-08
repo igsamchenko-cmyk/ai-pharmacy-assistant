@@ -1,0 +1,649 @@
+{
+  "version": "1.4-real-world",
+  "category": "search",
+  "description": "Real-world hospital and pharmacy search queries for name normalization only. No clinical advice is encoded here.",
+  "scenarios": [
+    {
+      "id": "rw-analgesic-nurofen-brand",
+      "query": "Нурофен",
+      "description": "Common pharmacy-counter brand query.",
+      "tags": ["pharmacy", "brand", "nsaid"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "nurofen-200",
+        "normalizedInn": "Ібупрофен",
+        "normalizedEnglish": "Ibuprofen",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-analgesic-ibuprofen-inn",
+      "query": "Ібупрофен",
+      "description": "Ukrainian INN query used in pharmacy search.",
+      "tags": ["pharmacy", "inn", "nsaid"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "ibuprofen-200",
+        "normalizedInn": "Ібупрофен",
+        "normalizedEnglish": "Ibuprofen",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-analgesic-ibuprofen-latin",
+      "query": "Ibuprofenum",
+      "description": "Latin INN spelling from labels or reference materials.",
+      "tags": ["latin", "nsaid"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Ібупрофен",
+        "normalizedEnglish": "Ibuprofen",
+        "ukrainian": false
+      }
+    },
+    {
+      "id": "rw-analgesic-paracetamol-inn",
+      "query": "Парацетамол",
+      "description": "Common Ukrainian INN query.",
+      "tags": ["pharmacy", "inn", "analgesic"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "panadol-500",
+        "normalizedInn": "Парацетамол",
+        "normalizedEnglish": "Paracetamol",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-analgesic-paracetamol-common-typo",
+      "query": "парацитамол",
+      "description": "Frequent misspelling that should be collected for review before runtime approval.",
+      "tags": ["pharmacy", "typo", "recommended-addition"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Парацетамол",
+        "normalizedEnglish": "Paracetamol",
+        "ukrainian": true
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Парацетамол",
+        "name": "парацитамол",
+        "nameType": "typo",
+        "sourceId": "manual_review_candidate",
+        "reviewHint": "needs_review"
+      }
+    },
+    {
+      "id": "rw-antibiotic-amoxiclav-brand",
+      "query": "Амоксиклав",
+      "description": "Protected penicillin brand query.",
+      "tags": ["pharmacy", "hospital", "brand", "antibiotic"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "amoxiclav-625",
+        "normalizedInn": "Амоксицилін + клавуланова кислота",
+        "normalizedEnglish": "Amoxicillin + clavulanic acid",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-antibiotic-amoksyklav-translit",
+      "query": "amoksyklav",
+      "description": "Ukrainian brand transliteration typed on Latin keyboard.",
+      "tags": ["pharmacy", "transliteration", "antibiotic"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Амоксицилін + клавуланова кислота",
+        "normalizedEnglish": "Amoxicillin + clavulanic acid",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Амоксицилін + клавуланова кислота",
+        "name": "amoksyklav",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-antibiotic-amoxicillin-uk",
+      "query": "Амоксицилін",
+      "description": "Ukrainian INN antibiotic query.",
+      "tags": ["hospital", "inn", "antibiotic"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Амоксицилін",
+        "normalizedEnglish": "Amoxicillin",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-antibiotic-amoksytsylin-translit",
+      "query": "amoksytsylin",
+      "description": "Ukrainian INN transliteration typed on Latin keyboard.",
+      "tags": ["transliteration", "antibiotic"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Амоксицилін",
+        "normalizedEnglish": "Amoxicillin",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Амоксицилін",
+        "name": "amoksytsylin",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-antibiotic-ceftriaxone-uk",
+      "query": "Цефтріаксон",
+      "description": "Frequent inpatient antibiotic INN.",
+      "tags": ["hospital", "inn", "antibiotic"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Цефтріаксон",
+        "normalizedEnglish": "Ceftriaxone",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-antibiotic-tseftriakson-translit",
+      "query": "tseftriakson",
+      "description": "Latin-keyboard transliteration of цефтріаксон.",
+      "tags": ["hospital", "transliteration", "antibiotic"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Цефтріаксон",
+        "normalizedEnglish": "Ceftriaxone",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Цефтріаксон",
+        "name": "tseftriakson",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-antibiotic-azithromycin-uk",
+      "query": "Азитроміцин",
+      "description": "Common macrolide query.",
+      "tags": ["pharmacy", "inn", "antibiotic"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "azithromycin-500",
+        "normalizedInn": "Азитроміцин",
+        "normalizedEnglish": "Azithromycin",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-anticoagulant-warfarin",
+      "query": "Варфарин",
+      "description": "Anticoagulant query with high interaction-safety relevance.",
+      "tags": ["hospital", "anticoagulant", "inn"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "warfarin-5",
+        "normalizedInn": "Варфарин",
+        "normalizedEnglish": "Warfarin",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-anticoagulant-xarelto-ua",
+      "query": "Ксарелто",
+      "description": "Ukrainian trade name query for rivaroxaban.",
+      "tags": ["pharmacy", "brand", "anticoagulant"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Ривароксабан",
+        "normalizedEnglish": "Rivaroxaban",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-anticoagulant-ksarelto-translit",
+      "query": "ksarelto",
+      "description": "Latin-keyboard transliteration of Ксарелто.",
+      "tags": ["transliteration", "anticoagulant"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Ривароксабан",
+        "normalizedEnglish": "Rivaroxaban",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Ривароксабан",
+        "name": "ksarelto",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-anticoagulant-eliquis-ua",
+      "query": "Еліквіс",
+      "description": "Ukrainian trade name query for apixaban.",
+      "tags": ["pharmacy", "brand", "anticoagulant"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Апіксабан",
+        "normalizedEnglish": "Apixaban",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-antiplatelet-clopidogrel",
+      "query": "Клопідогрель",
+      "description": "Common antiplatelet INN query.",
+      "tags": ["hospital", "inn", "antiplatelet"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Клопідогрель",
+        "normalizedEnglish": "Clopidogrel",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-antiplatelet-aspirin",
+      "query": "Аспірин",
+      "description": "Common Ukrainian aspirin brand/generic query.",
+      "tags": ["pharmacy", "nsaid", "antiplatelet"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "aspirin-500",
+        "normalizedInn": "Ацетилсаліцилова кислота",
+        "normalizedEnglish": "Acetylsalicylic acid",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-cardiovascular-losartan",
+      "query": "Лозартан",
+      "description": "Cardiovascular INN query.",
+      "tags": ["pharmacy", "inn", "cardiovascular"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Лозартан",
+        "normalizedEnglish": "Losartan",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-cardiovascular-amlodypin-translit",
+      "query": "amlodypin",
+      "description": "Latin-keyboard transliteration of амлодипін.",
+      "tags": ["transliteration", "cardiovascular"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Амлодипін",
+        "normalizedEnglish": "Amlodipine",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Амлодипін",
+        "name": "amlodypin",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-cardiovascular-bisoprolol",
+      "query": "Бісопролол",
+      "description": "Common beta-blocker INN query.",
+      "tags": ["pharmacy", "inn", "cardiovascular"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "bisoprolol-5",
+        "normalizedInn": "Бісопролол",
+        "normalizedEnglish": "Bisoprolol",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-diuretic-furosemid-translit",
+      "query": "furosemid",
+      "description": "Latin-keyboard transliteration of фуросемід.",
+      "tags": ["hospital", "transliteration", "diuretic"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Фуросемід",
+        "normalizedEnglish": "Furosemide",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Фуросемід",
+        "name": "furosemid",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-diuretic-torasemid-translit",
+      "query": "torasemid",
+      "description": "Latin-keyboard transliteration of торасемід.",
+      "tags": ["hospital", "transliteration", "diuretic"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Торасемід",
+        "normalizedEnglish": "Torasemide",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Торасемід",
+        "name": "torasemid",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-endocrine-metformyn-translit",
+      "query": "metformyn",
+      "description": "Latin-keyboard transliteration of метформін.",
+      "tags": ["pharmacy", "transliteration", "endocrine"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Метформін",
+        "normalizedEnglish": "Metformin",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Метформін",
+        "name": "metformyn",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-gi-omeprazol-translit",
+      "query": "omeprazol",
+      "description": "Latin-keyboard transliteration of омепразол.",
+      "tags": ["pharmacy", "transliteration", "gi"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "omeprazole-20",
+        "normalizedInn": "Омепразол",
+        "normalizedEnglish": "Omeprazole",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Омепразол",
+        "name": "omeprazol",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-gi-pantoprazol-translit",
+      "query": "pantoprazol",
+      "description": "Latin-keyboard transliteration of пантопразол.",
+      "tags": ["pharmacy", "transliteration", "gi"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "pantoprazole-40",
+        "normalizedInn": "Пантопразол",
+        "normalizedEnglish": "Pantoprazole",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Пантопразол",
+        "name": "pantoprazol",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-allergy-loratadyn-translit",
+      "query": "loratadyn",
+      "description": "Latin-keyboard transliteration of лоратадин.",
+      "tags": ["pharmacy", "transliteration", "allergy"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "loratadine-10",
+        "normalizedInn": "Лоратадин",
+        "normalizedEnglish": "Loratadine",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Лоратадин",
+        "name": "loratadyn",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-allergy-tsetyryzyn-translit",
+      "query": "tsetyryzyn",
+      "description": "Latin-keyboard transliteration of цетиризин.",
+      "tags": ["pharmacy", "transliteration", "allergy"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "cetirizine-10",
+        "normalizedInn": "Цетиризин",
+        "normalizedEnglish": "Cetirizine",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Цетиризин",
+        "name": "tsetyryzyn",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-steroid-deksametazon-translit",
+      "query": "deksametazon",
+      "description": "Latin-keyboard transliteration of дексаметазон.",
+      "tags": ["hospital", "transliteration", "steroid"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Дексаметазон",
+        "normalizedEnglish": "Dexamethasone",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Дексаметазон",
+        "name": "deksametazon",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-steroid-prednizolon-translit",
+      "query": "prednizolon",
+      "description": "Latin-keyboard transliteration of преднізолон.",
+      "tags": ["hospital", "transliteration", "steroid"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Преднізолон",
+        "normalizedEnglish": "Prednisolone",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Преднізолон",
+        "name": "prednizolon",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-urgent-ondansetron-uk",
+      "query": "Ондансетрон",
+      "description": "Inpatient generic name query for antiemetic lookup.",
+      "tags": ["hospital", "urgent", "inn"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Ондансетрон",
+        "normalizedEnglish": "Ondansetron",
+        "ukrainian": true
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Ондансетрон",
+        "name": "Ондансетрон",
+        "nameType": "ukrainian",
+        "sourceId": "public_generic_inn",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-urgent-drotaverine-brand",
+      "query": "Но-шпа",
+      "description": "Common pharmacy/hospital brand query for drotaverine.",
+      "tags": ["pharmacy", "hospital", "brand", "gi"],
+      "expected": {
+        "hit": true,
+        "topCatalogId": "no-shpa-40",
+        "normalizedInn": "Дротаверин",
+        "normalizedEnglish": "Drotaverine",
+        "ukrainian": true
+      }
+    },
+    {
+      "id": "rw-urgent-drotaveryn-translit",
+      "query": "drotaveryn",
+      "description": "Latin-keyboard transliteration of дротаверин.",
+      "tags": ["transliteration", "gi"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Дротаверин",
+        "normalizedEnglish": "Drotaverine",
+        "ukrainian": false
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Дротаверин",
+        "name": "drotaveryn",
+        "nameType": "transliteration",
+        "sourceId": "project_generated_transliteration",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-urgent-atropine-uk",
+      "query": "Атропін",
+      "description": "Hospital generic-name query.",
+      "tags": ["hospital", "urgent", "inn"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Атропін",
+        "normalizedEnglish": "Atropine",
+        "ukrainian": true
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Атропін",
+        "name": "Атропін",
+        "nameType": "ukrainian",
+        "sourceId": "public_generic_inn",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-urgent-adrenaline-uk",
+      "query": "Адреналін",
+      "description": "Hospital generic-name query; maps to epinephrine/adrenaline nomenclature only.",
+      "tags": ["hospital", "urgent", "inn"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Адреналін",
+        "normalizedEnglish": "Epinephrine",
+        "ukrainian": true
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Адреналін",
+        "name": "Адреналін",
+        "nameType": "ukrainian",
+        "sourceId": "public_generic_inn",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-electrolyte-magnesium-sulfate",
+      "query": "Магнію сульфат",
+      "description": "Hospital electrolyte generic-name query.",
+      "tags": ["hospital", "urgent", "electrolyte"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Магнію сульфат",
+        "normalizedEnglish": "Magnesium sulfate",
+        "ukrainian": true
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Магнію сульфат",
+        "name": "Магнію сульфат",
+        "nameType": "ukrainian",
+        "sourceId": "public_generic_inn",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-electrolyte-potassium-chloride",
+      "query": "Калію хлорид",
+      "description": "Hospital electrolyte generic-name query.",
+      "tags": ["hospital", "urgent", "electrolyte"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Калію хлорид",
+        "normalizedEnglish": "Potassium chloride",
+        "ukrainian": true
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Калію хлорид",
+        "name": "Калію хлорид",
+        "nameType": "ukrainian",
+        "sourceId": "public_generic_inn",
+        "reviewHint": "approved"
+      }
+    },
+    {
+      "id": "rw-review-amoxiclav-typo",
+      "query": "амоксиклавв",
+      "description": "Likely typing error; collect as review candidate, not auto-approved runtime data.",
+      "tags": ["typo", "recommended-addition", "antibiotic"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Амоксицилін + клавуланова кислота",
+        "normalizedEnglish": "Amoxicillin + clavulanic acid",
+        "ukrainian": true
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Амоксицилін + клавуланова кислота",
+        "name": "амоксиклавв",
+        "nameType": "typo",
+        "sourceId": "manual_review_candidate",
+        "reviewHint": "needs_review"
+      }
+    },
+    {
+      "id": "rw-review-eliquis-typo",
+      "query": "еліківс",
+      "description": "Likely Ukrainian spelling variant/misspelling; requires reviewer decision.",
+      "tags": ["typo", "recommended-addition", "anticoagulant"],
+      "expected": {
+        "hit": true,
+        "normalizedInn": "Апіксабан",
+        "normalizedEnglish": "Apixaban",
+        "ukrainian": true
+      },
+      "recommendedMapping": {
+        "canonicalInn": "Апіксабан",
+        "name": "еліківс",
+        "nameType": "typo",
+        "sourceId": "manual_review_candidate",
+        "reviewHint": "needs_review"
+      }
+    }
+  ]
+}

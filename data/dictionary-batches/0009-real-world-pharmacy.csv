@@ -1,0 +1,43 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-ondansetron,Ондансетрон,Ondansetron,en,english,public_generic_inn,verified,A04AA01,v1.4 real-world generic mapping
+ing-ondansetron,Ондансетрон,Ondansetronum,la,latin,public_generic_inn,verified,A04AA01,v1.4 real-world generic mapping
+ing-ondansetron,Ондансетрон,ondansetron,uk-Latn,transliteration,project_generated_transliteration,high,A04AA01,v1.4 deterministic transliteration
+ing-ondansetron,Ондансетрон,Ондансетрон,uk,ukrainian,public_generic_inn,verified,A04AA01,v1.4 real-world generic mapping
+ing-atropine,Атропін,Atropine,en,english,public_generic_inn,verified,A03BA01,v1.4 real-world generic mapping
+ing-atropine,Атропін,Atropinum,la,latin,public_generic_inn,verified,A03BA01,v1.4 real-world generic mapping
+ing-atropine,Атропін,atropin,uk-Latn,transliteration,project_generated_transliteration,high,A03BA01,v1.4 deterministic transliteration
+ing-atropine,Атропін,Атропін,uk,ukrainian,public_generic_inn,verified,A03BA01,v1.4 real-world generic mapping
+ing-epinephrine,Адреналін,Epinephrine,en,english,public_generic_inn,verified,C01CA24,v1.4 real-world generic mapping
+ing-epinephrine,Адреналін,Adrenalinum,la,latin,public_generic_inn,verified,C01CA24,v1.4 real-world generic mapping
+ing-epinephrine,Адреналін,adrenalin,uk-Latn,transliteration,project_generated_transliteration,high,C01CA24,v1.4 deterministic transliteration
+ing-epinephrine,Адреналін,Адреналін,uk,ukrainian,public_generic_inn,verified,C01CA24,v1.4 real-world generic mapping
+ing-magnesium-sulfate,Магнію сульфат,Magnesium sulfate,en,english,public_generic_inn,verified,B05XA05,v1.4 real-world generic mapping
+ing-magnesium-sulfate,Магнію сульфат,Magnesii sulfas,la,latin,public_generic_inn,verified,B05XA05,v1.4 real-world generic mapping
+ing-magnesium-sulfate,Магнію сульфат,mahniiu sulfat,uk-Latn,transliteration,project_generated_transliteration,high,B05XA05,v1.4 deterministic transliteration
+ing-magnesium-sulfate,Магнію сульфат,Магнію сульфат,uk,ukrainian,public_generic_inn,verified,B05XA05,v1.4 real-world generic mapping
+ing-potassium-chloride,Калію хлорид,Potassium chloride,en,english,public_generic_inn,verified,B05XA01,v1.4 real-world generic mapping
+ing-potassium-chloride,Калію хлорид,Kalii chloridum,la,latin,public_generic_inn,verified,B05XA01,v1.4 real-world generic mapping
+ing-potassium-chloride,Калію хлорид,kaliiu khloryd,uk-Latn,transliteration,project_generated_transliteration,high,B05XA01,v1.4 deterministic transliteration
+ing-potassium-chloride,Калію хлорид,Калію хлорид,uk,ukrainian,public_generic_inn,verified,B05XA01,v1.4 real-world generic mapping
+ing-amoxicillin-clavulanate,Амоксицилін + клавуланова кислота,amoksyklav,uk-Latn,transliteration,project_generated_transliteration,high,J01CR02,v1.4 observed Latin-keyboard query
+ing-amoxicillin,Амоксицилін,amoksytsylin,uk-Latn,transliteration,project_generated_transliteration,high,J01CA04,v1.4 observed Latin-keyboard query
+ing-ceftriaxone,Цефтріаксон,tseftriakson,uk-Latn,transliteration,project_generated_transliteration,high,J01DD04,v1.4 observed Latin-keyboard query
+ing-rivaroxaban,Ривароксабан,ksarelto,uk-Latn,transliteration,project_generated_transliteration,high,B01AF01,v1.4 observed Latin-keyboard query
+ing-apixaban,Апіксабан,elikvis,uk-Latn,transliteration,project_generated_transliteration,high,B01AF02,v1.4 observed Latin-keyboard query
+ing-amlodipine,Амлодипін,amlodypin,uk-Latn,transliteration,project_generated_transliteration,high,C08CA01,v1.4 observed Latin-keyboard query
+ing-furosemide,Фуросемід,furosemid,uk-Latn,transliteration,project_generated_transliteration,high,C03CA01,v1.4 observed Latin-keyboard query
+ing-torasemide,Торасемід,torasemid,uk-Latn,transliteration,project_generated_transliteration,high,C03CA04,v1.4 observed Latin-keyboard query
+ing-metformin,Метформін,metformyn,uk-Latn,transliteration,project_generated_transliteration,high,A10BA02,v1.4 observed Latin-keyboard query
+ing-omeprazole,Омепразол,omeprazol,uk-Latn,transliteration,project_generated_transliteration,high,A02BC01,v1.4 observed Latin-keyboard query
+ing-pantoprazole,Пантопразол,pantoprazol,uk-Latn,transliteration,project_generated_transliteration,high,A02BC02,v1.4 observed Latin-keyboard query
+ing-loratadine,Лоратадин,loratadyn,uk-Latn,transliteration,project_generated_transliteration,high,R06AX13,v1.4 observed Latin-keyboard query
+ing-cetirizine,Цетиризин,tsetyryzyn,uk-Latn,transliteration,project_generated_transliteration,high,R06AE07,v1.4 observed Latin-keyboard query
+ing-dexamethasone,Дексаметазон,deksametazon,uk-Latn,transliteration,project_generated_transliteration,high,H02AB02,v1.4 observed Latin-keyboard query
+ing-prednisolone,Преднізолон,prednizolon,uk-Latn,transliteration,project_generated_transliteration,high,H02AB06,v1.4 observed Latin-keyboard query
+ing-drotaverine,Дротаверин,drotaveryn,uk-Latn,transliteration,project_generated_transliteration,high,A03AD02,v1.4 observed Latin-keyboard query
+ing-paracetamol,Парацетамол,парацитамол,uk,typo,manual_review_candidate,high,N02BE01,v1.4 typo candidate kept out of auto-approved runtime until review
+ing-amoxicillin-clavulanate,Амоксицилін + клавуланова кислота,амоксиклавв,uk,typo,manual_review_candidate,high,J01CR02,v1.4 typo candidate kept out of auto-approved runtime until review
+ing-apixaban,Апіксабан,еліківс,uk,typo,manual_review_candidate,high,B01AF02,v1.4 spelling candidate kept out of auto-approved runtime until review
+ing-ceftriaxone,Цефтріаксон,цефтріаксонн,uk,typo,manual_review_candidate,high,J01DD04,v1.4 typo candidate kept out of auto-approved runtime until review
+ing-magnesium-sulfate,Магнію сульфат,магнія сульфат,uk,synonym,manual_review_candidate,medium,B05XA05,v1.4 grammar variant pending human review
+ing-potassium-chloride,Калію хлорид,калій хлорид,uk,synonym,manual_review_candidate,medium,B05XA01,v1.4 grammar variant pending human review

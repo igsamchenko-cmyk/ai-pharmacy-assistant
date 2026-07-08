@@ -27,6 +27,7 @@ export * from './betaDashboardStatus';
 export * from './betaDashboardStatusDataQuality';
 export * from './betaDashboardStatusDiagnostics';
 export * from './betaDashboardStatusReadiness';
+export * from './betaDashboardStatusRealWorld';
 export * from './betaDashboardStatusReviewQueue';
 export * from './betaDashboardStatusRuntime';
 export * from './betaDashboardStatusRuntimeMode';

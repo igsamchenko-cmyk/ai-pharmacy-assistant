@@ -20,6 +20,7 @@ describe("dictionary batch files", () => {
       "0006-respiratory-allergy.csv",
       "0007-neuro-psych.csv",
       "0008-icu-emergency-electrolytes.csv",
+      "0009-real-world-pharmacy.csv",
     ]);
   });
 
@@ -53,9 +54,27 @@ describe("dictionary batch files", () => {
     expect(parsed.rows.every((row) => row.atcCode)).toBe(true);
     expect(
       parsed.rows.every(
-        (row) => row.confidence === "verified" || row.confidence === "high",
+        (row) =>
+          row.confidence === "verified" ||
+          row.confidence === "high" ||
+          row.confidence === "medium",
       ),
     ).toBe(true);
+  });
+
+  it("ships real-world additions as generic and review-safe mappings", () => {
+    const file = files.find(
+      (item) => item.fileName === "0009-real-world-pharmacy.csv",
+    );
+    expect(file).toBeDefined();
+    const parsed = parseDictionaryBatchFile(file!);
+
+    expect(parsed.rows.length).toBeGreaterThanOrEqual(40);
+    expect(parsed.rows.every((row) => row.nameType !== "brand")).toBe(true);
+    expect(parsed.rows.every((row) => isKnownSource(row.sourceId))).toBe(true);
+    expect(findCopyrightedSources(parsed.rows)).toHaveLength(0);
+    expect(parsed.preview.reviewDistribution.pending).toBeGreaterThan(0);
+    expect(parsed.preview.reviewDistribution.needs_review).toBeGreaterThan(0);
   });
 });
 
@@ -63,9 +82,9 @@ describe("dictionary batch summary", () => {
   const summary = buildDictionaryBatchSummary(files);
 
   it("summarizes all batch files", () => {
-    expect(summary.files).toBe(8);
+    expect(summary.files).toBe(9);
     expect(summary.totalRows).toBeGreaterThanOrEqual(500);
-    expect(summary.fileSummaries).toHaveLength(8);
+    expect(summary.fileSummaries).toHaveLength(9);
   });
 
   it("keeps the combined preview importable", () => {
@@ -89,8 +108,11 @@ describe("dictionary batch summary", () => {
     );
     expect(summary.byConfidence.verified).toBeGreaterThan(0);
     expect(summary.byConfidence.high).toBeGreaterThan(0);
-    expect(summary.byReviewStatus.approved).toBe(summary.totalRows);
-    expect(summary.byReviewStatus.pending).toBe(0);
+    expect(summary.byConfidence.medium).toBeGreaterThan(0);
+    expect(summary.byReviewStatus.approved).toBeGreaterThan(0);
+    expect(summary.byReviewStatus.pending).toBeGreaterThan(0);
+    expect(summary.byReviewStatus.needs_review).toBeGreaterThan(0);
+    expect(summary.byReviewStatus.rejected).toBe(0);
   });
 
   it("keeps suspicious rows out of approved batch data", () => {
