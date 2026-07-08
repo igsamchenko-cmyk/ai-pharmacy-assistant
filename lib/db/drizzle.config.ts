@@ -1,14 +1,28 @@
 import { defineConfig } from "drizzle-kit";
-import path from "path";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL, ensure the database is provisioned");
 }
 
+const databaseUrl = process.env.DATABASE_URL;
+const databaseSsl = process.env.DATABASE_SSL === "true";
+
+function dbCredentials() {
+  if (!databaseSsl) return { url: databaseUrl };
+
+  const parsed = new URL(databaseUrl);
+  return {
+    host: parsed.hostname,
+    ...(parsed.port ? { port: Number(parsed.port) } : {}),
+    user: decodeURIComponent(parsed.username),
+    password: decodeURIComponent(parsed.password),
+    database: decodeURIComponent(parsed.pathname.replace(/^\//, "")),
+    ssl: true,
+  };
+}
+
 export default defineConfig({
-  schema: path.join(__dirname, "./src/schema/index.ts"),
+  schema: "./src/schema/index.ts",
   dialect: "postgresql",
-  dbCredentials: {
-    url: process.env.DATABASE_URL,
-  },
+  dbCredentials: dbCredentials(),
 });
