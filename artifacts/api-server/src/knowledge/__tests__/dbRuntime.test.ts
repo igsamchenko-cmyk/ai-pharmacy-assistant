@@ -112,6 +112,36 @@ describe("DB-backed knowledge runtime", () => {
     });
   });
 
+  it("keeps real-world typo review candidates hidden until approved", () => {
+    const rows = [
+      mapping({
+        normalized: "paratsytamol",
+        name: "paratsytamol",
+        kind: "synonym",
+        reviewStatus: "needs_review",
+        confidence: "high",
+        confidenceScore: 80,
+      }),
+      mapping({
+        normalized: "mahniia sulfat",
+        name: "mahniia sulfat",
+        kind: "synonym",
+        reviewStatus: "pending",
+        confidence: "medium",
+        confidenceScore: 60,
+      }),
+    ];
+
+    expect(resolveRuntimeNameFromRows("paratsytamol", rows).source).toBe(
+      "fallback",
+    );
+    expect(resolveRuntimeNameFromRows("mahniia sulfat", rows).source).toBe(
+      "fallback",
+    );
+    rows[0].reviewStatus = "approved";
+    expect(resolveRuntimeNameFromRows("paratsytamol", rows).source).toBe("db");
+  });
+
   it("returns DB provenance for approved mappings", async () => {
     await withRuntimeFlag("true", async () => {
       const result = await resolveRuntimeName("RuntimeBrand", store([mapping()]));

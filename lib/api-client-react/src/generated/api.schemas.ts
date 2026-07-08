@@ -88,6 +88,7 @@ export const BetaDashboardCheckType = {
   readiness: 'readiness',
   scenarios: 'scenarios',
   search_quality: 'search_quality',
+  real_world: 'real_world',
   safety: 'safety',
   interactions: 'interactions',
   data_quality: 'data_quality',
@@ -145,6 +146,15 @@ export type BetaDashboardStatusSearchQuality = {
   warnings: string[];
 };
 
+export type BetaDashboardStatusRealWorld = {
+  total: number;
+  passed: number;
+  missed: number;
+  recommendedAdditions: number;
+  hitRatePct: number;
+  warnings: string[];
+};
+
 export type BetaDashboardStatusRuntimeMode = typeof BetaDashboardStatusRuntimeMode[keyof typeof BetaDashboardStatusRuntimeMode];
 
 
@@ -190,6 +200,7 @@ export interface BetaDashboardStatus {
   readiness: BetaDashboardStatusReadiness;
   scenarios: BetaDashboardStatusScenarios;
   searchQuality: BetaDashboardStatusSearchQuality;
+  realWorld: BetaDashboardStatusRealWorld;
   runtime: BetaDashboardStatusRuntime;
   dataQuality: BetaDashboardStatusDataQuality;
   reviewQueue: BetaDashboardStatusReviewQueue;

@@ -112,10 +112,10 @@ export default function SearchPage() {
             <SearchIcon className="w-8 h-8 opacity-20" />
             <div>
               <p className="font-medium text-foreground">
-                Нічого не знайдено за запитом "{debouncedQ}"
+                Не знайдено — повідомити про проблему
               </p>
               <p className="text-sm mt-1">
-                Спробуйте МНН, бренд без дозування або латинську/англійську назву. Якщо це реальний beta miss, збережіть звіт.
+                Запит "{debouncedQ}" не дав локального збігу. Спробуйте МНН, бренд без дозування або латинську/англійську назву; для реального beta miss збережіть звіт.
               </p>
             </div>
             <ReportIssueButton

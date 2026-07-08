@@ -121,6 +121,14 @@ export const GetBetaDashboardStatusResponse = zod.object({
   "missesCount": zod.number(),
   "warnings": zod.array(zod.string())
 }),
+  "realWorld": zod.object({
+  "total": zod.number(),
+  "passed": zod.number(),
+  "missed": zod.number(),
+  "recommendedAdditions": zod.number(),
+  "hitRatePct": zod.number(),
+  "warnings": zod.array(zod.string())
+}),
   "runtime": zod.object({
   "mode": zod.enum(['static', 'db']),
   "dbConfigured": zod.boolean(),
@@ -156,11 +164,11 @@ export const GetBetaDashboardStatusResponse = zod.object({
  * @summary Run a predefined beta dashboard check
  */
 export const RunBetaDashboardCheckBody = zod.object({
-  "checkType": zod.enum(['readiness', 'scenarios', 'search_quality', 'safety', 'interactions', 'data_quality', 'diagnostics', 'full_safe_check'])
+  "checkType": zod.enum(['readiness', 'scenarios', 'search_quality', 'safety', 'interactions', 'real_world', 'data_quality', 'diagnostics', 'full_safe_check'])
 })
 
 export const RunBetaDashboardCheckResponse = zod.object({
-  "checkType": zod.enum(['readiness', 'scenarios', 'search_quality', 'safety', 'interactions', 'data_quality', 'diagnostics', 'full_safe_check']),
+  "checkType": zod.enum(['readiness', 'scenarios', 'search_quality', 'safety', 'interactions', 'real_world', 'data_quality', 'diagnostics', 'full_safe_check']),
   "status": zod.enum(['ok', 'warning', 'failed']),
   "score": zod.union([zod.number(),zod.null()]),
   "passed": zod.number(),

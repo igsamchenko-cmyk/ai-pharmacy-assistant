@@ -37,6 +37,7 @@ const UI = {
     readiness: "\u0413\u043e\u0442\u043e\u0432\u043d\u0456\u0441\u0442\u044c beta",
     scenarios: "\u0421\u0446\u0435\u043d\u0430\u0440\u0456\u0457",
     search_quality: "\u042f\u043a\u0456\u0441\u0442\u044c \u043f\u043e\u0448\u0443\u043a\u0443",
+    real_world: "Real-world pharmacy",
     safety: "\u041f\u0435\u0440\u0435\u0432\u0456\u0440\u043a\u0438 \u0431\u0435\u0437\u043f\u0435\u043a\u0438",
     interactions: "\u0412\u0437\u0430\u0454\u043c\u043e\u0434\u0456\u0457",
     data_quality: "\u042f\u043a\u0456\u0441\u0442\u044c \u0434\u0430\u043d\u0438\u0445",
@@ -47,6 +48,7 @@ const UI = {
     readiness: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u0433\u043e\u0442\u043e\u0432\u043d\u0456\u0441\u0442\u044c",
     scenarios: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u0441\u0446\u0435\u043d\u0430\u0440\u0456\u0457",
     search_quality: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u0437\u0432\u0456\u0442",
+    real_world: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438 real-world",
     safety: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u0431\u0435\u0437\u043f\u0435\u043a\u0443",
     interactions: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u0432\u0437\u0430\u0454\u043c\u043e\u0434\u0456\u0457",
     data_quality: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u044f\u043a\u0456\u0441\u0442\u044c",
@@ -77,6 +79,7 @@ const UI = {
     hitRate: "\u0417\u0431\u0456\u0433\u0438",
     topResult: "\u0422\u043e\u043f \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442",
     misses: "\u041f\u0440\u043e\u043f\u0443\u0441\u043a\u0438",
+    recommended: "\u0420\u0435\u043a\u043e\u043c. \u0434\u043e\u0434\u0430\u0442\u0438",
     runtimeMode: "\u0420\u0435\u0436\u0438\u043c runtime",
     mode: "\u0420\u0435\u0436\u0438\u043c",
     dbConfigured: "DB \u043d\u0430\u043b\u0430\u0448\u0442.",
@@ -108,6 +111,7 @@ const RUNNABLE_CHECKS: { type: RunnableCheck; button: string }[] = [
   { type: "readiness", button: UI.buttons.readiness },
   { type: "scenarios", button: UI.buttons.scenarios },
   { type: "search_quality", button: UI.buttons.search_quality },
+  { type: "real_world", button: UI.buttons.real_world },
   { type: "safety", button: UI.buttons.safety },
   { type: "interactions", button: UI.buttons.interactions },
   { type: "data_quality", button: UI.buttons.data_quality },
@@ -293,6 +297,31 @@ function DashboardContent({
         </div>
         <WarningBlock warnings={status.searchQuality.warnings} />
         <LastRun result={lastRuns.search_quality} />
+      </PanelCard>
+
+      <PanelCard
+        title={UI.checks.real_world}
+        icon={SearchCheck}
+        action={
+          <RunButton
+            checkType="real_world"
+            onRun={onRun}
+            running={runningType === "real_world"}
+            label={UI.buttons.real_world}
+          />
+        }
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label={UI.labels.total} value={status.realWorld.total} />
+          <StatCard label={UI.labels.passed} value={status.realWorld.passed} />
+          <StatCard label={UI.labels.misses} value={status.realWorld.missed} />
+          <StatCard label={UI.labels.recommended} value={status.realWorld.recommendedAdditions} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <StatCard label={UI.labels.hitRate} value={`${status.realWorld.hitRatePct}%`} />
+        </div>
+        <WarningBlock warnings={status.realWorld.warnings} />
+        <LastRun result={lastRuns.real_world} />
       </PanelCard>
 
       <div className="grid gap-4 lg:grid-cols-2">

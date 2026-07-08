@@ -20,6 +20,7 @@
     "knowledge:runtime:verify": "pnpm --filter @workspace/api-server run knowledge:runtime:verify",
     "knowledge:quality:report": "pnpm --filter @workspace/api-server run knowledge:quality:report",
     "knowledge:search:report": "pnpm --filter @workspace/api-server run knowledge:search:report",
+    "knowledge:real-world:report": "pnpm --filter @workspace/api-server run knowledge:real-world:report",
     "beta:scenarios": "pnpm --filter @workspace/api-server run beta:scenarios",
     "beta:readiness": "pnpm --filter @workspace/api-server run beta:readiness",
     "deploy:verify": "pnpm --filter @workspace/api-server run deploy:verify",

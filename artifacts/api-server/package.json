@@ -21,6 +21,7 @@
     "import:preview:all": "tsx src/scripts/import-preview-all-batches.ts",
     "import:validate:all": "tsx src/scripts/validate-dictionary-batches.ts",
     "generate:dictionary-batches": "tsx src/scripts/generate-dictionary-batches.ts",
+    "knowledge:real-world:report": "tsx src/scripts/knowledge-real-world-report.ts",
     "knowledge:search:report": "tsx src/scripts/knowledge-search-report.ts",
     "beta:scenarios": "tsx src/scripts/beta-scenarios.ts",
     "beta:readiness": "tsx src/scripts/beta-readiness.ts",

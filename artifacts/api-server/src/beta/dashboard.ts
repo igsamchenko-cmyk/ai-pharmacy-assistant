@@ -8,6 +8,7 @@ import {
   runBetaScenarios,
   type BetaScenarioRunReport,
 } from "./scenarios";
+import { buildRealWorldPharmacyReport } from "./realWorldReport";
 import { buildSearchQualityReport } from "./searchQualityReport";
 
 export const BETA_DASHBOARD_CHECK_TYPES = [
@@ -16,6 +17,7 @@ export const BETA_DASHBOARD_CHECK_TYPES = [
   "search_quality",
   "safety",
   "interactions",
+  "real_world",
   "data_quality",
   "diagnostics",
   "full_safe_check",
@@ -57,6 +59,14 @@ export interface BetaDashboardStatus {
     hitRatePct: number;
     topResultAccuracyPct: number;
     missesCount: number;
+    warnings: string[];
+  };
+  realWorld: {
+    total: number;
+    passed: number;
+    missed: number;
+    recommendedAdditions: number;
+    hitRatePct: number;
     warnings: string[];
   };
   runtime: {
@@ -231,6 +241,25 @@ async function executeCheck(checkType: BetaDashboardCheckType): Promise<Omit<Bet
     return withoutDuration;
   }
 
+  if (checkType === "real_world") {
+    const report = await buildRealWorldPharmacyReport();
+    const warnings = uniqueWarnings([
+      ...report.warnings,
+      ...report.scenarios.flatMap((scenario) => scenario.warnings),
+    ]);
+    return {
+      checkType,
+      status: report.missed > 0 || warnings.length > 0 ? "warning" : "ok",
+      score: report.hitRatePct,
+      passed: report.passed,
+      failed: report.missed,
+      warnings,
+      summary: `Real-world pharmacy scenarios: ${report.found}/${report.totalQueries} found, ${report.missed} missed, ${report.recommendedMappingsToAdd.length} recommended additions.`,
+      details: asDetails(report),
+      generatedAt: report.timestamp,
+    };
+  }
+
   if (checkType === "data_quality") {
     const report = await buildKnowledgeQualityJsonReport();
     const warnings = uniqueWarnings([
@@ -269,10 +298,11 @@ async function executeCheck(checkType: BetaDashboardCheckType): Promise<Omit<Bet
     };
   }
 
-  const [readiness, scenarios, searchQuality, dataQuality, diagnostics] = await Promise.all([
+  const [readiness, scenarios, searchQuality, realWorld, dataQuality, diagnostics] = await Promise.all([
     buildBetaReadinessReport(),
     runBetaScenarios(),
     buildSearchQualityReport(),
+    buildRealWorldPharmacyReport(),
     buildKnowledgeQualityJsonReport(),
     buildDiagnosticsPanelData(),
   ]);
@@ -286,6 +316,7 @@ async function executeCheck(checkType: BetaDashboardCheckType): Promise<Omit<Bet
     ...readiness.warnings,
     ...scenarios.warnings,
     ...searchQuality.warnings,
+    ...realWorld.warnings,
     ...dataQuality.warnings,
     ...diagnostics.warnings,
   ]);
@@ -294,10 +325,15 @@ async function executeCheck(checkType: BetaDashboardCheckType): Promise<Omit<Bet
     status: statusFor(hardFailures, warnings),
     score: readiness.readinessScore,
     passed: readiness.commands.filter((item) => item.ok).length + scenarios.passed,
-    failed: hardFailures + scenarios.failed + searchQuality.misses.length + dataQuality.validation.errors.length,
+    failed:
+      hardFailures +
+      scenarios.failed +
+      searchQuality.misses.length +
+      realWorld.missed +
+      dataQuality.validation.errors.length,
     warnings,
-    summary: `Full safe check: readiness ${readiness.readinessScore}, scenarios ${scenarios.passed}/${scenarios.passed + scenarios.failed}, search misses ${searchQuality.misses.length}.`,
-    details: { readiness, scenarios, searchQuality, dataQuality, diagnostics },
+    summary: `Full safe check: readiness ${readiness.readinessScore}, scenarios ${scenarios.passed}/${scenarios.passed + scenarios.failed}, search misses ${searchQuality.misses.length}, real-world misses ${realWorld.missed}.`,
+    details: { readiness, scenarios, searchQuality, realWorld, dataQuality, diagnostics },
     generatedAt: new Date().toISOString(),
   };
 }
@@ -331,12 +367,13 @@ export async function runBetaDashboardCheck(
 }
 
 export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
-  const [readiness, quality, diagnostics, runtime, review] = await Promise.all([
+  const [readiness, quality, diagnostics, runtime, review, realWorld] = await Promise.all([
     buildBetaReadinessReport(),
     buildKnowledgeQualityJsonReport(),
     buildDiagnosticsPanelData(),
     getKnowledgeRuntimeStatus(),
     getReviewStats(),
+    buildRealWorldPharmacyReport(),
   ]);
   const warnings = uniqueWarnings([
     ...readiness.warnings,
@@ -344,6 +381,7 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
     ...diagnostics.warnings,
     ...runtime.warnings,
     ...review.warnings,
+    ...realWorld.warnings,
   ]);
   return {
     generatedAt: new Date().toISOString(),
@@ -366,6 +404,14 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
       topResultAccuracyPct: readiness.searchQuality.topResultAccuracyPct,
       missesCount: readiness.searchQuality.misses.length,
       warnings: uniqueWarnings(readiness.warnings.filter((warning) => warning.includes("search") || warning.includes("Search"))),
+    },
+    realWorld: {
+      total: realWorld.totalQueries,
+      passed: realWorld.passed,
+      missed: realWorld.missed,
+      recommendedAdditions: realWorld.recommendedMappingsToAdd.length,
+      hitRatePct: realWorld.hitRatePct,
+      warnings: uniqueWarnings(realWorld.warnings),
     },
     runtime: {
       mode: runtime.runtimeMode,

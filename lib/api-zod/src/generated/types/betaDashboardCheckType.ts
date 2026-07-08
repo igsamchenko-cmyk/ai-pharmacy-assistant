@@ -15,6 +15,7 @@ export const BetaDashboardCheckType = {
   search_quality: 'search_quality',
   safety: 'safety',
   interactions: 'interactions',
+  real_world: 'real_world',
   data_quality: 'data_quality',
   diagnostics: 'diagnostics',
   full_safe_check: 'full_safe_check',
