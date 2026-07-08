@@ -102,6 +102,10 @@ DATABASE_URL=... pnpm knowledge:backfill --require-db
 DATABASE_URL=... KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:runtime:verify --strict
 ```
 
+When using Render's External Database URL from a local operator machine, add
+`DATABASE_SSL=true` for these one-off setup commands. The Render web service
+should keep using the Internal Database URL and does not need `DATABASE_SSL`.
+
 If the hosted DB is not ready, keep the web service online with static fallback
 and rerun the DB steps later. The app must continue to work without DB runtime,
 and diagnostics must never show the raw `DATABASE_URL`.

@@ -83,6 +83,10 @@ Only enable DB runtime as an operational dependency after schema push,
 backfill and verification pass. Static fallback remains present even when
 `KNOWLEDGE_DB_RUNTIME=true`.
 
+If those one-off commands are run locally against Render's External Database
+URL, set `DATABASE_SSL=true` for the command session. The deployed Render web
+service should use the Internal Database URL and does not need `DATABASE_SSL`.
+
 ## Access From Any PC
 
 1. Open the deployed Render URL.
