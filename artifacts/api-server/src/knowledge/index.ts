@@ -27,6 +27,7 @@ export * from "./backfill";
 export * from "./runtimeVerify";
 export * from "./qualityReport";
 export * from "./reviewWorkflow";
+export * from "./ingestion";
 export * from "./dictionary/provider";
 export * from "./dictionary/active";
 

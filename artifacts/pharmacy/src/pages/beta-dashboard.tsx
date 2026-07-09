@@ -13,6 +13,7 @@ import {
   SearchCheck,
   ServerCog,
   ShieldCheck,
+  Upload,
   XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ const UI = {
     scenarios: "\u0421\u0446\u0435\u043d\u0430\u0440\u0456\u0457",
     search_quality: "\u042f\u043a\u0456\u0441\u0442\u044c \u043f\u043e\u0448\u0443\u043a\u0443",
     real_world: "Real-world pharmacy",
+    ingestion: "Automated ingestion",
     safety: "\u041f\u0435\u0440\u0435\u0432\u0456\u0440\u043a\u0438 \u0431\u0435\u0437\u043f\u0435\u043a\u0438",
     interactions: "\u0412\u0437\u0430\u0454\u043c\u043e\u0434\u0456\u0457",
     data_quality: "\u042f\u043a\u0456\u0441\u0442\u044c \u0434\u0430\u043d\u0438\u0445",
@@ -49,6 +51,7 @@ const UI = {
     scenarios: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u0441\u0446\u0435\u043d\u0430\u0440\u0456\u0457",
     search_quality: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u0437\u0432\u0456\u0442",
     real_world: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438 real-world",
+    ingestion: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438 ingestion",
     safety: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u0431\u0435\u0437\u043f\u0435\u043a\u0443",
     interactions: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u0432\u0437\u0430\u0454\u043c\u043e\u0434\u0456\u0457",
     data_quality: "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0438 \u044f\u043a\u0456\u0441\u0442\u044c",
@@ -80,6 +83,10 @@ const UI = {
     topResult: "\u0422\u043e\u043f \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442",
     misses: "\u041f\u0440\u043e\u043f\u0443\u0441\u043a\u0438",
     recommended: "\u0420\u0435\u043a\u043e\u043c. \u0434\u043e\u0434\u0430\u0442\u0438",
+    candidateFiles: "Candidate files",
+    candidateRows: "Candidate rows",
+    needsReview: "\u041d\u0430 review",
+    approvedSources: "\u0414\u0436\u0435\u0440\u0435\u043b\u0430 OK",
     runtimeMode: "\u0420\u0435\u0436\u0438\u043c runtime",
     mode: "\u0420\u0435\u0436\u0438\u043c",
     dbConfigured: "DB \u043d\u0430\u043b\u0430\u0448\u0442.",
@@ -89,7 +96,6 @@ const UI = {
     conflicts: "\u041a\u043e\u043d\u0444\u043b\u0456\u043a\u0442\u0438",
     reviewQueue: "\u0427\u0435\u0440\u0433\u0430 review",
     pending: "\u041e\u0447\u0456\u043a\u0443\u0454",
-    needsReview: "\u041d\u0430 review",
     approved: "\u041f\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043d\u043e",
     rejected: "\u0412\u0456\u0434\u0445\u0438\u043b\u0435\u043d\u043e",
     release: "\u0420\u0435\u043b\u0456\u0437",
@@ -112,6 +118,7 @@ const RUNNABLE_CHECKS: { type: RunnableCheck; button: string }[] = [
   { type: "scenarios", button: UI.buttons.scenarios },
   { type: "search_quality", button: UI.buttons.search_quality },
   { type: "real_world", button: UI.buttons.real_world },
+  { type: "ingestion", button: UI.buttons.ingestion },
   { type: "safety", button: UI.buttons.safety },
   { type: "interactions", button: UI.buttons.interactions },
   { type: "data_quality", button: UI.buttons.data_quality },
@@ -322,6 +329,34 @@ function DashboardContent({
         </div>
         <WarningBlock warnings={status.realWorld.warnings} />
         <LastRun result={lastRuns.real_world} />
+      </PanelCard>
+
+      <PanelCard
+        title={UI.checks.ingestion}
+        icon={Upload}
+        action={
+          <RunButton
+            checkType="ingestion"
+            onRun={onRun}
+            running={runningType === "ingestion"}
+            label={UI.buttons.ingestion}
+          />
+        }
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label={UI.labels.approvedSources} value={status.ingestion.sourcesApproved} />
+          <StatCard label={UI.labels.candidateFiles} value={status.ingestion.candidateFiles} />
+          <StatCard label={UI.labels.candidateRows} value={status.ingestion.candidateRows} />
+          <StatCard label={UI.labels.conflicts} value={status.ingestion.conflicts} />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label={UI.labels.approved} value={status.ingestion.approved} />
+          <StatCard label={UI.labels.pending} value={status.ingestion.pending} />
+          <StatCard label={UI.labels.needsReview} value={status.ingestion.needsReview} />
+          <StatCard label={UI.labels.rejected} value={status.ingestion.rejected} />
+        </div>
+        <WarningBlock warnings={status.ingestion.warnings} />
+        <LastRun result={lastRuns.ingestion} />
       </PanelCard>
 
       <div className="grid gap-4 lg:grid-cols-2">

@@ -55,6 +55,7 @@ const REVIEW_STATUS_LABEL: Record<
 type DictionaryBatchSummary = NonNullable<
   DataQualityReport["dictionaryBatches"]
 >;
+type IngestionSummary = NonNullable<DataQualityReport["ingestion"]>;
 
 const SOURCE_TYPE_LABEL: Record<ProvenanceSource["type"], string> = {
   official: "Офіційне",
@@ -454,6 +455,48 @@ function BackfillWorkflowCard({
   );
 }
 
+function IngestionWorkflowCard({
+  ingestion,
+}: {
+  ingestion: IngestionSummary | undefined;
+}) {
+  if (!ingestion) return null;
+  return (
+    <Card className="bg-card/50">
+      <CardContent className="p-5 space-y-4">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <Upload className="w-5 h-5 text-primary" />
+          Automated ingestion pipeline
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label="Approved sources" value={ingestion.sourceDiscovery.approvedSources} />
+          <StatCard label="Candidate sources" value={ingestion.sourceDiscovery.candidateSources} />
+          <StatCard label="Blocked sources" value={ingestion.sourceDiscovery.blockedSources} />
+          <StatCard label="Registry raw rows" value={ingestion.registry.rawRows} />
+          <StatCard label="Candidate files" value={ingestion.candidates.files} />
+          <StatCard label="Candidate rows" value={ingestion.candidates.rows} />
+          <StatCard label="Conflicts" value={ingestion.candidates.conflicts} />
+          <TextStatCard label="Preview" value={ingestion.candidates.wouldSucceed ? "ok" : "blocked"} />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label="Approved" value={ingestion.candidates.approved} />
+          <StatCard label="Pending" value={ingestion.candidates.pending} />
+          <StatCard label="Needs review" value={ingestion.candidates.needsReview} />
+          <StatCard label="Rejected" value={ingestion.candidates.rejected} />
+        </div>
+        <div className="rounded-lg bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+          Runtime remains approved-only; candidate commit is dry-run unless an operator explicitly uses DB commit.
+        </div>
+        {ingestion.warnings.length > 0 && (
+          <div className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-700">
+            {ingestion.warnings.join(" ")}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function CoverageBar({
   label,
   pct,
@@ -631,6 +674,12 @@ export default function DataQuality() {
           />
 
           <BackfillWorkflowCard runtime={runtime} />
+
+          {report.dictionaryBatches && (
+            <BatchCoverageCard batches={report.dictionaryBatches} />
+          )}
+
+          <IngestionWorkflowCard ingestion={report.ingestion} />
 
           <Card className="bg-card/50">
             <CardContent className="p-5">

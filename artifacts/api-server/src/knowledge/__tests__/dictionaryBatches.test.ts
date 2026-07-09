@@ -21,6 +21,10 @@ describe("dictionary batch files", () => {
       "0007-neuro-psych.csv",
       "0008-icu-emergency-electrolytes.csv",
       "0009-real-world-pharmacy.csv",
+      "0010-registry-import-candidates.csv",
+      "0011-registry-approved-generics.csv",
+      "0012-generated-transliterations.csv",
+      "0013-search-miss-candidates.csv",
     ]);
   });
 
@@ -57,7 +61,8 @@ describe("dictionary batch files", () => {
         (row) =>
           row.confidence === "verified" ||
           row.confidence === "high" ||
-          row.confidence === "medium",
+          row.confidence === "medium" ||
+          row.confidence === "low",
       ),
     ).toBe(true);
   });
@@ -82,9 +87,9 @@ describe("dictionary batch summary", () => {
   const summary = buildDictionaryBatchSummary(files);
 
   it("summarizes all batch files", () => {
-    expect(summary.files).toBe(9);
+    expect(summary.files).toBe(13);
     expect(summary.totalRows).toBeGreaterThanOrEqual(500);
-    expect(summary.fileSummaries).toHaveLength(9);
+    expect(summary.fileSummaries).toHaveLength(13);
   });
 
   it("keeps the combined preview importable", () => {
@@ -125,5 +130,7 @@ describe("dictionary batch summary", () => {
     expect(summary.byCategory["antibiotics"]).toBeGreaterThan(0);
     expect(summary.byCategory["cardiovascular diuretics"]).toBeGreaterThan(0);
     expect(summary.byCategory["respiratory allergy"]).toBeGreaterThan(0);
+    expect(summary.byCategory["registry import candidates"]).toBeGreaterThan(0);
+    expect(summary.byCategory["search miss candidates"]).toBeGreaterThan(0);
   });
 });

@@ -24,6 +24,10 @@ import {
   buildDictionaryBatchSummary,
   type DictionaryBatchQualitySummary,
 } from "../import/batches";
+import {
+  buildBulkIngestReport,
+  type BulkIngestReport,
+} from "../ingestion/report";
 
 export type IssueSeverity = "error" | "warning";
 
@@ -67,6 +71,7 @@ export interface QualityReport {
   errors: QualityIssue[];
   warnings: QualityIssue[];
   dictionaryBatches?: DictionaryBatchQualitySummary;
+  ingestion?: BulkIngestReport;
 }
 
 function pct(part: number, total: number): number {
@@ -305,5 +310,6 @@ export function validateKnowledge(): QualityReport {
   return {
     ...report,
     dictionaryBatches: buildDictionaryBatchSummary(),
+    ingestion: buildBulkIngestReport(),
   };
 }

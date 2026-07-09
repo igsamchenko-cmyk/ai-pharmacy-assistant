@@ -129,6 +129,18 @@ export const GetBetaDashboardStatusResponse = zod.object({
   "hitRatePct": zod.number(),
   "warnings": zod.array(zod.string())
 }),
+  "ingestion": zod.object({
+  "sourcesApproved": zod.number(),
+  "candidateFiles": zod.number(),
+  "candidateRows": zod.number(),
+  "approved": zod.number(),
+  "pending": zod.number(),
+  "needsReview": zod.number(),
+  "rejected": zod.number(),
+  "conflicts": zod.number(),
+  "ok": zod.boolean(),
+  "warnings": zod.array(zod.string())
+}),
   "runtime": zod.object({
   "mode": zod.enum(['static', 'db']),
   "dbConfigured": zod.boolean(),
@@ -164,11 +176,11 @@ export const GetBetaDashboardStatusResponse = zod.object({
  * @summary Run a predefined beta dashboard check
  */
 export const RunBetaDashboardCheckBody = zod.object({
-  "checkType": zod.enum(['readiness', 'scenarios', 'search_quality', 'safety', 'interactions', 'real_world', 'data_quality', 'diagnostics', 'full_safe_check'])
+  "checkType": zod.enum(['readiness', 'scenarios', 'search_quality', 'safety', 'interactions', 'real_world', 'ingestion', 'data_quality', 'diagnostics', 'full_safe_check'])
 })
 
 export const RunBetaDashboardCheckResponse = zod.object({
-  "checkType": zod.enum(['readiness', 'scenarios', 'search_quality', 'safety', 'interactions', 'real_world', 'data_quality', 'diagnostics', 'full_safe_check']),
+  "checkType": zod.enum(['readiness', 'scenarios', 'search_quality', 'safety', 'interactions', 'real_world', 'ingestion', 'data_quality', 'diagnostics', 'full_safe_check']),
   "status": zod.enum(['ok', 'warning', 'failed']),
   "score": zod.union([zod.number(),zod.null()]),
   "passed": zod.number(),
@@ -816,6 +828,43 @@ export const GetDataQualityResponse = zod.object({
 })),
   "wouldSucceed": zod.boolean()
 }).optional(),
+  "ingestion": zod.object({
+  "version": zod.enum(['1.5-bulk-ingest']),
+  "generatedAt": zod.string(),
+  "sourceDiscovery": zod.object({
+  "approvedSources": zod.number(),
+  "candidateSources": zod.number(),
+  "blockedSources": zod.number()
+}),
+  "registry": zod.object({
+  "sampleFiles": zod.number(),
+  "rawRows": zod.number(),
+  "generatedCandidates": zod.number(),
+  "parseErrors": zod.number(),
+  "warnings": zod.array(zod.string())
+}),
+  "candidates": zod.object({
+  "files": zod.number(),
+  "rows": zod.number(),
+  "approved": zod.number(),
+  "pending": zod.number(),
+  "needsReview": zod.number(),
+  "rejected": zod.number(),
+  "conflicts": zod.number(),
+  "missingSources": zod.number(),
+  "invalidAtc": zod.number(),
+  "copyrightViolations": zod.number(),
+  "wouldSucceed": zod.boolean(),
+  "fileNames": zod.array(zod.string())
+}),
+  "runtimeSafety": zod.object({
+  "approvedOnlyRuntime": zod.boolean(),
+  "pendingNeedsReviewHidden": zod.boolean(),
+  "postgresMandatory": zod.boolean(),
+  "staticFallbackPreserved": zod.boolean()
+}),
+  "warnings": zod.array(zod.string())
+}),
   "errors": zod.array(zod.object({
   "code": zod.string(),
   "severity": zod.enum(['error', 'warning']),

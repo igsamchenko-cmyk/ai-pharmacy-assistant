@@ -5,6 +5,7 @@ import { buildStaticBackfillSnapshot, backfillCounts } from "./backfill";
 import { getKnowledgeRuntimeStatus } from "./dbRuntime";
 import { getReviewStats } from "./reviewWorkflow";
 import { buildDictionaryBatchSummary } from "./import/batches";
+import { buildBulkIngestReport } from "./ingestion/report";
 
 export interface KnowledgeQualityJsonReport {
   version: "0.9";
@@ -19,6 +20,7 @@ export interface KnowledgeQualityJsonReport {
   runtime: Awaited<ReturnType<typeof getKnowledgeRuntimeStatus>>;
   review: Awaited<ReturnType<typeof getReviewStats>>;
   dictionaryBatches: ReturnType<typeof buildDictionaryBatchSummary>;
+  ingestion: ReturnType<typeof buildBulkIngestReport>;
   warnings: string[];
   validation: ReturnType<typeof validateKnowledge>;
 }
@@ -69,6 +71,7 @@ export async function buildKnowledgeQualityJsonReport(): Promise<KnowledgeQualit
     review,
     dictionaryBatches:
       validation.dictionaryBatches ?? buildDictionaryBatchSummary(),
+    ingestion: validation.ingestion ?? buildBulkIngestReport(),
     warnings: [
       ...validation.warnings.map((warning) => warning.message),
       ...runtime.warnings,

@@ -1,0 +1,9 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-paracetamol,Парацетамол,paratsetamol,uk-Latn,transliteration,project_generated_transliteration,high,N02BE01,v1.5 deterministic transliteration candidate
+ing-ibuprofen,Ібупрофен,ibuprofen,uk-Latn,transliteration,project_generated_transliteration,high,M01AE01,v1.5 deterministic transliteration candidate
+ing-amoxicillin,Амоксицилін,amoksytsylin,uk-Latn,transliteration,project_generated_transliteration,high,J01CA04,v1.5 deterministic transliteration candidate
+ing-metformin,Метформін,metformin,uk-Latn,transliteration,project_generated_transliteration,high,A10BA02,v1.5 deterministic transliteration candidate
+ing-loratadine,Лоратадин,loratadyn,uk-Latn,transliteration,project_generated_transliteration,high,R06AX13,v1.5 deterministic transliteration candidate
+ing-omeprazole,Омепразол,omeprazol,uk-Latn,transliteration,project_generated_transliteration,high,A02BC01,v1.5 deterministic transliteration candidate
+ing-amlodipine,Амлодипін,amlodypin,uk-Latn,transliteration,project_generated_transliteration,high,C08CA01,v1.5 deterministic transliteration candidate
+ing-atorvastatin,Аторвастатин,atorvastatyn,uk-Latn,transliteration,project_generated_transliteration,high,C10AA05,v1.5 deterministic transliteration candidate

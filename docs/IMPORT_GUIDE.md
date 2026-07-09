@@ -179,3 +179,24 @@ pnpm knowledge:runtime:verify
 ```
 
 Do not import copyrighted/proprietary datasets. New rows should come from permitted references, preserve provenance, and enter the review workflow before they can affect DB runtime. Static fallback must remain available even when DB import/backfill is skipped.
+
+## v1.5 Automated Drug Ingestion
+
+v1.5 adds source discovery, Ukrainian registry preview/import, generated
+candidate batches and bulk-ingest reporting.
+
+```bash
+pnpm knowledge:sources:discover
+pnpm knowledge:registry:preview -- --file=data/imports/ukraine-registry-sample.csv
+pnpm knowledge:candidates:preview
+pnpm knowledge:bulk-ingest:report
+```
+
+Writes remain explicit:
+
+```bash
+DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:candidates:commit -- --commit
+```
+
+Registry trade-name rows, generated typos and search-miss rows are review
+candidates. Runtime lookup remains approved-only.

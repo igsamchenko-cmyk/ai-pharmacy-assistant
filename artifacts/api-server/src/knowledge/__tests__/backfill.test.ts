@@ -238,8 +238,8 @@ describe("static knowledge backfill", () => {
   it("quality report includes v0.9 marker and batch summary", async () => {
     const report = await buildKnowledgeQualityJsonReport();
     expect(report.version).toBe("0.9");
-    expect(report.dictionaryBatches.files).toBe(9);
-    expect(report.dictionaryBatches.totalRows).toBeGreaterThanOrEqual(500);
+    expect(report.dictionaryBatches.files).toBe(13);
+    expect(report.dictionaryBatches.totalRows).toBeGreaterThanOrEqual(580);
   });
 
   it("quality report includes provenance coverage", async () => {

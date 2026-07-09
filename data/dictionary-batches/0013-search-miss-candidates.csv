@@ -1,0 +1,9 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-paracetamol,Парацетамол,парацетомол,uk,typo,project_search_miss_feedback,low,N02BE01,v1.5 search miss candidate; review required
+ing-ibuprofen,Ібупрофен,ібупрафен,uk,typo,project_search_miss_feedback,low,M01AE01,v1.5 search miss candidate; review required
+ing-amoxicillin,Амоксицилін,амоксіцілін,uk,typo,project_search_miss_feedback,low,J01CA04,v1.5 search miss candidate; review required
+ing-metformin,Метформін,метфармін,uk,typo,project_search_miss_feedback,low,A10BA02,v1.5 search miss candidate; review required
+ing-loratadine,Лоратадин,лоратодин,uk,typo,project_search_miss_feedback,low,R06AX13,v1.5 search miss candidate; review required
+ing-omeprazole,Омепразол,омепразоль,uk,typo,project_search_miss_feedback,low,A02BC01,v1.5 search miss candidate; review required
+ing-amlodipine,Амлодипін,амлодепін,uk,typo,project_search_miss_feedback,low,C08CA01,v1.5 search miss candidate; review required
+ing-atorvastatin,Аторвастатин,аторвостатин,uk,typo,project_search_miss_feedback,low,C10AA05,v1.5 search miss candidate; review required
