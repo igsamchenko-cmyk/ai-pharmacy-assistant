@@ -25,4 +25,3 @@ provenance. A row without a registered source is rejected by review policy.
 - Typo, search-miss, low-confidence or conflicting rows become `needs_review`.
 - Unknown-source rows become `rejected`.
 - Proprietary/copyright rows are blocked before commit.
-

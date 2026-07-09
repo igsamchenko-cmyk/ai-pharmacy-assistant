@@ -28,4 +28,3 @@ tokens.
 - Use registry/API data only to generate dictionary candidates.
 - Keep generated typo/search-miss rows out of runtime until admin approval.
 - Keep `pending`, `needs_review` and `rejected` rows hidden from runtime.
-

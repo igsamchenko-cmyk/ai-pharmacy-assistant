@@ -27,4 +27,3 @@ v1.5 focuses on controlled expansion, not a new runtime architecture.
 6. Run `pnpm knowledge:runtime:verify -- --strict`.
 7. Review pending/needs_review rows in `/review`.
 8. Redeploy Render after verified DB import if runtime behavior changed.
-

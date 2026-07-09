@@ -41,4 +41,3 @@ Never paste or print `DATABASE_URL`. Use a local env/session variable.
 - `pending`, `needs_review` and `rejected` rows remain review/audit data.
 - No source may add diagnosis, dosing or treatment recommendations.
 - No arbitrary shell execution is exposed through the UI or API.
-
