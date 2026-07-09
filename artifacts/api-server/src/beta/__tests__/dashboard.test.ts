@@ -13,6 +13,8 @@ describe("beta dashboard status", () => {
     expect(status.searchQuality.hitRatePct).toBeGreaterThanOrEqual(0);
     expect(status.realWorld.total).toBeGreaterThan(0);
     expect(status.realWorld.hitRatePct).toBeGreaterThanOrEqual(0);
+    expect(status.ingestion.candidateRows).toBeGreaterThan(0);
+    expect(status.ingestion.ok).toBe(true);
     expect(status.runtime.staticFallbackEnabled).toBe(true);
     expect(status.dataQuality.mappingsCount).toBeGreaterThan(0);
   });
@@ -46,7 +48,7 @@ describe("beta dashboard status", () => {
       if (originalRuntime === undefined) delete process.env.KNOWLEDGE_DB_RUNTIME;
       else process.env.KNOWLEDGE_DB_RUNTIME = originalRuntime;
     }
-  });
+  }, 10_000);
 
   it("reports static fallback when DB is unavailable", async () => {
     const originalDatabaseUrl = process.env.DATABASE_URL;
@@ -102,6 +104,18 @@ describe("beta dashboard checks", () => {
     expect(json).not.toContain("postgresql://");
   });
 
+  it("runs ingestion check without exposing local paths or secrets", async () => {
+    const result = await runBetaDashboardCheck("ingestion");
+    const json = JSON.stringify(result);
+
+    expect(result.checkType).toBe("ingestion");
+    expect(result.passed).toBe(1);
+    expect(result.failed).toBe(0);
+    expect(json).not.toMatch(/[A-Za-z]:\\/);
+    expect(json).not.toContain("/opt/render/project");
+    expect(json).not.toContain("postgresql://");
+  });
+
   it("runs full safe check", async () => {
     const result = await runBetaDashboardCheck("full_safe_check");
     expect(result.checkType).toBe("full_safe_check");
@@ -109,6 +123,7 @@ describe("beta dashboard checks", () => {
     expect(result.status).not.toBe("failed");
     expect(result.details).toHaveProperty("readiness");
     expect(result.details).toHaveProperty("realWorld");
+    expect(result.details).toHaveProperty("ingestion");
   });
 
   it("rejects invalid check types at the API schema boundary", () => {

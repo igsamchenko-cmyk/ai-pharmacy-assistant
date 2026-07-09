@@ -171,3 +171,13 @@ For closed beta, data quality is checked with both static validation and workflo
 - `pnpm knowledge:search:report` evaluates search hit rate, top-result accuracy, normalization success, Ukrainian query coverage, misses, ambiguous queries, and recommended dictionary additions.
 - `/data-quality` includes a diagnostics/version panel with runtime mode, DB/Gemini/OpenAI configured flags, batch and mapping counts, and report status.
 - Generated report JSON under `artifacts/reports/*.json` is ignored unless intentionally committed as a sample.
+
+## v1.5 Ingestion Quality
+
+`/data-quality` now includes an ingestion summary: source discovery counts,
+registry sample rows, candidate batch files, candidate rows, review-status
+distribution, conflicts and preview status.
+
+`pnpm knowledge:bulk-ingest:report` prints the same safe JSON summary. The report
+contains file names and counts only; it does not include database URLs, API keys,
+tokens, raw environment values or filesystem paths.

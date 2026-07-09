@@ -889,6 +889,7 @@ components:
         - safety
         - interactions
         - real_world
+        - ingestion
         - data_quality
         - diagnostics
         - full_safe_check
@@ -951,6 +952,7 @@ components:
         - scenarios
         - searchQuality
         - realWorld
+        - ingestion
         - runtime
         - dataQuality
         - reviewQueue
@@ -1019,6 +1021,42 @@ components:
               type: integer
             hitRatePct:
               type: integer
+            warnings:
+              type: array
+              items:
+                type: string
+        ingestion:
+          type: object
+          required:
+            - sourcesApproved
+            - candidateFiles
+            - candidateRows
+            - approved
+            - pending
+            - needsReview
+            - rejected
+            - conflicts
+            - ok
+            - warnings
+          properties:
+            sourcesApproved:
+              type: integer
+            candidateFiles:
+              type: integer
+            candidateRows:
+              type: integer
+            approved:
+              type: integer
+            pending:
+              type: integer
+            needsReview:
+              type: integer
+            rejected:
+              type: integer
+            conflicts:
+              type: integer
+            ok:
+              type: boolean
             warnings:
               type: array
               items:
@@ -1994,6 +2032,110 @@ components:
             $ref: "#/components/schemas/DictionaryBatchFileSummary"
         wouldSucceed:
           type: boolean
+    BulkIngestReport:
+      type: object
+      required:
+        - version
+        - generatedAt
+        - sourceDiscovery
+        - registry
+        - candidates
+        - runtimeSafety
+        - warnings
+      properties:
+        version:
+          type: string
+          enum: ["1.5-bulk-ingest"]
+        generatedAt:
+          type: string
+        sourceDiscovery:
+          type: object
+          required: [approvedSources, candidateSources, blockedSources]
+          properties:
+            approvedSources:
+              type: integer
+            candidateSources:
+              type: integer
+            blockedSources:
+              type: integer
+        registry:
+          type: object
+          required: [sampleFiles, rawRows, generatedCandidates, parseErrors, warnings]
+          properties:
+            sampleFiles:
+              type: integer
+            rawRows:
+              type: integer
+            generatedCandidates:
+              type: integer
+            parseErrors:
+              type: integer
+            warnings:
+              type: array
+              items:
+                type: string
+        candidates:
+          type: object
+          required:
+            - files
+            - rows
+            - approved
+            - pending
+            - needsReview
+            - rejected
+            - conflicts
+            - missingSources
+            - invalidAtc
+            - copyrightViolations
+            - wouldSucceed
+            - fileNames
+          properties:
+            files:
+              type: integer
+            rows:
+              type: integer
+            approved:
+              type: integer
+            pending:
+              type: integer
+            needsReview:
+              type: integer
+            rejected:
+              type: integer
+            conflicts:
+              type: integer
+            missingSources:
+              type: integer
+            invalidAtc:
+              type: integer
+            copyrightViolations:
+              type: integer
+            wouldSucceed:
+              type: boolean
+            fileNames:
+              type: array
+              items:
+                type: string
+        runtimeSafety:
+          type: object
+          required:
+            - approvedOnlyRuntime
+            - pendingNeedsReviewHidden
+            - postgresMandatory
+            - staticFallbackPreserved
+          properties:
+            approvedOnlyRuntime:
+              type: boolean
+            pendingNeedsReviewHidden:
+              type: boolean
+            postgresMandatory:
+              type: boolean
+            staticFallbackPreserved:
+              type: boolean
+        warnings:
+          type: array
+          items:
+            type: string
     DataQualityReport:
       type: object
       required:
@@ -2001,6 +2143,7 @@ components:
         - generatedAt
         - counts
         - coverage
+        - ingestion
         - errors
         - warnings
       properties:
@@ -2057,6 +2200,8 @@ components:
               type: number
         dictionaryBatches:
           $ref: "#/components/schemas/DictionaryBatchQualitySummary"
+        ingestion:
+          $ref: "#/components/schemas/BulkIngestReport"
         errors:
           type: array
           items:

@@ -1,5 +1,5 @@
 import { existsSync, statSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export interface DataPathResolveOptions {
@@ -13,6 +13,14 @@ const DATA_DIR_ENV = "FARMASSIST_DATA_DIR";
 function existingDirectory(path: string): string | null {
   try {
     return existsSync(path) && statSync(path).isDirectory() ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+function existingFile(path: string): string | null {
+  try {
+    return existsSync(path) && statSync(path).isFile() ? path : null;
   } catch {
     return null;
   }
@@ -73,6 +81,28 @@ export function findDataSubdir(
     if (existing) return existing;
   }
   return null;
+}
+
+export function resolveDataFilePath(
+  filePath: string,
+  options: DataPathResolveOptions = {},
+): string {
+  const cwd = resolve(options.cwd ?? process.cwd());
+  const directPath = isAbsolute(filePath) ? filePath : resolve(cwd, filePath);
+  const direct = existingFile(directPath);
+  if (direct) return direct;
+
+  const normalized = filePath.replace(/\\/g, "/").replace(/^\.?\//, "");
+  const dataRelativePath = normalized.startsWith("data/")
+    ? normalized.slice("data/".length)
+    : normalized;
+
+  for (const dataDir of candidateDataDirs(options)) {
+    const candidate = existingFile(resolve(dataDir, dataRelativePath));
+    if (candidate) return candidate;
+  }
+
+  return directPath;
 }
 
 export { DATA_DIR_ENV };

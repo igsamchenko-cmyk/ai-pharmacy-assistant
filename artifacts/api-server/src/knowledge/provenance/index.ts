@@ -97,6 +97,14 @@ const SOURCE_LIST: Source[] = [
     note: "Public generic names used for auditable INN/MNN dictionary rows.",
   },
   {
+    key: "ukraine_state_drug_registry",
+    label: "State Register of Medicinal Products of Ukraine",
+    type: "official",
+    reliability: "high",
+    url: "https://www.drlz.com.ua/",
+    note: "Official Ukrainian registry export candidates; trade-name rows require admin review before runtime use.",
+  },
+  {
     key: "rxnorm_reference",
     label: "RxNorm reference mapping candidate",
     type: "external",
@@ -110,6 +118,20 @@ const SOURCE_LIST: Source[] = [
     type: "demo",
     reliability: "low",
     note: "Project-owned candidate rows that must remain pending or needs_review until a reviewer approves them.",
+  },
+  {
+    key: "project_search_miss_feedback",
+    label: "Project search-miss feedback candidate",
+    type: "demo",
+    reliability: "low",
+    note: "Search-miss and beta feedback candidates; never trusted as clinical evidence and require review.",
+  },
+  {
+    key: "project_generated_typo_candidate",
+    label: "Project-generated typo candidate",
+    type: "demo",
+    reliability: "low",
+    note: "Deterministic typo/search variants generated for review workflow; kept out of runtime until approved.",
   },
   {
     key: "demo-catalog",

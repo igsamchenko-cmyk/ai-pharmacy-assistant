@@ -65,3 +65,18 @@ Before sharing the permanent URL:
 - verify `/diagnostics` shows booleans/status only;
 - run the full validation commands from the release checklist;
 - open `/beta-dashboard` from another PC and login with an allow-listed email.
+
+## v1.5 Ingestion Gate
+
+Before merging an ingestion branch:
+
+- run `pnpm knowledge:sources:discover`;
+- run `pnpm knowledge:registry:preview -- --file=data/imports/ukraine-registry-sample.csv`;
+- run `pnpm knowledge:candidates:preview`;
+- run `pnpm knowledge:bulk-ingest:report`;
+- run the full release validation gate with Node 24;
+- confirm no proprietary source rows, secrets, raw env values or filesystem paths
+  appear in diagnostics or dashboard responses.
+
+DB import remains a post-merge production operation and must use local env
+variables for `DATABASE_URL`, `DATABASE_SSL=true` and `KNOWLEDGE_DB_RUNTIME=true`.

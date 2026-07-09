@@ -1,0 +1,9 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-paracetamol,Парацетамол,Paracetamol,en,english,who-inn,verified,N02BE01,v1.5 approved generic cross-check
+ing-ibuprofen,Ібупрофен,Ibuprofen,en,english,who-inn,verified,M01AE01,v1.5 approved generic cross-check
+ing-amoxicillin,Амоксицилін,Amoxicillin,en,english,who-inn,verified,J01CA04,v1.5 approved generic cross-check
+ing-metformin,Метформін,Metformin,en,english,who-inn,verified,A10BA02,v1.5 approved generic cross-check
+ing-loratadine,Лоратадин,Loratadine,en,english,who-inn,verified,R06AX13,v1.5 approved generic cross-check
+ing-omeprazole,Омепразол,Omeprazole,en,english,who-inn,verified,A02BC01,v1.5 approved generic cross-check
+ing-amlodipine,Амлодипін,Amlodipine,en,english,who-inn,verified,C08CA01,v1.5 approved generic cross-check
+ing-atorvastatin,Аторвастатин,Atorvastatin,en,english,who-inn,verified,C10AA05,v1.5 approved generic cross-check

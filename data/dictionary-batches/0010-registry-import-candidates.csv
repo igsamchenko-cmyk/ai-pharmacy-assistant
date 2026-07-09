@@ -1,0 +1,11 @@
+ingredient_id,canonical_inn,name,locale,name_type,source_id,confidence,atc_code,notes
+ing-paracetamol,Парацетамол,Парацетамол,uk,ukrainian,ukraine_state_drug_registry,medium,N02BE01,v1.5 official registry export candidate; review before runtime if new
+ing-ibuprofen,Ібупрофен,Ібупрофен,uk,ukrainian,ukraine_state_drug_registry,medium,M01AE01,v1.5 official registry export candidate; review before runtime if new
+ing-amoxicillin,Амоксицилін,Амоксицилін,uk,ukrainian,ukraine_state_drug_registry,medium,J01CA04,v1.5 official registry export candidate; review before runtime if new
+ing-metformin,Метформін,Метформін,uk,ukrainian,ukraine_state_drug_registry,medium,A10BA02,v1.5 official registry export candidate; review before runtime if new
+ing-loratadine,Лоратадин,Лоратадин,uk,ukrainian,ukraine_state_drug_registry,medium,R06AX13,v1.5 official registry export candidate; review before runtime if new
+ing-omeprazole,Омепразол,Омепразол,uk,ukrainian,ukraine_state_drug_registry,medium,A02BC01,v1.5 official registry export candidate; review before runtime if new
+ing-amlodipine,Амлодипін,Амлодипін,uk,ukrainian,ukraine_state_drug_registry,medium,C08CA01,v1.5 official registry export candidate; review before runtime if new
+ing-atorvastatin,Аторвастатин,Аторвастатин,uk,ukrainian,ukraine_state_drug_registry,medium,C10AA05,v1.5 official registry export candidate; review before runtime if new
+ing-salbutamol,Сальбутамол,Сальбутамол,uk,ukrainian,ukraine_state_drug_registry,medium,R03AC02,v1.5 official registry export candidate; review before runtime if new
+ing-warfarin,Варфарин,Варфарин,uk,ukrainian,ukraine_state_drug_registry,medium,B01AA03,v1.5 official registry export candidate; review before runtime if new

@@ -1,0 +1,11 @@
+trade_name,inn,active_ingredient,atc_code,form,strength,manufacturer,country,registration_number,status
+Парацетамол,Парацетамол,Парацетамол,N02BE01,tablet,,sample-public-format,UA,UA-SAMPLE-001,active
+Ібупрофен,Ібупрофен,Ібупрофен,M01AE01,capsule,,sample-public-format,UA,UA-SAMPLE-002,active
+Амоксицилін,Амоксицилін,Амоксицилін,J01CA04,capsule,,sample-public-format,UA,UA-SAMPLE-003,active
+Метформін,Метформін,Метформін,A10BA02,tablet,,sample-public-format,UA,UA-SAMPLE-004,active
+Лоратадин,Лоратадин,Лоратадин,R06AX13,tablet,,sample-public-format,UA,UA-SAMPLE-005,active
+Омепразол,Омепразол,Омепразол,A02BC01,capsule,,sample-public-format,UA,UA-SAMPLE-006,active
+Амлодипін,Амлодипін,Амлодипін,C08CA01,tablet,,sample-public-format,UA,UA-SAMPLE-007,active
+Аторвастатин,Аторвастатин,Аторвастатин,C10AA05,tablet,,sample-public-format,UA,UA-SAMPLE-008,active
+Сальбутамол,Сальбутамол,Сальбутамол,R03AC02,aerosol,,sample-public-format,UA,UA-SAMPLE-009,active
+Варфарин,Варфарин,Варфарин,B01AA03,tablet,,sample-public-format,UA,UA-SAMPLE-010,active

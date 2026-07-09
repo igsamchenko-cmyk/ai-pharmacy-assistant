@@ -89,6 +89,7 @@ export const BetaDashboardCheckType = {
   scenarios: 'scenarios',
   search_quality: 'search_quality',
   real_world: 'real_world',
+  ingestion: 'ingestion',
   safety: 'safety',
   interactions: 'interactions',
   data_quality: 'data_quality',
@@ -155,6 +156,19 @@ export type BetaDashboardStatusRealWorld = {
   warnings: string[];
 };
 
+export type BetaDashboardStatusIngestion = {
+  sourcesApproved: number;
+  candidateFiles: number;
+  candidateRows: number;
+  approved: number;
+  pending: number;
+  needsReview: number;
+  rejected: number;
+  conflicts: number;
+  ok: boolean;
+  warnings: string[];
+};
+
 export type BetaDashboardStatusRuntimeMode = typeof BetaDashboardStatusRuntimeMode[keyof typeof BetaDashboardStatusRuntimeMode];
 
 
@@ -201,6 +215,7 @@ export interface BetaDashboardStatus {
   scenarios: BetaDashboardStatusScenarios;
   searchQuality: BetaDashboardStatusSearchQuality;
   realWorld: BetaDashboardStatusRealWorld;
+  ingestion: BetaDashboardStatusIngestion;
   runtime: BetaDashboardStatusRuntime;
   dataQuality: BetaDashboardStatusDataQuality;
   reviewQueue: BetaDashboardStatusReviewQueue;
@@ -769,6 +784,59 @@ export interface DictionaryBatchQualitySummary {
   wouldSucceed: boolean;
 }
 
+export type BulkIngestReportVersion = typeof BulkIngestReportVersion[keyof typeof BulkIngestReportVersion];
+
+
+export const BulkIngestReportVersion = {
+  '1.5-bulk-ingest': '1.5-bulk-ingest',
+} as const;
+
+export type BulkIngestReportSourceDiscovery = {
+  approvedSources: number;
+  candidateSources: number;
+  blockedSources: number;
+};
+
+export type BulkIngestReportRegistry = {
+  sampleFiles: number;
+  rawRows: number;
+  generatedCandidates: number;
+  parseErrors: number;
+  warnings: string[];
+};
+
+export type BulkIngestReportCandidates = {
+  files: number;
+  rows: number;
+  approved: number;
+  pending: number;
+  needsReview: number;
+  rejected: number;
+  conflicts: number;
+  missingSources: number;
+  invalidAtc: number;
+  copyrightViolations: number;
+  wouldSucceed: boolean;
+  fileNames: string[];
+};
+
+export type BulkIngestReportRuntimeSafety = {
+  approvedOnlyRuntime: boolean;
+  pendingNeedsReviewHidden: boolean;
+  postgresMandatory: boolean;
+  staticFallbackPreserved: boolean;
+};
+
+export interface BulkIngestReport {
+  version: BulkIngestReportVersion;
+  generatedAt: string;
+  sourceDiscovery: BulkIngestReportSourceDiscovery;
+  registry: BulkIngestReportRegistry;
+  candidates: BulkIngestReportCandidates;
+  runtimeSafety: BulkIngestReportRuntimeSafety;
+  warnings: string[];
+}
+
 export type DataQualityReportCounts = {
   ingredients: number;
   mappings: number;
@@ -794,6 +862,7 @@ export interface DataQualityReport {
   counts: DataQualityReportCounts;
   coverage: DataQualityReportCoverage;
   dictionaryBatches?: DictionaryBatchQualitySummary;
+  ingestion: BulkIngestReport;
   errors: QualityIssue[];
   warnings: QualityIssue[];
 }

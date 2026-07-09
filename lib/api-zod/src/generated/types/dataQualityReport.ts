@@ -5,6 +5,7 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
+import type { BulkIngestReport } from './bulkIngestReport';
 import type { DataQualityReportCounts } from './dataQualityReportCounts';
 import type { DataQualityReportCoverage } from './dataQualityReportCoverage';
 import type { DictionaryBatchQualitySummary } from './dictionaryBatchQualitySummary';
@@ -16,6 +17,7 @@ export interface DataQualityReport {
   counts: DataQualityReportCounts;
   coverage: DataQualityReportCoverage;
   dictionaryBatches?: DictionaryBatchQualitySummary;
+  ingestion: BulkIngestReport;
   errors: QualityIssue[];
   warnings: QualityIssue[];
 }

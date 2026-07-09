@@ -5,6 +5,32 @@
 
 ## [Не випущено]
 
+## v1.5.0 - Automated Drug Ingestion Pipeline - Unreleased
+
+### Added
+
+- Added safe source discovery for WHO INN, WHO ATC, Ukrainian registry exports,
+  RxNorm/RxNav, openFDA and project search-miss feedback.
+- Added Ukrainian registry preview/import support for CSV/TSV/JSON exports.
+- Added generated candidate batches:
+  `0010-registry-import-candidates.csv`,
+  `0011-registry-approved-generics.csv`,
+  `0012-generated-transliterations.csv` and
+  `0013-search-miss-candidates.csv`.
+- Added ingestion CLI commands for source discovery, registry preview/import,
+  candidate generation/preview/commit, search-miss conversion and bulk reports.
+- Added Beta Dashboard `ingestion` check and `/data-quality` ingestion summary.
+- Added source policy and automated ingestion documentation.
+
+### Safety
+
+- Runtime lookup remains approved-only.
+- `pending`, `needs_review` and `rejected` rows remain hidden from runtime.
+- PostgreSQL remains optional; static fallback is preserved.
+- No commercial pharmacy catalog scraping, proprietary source import, clinical
+  claims, dosing or treatment recommendations are added.
+- DB writes require explicit `--commit` and do not print `DATABASE_URL`.
+
 ## v1.4.0 - Real-World Pharmacy Testing & Data Expansion - 2026-07-08
 
 ### Added

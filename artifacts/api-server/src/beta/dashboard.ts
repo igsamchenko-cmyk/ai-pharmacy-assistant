@@ -2,6 +2,7 @@
 import { buildKnowledgeQualityJsonReport } from "../knowledge/qualityReport";
 import { getKnowledgeRuntimeStatus } from "../knowledge/dbRuntime";
 import { getReviewStats } from "../knowledge/reviewWorkflow";
+import { buildBulkIngestReport } from "../knowledge/ingestion/report";
 import { buildBetaReadinessReport } from "./readiness";
 import {
   loadBetaScenarioSet,
@@ -18,6 +19,7 @@ export const BETA_DASHBOARD_CHECK_TYPES = [
   "safety",
   "interactions",
   "real_world",
+  "ingestion",
   "data_quality",
   "diagnostics",
   "full_safe_check",
@@ -67,6 +69,18 @@ export interface BetaDashboardStatus {
     missed: number;
     recommendedAdditions: number;
     hitRatePct: number;
+    warnings: string[];
+  };
+  ingestion: {
+    sourcesApproved: number;
+    candidateFiles: number;
+    candidateRows: number;
+    approved: number;
+    pending: number;
+    needsReview: number;
+    rejected: number;
+    conflicts: number;
+    ok: boolean;
     warnings: string[];
   };
   runtime: {
@@ -260,6 +274,23 @@ async function executeCheck(checkType: BetaDashboardCheckType): Promise<Omit<Bet
     };
   }
 
+  if (checkType === "ingestion") {
+    const report = buildBulkIngestReport();
+    const warnings = uniqueWarnings(report.warnings);
+    const failed = report.candidates.wouldSucceed ? 0 : 1;
+    return {
+      checkType,
+      status: statusFor(failed, warnings),
+      score: report.candidates.rows,
+      passed: report.candidates.wouldSucceed ? 1 : 0,
+      failed,
+      warnings,
+      summary: `Ingestion candidates: ${report.candidates.rows} rows across ${report.candidates.files} files; ${report.candidates.pending + report.candidates.needsReview} require review.`,
+      details: asDetails(report),
+      generatedAt: report.generatedAt,
+    };
+  }
+
   if (checkType === "data_quality") {
     const report = await buildKnowledgeQualityJsonReport();
     const warnings = uniqueWarnings([
@@ -306,11 +337,13 @@ async function executeCheck(checkType: BetaDashboardCheckType): Promise<Omit<Bet
     buildKnowledgeQualityJsonReport(),
     buildDiagnosticsPanelData(),
   ]);
+  const ingestion = buildBulkIngestReport();
   const hardFailures = [
     readiness.readyToMerge,
     scenarios.ok,
     searchQuality.misses.length === 0,
     dataQuality.validation.ok,
+    ingestion.candidates.wouldSucceed,
   ].filter((ok) => !ok).length;
   const warnings = uniqueWarnings([
     ...readiness.warnings,
@@ -319,6 +352,7 @@ async function executeCheck(checkType: BetaDashboardCheckType): Promise<Omit<Bet
     ...realWorld.warnings,
     ...dataQuality.warnings,
     ...diagnostics.warnings,
+    ...ingestion.warnings,
   ]);
   return {
     checkType,
@@ -330,10 +364,11 @@ async function executeCheck(checkType: BetaDashboardCheckType): Promise<Omit<Bet
       scenarios.failed +
       searchQuality.misses.length +
       realWorld.missed +
+      (ingestion.candidates.wouldSucceed ? 0 : 1) +
       dataQuality.validation.errors.length,
     warnings,
-    summary: `Full safe check: readiness ${readiness.readinessScore}, scenarios ${scenarios.passed}/${scenarios.passed + scenarios.failed}, search misses ${searchQuality.misses.length}, real-world misses ${realWorld.missed}.`,
-    details: { readiness, scenarios, searchQuality, realWorld, dataQuality, diagnostics },
+    summary: `Full safe check: readiness ${readiness.readinessScore}, scenarios ${scenarios.passed}/${scenarios.passed + scenarios.failed}, search misses ${searchQuality.misses.length}, real-world misses ${realWorld.missed}, ingestion rows ${ingestion.candidates.rows}.`,
+    details: { readiness, scenarios, searchQuality, realWorld, ingestion, dataQuality, diagnostics },
     generatedAt: new Date().toISOString(),
   };
 }
@@ -375,6 +410,7 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
     getReviewStats(),
     buildRealWorldPharmacyReport(),
   ]);
+  const ingestion = buildBulkIngestReport();
   const warnings = uniqueWarnings([
     ...readiness.warnings,
     ...quality.warnings,
@@ -382,10 +418,16 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
     ...runtime.warnings,
     ...review.warnings,
     ...realWorld.warnings,
+    ...ingestion.warnings,
   ]);
   return {
     generatedAt: new Date().toISOString(),
-    status: statusFromOk(readiness.readyToMerge && quality.validation.ok, warnings),
+    status: statusFromOk(
+      readiness.readyToMerge &&
+        quality.validation.ok &&
+        ingestion.candidates.wouldSucceed,
+      warnings,
+    ),
     readiness: {
       score: readiness.readinessScore,
       ready: readiness.readyToMerge,
@@ -412,6 +454,18 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
       recommendedAdditions: realWorld.recommendedMappingsToAdd.length,
       hitRatePct: realWorld.hitRatePct,
       warnings: uniqueWarnings(realWorld.warnings),
+    },
+    ingestion: {
+      sourcesApproved: ingestion.sourceDiscovery.approvedSources,
+      candidateFiles: ingestion.candidates.files,
+      candidateRows: ingestion.candidates.rows,
+      approved: ingestion.candidates.approved,
+      pending: ingestion.candidates.pending,
+      needsReview: ingestion.candidates.needsReview,
+      rejected: ingestion.candidates.rejected,
+      conflicts: ingestion.candidates.conflicts,
+      ok: ingestion.candidates.wouldSucceed,
+      warnings: uniqueWarnings(ingestion.warnings),
     },
     runtime: {
       mode: runtime.runtimeMode,

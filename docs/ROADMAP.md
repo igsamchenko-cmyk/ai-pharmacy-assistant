@@ -111,3 +111,11 @@ v1.0 focuses on controlled internal daily testing rather than SaaS features. Sco
 - Online private beta access with invite-only auth, roles, protected backend and
   frontend routes, safe diagnostics auth status and one-service Render
   deployment profile.
+
+## v1.5 Direction
+
+- Add automated source discovery and official-registry import preview.
+- Keep candidate generation deterministic, auditable and review-first.
+- Surface ingestion health in Beta Dashboard and Data Quality.
+- Continue avoiding commercial catalog scraping and proprietary data.
+- Keep DB runtime optional, approved-only and backed by static fallback.

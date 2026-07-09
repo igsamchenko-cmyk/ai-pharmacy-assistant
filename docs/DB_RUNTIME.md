@@ -82,3 +82,14 @@ Closed beta must work in static mode and may optionally test DB mode.
 PostgreSQL remains optional. Auth does not require the DB: local private beta
 sessions are stored in memory, while DB runtime stays behind
 `KNOWLEDGE_DB_RUNTIME`. Reviewer/admin DB tools are protected by role checks.
+
+## v1.5 Ingestion Commit Boundary
+
+Automated ingestion commits write to the existing knowledge review tables only.
+They do not bypass review status.
+
+- `approved` rows are runtime-visible when DB runtime is enabled.
+- `pending`, `needs_review` and `rejected` rows stay hidden.
+- DB commit requires explicit `--commit` and `DATABASE_URL`.
+- Without DB configuration, preview/report commands remain usable through static
+  fallback.
