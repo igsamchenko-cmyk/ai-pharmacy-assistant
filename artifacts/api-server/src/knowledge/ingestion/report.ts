@@ -11,10 +11,14 @@ import {
 import type { ImportRow } from "../import/format";
 import type { ImportRowError } from "../import/parse";
 import { discoverIngestionSources } from "./sources";
-import { parseRegistryText } from "./registry";
+import {
+  buildRegistryProductionSummary,
+  OFFICIAL_UKRAINE_REGISTRY_CSV_URL,
+  parseRegistryText,
+} from "./registry";
 
 export interface BulkIngestReport {
-  version: "1.5-bulk-ingest";
+  version: "1.6-bulk-ingest";
   generatedAt: string;
   sourceDiscovery: {
     approvedSources: number;
@@ -23,8 +27,18 @@ export interface BulkIngestReport {
   };
   registry: {
     sampleFiles: number;
+    sourceUrl: string | null;
+    snapshotFormat: string | null;
+    snapshotEncoding: string | null;
+    snapshotSha256: string | null;
     rawRows: number;
+    validProducts: number;
+    uniqueIngredients: number;
+    uniqueManufacturers: number;
+    uniqueRegistrations: number;
     generatedCandidates: number;
+    genericCandidates: number;
+    brandCandidates: number;
     parseErrors: number;
     warnings: string[];
   };
@@ -85,7 +99,13 @@ export function buildBulkIngestReport(options: {
       moduleUrl: import.meta.url,
     });
   let registryRawRows = 0;
+  let registryValidProducts = 0;
+  let registryUniqueIngredients = 0;
+  let registryUniqueManufacturers = 0;
+  let registryUniqueRegistrations = 0;
   let registryCandidates = 0;
+  let registryGenericCandidates = 0;
+  let registryBrandCandidates = 0;
   let registryParseErrors = 0;
   let registryWarnings: string[] = [];
 
@@ -93,8 +113,15 @@ export function buildBulkIngestReport(options: {
     const registry = parseRegistryText(readFileSync(registrySamplePath, "utf8"), {
       fileName: "ukraine-registry-sample.csv",
     });
+    const registrySummary = buildRegistryProductionSummary(registry);
     registryRawRows = registry.rawRows;
+    registryValidProducts = registrySummary.rows.validProducts;
+    registryUniqueIngredients = registrySummary.ingredients.uniqueInn;
+    registryUniqueManufacturers = registrySummary.manufacturers.uniqueManufacturers;
+    registryUniqueRegistrations = registrySummary.registrations.uniqueNumbers;
     registryCandidates = registry.generatedCandidates;
+    registryGenericCandidates = registrySummary.mappings.genericCandidates;
+    registryBrandCandidates = registrySummary.mappings.brandCandidates;
     registryParseErrors = registry.parseErrors.length;
     registryWarnings = registry.warnings;
   } catch {
@@ -102,7 +129,7 @@ export function buildBulkIngestReport(options: {
   }
 
   return {
-    version: "1.5-bulk-ingest",
+    version: "1.6-bulk-ingest",
     generatedAt: now.toISOString(),
     sourceDiscovery: {
       approvedSources: sourceDiscovery.approvedSources,
@@ -111,8 +138,18 @@ export function buildBulkIngestReport(options: {
     },
     registry: {
       sampleFiles: registryRawRows > 0 ? 1 : 0,
+      sourceUrl: OFFICIAL_UKRAINE_REGISTRY_CSV_URL,
+      snapshotFormat: "csv",
+      snapshotEncoding: "windows-1251",
+      snapshotSha256: null,
       rawRows: registryRawRows,
+      validProducts: registryValidProducts,
+      uniqueIngredients: registryUniqueIngredients,
+      uniqueManufacturers: registryUniqueManufacturers,
+      uniqueRegistrations: registryUniqueRegistrations,
       generatedCandidates: registryCandidates,
+      genericCandidates: registryGenericCandidates,
+      brandCandidates: registryBrandCandidates,
       parseErrors: registryParseErrors,
       warnings: registryWarnings,
     },

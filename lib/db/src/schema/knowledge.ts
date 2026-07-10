@@ -164,6 +164,69 @@ export const knowledgeIngredientNamesTable = pgTable(
   ],
 );
 
+/** Official registry product snapshot rows. Not used directly by runtime lookup. */
+export const knowledgeRegistryProductsTable = pgTable(
+  "knowledge_registry_products",
+  {
+    registryId: text("registry_id").primaryKey(),
+    tradeName: text("trade_name").notNull(),
+    normalizedTradeName: text("normalized_trade_name").notNull(),
+    inn: text("inn").notNull().default(""),
+    activeIngredient: text("active_ingredient").notNull().default(""),
+    atcCode: text("atc_code"),
+    form: text("form").notNull().default(""),
+    applicantName: text("applicant_name").notNull().default(""),
+    applicantCountry: text("applicant_country").notNull().default(""),
+    registrationNumber: text("registration_number").notNull().default(""),
+    registrationStartDate: text("registration_start_date").notNull().default(""),
+    registrationEndDate: text("registration_end_date").notNull().default(""),
+    earlyTermination: text("early_termination").notNull().default(""),
+    instructionUrl: text("instruction_url"),
+    sourceKey: text("source_key").notNull(),
+    reviewStatus: text("review_status").notNull().default("pending"),
+    importBatchId: text("import_batch_id"),
+    rawHash: text("raw_hash").notNull(),
+    importedAt: timestamp("imported_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("knowledge_registry_products_name_idx").on(t.normalizedTradeName),
+    index("knowledge_registry_products_reg_idx").on(t.registrationNumber),
+    index("knowledge_registry_products_review_idx").on(t.reviewStatus),
+    index("knowledge_registry_products_batch_idx").on(t.importBatchId),
+  ],
+);
+
+/** Manufacturer names attached to official registry products. */
+export const knowledgeRegistryManufacturersTable = pgTable(
+  "knowledge_registry_manufacturers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productRegistryId: text("product_registry_id").notNull(),
+    name: text("name").notNull(),
+    normalizedName: text("normalized_name").notNull(),
+    country: text("country").notNull().default(""),
+    sourceKey: text("source_key").notNull(),
+    importBatchId: text("import_batch_id"),
+    importedAt: timestamp("imported_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("knowledge_registry_manufacturer_unique_idx").on(
+      t.productRegistryId,
+      t.normalizedName,
+      t.country,
+    ),
+    index("knowledge_registry_manufacturer_product_idx").on(t.productRegistryId),
+    index("knowledge_registry_manufacturer_name_idx").on(t.normalizedName),
+  ],
+);
+
 /** Append-only audit trail for admin review decisions. */
 export const knowledgeReviewAuditLogTable = pgTable(
   "knowledge_review_audit_log",
@@ -241,6 +304,24 @@ export type InsertKnowledgeIngredientName = z.infer<
 >;
 export type KnowledgeIngredientName =
   typeof knowledgeIngredientNamesTable.$inferSelect;
+
+export const insertKnowledgeRegistryProductSchema = createInsertSchema(
+  knowledgeRegistryProductsTable,
+).omit({ importedAt: true, updatedAt: true });
+export type InsertKnowledgeRegistryProduct = z.infer<
+  typeof insertKnowledgeRegistryProductSchema
+>;
+export type KnowledgeRegistryProduct =
+  typeof knowledgeRegistryProductsTable.$inferSelect;
+
+export const insertKnowledgeRegistryManufacturerSchema = createInsertSchema(
+  knowledgeRegistryManufacturersTable,
+).omit({ id: true, importedAt: true });
+export type InsertKnowledgeRegistryManufacturer = z.infer<
+  typeof insertKnowledgeRegistryManufacturerSchema
+>;
+export type KnowledgeRegistryManufacturer =
+  typeof knowledgeRegistryManufacturersTable.$inferSelect;
 
 export const insertKnowledgeAtcCodeSchema = createInsertSchema(
   knowledgeAtcCodesTable,

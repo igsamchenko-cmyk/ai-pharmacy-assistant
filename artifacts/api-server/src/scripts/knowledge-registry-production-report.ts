@@ -17,50 +17,43 @@ function positionalFile(): string | null {
 
 function safeMessage(error: unknown): string {
   return error instanceof Error
-    ? error.message.replace(/[A-Za-z]:\\[^\s"'`]+/g, "[path]")
+    ? error.message
+        .replace(/[A-Za-z]:\\[^\s"'`]+/g, "[path]")
         .replace(/\/(?:opt|tmp|var|home|Users)\/[^\s"'`]+/g, "[path]")
-    : "Registry preview failed.";
+        .replace(/postgres(?:ql)?:\/\/[^\s"'`]+/gi, "[database-url]")
+    : "Registry production report failed.";
 }
 
 async function main(): Promise<void> {
   const file = argValue("--file=") ?? positionalFile();
-  const download = process.argv.includes("--download");
-  if (!file && !download) {
-    console.error("Provide --file=<registry.csv|tsv|json> or --download.");
-    process.exit(1);
-  }
   const includeTradeNames = !process.argv.includes("--no-trade-names");
-  const downloaded = download
-    ? await downloadOfficialRegistrySnapshot()
-    : null;
+  const downloaded = file ? null : await downloadOfficialRegistrySnapshot();
   const parsedRegistry = downloaded
     ? parseRegistryText(downloaded.text, {
         includeTradeNames,
         snapshot: downloaded.metadata,
       })
     : parseRegistryFile(file as string, { includeTradeNames });
+
   const plan = buildRegistryMappingPlan(parsedRegistry);
-  const productionSummary = buildRegistryProductionSummary(
-    parsedRegistry,
-    plan.stats,
-  );
+  const ok =
+    plan.readiness.productSnapshotReady &&
+    plan.readiness.approvedMappingsReady &&
+    plan.approvedCandidateConflicts === 0;
   console.log(JSON.stringify({
-    ok: plan.blocked.length === 0,
-    ...parsedRegistry,
-    rows: undefined,
-    candidates: undefined,
-    productionSummary,
+    ok,
+    productionSummary: buildRegistryProductionSummary(
+      parsedRegistry,
+      plan.stats,
+    ),
     approvedPreview: summarizeImportPreview(plan.approvedCandidatesPlan.preview),
     reviewPreview: summarizeImportPreview(plan.allCandidatesPlan.preview),
-    reviewableRows: plan.allCandidatesPlan.reviewable.length,
-    approvedRows: plan.approvedReviewableRows.length,
-    reviewOnlyRows: plan.reviewOnlyRows.length,
-    quarantinedRows: plan.quarantinedRows.length,
     conflictGroups: {
       total: plan.conflictGroups.length,
       top: plan.topConflictGroups,
     },
     blocked: plan.blocked,
+    parseErrors: parsedRegistry.parseErrors.length,
   }, null, 2));
 }
 

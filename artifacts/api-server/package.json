@@ -26,6 +26,7 @@
     "knowledge:sources:discover": "tsx src/scripts/knowledge-sources-discover.ts",
     "knowledge:registry:preview": "tsx src/scripts/knowledge-registry-preview.ts",
     "knowledge:registry:import": "tsx src/scripts/knowledge-registry-import.ts",
+    "knowledge:registry:production-report": "tsx src/scripts/knowledge-registry-production-report.ts",
     "knowledge:candidates:generate": "tsx src/scripts/knowledge-candidates-generate.ts",
     "knowledge:candidates:preview": "tsx src/scripts/knowledge-candidates-preview.ts",
     "knowledge:candidates:commit": "tsx src/scripts/knowledge-candidates-commit.ts",

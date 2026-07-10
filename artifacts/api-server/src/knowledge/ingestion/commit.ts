@@ -9,6 +9,7 @@ import { findCopyrightedSources } from "../import/guard";
 import { deriveReviewStatus } from "../import/review";
 import { nameTypeToKind, type ImportRow } from "../import/format";
 import type { ImportRowError } from "../import/parse";
+import { registryRowHash, type RegistryRawRow } from "./registry";
 
 export interface ReviewableImportRow {
   row: ImportRow;
@@ -25,6 +26,10 @@ export interface ReviewableImportPlan {
 
 export interface KnowledgeImportCommitStore {
   writeBatch(rows: readonly ReviewableImportRow[], batchId: string): Promise<void>;
+  writeRegistryProducts?(
+    rows: readonly RegistryRawRow[],
+    batchId: string,
+  ): Promise<{ committedProducts: number; committedManufacturers: number }>;
 }
 
 function encodeList(values: readonly string[]): string {
@@ -110,6 +115,8 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
     db,
     knowledgeIngredientsTable,
     knowledgeIngredientNamesTable,
+    knowledgeRegistryManufacturersTable,
+    knowledgeRegistryProductsTable,
   } = await import("@workspace/db");
 
   return {
@@ -157,6 +164,69 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
         }
       });
     },
+    async writeRegistryProducts(rows, batchId) {
+      let committedProducts = 0;
+      let committedManufacturers = 0;
+      await db.transaction(async (tx) => {
+        for (const row of rows) {
+          const registryId =
+            row.registryId ||
+            row.registrationNumber ||
+            registryRowHash(row).slice(0, 32);
+          const insertedProducts = await tx
+            .insert(knowledgeRegistryProductsTable)
+            .values({
+              registryId,
+              tradeName: row.tradeName,
+              normalizedTradeName: normalize(row.tradeName),
+              inn: row.inn,
+              activeIngredient: row.activeIngredient,
+              atcCode: row.atcCode || null,
+              form: row.form,
+              applicantName: row.applicantName,
+              applicantCountry: row.applicantCountry,
+              registrationNumber: row.registrationNumber,
+              registrationStartDate: row.registrationStartDate,
+              registrationEndDate: row.registrationEndDate,
+              earlyTermination: row.earlyTermination,
+              instructionUrl: row.instructionUrl || null,
+              sourceKey: row.sourceId,
+              reviewStatus: "pending",
+              importBatchId: batchId,
+              rawHash: registryRowHash(row),
+            })
+            .onConflictDoNothing({
+              target: knowledgeRegistryProductsTable.registryId,
+            })
+            .returning({ registryId: knowledgeRegistryProductsTable.registryId });
+          committedProducts += insertedProducts.length;
+
+          for (const manufacturer of row.manufacturers) {
+            if (!manufacturer.name) continue;
+            const insertedManufacturers = await tx
+              .insert(knowledgeRegistryManufacturersTable)
+              .values({
+                productRegistryId: registryId,
+                name: manufacturer.name,
+                normalizedName: normalize(manufacturer.name),
+                country: manufacturer.country,
+                sourceKey: row.sourceId,
+                importBatchId: batchId,
+              })
+              .onConflictDoNothing({
+                target: [
+                  knowledgeRegistryManufacturersTable.productRegistryId,
+                  knowledgeRegistryManufacturersTable.normalizedName,
+                  knowledgeRegistryManufacturersTable.country,
+                ],
+              })
+              .returning({ id: knowledgeRegistryManufacturersTable.id });
+            committedManufacturers += insertedManufacturers.length;
+          }
+        }
+      });
+      return { committedProducts, committedManufacturers };
+    },
   };
 }
 
@@ -179,4 +249,31 @@ export async function commitReviewableImportPlan(
   const store = options.store ?? (await createDbCommitStore());
   await store.writeBatch(plan.reviewable, batchId);
   return { committedRows: plan.reviewable.length, batchId };
+}
+
+export async function commitRegistryProducts(
+  rows: readonly RegistryRawRow[],
+  options: {
+    store?: KnowledgeImportCommitStore;
+    batchId?: string;
+  } = {},
+): Promise<{
+  committedProducts: number;
+  committedManufacturers: number;
+  batchId: string;
+  skipped: boolean;
+}> {
+  const batchId =
+    options.batchId ?? `registry-products-${new Date().toISOString()}`;
+  const store = options.store ?? (await createDbCommitStore());
+  if (!store.writeRegistryProducts) {
+    return {
+      committedProducts: 0,
+      committedManufacturers: 0,
+      batchId,
+      skipped: true,
+    };
+  }
+  const result = await store.writeRegistryProducts(rows, batchId);
+  return { ...result, batchId, skipped: false };
 }

@@ -10,5 +10,5 @@ export type BulkIngestReportVersion = typeof BulkIngestReportVersion[keyof typeo
 
 
 export const BulkIngestReportVersion = {
-  '15-bulk-ingest': '1.5-bulk-ingest',
+  '16-bulk-ingest': '1.6-bulk-ingest',
 } as const;

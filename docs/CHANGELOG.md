@@ -5,6 +5,44 @@
 
 ## [Не випущено]
 
+## v1.6.0 - Production Ukrainian Drug Registry Import & Database Scaling - Unreleased
+
+### Added
+
+- Added production-scale Ukrainian State Drug Registry ingestion from the
+  official CSV export at `drlz.com.ua`.
+- Added Windows-1251 and semicolon-delimited CSV parsing for the official
+  registry snapshot format.
+- Added `pnpm knowledge:registry:production-report` for sanitized snapshot
+  metadata, hash, product, ingredient, manufacturer, registration and review
+  distribution counts.
+- Added optional DB product/manufacturer snapshot tables for audit and review;
+  these rows are not used by runtime search.
+- Expanded Beta Dashboard and Data Quality ingestion summaries with registry
+  product, ingredient, manufacturer and registration counts.
+- Added conservative active-ingredient parsing for combinations, salts,
+  hydrates, esters, complexes and derivative ambiguity.
+- Added registry conflict grouping and quarantine reporting so review-only
+  conflicts stay visible without blocking product snapshot dry-runs.
+- Added v1.6 Node 24 Linux registry validation workflow.
+
+### Safety
+
+- Registry preview/import remains dry-run by default.
+- DB writes still require explicit `--commit` and do not print `DATABASE_URL`.
+- Runtime lookup remains approved-only.
+- `pending`, `needs_review` and registry product snapshot rows remain hidden
+  from user-facing runtime lookup until reviewed and approved as mappings.
+- Product snapshot import is separate from runtime mapping generation; official
+  registry rows do not become approved mappings automatically.
+- Approved-only mapping commits require `--only-approved` or
+  `--only-approved-mappings`; registry imports do not support `--force`.
+- Combination products and salt/base ambiguity are never auto-mapped to a single
+  ingredient.
+- Static fallback and optional local PostgreSQL behavior are preserved.
+- No proprietary catalog scraping, copied instructions, dosing logic, treatment
+  recommendations or invented clinical claims are added.
+
 ## v1.5.0 - Automated Drug Ingestion Pipeline - Unreleased
 
 ### Added
