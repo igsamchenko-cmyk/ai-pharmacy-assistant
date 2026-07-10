@@ -4,7 +4,7 @@ import { basename, extname } from "node:path";
 import { normalize } from "../../lib/text";
 import { resolveDataFilePath } from "../../lib/dataPath";
 import { parseCsv } from "../import/csv";
-import type { ImportRow } from "../import/format";
+import type { ImportRow, ReviewStatus } from "../import/format";
 import {
   hasCyrillic,
   ingredientIdForInn,
@@ -38,11 +38,25 @@ export interface RegistryManufacturer {
   country: string;
 }
 
+export type RegistryParseConfidence = "high" | "medium" | "low";
+
+export interface RegistryIngredientParse {
+  rawIngredientExpression: string;
+  parsedIngredients: string[];
+  ingredientCount: number;
+  combinationProduct: boolean;
+  parseConfidence: RegistryParseConfidence;
+  parseWarnings: string[];
+  baseIngredientCandidates: string[];
+  saltOrDerivativeFlags: string[];
+}
+
 export interface RegistryRawRow {
   registryId: string;
   tradeName: string;
   inn: string;
   activeIngredient: string;
+  ingredientParse: RegistryIngredientParse;
   atcCode: string;
   form: string;
   strength: string;
@@ -86,6 +100,14 @@ export interface RegistryProductionSummary {
     generatedCandidates: number;
     genericCandidates: number;
     brandCandidates: number;
+    autoApprovedSafe: number;
+    pending: number;
+    needsReview: number;
+    rejected: number;
+    quarantined: number;
+    duplicates: number;
+    hardApprovedConflicts: number;
+    reviewOnlyConflicts: number;
   };
   manufacturers: {
     declaredManufacturers: number;
@@ -103,8 +125,27 @@ export interface RegistryProductionSummary {
     pending: number;
     needs_review: number;
     rejected: number;
+    quarantined: number;
+  };
+  readiness: {
+    productSnapshotReady: boolean;
+    approvedMappingsReady: boolean;
+    reviewQueueReady: boolean;
+    DBCommitReady: boolean;
   };
   warnings: string[];
+}
+
+export interface RegistryMappingStats {
+  reviewDistribution?: Partial<Record<ReviewStatus | "quarantined", number>>;
+  autoApprovedSafe?: number;
+  duplicates?: number;
+  hardApprovedConflicts?: number;
+  reviewOnlyConflicts?: number;
+  productSnapshotReady?: boolean;
+  approvedMappingsReady?: boolean;
+  reviewQueueReady?: boolean;
+  DBCommitReady?: boolean;
 }
 
 export interface RegistryParseResult {
@@ -386,17 +427,147 @@ function isPlaceholderInn(value: string): boolean {
   );
 }
 
+const SALT_OR_DERIVATIVE_TERMS = [
+  "hydrochloride",
+  "sodium",
+  "potassium",
+  "hydrate",
+  "acetate",
+  "succinate",
+  "ester",
+  "esters",
+  "complex",
+  "complexes",
+] as const;
+
+const COMBINATION_WORDS = [
+  "and",
+  "with",
+  "combination",
+  "combinations",
+  "comb drug",
+  "combined",
+  "\u0442\u0430",
+  "\u0456",
+  "\u043a\u043e\u043c\u0431\u0456\u043d\u0430\u0446\u0456\u044f",
+  "\u043a\u043e\u043c\u0431\u0456\u043d\u043e\u0432\u0430\u043d\u0438\u0439",
+  "\u0443 \u043a\u043e\u043c\u0431\u0456\u043d\u0430\u0446\u0456\u0457",
+] as const;
+
+const COMBINATION_WORD_PATTERN = new RegExp(
+  `(?:^|\\s)(?:${COMBINATION_WORDS.join("|")})(?:\\s|$)`,
+  "i",
+);
+
+const INGREDIENT_SPLIT_PATTERN = new RegExp(
+  `\\s*(?:[+;/,]|(?:\\b(?:and|with)\\b)|(?:^|\\s)(?:\\u0442\\u0430|\\u0456)(?:\\s|$))\\s*`,
+  "i",
+);
+
+const SALT_OR_DERIVATIVE_PATTERN = new RegExp(
+  `\\b(?:${SALT_OR_DERIVATIVE_TERMS.join("|")})\\b`,
+  "gi",
+);
+
+function saltOrDerivativeFlags(value: string): string[] {
+  const flags = new Set<string>();
+  for (const term of value.matchAll(SALT_OR_DERIVATIVE_PATTERN)) {
+    flags.add(term[0].toLowerCase());
+  }
+  return [...flags].sort();
+}
+
+function cleanIngredientToken(value: string): string {
+  return cleanText(
+    value
+      .replace(/\([^)]*\)/g, " ")
+      .replace(/\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|g|ml|iu|%)\b/gi, " ")
+      .replace(/\b\d+(?:[.,]\d+)?\b/g, " ")
+      .replace(/[.:]/g, " "),
+  );
+}
+
+function baseIngredientCandidate(value: string): string {
+  return cleanText(cleanIngredientToken(value).replace(SALT_OR_DERIVATIVE_PATTERN, " "));
+}
+
+export function parseIngredientExpression(value: string): RegistryIngredientParse {
+  const rawIngredientExpression = cleanText(value);
+  const parseWarnings: string[] = [];
+  const saltFlags = saltOrDerivativeFlags(rawIngredientExpression);
+
+  if (!rawIngredientExpression) {
+    return {
+      rawIngredientExpression,
+      parsedIngredients: [],
+      ingredientCount: 0,
+      combinationProduct: false,
+      parseConfidence: "low",
+      parseWarnings: ["missing_ingredient_expression"],
+      baseIngredientCandidates: [],
+      saltOrDerivativeFlags: [],
+    };
+  }
+
+  const hasExplicitSeparator = /[+;/,]/.test(rawIngredientExpression);
+  const hasCombinationMarker = COMBINATION_WORD_PATTERN.test(rawIngredientExpression);
+  const splitTokens = rawIngredientExpression
+    .split(INGREDIENT_SPLIT_PATTERN)
+    .map(cleanIngredientToken)
+    .filter(Boolean);
+  const parsedIngredients =
+    splitTokens.length > 0 ? [...new Set(splitTokens)] : [cleanIngredientToken(rawIngredientExpression)].filter(Boolean);
+
+  if (hasCombinationMarker) parseWarnings.push("combination_marker");
+  if (hasExplicitSeparator && parsedIngredients.length <= 1) {
+    parseWarnings.push("unparsed_combination_expression");
+  }
+  if (saltFlags.length > 0) parseWarnings.push("salt_or_derivative_ambiguity");
+  if (/\d|%/.test(rawIngredientExpression)) parseWarnings.push("quantity_or_strength_in_expression");
+
+  const combinationProduct =
+    parsedIngredients.length > 1 || hasExplicitSeparator || hasCombinationMarker;
+  const ingredientCount = combinationProduct
+    ? Math.max(2, parsedIngredients.length)
+    : parsedIngredients.length;
+  const baseIngredientCandidates = [
+    ...new Set(
+      parsedIngredients
+        .map(baseIngredientCandidate)
+        .filter((candidate) => candidate && normalize(candidate) !== normalize(rawIngredientExpression)),
+    ),
+  ];
+
+  return {
+    rawIngredientExpression,
+    parsedIngredients,
+    ingredientCount,
+    combinationProduct,
+    parseConfidence:
+      parsedIngredients.length === 0 || combinationProduct
+        ? "low"
+        : saltFlags.length > 0 || parseWarnings.length > 0
+          ? "medium"
+          : "high",
+    parseWarnings,
+    baseIngredientCandidates,
+    saltOrDerivativeFlags: saltFlags,
+  };
+}
+
 function isMultiIngredient(value: string): boolean {
-  return /[+;/]/.test(value);
+  return parseIngredientExpression(value).combinationProduct;
 }
 
 function isImportableInn(value: string): boolean {
   const cleaned = cleanInn(value);
+  const parsed = parseIngredientExpression(cleaned);
   return (
     cleaned.length > 1 &&
     cleaned.length <= 120 &&
     !isPlaceholderInn(cleaned) &&
-    !isMultiIngredient(cleaned) &&
+    parsed.ingredientCount === 1 &&
+    !parsed.combinationProduct &&
     !/\d|%/.test(cleaned)
   );
 }
@@ -439,13 +610,25 @@ function rowToRegistryRawRow(
 ): RegistryRawRow {
   const inn = cleanInn(pick(row, "inn"));
   const activeIngredient = cleanText(pick(row, "activeIngredient"));
+  const ingredientParse = parseIngredientExpression(inn || activeIngredient);
   const warnings: string[] = [];
 
   if (!isImportableInn(inn)) warnings.push("missing_importable_inn");
   if (inn && (isPlaceholderInn(inn) || /\d|%/.test(inn))) {
     warnings.push("non_importable_inn_value");
   }
-  if (inn && isMultiIngredient(inn)) warnings.push("combination_or_multi_ingredient");
+  if (ingredientParse.combinationProduct || (inn && isMultiIngredient(inn))) {
+    warnings.push("combination_or_multi_ingredient");
+  }
+  if (ingredientParse.saltOrDerivativeFlags.length > 0) {
+    warnings.push("salt_or_derivative_ambiguity");
+  }
+  if (
+    ingredientParse.parseConfidence !== "high" ||
+    ingredientParse.parseWarnings.length > 0
+  ) {
+    warnings.push("ingredient_parse_review_required");
+  }
   if (!inn && activeIngredient) warnings.push("composition_not_imported_as_inn");
 
   const status = cleanText(pick(row, "status"));
@@ -465,6 +648,7 @@ function rowToRegistryRawRow(
     tradeName: cleanText(pick(row, "tradeName")),
     inn,
     activeIngredient,
+    ingredientParse,
     atcCode: cleanText(pick(row, "atcCode")).toUpperCase(),
     form: cleanText(pick(row, "form")),
     strength: cleanText(pick(row, "strength")),
@@ -509,7 +693,13 @@ function rowToImportRows(
       locale: hasCyrillic(canonicalInn) ? "uk" : "en",
       nameType: hasCyrillic(canonicalInn) ? "ukrainian" : "english",
       sourceId: row.sourceId,
-      confidence: row.warnings.length > 0 ? "medium" : "high",
+      confidence:
+        row.ingredientParse.saltOrDerivativeFlags.length > 0 ||
+        row.ingredientParse.parseWarnings.length > 0
+          ? "low"
+          : row.warnings.length > 0
+            ? "medium"
+            : "high",
       ...(row.atcCode ? { atcCode: row.atcCode } : {}),
       notes,
     },
@@ -651,11 +841,12 @@ export function registryRowHash(row: RegistryRawRow): string {
 
 export function buildRegistryProductionSummary(
   registry: RegistryParseResult,
-  reviewDistribution: Partial<RegistryProductionSummary["review"]> = {},
+  stats: RegistryMappingStats = {},
 ): RegistryProductionSummary {
   const rows = registry.rows;
   const validProducts = rows.filter((row) => row.tradeName || row.registrationNumber).length;
   const importableInnRows = rows.filter((row) => isImportableInn(row.inn));
+  const reviewDistribution = stats.reviewDistribution ?? {};
   const registrationNumbers = rows
     .map((row) => row.registrationNumber)
     .filter(Boolean);
@@ -700,6 +891,14 @@ export function buildRegistryProductionSummary(
       generatedCandidates: registry.generatedCandidates,
       genericCandidates: registry.candidates.filter((row) => row.nameType !== "brand").length,
       brandCandidates: registry.candidates.filter((row) => row.nameType === "brand").length,
+      autoApprovedSafe: stats.autoApprovedSafe ?? reviewDistribution.approved ?? 0,
+      pending: reviewDistribution.pending ?? 0,
+      needsReview: reviewDistribution.needs_review ?? 0,
+      rejected: reviewDistribution.rejected ?? 0,
+      quarantined: reviewDistribution.quarantined ?? 0,
+      duplicates: stats.duplicates ?? 0,
+      hardApprovedConflicts: stats.hardApprovedConflicts ?? 0,
+      reviewOnlyConflicts: stats.reviewOnlyConflicts ?? 0,
     },
     manufacturers: {
       declaredManufacturers: manufacturerEntries.length,
@@ -721,6 +920,20 @@ export function buildRegistryProductionSummary(
       pending: reviewDistribution.pending ?? 0,
       needs_review: reviewDistribution.needs_review ?? 0,
       rejected: reviewDistribution.rejected ?? 0,
+      quarantined: reviewDistribution.quarantined ?? 0,
+    },
+    readiness: {
+      productSnapshotReady:
+        stats.productSnapshotReady ??
+        (registry.parseErrors.length === 0 &&
+          registry.rawRows === registry.parsedRows &&
+          validProducts === registry.parsedRows),
+      approvedMappingsReady:
+        stats.approvedMappingsReady ?? (stats.hardApprovedConflicts ?? 0) === 0,
+      reviewQueueReady: stats.reviewQueueReady ?? registry.parseErrors.length === 0,
+      DBCommitReady:
+        stats.DBCommitReady ??
+        (registry.parseErrors.length === 0 && (stats.hardApprovedConflicts ?? 0) === 0),
     },
     warnings,
   };

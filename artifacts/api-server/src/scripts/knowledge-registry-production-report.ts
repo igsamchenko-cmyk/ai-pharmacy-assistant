@@ -1,10 +1,11 @@
 import {
   buildRegistryProductionSummary,
+  buildRegistryMappingPlan,
   downloadOfficialRegistrySnapshot,
   parseRegistryFile,
   parseRegistryText,
+  summarizeImportPreview,
 } from "../knowledge/ingestion";
-import { buildReviewableImportPlan } from "../knowledge/ingestion/commit";
 
 function argValue(prefix: string): string | null {
   return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length) ?? null;
@@ -34,14 +35,23 @@ async function main(): Promise<void> {
       })
     : parseRegistryFile(file as string, { includeTradeNames });
 
-  const plan = buildReviewableImportPlan(parsedRegistry.candidates);
+  const plan = buildRegistryMappingPlan(parsedRegistry);
+  const ok =
+    plan.readiness.productSnapshotReady &&
+    plan.readiness.approvedMappingsReady &&
+    plan.approvedCandidateConflicts === 0;
   console.log(JSON.stringify({
-    ok: plan.blocked.length === 0,
+    ok,
     productionSummary: buildRegistryProductionSummary(
       parsedRegistry,
-      plan.preview.reviewDistribution,
+      plan.stats,
     ),
-    preview: plan.preview,
+    approvedPreview: summarizeImportPreview(plan.approvedCandidatesPlan.preview),
+    reviewPreview: summarizeImportPreview(plan.allCandidatesPlan.preview),
+    conflictGroups: {
+      total: plan.conflictGroups.length,
+      top: plan.topConflictGroups,
+    },
     blocked: plan.blocked,
     parseErrors: parsedRegistry.parseErrors.length,
   }, null, 2));

@@ -29,3 +29,10 @@ provenance. A row without a registered source is rejected by review policy.
 - Proprietary/copyright rows are blocked before commit.
 - Official registry trade names and product snapshots remain review/audit data
   until an admin approves a runtime mapping.
+- Official registry product rows may be imported into snapshot tables even when
+  mapping candidates are ambiguous.
+- Combination products are never auto-mapped to one ingredient.
+- Salt, hydrate, ester, complex or derivative ambiguity becomes `needs_review`
+  or quarantined until a reviewer resolves the base ingredient relationship.
+- Hard conflicts block only approved/runtime-visible mapping commits. Review-only
+  and quarantined conflicts must stay visible in reports.

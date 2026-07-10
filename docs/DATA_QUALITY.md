@@ -181,3 +181,18 @@ distribution, conflicts and preview status.
 `pnpm knowledge:bulk-ingest:report` prints the same safe JSON summary. The report
 contains file names and counts only; it does not include database URLs, API keys,
 tokens, raw environment values or filesystem paths.
+
+## v1.6 Registry Snapshot Quality
+
+The production registry report separates product snapshot quality from runtime
+mapping quality. Product rows, manufacturers and registration metadata can be
+ready for snapshot import even when many candidate mappings need review.
+
+The registry report tracks product snapshot readiness, approved mapping
+readiness, review queue readiness, duplicate mappings, approved hard conflicts,
+review-only conflicts and quarantined conflict groups. Only the approved-safe
+mapping subset may affect runtime search.
+
+Expected registry warnings include large review queues for trade names,
+combination products, salt/base ambiguity and same-name conflicts. These are not
+runtime-visible unless an admin later approves a mapping.

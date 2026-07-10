@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildBulkIngestReport,
+  buildRegistryMappingPlan,
   buildRegistryProductionSummary,
   buildReviewableImportPlan,
   commitRegistryProducts,
@@ -9,6 +10,7 @@ import {
   decodeRegistryBuffer,
   discoverIngestionSources,
   generateImportCandidates,
+  parseIngredientExpression,
   parseRegistryFile,
   parseRegistryText,
   searchMissesToImportRows,
@@ -99,7 +101,7 @@ describe("Ukrainian registry ingestion", () => {
     const plan = buildReviewableImportPlan(result.candidates);
     const summary = buildRegistryProductionSummary(
       result,
-      plan.preview.reviewDistribution,
+      { reviewDistribution: plan.preview.reviewDistribution },
     );
 
     expect(result.delimiter).toBe(";");
@@ -117,6 +119,58 @@ describe("Ukrainian registry ingestion", () => {
     expect(summary.mappings.brandCandidates).toBe(1);
     expect(JSON.stringify(summary)).not.toMatch(/[A-Za-z]:\\/);
     expect(JSON.stringify(summary)).not.toContain("postgresql://");
+  });
+
+  it("parses active ingredient expressions conservatively", () => {
+    expect(parseIngredientExpression("Ceftriaxone")).toMatchObject({
+      parsedIngredients: ["Ceftriaxone"],
+      ingredientCount: 1,
+      combinationProduct: false,
+      parseConfidence: "high",
+    });
+    expect(parseIngredientExpression("Amlodipine and Valsartan")).toMatchObject({
+      parsedIngredients: ["Amlodipine", "Valsartan"],
+      ingredientCount: 2,
+      combinationProduct: true,
+    });
+    expect(parseIngredientExpression("Amlodipine \u0442\u0430 Valsartan")).toMatchObject({
+      ingredientCount: 2,
+      combinationProduct: true,
+    });
+    expect(parseIngredientExpression("Levofloxacin hydrochloride")).toMatchObject({
+      ingredientCount: 1,
+      combinationProduct: false,
+      saltOrDerivativeFlags: ["hydrochloride"],
+    });
+  });
+
+  it("keeps registry review conflicts out of approved mapping blockers", () => {
+    const registry = parseRegistryText([
+      "trade_name,inn,registration_number",
+      "Shared Brand,Ceftriaxone,UA/1/01/01",
+      "Shared Brand,Amlodipine,UA/2/01/01",
+      "Combo,Amlodipine and Valsartan,UA/3/01/01",
+      "Salt,Levofloxacin hydrochloride,UA/4/01/01",
+    ].join("\n"));
+    const plan = buildRegistryMappingPlan(registry);
+    const summary = buildRegistryProductionSummary(registry, plan.stats);
+    const json = JSON.stringify({ plan, summary });
+
+    expect(registry.rawRows).toBe(4);
+    expect(registry.parsedRows).toBe(4);
+    expect(registry.rows.find((item) => item.tradeName === "Combo")?.warnings)
+      .toContain("combination_or_multi_ingredient");
+    expect(registry.candidates.some((candidate) => candidate.canonicalInn.includes("and"))).toBe(false);
+    expect(plan.conflictGroups.length).toBeGreaterThanOrEqual(1);
+    expect(plan.conflictGroups.some((group) => group.normalizedName === "sharedbrand")).toBe(true);
+    expect(plan.reviewDistribution.quarantined).toBeGreaterThan(0);
+    expect(plan.reviewDistribution.needs_review).toBeGreaterThan(0);
+    expect(plan.approvedCandidateConflicts).toBe(0);
+    expect(plan.blocked).not.toContain("hard_conflicts");
+    expect(summary.readiness.productSnapshotReady).toBe(true);
+    expect(summary.readiness.approvedMappingsReady).toBe(true);
+    expect(json).not.toMatch(/[A-Za-z]:\\/);
+    expect(json).not.toContain("postgresql://");
   });
 
   it("decodes Windows-1251 registry snapshots without adding a dependency", () => {

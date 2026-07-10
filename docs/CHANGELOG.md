@@ -20,6 +20,11 @@
   these rows are not used by runtime search.
 - Expanded Beta Dashboard and Data Quality ingestion summaries with registry
   product, ingredient, manufacturer and registration counts.
+- Added conservative active-ingredient parsing for combinations, salts,
+  hydrates, esters, complexes and derivative ambiguity.
+- Added registry conflict grouping and quarantine reporting so review-only
+  conflicts stay visible without blocking product snapshot dry-runs.
+- Added v1.6 Node 24 Linux registry validation workflow.
 
 ### Safety
 
@@ -28,6 +33,12 @@
 - Runtime lookup remains approved-only.
 - `pending`, `needs_review` and registry product snapshot rows remain hidden
   from user-facing runtime lookup until reviewed and approved as mappings.
+- Product snapshot import is separate from runtime mapping generation; official
+  registry rows do not become approved mappings automatically.
+- Approved-only mapping commits require `--only-approved` or
+  `--only-approved-mappings`; registry imports do not support `--force`.
+- Combination products and salt/base ambiguity are never auto-mapped to a single
+  ingredient.
 - Static fallback and optional local PostgreSQL behavior are preserved.
 - No proprietary catalog scraping, copied instructions, dosing logic, treatment
   recommendations or invented clinical claims are added.

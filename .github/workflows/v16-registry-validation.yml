@@ -1,0 +1,77 @@
+name: v1.6 Registry Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "artifacts/**"
+      - "data/**"
+      - "docs/**"
+      - "lib/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/v16-registry-validation.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PORT: "5173"
+      BASE_PATH: "/"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.14.1"
+          cache: pnpm
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Codegen
+        run: pnpm --filter @workspace/api-spec run codegen
+
+      - name: Registry production dry-runs
+        run: |
+          pnpm knowledge:sources:discover
+          pnpm knowledge:registry:production-report
+          pnpm knowledge:registry:preview -- --download
+          pnpm knowledge:registry:import -- --download
+
+      - name: Knowledge validation
+        run: |
+          pnpm knowledge:import:preview:all
+          pnpm knowledge:import:validate:all
+          pnpm knowledge:backfill
+          pnpm knowledge:runtime:verify
+          pnpm knowledge:quality:report
+          pnpm knowledge:search:report
+          pnpm knowledge:real-world:report
+          pnpm beta:scenarios
+          pnpm beta:readiness
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Tests
+        run: pnpm -r test
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Diff checks
+        run: |
+          git diff --check origin/main..HEAD
+          git diff --check
+          git diff --exit-code

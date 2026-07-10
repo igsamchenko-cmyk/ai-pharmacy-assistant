@@ -88,10 +88,10 @@ export const BetaDashboardCheckType = {
   readiness: 'readiness',
   scenarios: 'scenarios',
   search_quality: 'search_quality',
-  real_world: 'real_world',
-  ingestion: 'ingestion',
   safety: 'safety',
   interactions: 'interactions',
+  real_world: 'real_world',
+  ingestion: 'ingestion',
   data_quality: 'data_quality',
   diagnostics: 'diagnostics',
   full_safe_check: 'full_safe_check',
@@ -793,7 +793,7 @@ export type BulkIngestReportVersion = typeof BulkIngestReportVersion[keyof typeo
 
 
 export const BulkIngestReportVersion = {
-  '1.6-bulk-ingest': '1.6-bulk-ingest',
+  '16-bulk-ingest': '1.6-bulk-ingest',
 } as const;
 
 export type BulkIngestReportSourceDiscovery = {
@@ -804,13 +804,9 @@ export type BulkIngestReportSourceDiscovery = {
 
 export type BulkIngestReportRegistry = {
   sampleFiles: number;
-  /** @nullable */
   sourceUrl: string | null;
-  /** @nullable */
   snapshotFormat: string | null;
-  /** @nullable */
   snapshotEncoding: string | null;
-  /** @nullable */
   snapshotSha256: string | null;
   rawRows: number;
   validProducts: number;

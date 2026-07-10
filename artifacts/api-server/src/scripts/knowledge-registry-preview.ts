@@ -1,10 +1,11 @@
 import {
   buildRegistryProductionSummary,
+  buildRegistryMappingPlan,
   downloadOfficialRegistrySnapshot,
   parseRegistryFile,
   parseRegistryText,
+  summarizeImportPreview,
 } from "../knowledge/ingestion";
-import { buildReviewableImportPlan } from "../knowledge/ingestion/commit";
 
 function argValue(prefix: string): string | null {
   return process.argv.find((arg) => arg.startsWith(prefix))?.slice(prefix.length) ?? null;
@@ -38,18 +39,27 @@ async function main(): Promise<void> {
         snapshot: downloaded.metadata,
       })
     : parseRegistryFile(file as string, { includeTradeNames });
-  const plan = buildReviewableImportPlan(parsedRegistry.candidates);
+  const plan = buildRegistryMappingPlan(parsedRegistry);
   const productionSummary = buildRegistryProductionSummary(
     parsedRegistry,
-    plan.preview.reviewDistribution,
+    plan.stats,
   );
   console.log(JSON.stringify({
+    ok: plan.blocked.length === 0,
     ...parsedRegistry,
     rows: undefined,
     candidates: undefined,
     productionSummary,
-    preview: plan.preview,
-    reviewableRows: plan.reviewable.length,
+    approvedPreview: summarizeImportPreview(plan.approvedCandidatesPlan.preview),
+    reviewPreview: summarizeImportPreview(plan.allCandidatesPlan.preview),
+    reviewableRows: plan.allCandidatesPlan.reviewable.length,
+    approvedRows: plan.approvedReviewableRows.length,
+    reviewOnlyRows: plan.reviewOnlyRows.length,
+    quarantinedRows: plan.quarantinedRows.length,
+    conflictGroups: {
+      total: plan.conflictGroups.length,
+      top: plan.topConflictGroups,
+    },
     blocked: plan.blocked,
   }, null, 2));
 }

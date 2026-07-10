@@ -24,7 +24,7 @@ All commands are read-only by default. DB writes require:
 
 ```bash
 DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:candidates:commit -- --commit
-DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:registry:import -- --download --commit
+DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:registry:import -- --download --commit --require-db --products --only-approved-mappings
 ```
 
 Never paste or print `DATABASE_URL`. Use a local env/session variable.
@@ -47,10 +47,26 @@ sanitized JSON report with snapshot hash, format, encoding and counts. It does
 not write to the database.
 
 `pnpm knowledge:registry:import -- --download` performs the same production
-preview and remains a dry-run. Adding `--commit` writes reviewable dictionary
-candidates plus a product/manufacturer snapshot for audit and review. The
-snapshot tables are not used by runtime search; runtime lookup still reads only
-approved name mappings.
+preview and remains a dry-run. Product snapshots and runtime mappings are
+separate safety layers: the snapshot can retain all valid structured registry
+rows for audit/review, while runtime mappings are committed only from the
+approved-safe subset.
+
+Production modes:
+
+```bash
+pnpm knowledge:registry:preview -- --download
+pnpm knowledge:registry:import -- --download --products-only
+pnpm knowledge:registry:production-report
+pnpm knowledge:registry:import -- --download --mappings-only --only-approved
+DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:registry:import -- --download --commit --require-db --products --only-approved-mappings
+```
+
+`--force` is not supported for registry imports. Ambiguous products, same-name
+conflicts, combinations and salt/base ambiguity are reported as review-only or
+quarantined conflicts, not silently promoted to runtime mappings. The snapshot
+tables are not used by runtime search; runtime lookup still reads only approved
+name mappings.
 
 ## Safety Boundaries
 

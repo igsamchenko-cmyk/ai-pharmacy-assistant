@@ -80,3 +80,28 @@ Before merging an ingestion branch:
 
 DB import remains a post-merge production operation and must use local env
 variables for `DATABASE_URL`, `DATABASE_SSL=true` and `KNOWLEDGE_DB_RUNTIME=true`.
+
+## v1.6 Registry Import Gate
+
+Before merging a production registry import branch:
+
+- run `pnpm --filter @workspace/api-spec run codegen`;
+- run `pnpm knowledge:registry:production-report`;
+- run `pnpm knowledge:registry:preview -- --download`;
+- run `pnpm knowledge:registry:import -- --download`;
+- confirm product snapshot readiness is true;
+- confirm the approved mapping subset has zero hard conflicts;
+- confirm review-only and quarantined conflict groups are visible in the report;
+- confirm combinations and salt/base ambiguity are not auto-approved;
+- run the full release validation gate with Node 24 on Linux CI;
+- confirm `git diff --check origin/main..HEAD`, `git diff --check` and
+  `git diff --exit-code` pass after codegen.
+
+Production DB import must use:
+
+```bash
+pnpm knowledge:registry:import -- --download --commit --require-db --products --only-approved-mappings
+```
+
+Do not use production database credentials in CI. Do not use `--force` to bypass
+registry data-quality blockers.
