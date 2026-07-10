@@ -77,6 +77,7 @@ Closed beta must work in static mode and may optionally test DB mode.
 - DB runtime is requested only with `KNOWLEDGE_DB_RUNTIME=true`.
 - `/api/diagnostics` reports `dbConfigured`, runtime mode, provider status, schema status, and approved mapping counts without exposing `DATABASE_URL` or server filesystem paths.
 - `pnpm beta:readiness` treats absent DB as static-fallback readiness, not as a failure.
+
 ## v1.2 Auth Interaction
 
 PostgreSQL remains optional. Auth does not require the DB: local private beta
@@ -93,3 +94,19 @@ They do not bypass review status.
 - DB commit requires explicit `--commit` and `DATABASE_URL`.
 - Without DB configuration, preview/report commands remain usable through static
   fallback.
+
+## v1.6 Registry Product Snapshot Boundary
+
+Official registry product snapshots are DB audit/review records, not runtime
+lookup mappings. Products-only imports write to
+`knowledge_registry_products` and `knowledge_registry_manufacturers`; they do
+not write to `knowledge_ingredient_names`.
+
+Products-only commits require `--commit --require-db`, use bounded bulk chunks,
+and report final DB counts. If valid planned products exist but no products are
+inserted, updated or detected as unchanged, the command fails instead of
+returning a successful empty snapshot.
+
+Approved runtime mappings remain a separate commit step and still require
+`--only-approved` or `--only-approved-mappings`. Static fallback remains
+available when DB runtime is disabled or unavailable.
