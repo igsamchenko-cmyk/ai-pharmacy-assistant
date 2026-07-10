@@ -16,6 +16,7 @@ import {
   searchMissesToImportRows,
   type ImportRow,
   type KnowledgeImportCommitStore,
+  type RegistryProductCommitStats,
 } from "../index";
 
 function row(overrides: Partial<ImportRow> = {}): ImportRow {
@@ -33,16 +34,58 @@ function row(overrides: Partial<ImportRow> = {}): ImportRow {
   };
 }
 
+function productStats(
+  overrides: Partial<RegistryProductCommitStats> = {},
+): RegistryProductCommitStats {
+  return {
+    plannedProducts: 1,
+    plannedManufacturers: 0,
+    plannedRegistrations: 1,
+    attemptedProducts: 1,
+    attemptedManufacturers: 0,
+    insertedProducts: 1,
+    insertedManufacturers: 0,
+    updatedProducts: 0,
+    updatedManufacturers: 0,
+    unchangedProducts: 0,
+    unchangedManufacturers: 0,
+    skippedProducts: 0,
+    skippedManufacturers: 0,
+    failedProducts: 0,
+    failedManufacturers: 0,
+    chunks: 1,
+    chunkSize: 500,
+    finalProductCount: 1,
+    finalManufacturerCount: 0,
+    finalRegistrationCount: 1,
+    elapsedMs: 1,
+    importBatchStatus: "completed",
+    committedProducts: 1,
+    committedManufacturers: 0,
+    ...overrides,
+  };
+}
+
 describe("ingestion source discovery", () => {
   it("classifies official/reference sources and blocks commercial catalogs", () => {
-    const report = discoverIngestionSources(new Date("2026-07-09T00:00:00.000Z"));
+    const report = discoverIngestionSources(
+      new Date("2026-07-09T00:00:00.000Z"),
+    );
     expect(report.approvedSources).toBeGreaterThan(0);
     expect(report.candidateSources).toBeGreaterThan(0);
     expect(report.blockedSources).toBeGreaterThan(0);
     expect(report.policy.commercialCatalogScrapingAllowed).toBe(false);
     expect(report.policy.runtimeRequiresApprovedRows).toBe(true);
-    expect(report.sources.some((source) => source.key === "ukraine_state_drug_registry")).toBe(true);
-    expect(report.sources.find((source) => source.key === "commercial_pharmacy_catalogs")?.status).toBe("blocked");
+    expect(
+      report.sources.some(
+        (source) => source.key === "ukraine_state_drug_registry",
+      ),
+    ).toBe(true);
+    expect(
+      report.sources.find(
+        (source) => source.key === "commercial_pharmacy_catalogs",
+      )?.status,
+    ).toBe("blocked");
   });
 });
 
@@ -58,9 +101,13 @@ describe("Ukrainian registry ingestion", () => {
 
     expect(result.rawRows).toBe(2);
     expect(result.generatedCandidates).toBe(3);
-    expect(result.candidates.some((candidate) => candidate.nameType === "brand")).toBe(true);
+    expect(
+      result.candidates.some((candidate) => candidate.nameType === "brand"),
+    ).toBe(true);
     expect(plan.preview.missingSources).toBe(0);
-    expect(plan.reviewable.some((candidate) => candidate.reviewStatus === "pending")).toBe(true);
+    expect(
+      plan.reviewable.some((candidate) => candidate.reviewStatus === "pending"),
+    ).toBe(true);
   });
 
   it("parses the official semicolon registry export shape", () => {
@@ -79,7 +126,9 @@ describe("Ukrainian registry ingestion", () => {
         "\u0414\u0430\u0442\u0430 \u043f\u043e\u0447\u0430\u0442\u043a\u0443 \u0434\u0456\u0457",
         "\u0414\u0430\u0442\u0430 \u0437\u0430\u043a\u0456\u043d\u0447\u0435\u043d\u043d\u044f",
         "URL \u0456\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0456\u0457",
-      ].map((cell) => `"${cell}"`).join(";"),
+      ]
+        .map((cell) => `"${cell}"`)
+        .join(";"),
       [
         "abc",
         "\u041f\u0410\u041d\u0410\u0414\u041e\u041b",
@@ -94,15 +143,16 @@ describe("Ukrainian registry ingestion", () => {
         "01.01.2026",
         "\u043d\u0435\u043e\u0431\u043c\u0435\u0436\u0435\u043d\u0438\u0439",
         "http://www.drlz.com.ua/ibp/lz_www.nsf/id/example",
-      ].map((cell) => `"${cell}"`).join(";"),
+      ]
+        .map((cell) => `"${cell}"`)
+        .join(";"),
     ].join("\n");
 
     const result = parseRegistryText(csv, { fileName: "reestr.csv" });
     const plan = buildReviewableImportPlan(result.candidates);
-    const summary = buildRegistryProductionSummary(
-      result,
-      { reviewDistribution: plan.preview.reviewDistribution },
-    );
+    const summary = buildRegistryProductionSummary(result, {
+      reviewDistribution: plan.preview.reviewDistribution,
+    });
 
     expect(result.delimiter).toBe(";");
     expect(result.rows[0]).toMatchObject({
@@ -128,16 +178,22 @@ describe("Ukrainian registry ingestion", () => {
       combinationProduct: false,
       parseConfidence: "high",
     });
-    expect(parseIngredientExpression("Amlodipine and Valsartan")).toMatchObject({
-      parsedIngredients: ["Amlodipine", "Valsartan"],
+    expect(parseIngredientExpression("Amlodipine and Valsartan")).toMatchObject(
+      {
+        parsedIngredients: ["Amlodipine", "Valsartan"],
+        ingredientCount: 2,
+        combinationProduct: true,
+      },
+    );
+    expect(
+      parseIngredientExpression("Amlodipine \u0442\u0430 Valsartan"),
+    ).toMatchObject({
       ingredientCount: 2,
       combinationProduct: true,
     });
-    expect(parseIngredientExpression("Amlodipine \u0442\u0430 Valsartan")).toMatchObject({
-      ingredientCount: 2,
-      combinationProduct: true,
-    });
-    expect(parseIngredientExpression("Levofloxacin hydrochloride")).toMatchObject({
+    expect(
+      parseIngredientExpression("Levofloxacin hydrochloride"),
+    ).toMatchObject({
       ingredientCount: 1,
       combinationProduct: false,
       saltOrDerivativeFlags: ["hydrochloride"],
@@ -145,24 +201,35 @@ describe("Ukrainian registry ingestion", () => {
   });
 
   it("keeps registry review conflicts out of approved mapping blockers", () => {
-    const registry = parseRegistryText([
-      "trade_name,inn,registration_number",
-      "Shared Brand,Ceftriaxone,UA/1/01/01",
-      "Shared Brand,Amlodipine,UA/2/01/01",
-      "Combo,Amlodipine and Valsartan,UA/3/01/01",
-      "Salt,Levofloxacin hydrochloride,UA/4/01/01",
-    ].join("\n"));
+    const registry = parseRegistryText(
+      [
+        "trade_name,inn,registration_number",
+        "Shared Brand,Ceftriaxone,UA/1/01/01",
+        "Shared Brand,Amlodipine,UA/2/01/01",
+        "Combo,Amlodipine and Valsartan,UA/3/01/01",
+        "Salt,Levofloxacin hydrochloride,UA/4/01/01",
+      ].join("\n"),
+    );
     const plan = buildRegistryMappingPlan(registry);
     const summary = buildRegistryProductionSummary(registry, plan.stats);
     const json = JSON.stringify({ plan, summary });
 
     expect(registry.rawRows).toBe(4);
     expect(registry.parsedRows).toBe(4);
-    expect(registry.rows.find((item) => item.tradeName === "Combo")?.warnings)
-      .toContain("combination_or_multi_ingredient");
-    expect(registry.candidates.some((candidate) => candidate.canonicalInn.includes("and"))).toBe(false);
+    expect(
+      registry.rows.find((item) => item.tradeName === "Combo")?.warnings,
+    ).toContain("combination_or_multi_ingredient");
+    expect(
+      registry.candidates.some((candidate) =>
+        candidate.canonicalInn.includes("and"),
+      ),
+    ).toBe(false);
     expect(plan.conflictGroups.length).toBeGreaterThanOrEqual(1);
-    expect(plan.conflictGroups.some((group) => group.normalizedName === "sharedbrand")).toBe(true);
+    expect(
+      plan.conflictGroups.some(
+        (group) => group.normalizedName === "sharedbrand",
+      ),
+    ).toBe(true);
     expect(plan.reviewDistribution.quarantined).toBeGreaterThan(0);
     expect(plan.reviewDistribution.needs_review).toBeGreaterThan(0);
     expect(plan.approvedCandidateConflicts).toBe(0);
@@ -193,9 +260,12 @@ describe("Ukrainian registry ingestion", () => {
 
     process.chdir(packageCwd);
     try {
-      const result = parseRegistryFile("data/imports/ukraine-registry-sample.csv", {
-        includeTradeNames: false,
-      });
+      const result = parseRegistryFile(
+        "data/imports/ukraine-registry-sample.csv",
+        {
+          includeTradeNames: false,
+        },
+      );
 
       expect(result.rawRows).toBeGreaterThan(0);
       expect(result.generatedCandidates).toBeGreaterThan(0);
@@ -212,8 +282,12 @@ describe("candidate generation", () => {
     const plan = buildReviewableImportPlan(result.rows);
 
     expect(result.generatedRows).toBeGreaterThan(0);
-    expect(result.rows.some((candidate) => candidate.nameType === "transliteration")).toBe(true);
-    expect(result.rows.some((candidate) => candidate.nameType === "typo")).toBe(true);
+    expect(
+      result.rows.some((candidate) => candidate.nameType === "transliteration"),
+    ).toBe(true);
+    expect(result.rows.some((candidate) => candidate.nameType === "typo")).toBe(
+      true,
+    );
     expect(plan.preview.reviewDistribution.needs_review).toBeGreaterThan(0);
   });
 
@@ -254,10 +328,12 @@ describe("candidate commit flow", () => {
   });
 
   it("can commit registry product snapshots through an injected store", async () => {
-    const registry = parseRegistryText([
-      "id,trade_name,inn,atc_code,registration_number",
-      "abc,Panadol,Paracetamol,N02BE01,UA/123/01/01",
-    ].join("\n"));
+    const registry = parseRegistryText(
+      [
+        "id,trade_name,inn,atc_code,registration_number",
+        "abc,Panadol,Paracetamol,N02BE01,UA/123/01/01",
+      ].join("\n"),
+    );
     const store: KnowledgeImportCommitStore = {
       async writeBatch() {
         throw new Error("not used");
@@ -265,18 +341,137 @@ describe("candidate commit flow", () => {
       async writeRegistryProducts(rows, batchId) {
         expect(rows).toHaveLength(1);
         expect(batchId).toBe("registry-test");
-        return { committedProducts: rows.length, committedManufacturers: 0 };
+        return productStats({
+          plannedProducts: rows.length,
+          attemptedProducts: rows.length,
+          insertedProducts: rows.length,
+          committedProducts: rows.length,
+        });
       },
     };
 
     await expect(
-      commitRegistryProducts(registry.rows, { store, batchId: "registry-test" }),
+      commitRegistryProducts(registry.rows, {
+        store,
+        batchId: "registry-test",
+      }),
     ).resolves.toMatchObject({
       committedProducts: 1,
       committedManufacturers: 0,
       batchId: "registry-test",
       skipped: false,
     });
+  });
+
+  it("hard-fails registry product commits that persist zero planned rows", async () => {
+    const registry = parseRegistryText(
+      [
+        "id,trade_name,inn,atc_code,registration_number",
+        "abc,Panadol,Paracetamol,N02BE01,UA/123/01/01",
+      ].join("\n"),
+    );
+    const store: KnowledgeImportCommitStore = {
+      async writeBatch() {
+        throw new Error("not used");
+      },
+      async writeRegistryProducts(rows) {
+        return productStats({
+          plannedProducts: rows.length,
+          attemptedProducts: rows.length,
+          insertedProducts: 0,
+          updatedProducts: 0,
+          unchangedProducts: 0,
+          committedProducts: 0,
+          finalProductCount: 0,
+          finalRegistrationCount: 0,
+        });
+      },
+    };
+
+    await expect(
+      commitRegistryProducts(registry.rows, {
+        store,
+        batchId: "registry-test",
+      }),
+    ).rejects.toThrow(
+      "Products-only commit completed with zero persisted rows.",
+    );
+  });
+
+  it("keeps combination product snapshots independent from runtime mapping commits", async () => {
+    const registry = parseRegistryText(
+      [
+        "id,trade_name,inn,atc_code,registration_number",
+        "combo-1,Combo,Amlodipine and Valsartan,C09DB01,UA/222/01/01",
+      ].join("\n"),
+    );
+    const store: KnowledgeImportCommitStore = {
+      async writeBatch() {
+        throw new Error("runtime mappings must not be written");
+      },
+      async writeRegistryProducts(rows) {
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.warnings).toContain("combination_or_multi_ingredient");
+        return productStats({
+          plannedProducts: rows.length,
+          attemptedProducts: rows.length,
+          insertedProducts: rows.length,
+          committedProducts: rows.length,
+        });
+      },
+    };
+
+    await expect(
+      commitRegistryProducts(registry.rows, {
+        store,
+        batchId: "registry-combo-test",
+      }),
+    ).resolves.toMatchObject({
+      committedProducts: 1,
+      skipped: false,
+    });
+  });
+
+  it("reports idempotent registry product reruns as unchanged rows", async () => {
+    const registry = parseRegistryText(
+      [
+        "id,trade_name,inn,atc_code,registration_number",
+        "abc,Panadol,Paracetamol,N02BE01,UA/123/01/01",
+      ].join("\n"),
+    );
+    const results = [
+      productStats({
+        insertedProducts: 1,
+        unchangedProducts: 0,
+        committedProducts: 1,
+      }),
+      productStats({
+        insertedProducts: 0,
+        unchangedProducts: 1,
+        committedProducts: 0,
+      }),
+    ];
+    const store: KnowledgeImportCommitStore = {
+      async writeBatch() {
+        throw new Error("not used");
+      },
+      async writeRegistryProducts() {
+        return results.shift() ?? productStats();
+      },
+    };
+
+    await expect(
+      commitRegistryProducts(registry.rows, {
+        store,
+        batchId: "registry-first",
+      }),
+    ).resolves.toMatchObject({ insertedProducts: 1, unchangedProducts: 0 });
+    await expect(
+      commitRegistryProducts(registry.rows, {
+        store,
+        batchId: "registry-second",
+      }),
+    ).resolves.toMatchObject({ insertedProducts: 0, unchangedProducts: 1 });
   });
 
   it("does not allow copyrighted source rows to be committed", async () => {

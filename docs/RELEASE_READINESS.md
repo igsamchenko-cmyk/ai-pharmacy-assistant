@@ -50,11 +50,10 @@ Generated JSON is written to `artifacts/reports/beta-readiness-report.json` and 
 - Confirm known limitations are acceptable for controlled beta use.
 - Tag only after the PR is merged and CI is green.
 
-
-
 ## In-App Beta Dashboard
 
 The `/beta-dashboard` page provides a UI checkpoint for the safe beta checks. It complements, but does not replace, CI/terminal validation. It does not run arbitrary shell commands and reports static fallback safely when DB is unavailable.
+
 ## v1.2 Online Private Beta Gate
 
 Before sharing the permanent URL:
@@ -93,15 +92,20 @@ Before merging a production registry import branch:
 - confirm the approved mapping subset has zero hard conflicts;
 - confirm review-only and quarantined conflict groups are visible in the report;
 - confirm combinations and salt/base ambiguity are not auto-approved;
+- confirm CI runs a PostgreSQL service products-only smoke with persisted row
+  assertions and an idempotent rerun;
 - run the full release validation gate with Node 24 on Linux CI;
 - confirm `git diff --check origin/main..HEAD`, `git diff --check` and
   `git diff --exit-code` pass after codegen.
 
-Production DB import must use:
+Production DB import must split product snapshots from approved mappings:
 
 ```bash
-pnpm knowledge:registry:import -- --download --commit --require-db --products --only-approved-mappings
+pnpm knowledge:registry:import -- --download --products-only --commit --require-db
+pnpm knowledge:registry:import -- --download --mappings-only --only-approved-mappings --commit --require-db
 ```
 
 Do not use production database credentials in CI. Do not use `--force` to bypass
-registry data-quality blockers.
+registry data-quality blockers. Do not run the mapping commit until the
+products-only snapshot reports non-zero persisted or unchanged product rows and
+final DB counts.

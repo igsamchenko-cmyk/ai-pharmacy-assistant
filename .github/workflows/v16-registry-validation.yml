@@ -17,10 +17,27 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: farmassist_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d farmassist_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       PORT: "5173"
       BASE_PATH: "/"
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/farmassist_test"
+      DATABASE_SSL: "false"
+      KNOWLEDGE_DB_RUNTIME: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -40,6 +57,15 @@ jobs:
 
       - name: Codegen
         run: pnpm --filter @workspace/api-spec run codegen
+
+      - name: Schema push
+        run: pnpm db:push
+
+      - name: Registry product DB smoke
+        run: |
+          pnpm knowledge:registry:product-db-smoke -- --download --limit=10 --expect-min-products=10 --rerun
+          pnpm knowledge:registry:product-db-smoke -- --download --limit=500 --expect-min-products=500 --rerun
+          pnpm knowledge:registry:product-db-smoke -- --download --expect-min-products=16533 --rerun
 
       - name: Registry production dry-runs
         run: |

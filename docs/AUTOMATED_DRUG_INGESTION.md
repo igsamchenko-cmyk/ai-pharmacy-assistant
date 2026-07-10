@@ -24,7 +24,8 @@ All commands are read-only by default. DB writes require:
 
 ```bash
 DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:candidates:commit -- --commit
-DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:registry:import -- --download --commit --require-db --products --only-approved-mappings
+DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:registry:import -- --download --products-only --commit --require-db
+DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:registry:import -- --download --mappings-only --only-approved-mappings --commit --require-db
 ```
 
 Never paste or print `DATABASE_URL`. Use a local env/session variable.
@@ -59,7 +60,8 @@ pnpm knowledge:registry:preview -- --download
 pnpm knowledge:registry:import -- --download --products-only
 pnpm knowledge:registry:production-report
 pnpm knowledge:registry:import -- --download --mappings-only --only-approved
-DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:registry:import -- --download --commit --require-db --products --only-approved-mappings
+DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:registry:import -- --download --products-only --commit --require-db
+DATABASE_URL=... DATABASE_SSL=true KNOWLEDGE_DB_RUNTIME=true pnpm knowledge:registry:import -- --download --mappings-only --only-approved-mappings --commit --require-db
 ```
 
 `--force` is not supported for registry imports. Ambiguous products, same-name
@@ -67,6 +69,11 @@ conflicts, combinations and salt/base ambiguity are reported as review-only or
 quarantined conflicts, not silently promoted to runtime mappings. The snapshot
 tables are not used by runtime search; runtime lookup still reads only approved
 name mappings.
+
+The products-only commit uses chunked bulk writes and reports product snapshot
+counts separately from mapping counts. A planned products-only commit fails if
+no product rows are inserted, updated or detected as unchanged. Run the mapping
+commit only after product snapshot counts are verified.
 
 ## Safety Boundaries
 

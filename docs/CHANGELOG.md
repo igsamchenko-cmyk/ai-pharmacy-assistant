@@ -26,6 +26,23 @@
   conflicts stay visible without blocking product snapshot dry-runs.
 - Added v1.6 Node 24 Linux registry validation workflow.
 
+### Fixed
+
+- Fixed products-only registry snapshot commits so product/manufacturer rows are
+  written with bounded bulk chunks instead of one long per-row transaction.
+- Added a hard zero-write invariant: a products-only DB commit with planned
+  products can no longer report success when persisted/unchanged rows are zero.
+- Registry commit reports now separate product snapshot counts from approved
+  mapping counts, including planned, inserted, updated, unchanged, skipped,
+  failed, chunks, final counts and elapsed time.
+- DB commit commands close PostgreSQL connections cleanly after CLI completion.
+
+### Validation
+
+- Added a non-production PostgreSQL smoke gate for products-only commits,
+  persisted product/manufacturer counts, idempotent reruns and runtime mapping
+  isolation.
+
 ### Safety
 
 - Registry preview/import remains dry-run by default.
@@ -104,6 +121,7 @@
 ### Safety
 
 - No app behavior, auth rules, DB fallback behavior or medical safety boundaries changed.
+
 ## v1.1.0 - In-App Beta Test Dashboard - 2026-07-05
 
 ### Added
@@ -383,6 +401,7 @@ Release checkpoint for the merged v0.4 + v0.5 knowledge-system work.
 - Added sanitized diagnostics/version data and `/data-quality` panel.
 - Improved search/OCR normalization for local catalog matching.
 - Hardened blocked safety messaging while preserving reference-only allowed workflows.
+
 ## v1.3.0 - Real Online Deployment Readiness - 2026-07-06
 
 ### Added
