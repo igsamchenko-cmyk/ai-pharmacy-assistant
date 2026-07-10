@@ -2,8 +2,11 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   buildBulkIngestReport,
+  buildRegistryProductionSummary,
   buildReviewableImportPlan,
+  commitRegistryProducts,
   commitReviewableImportPlan,
+  decodeRegistryBuffer,
   discoverIngestionSources,
   generateImportCandidates,
   parseRegistryFile,
@@ -56,6 +59,70 @@ describe("Ukrainian registry ingestion", () => {
     expect(result.candidates.some((candidate) => candidate.nameType === "brand")).toBe(true);
     expect(plan.preview.missingSources).toBe(0);
     expect(plan.reviewable.some((candidate) => candidate.reviewStatus === "pending")).toBe(true);
+  });
+
+  it("parses the official semicolon registry export shape", () => {
+    const csv = [
+      [
+        "ID",
+        "\u0422\u043e\u0440\u0433\u0456\u0432\u0435\u043b\u044c\u043d\u0435 \u043d\u0430\u0439\u043c\u0435\u043d\u0443\u0432\u0430\u043d\u043d\u044f",
+        "\u041c\u0456\u0436\u043d\u0430\u0440\u043e\u0434\u043d\u0435 \u043d\u0435\u043f\u0430\u0442\u0435\u043d\u0442\u043e\u0432\u0430\u043d\u0435 \u043d\u0430\u0439\u043c\u0435\u043d\u0443\u0432\u0430\u043d\u043d\u044f",
+        "\u0424\u043e\u0440\u043c\u0430 \u0432\u0438\u043f\u0443\u0441\u043a\u0443",
+        "\u0421\u043a\u043b\u0430\u0434 (\u0434\u0456\u044e\u0447\u0456)",
+        "\u041a\u043e\u0434 \u0410\u0422\u0421 1",
+        "\u0417\u0430\u044f\u0432\u043d\u0438\u043a: \u043d\u0430\u0437\u0432\u0430 \u0443\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u043e\u044e",
+        "\u0412\u0438\u0440\u043e\u0431\u043d\u0438\u043a 1: \u043d\u0430\u0437\u0432\u0430 \u0443\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u043e\u044e",
+        "\u0412\u0438\u0440\u043e\u0431\u043d\u0438\u043a 1: \u043a\u0440\u0430\u0457\u043d\u0430",
+        "\u041d\u043e\u043c\u0435\u0440 \u0420\u0435\u0454\u0441\u0442\u0440\u0430\u0446\u0456\u0439\u043d\u043e\u0433\u043e \u043f\u043e\u0441\u0432\u0456\u0434\u0447\u0435\u043d\u043d\u044f",
+        "\u0414\u0430\u0442\u0430 \u043f\u043e\u0447\u0430\u0442\u043a\u0443 \u0434\u0456\u0457",
+        "\u0414\u0430\u0442\u0430 \u0437\u0430\u043a\u0456\u043d\u0447\u0435\u043d\u043d\u044f",
+        "URL \u0456\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0456\u0457",
+      ].map((cell) => `"${cell}"`).join(";"),
+      [
+        "abc",
+        "\u041f\u0410\u041d\u0410\u0414\u041e\u041b",
+        "Paracetamol",
+        "\u0442\u0430\u0431\u043b\u0435\u0442\u043a\u0438",
+        "1 \u0442\u0430\u0431\u043b\u0435\u0442\u043a\u0430 \u043c\u0456\u0441\u0442\u0438\u0442\u044c 500 \u043c\u0433",
+        "N02BE01",
+        "Applicant UA",
+        "Manufacturer UA",
+        "\u0423\u043a\u0440\u0430\u0457\u043d\u0430",
+        "UA/123/01/01",
+        "01.01.2026",
+        "\u043d\u0435\u043e\u0431\u043c\u0435\u0436\u0435\u043d\u0438\u0439",
+        "http://www.drlz.com.ua/ibp/lz_www.nsf/id/example",
+      ].map((cell) => `"${cell}"`).join(";"),
+    ].join("\n");
+
+    const result = parseRegistryText(csv, { fileName: "reestr.csv" });
+    const plan = buildReviewableImportPlan(result.candidates);
+    const summary = buildRegistryProductionSummary(
+      result,
+      plan.preview.reviewDistribution,
+    );
+
+    expect(result.delimiter).toBe(";");
+    expect(result.rows[0]).toMatchObject({
+      registryId: "abc",
+      tradeName: "\u041f\u0410\u041d\u0410\u0414\u041e\u041b",
+      inn: "Paracetamol",
+      atcCode: "N02BE01",
+      registrationNumber: "UA/123/01/01",
+    });
+    expect(summary.products.total).toBe(1);
+    expect(summary.ingredients.uniqueInn).toBe(1);
+    expect(summary.manufacturers.uniqueManufacturers).toBe(1);
+    expect(summary.registrations.uniqueNumbers).toBe(1);
+    expect(summary.mappings.brandCandidates).toBe(1);
+    expect(JSON.stringify(summary)).not.toMatch(/[A-Za-z]:\\/);
+    expect(JSON.stringify(summary)).not.toContain("postgresql://");
+  });
+
+  it("decodes Windows-1251 registry snapshots without adding a dependency", () => {
+    const decoded = decodeRegistryBuffer(Buffer.from([0xd2, 0xe5, 0xf1, 0xf2]));
+    expect(decoded.encoding).toBe("windows-1251");
+    expect(decoded.text).toBe("\u0422\u0435\u0441\u0442");
   });
 
   it("returns sanitized XLSX guidance instead of trying to parse spreadsheets", () => {
@@ -130,6 +197,32 @@ describe("candidate commit flow", () => {
 
     expect(result).toEqual({ committedRows: 1, batchId: "test-batch" });
     expect(written).toEqual([{ rows: 1, batchId: "test-batch" }]);
+  });
+
+  it("can commit registry product snapshots through an injected store", async () => {
+    const registry = parseRegistryText([
+      "id,trade_name,inn,atc_code,registration_number",
+      "abc,Panadol,Paracetamol,N02BE01,UA/123/01/01",
+    ].join("\n"));
+    const store: KnowledgeImportCommitStore = {
+      async writeBatch() {
+        throw new Error("not used");
+      },
+      async writeRegistryProducts(rows, batchId) {
+        expect(rows).toHaveLength(1);
+        expect(batchId).toBe("registry-test");
+        return { committedProducts: rows.length, committedManufacturers: 0 };
+      },
+    };
+
+    await expect(
+      commitRegistryProducts(registry.rows, { store, batchId: "registry-test" }),
+    ).resolves.toMatchObject({
+      committedProducts: 1,
+      committedManufacturers: 0,
+      batchId: "registry-test",
+      skipped: false,
+    });
   });
 
   it("does not allow copyrighted source rows to be committed", async () => {

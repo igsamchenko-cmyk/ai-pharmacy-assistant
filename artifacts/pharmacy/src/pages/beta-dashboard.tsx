@@ -87,6 +87,11 @@ const UI = {
     candidateRows: "Candidate rows",
     needsReview: "\u041d\u0430 review",
     approvedSources: "\u0414\u0436\u0435\u0440\u0435\u043b\u0430 OK",
+    registryRawRows: "Registry rows",
+    registryProducts: "Products",
+    registryIngredients: "Ingredients",
+    registryManufacturers: "Manufacturers",
+    registryRegistrations: "Registrations",
     runtimeMode: "\u0420\u0435\u0436\u0438\u043c runtime",
     mode: "\u0420\u0435\u0436\u0438\u043c",
     dbConfigured: "DB \u043d\u0430\u043b\u0430\u0448\u0442.",
@@ -345,11 +350,18 @@ function DashboardContent({
       >
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard label={UI.labels.approvedSources} value={status.ingestion.sourcesApproved} />
-          <StatCard label={UI.labels.candidateFiles} value={status.ingestion.candidateFiles} />
-          <StatCard label={UI.labels.candidateRows} value={status.ingestion.candidateRows} />
-          <StatCard label={UI.labels.conflicts} value={status.ingestion.conflicts} />
+          <StatCard label={UI.labels.registryRawRows} value={status.ingestion.registryRawRows} />
+          <StatCard label={UI.labels.registryProducts} value={status.ingestion.registryProducts} />
+          <StatCard label={UI.labels.registryIngredients} value={status.ingestion.registryIngredients} />
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label={UI.labels.registryManufacturers} value={status.ingestion.registryManufacturers} />
+          <StatCard label={UI.labels.registryRegistrations} value={status.ingestion.registryRegistrations} />
+          <StatCard label={UI.labels.candidateFiles} value={status.ingestion.candidateFiles} />
+          <StatCard label={UI.labels.candidateRows} value={status.ingestion.candidateRows} />
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label={UI.labels.conflicts} value={status.ingestion.conflicts} />
           <StatCard label={UI.labels.approved} value={status.ingestion.approved} />
           <StatCard label={UI.labels.pending} value={status.ingestion.pending} />
           <StatCard label={UI.labels.needsReview} value={status.ingestion.needsReview} />

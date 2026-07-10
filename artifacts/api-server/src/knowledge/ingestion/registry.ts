@@ -1,5 +1,6 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { extname } from "node:path";
+import { basename, extname } from "node:path";
 import { normalize } from "../../lib/text";
 import { resolveDataFilePath } from "../../lib/dataPath";
 import { parseCsv } from "../import/csv";
@@ -10,33 +11,108 @@ import {
 } from "./transliteration";
 
 export const UKRAINE_REGISTRY_SOURCE_ID = "ukraine_state_drug_registry";
+export const OFFICIAL_UKRAINE_REGISTRY_CSV_URL =
+  "http://www.drlz.com.ua/ibp/zvity.nsf/all/zvit/$file/reestr.csv";
+
+export type RegistrySnapshotFormat = "csv" | "tsv" | "json" | "unknown";
+
+export interface RegistrySnapshotMetadata {
+  sourceUrl: string | null;
+  downloadedAt: string | null;
+  contentLength: number | null;
+  sha256: string | null;
+  encoding: string;
+  format: RegistrySnapshotFormat;
+  fileName: string | null;
+}
 
 export interface RegistryParseOptions {
   fileName?: string;
   sourceId?: string;
   includeTradeNames?: boolean;
+  snapshot?: RegistrySnapshotMetadata | null;
+}
+
+export interface RegistryManufacturer {
+  name: string;
+  country: string;
 }
 
 export interface RegistryRawRow {
+  registryId: string;
   tradeName: string;
   inn: string;
   activeIngredient: string;
   atcCode: string;
   form: string;
   strength: string;
+  applicantName: string;
+  applicantCountry: string;
   manufacturer: string;
   country: string;
+  manufacturers: RegistryManufacturer[];
   registrationNumber: string;
+  registrationStartDate: string;
+  registrationEndDate: string;
   status: string;
+  earlyTermination: string;
+  instructionUrl: string;
   sourceId: string;
   rawIndex: number;
   warnings: string[];
 }
 
+export interface RegistryProductionSummary {
+  source: RegistrySnapshotMetadata | null;
+  rows: {
+    raw: number;
+    parsed: number;
+    validProducts: number;
+    invalidProducts: number;
+    withInstructionUrl: number;
+  };
+  products: {
+    total: number;
+    uniqueTradeNames: number;
+    uniqueRegistrationNumbers: number;
+  };
+  ingredients: {
+    withImportableInn: number;
+    uniqueInn: number;
+    multiIngredientOrCombination: number;
+    missingImportableInn: number;
+  };
+  mappings: {
+    generatedCandidates: number;
+    genericCandidates: number;
+    brandCandidates: number;
+  };
+  manufacturers: {
+    declaredManufacturers: number;
+    uniqueManufacturers: number;
+    countries: number;
+  };
+  registrations: {
+    uniqueNumbers: number;
+    duplicateNumbers: number;
+    earlyTerminated: number;
+    unlimited: number;
+  };
+  review: {
+    approved: number;
+    pending: number;
+    needs_review: number;
+    rejected: number;
+  };
+  warnings: string[];
+}
+
 export interface RegistryParseResult {
-  version: "1.5-registry-preview";
+  version: "1.6-registry-production";
   sourceId: string;
   fileName: string | null;
+  delimiter: string | null;
+  snapshot: RegistrySnapshotMetadata | null;
   rawRows: number;
   parsedRows: number;
   generatedCandidates: number;
@@ -47,25 +123,99 @@ export interface RegistryParseResult {
 }
 
 const FIELD_ALIASES = {
+  registryId: ["id", "registry_id"],
   tradeName: [
     "trade_name",
     "tradename",
     "name",
     "brand_name",
     "product_name",
-    "торгованазва",
-    "назвалікарськогозасобу",
-    "назва",
+    "\u0422\u043e\u0440\u0433\u0456\u0432\u0435\u043b\u044c\u043d\u0435 \u043d\u0430\u0439\u043c\u0435\u043d\u0443\u0432\u0430\u043d\u043d\u044f",
+    "\u0422\u043e\u0440\u0433\u043e\u0432\u0435 \u043d\u0430\u0439\u043c\u0435\u043d\u0443\u0432\u0430\u043d\u043d\u044f",
+    "\u041d\u0430\u0437\u0432\u0430 \u043b\u0456\u043a\u0430\u0440\u0441\u044c\u043a\u043e\u0433\u043e \u0437\u0430\u0441\u043e\u0431\u0443",
+    "\u043d\u0430\u0437\u0432\u0430",
   ],
-  inn: ["inn", "mnn", "internationalnonproprietaryname", "міжнароднанепатентовананазва", "мнн"],
-  activeIngredient: ["active_ingredient", "activesubstance", "activeingredient", "діючаречовина", "склад"],
-  atcCode: ["atc", "atc_code", "atccode", "атх", "кодатх"],
-  form: ["form", "dosage_form", "лікарськаформа", "форма"],
-  strength: ["strength", "dosage", "dose", "дозування"],
-  manufacturer: ["manufacturer", "виробник"],
-  country: ["country", "країна"],
-  registrationNumber: ["registration_number", "reg_number", "certificate", "реєстраційненомер", "номерпосвідчення"],
-  status: ["status", "стан", "статус"],
+  inn: [
+    "inn",
+    "mnn",
+    "internationalnonproprietaryname",
+    "\u041c\u0456\u0436\u043d\u0430\u0440\u043e\u0434\u043d\u0435 \u043d\u0435\u043f\u0430\u0442\u0435\u043d\u0442\u043e\u0432\u0430\u043d\u0435 \u043d\u0430\u0439\u043c\u0435\u043d\u0443\u0432\u0430\u043d\u043d\u044f",
+    "\u041c\u041d\u041d",
+  ],
+  activeIngredient: [
+    "active_ingredient",
+    "activesubstance",
+    "activeingredient",
+    "\u0421\u043a\u043b\u0430\u0434 (\u0434\u0456\u044e\u0447\u0456)",
+    "\u0414\u0456\u044e\u0447\u0430 \u0440\u0435\u0447\u043e\u0432\u0438\u043d\u0430",
+    "\u0421\u043a\u043b\u0430\u0434",
+  ],
+  atcCode: [
+    "atc",
+    "atc_code",
+    "atccode",
+    "\u041a\u043e\u0434 \u0410\u0422\u0421 1",
+    "\u041a\u043e\u0434 \u0410\u0422\u0421 2",
+    "\u041a\u043e\u0434 \u0410\u0422\u0421 3",
+    "\u041a\u043e\u0434 ATC 1",
+    "\u041a\u043e\u0434 ATC 2",
+    "\u041a\u043e\u0434 ATC 3",
+    "\u0410\u0422\u0421",
+  ],
+  form: [
+    "form",
+    "dosage_form",
+    "\u0424\u043e\u0440\u043c\u0430 \u0432\u0438\u043f\u0443\u0441\u043a\u0443",
+    "\u041b\u0456\u043a\u0430\u0440\u0441\u044c\u043a\u0430 \u0444\u043e\u0440\u043c\u0430",
+    "\u0424\u043e\u0440\u043c\u0430",
+  ],
+  strength: ["strength", "dosage", "dose", "\u0414\u043e\u0437\u0443\u0432\u0430\u043d\u043d\u044f"],
+  applicantName: [
+    "applicant",
+    "applicant_name",
+    "\u0417\u0430\u044f\u0432\u043d\u0438\u043a: \u043d\u0430\u0437\u0432\u0430 \u0443\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u043e\u044e",
+  ],
+  applicantCountry: [
+    "applicant_country",
+    "\u0417\u0430\u044f\u0432\u043d\u0438\u043a: \u043a\u0440\u0430\u0457\u043d\u0430",
+  ],
+  manufacturer: [
+    "manufacturer",
+    "\u0412\u0438\u0440\u043e\u0431\u043d\u0438\u043a",
+    "\u0412\u0438\u0440\u043e\u0431\u043d\u0438\u043a 1: \u043d\u0430\u0437\u0432\u0430 \u0443\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u043e\u044e",
+  ],
+  country: [
+    "country",
+    "\u041a\u0440\u0430\u0457\u043d\u0430",
+    "\u0412\u0438\u0440\u043e\u0431\u043d\u0438\u043a 1: \u043a\u0440\u0430\u0457\u043d\u0430",
+  ],
+  registrationNumber: [
+    "registration_number",
+    "reg_number",
+    "certificate",
+    "\u041d\u043e\u043c\u0435\u0440 \u0420\u0435\u0454\u0441\u0442\u0440\u0430\u0446\u0456\u0439\u043d\u043e\u0433\u043e \u043f\u043e\u0441\u0432\u0456\u0434\u0447\u0435\u043d\u043d\u044f",
+    "\u0420\u0435\u0454\u0441\u0442\u0440\u0430\u0446\u0456\u0439\u043d\u0438\u0439 \u043d\u043e\u043c\u0435\u0440",
+  ],
+  registrationStartDate: [
+    "registration_start",
+    "registration_start_date",
+    "\u0414\u0430\u0442\u0430 \u043f\u043e\u0447\u0430\u0442\u043a\u0443 \u0434\u0456\u0457",
+  ],
+  registrationEndDate: [
+    "registration_end",
+    "registration_end_date",
+    "\u0414\u0430\u0442\u0430 \u0437\u0430\u043a\u0456\u043d\u0447\u0435\u043d\u043d\u044f",
+  ],
+  status: ["status", "\u0421\u0442\u0430\u043d", "\u0421\u0442\u0430\u0442\u0443\u0441"],
+  earlyTermination: [
+    "early_termination",
+    "\u0414\u043e\u0441\u0442\u0440\u043e\u043a\u043e\u0432\u0435 \u043f\u0440\u0438\u043f\u0438\u043d\u0435\u043d\u043d\u044f",
+  ],
+  instructionUrl: [
+    "instruction_url",
+    "url",
+    "\u0055\u0052\u004c \u0456\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0456\u0457",
+  ],
 } as const;
 
 type FieldName = keyof typeof FIELD_ALIASES;
@@ -75,7 +225,74 @@ function normalizeHeader(value: string): string {
     .normalize("NFKC")
     .trim()
     .toLowerCase()
-    .replace(/[\s\-_.:/\\()№"']/g, "");
+    .replace(/[\s\-_.:/\\()\u2116"']/g, "");
+}
+
+function sha256(bytes: Buffer): string {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function formatFromFileName(fileName: string | null | undefined): RegistrySnapshotFormat {
+  const ext = fileName ? extname(fileName).toLowerCase() : "";
+  if (ext === ".csv") return "csv";
+  if (ext === ".tsv") return "tsv";
+  if (ext === ".json") return "json";
+  return "unknown";
+}
+
+export function decodeRegistryBuffer(
+  bytes: Buffer,
+  preferredEncoding: "auto" | "utf-8" | "windows-1251" = "auto",
+): { text: string; encoding: string } {
+  if (preferredEncoding !== "auto") {
+    const text = new TextDecoder(preferredEncoding).decode(bytes);
+    return { text, encoding: preferredEncoding };
+  }
+
+  if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+    return {
+      text: new TextDecoder("utf-8").decode(bytes.subarray(3)),
+      encoding: "utf-8",
+    };
+  }
+
+  try {
+    return {
+      text: new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+      encoding: "utf-8",
+    };
+  } catch {
+    return {
+      text: new TextDecoder("windows-1251").decode(bytes),
+      encoding: "windows-1251",
+    };
+  }
+}
+
+export async function downloadOfficialRegistrySnapshot(options: {
+  url?: string;
+  now?: Date;
+} = {}): Promise<{ text: string; metadata: RegistrySnapshotMetadata }> {
+  const url = options.url ?? OFFICIAL_UKRAINE_REGISTRY_CSV_URL;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Official registry download failed with HTTP ${response.status}.`);
+  }
+
+  const bytes = Buffer.from(await response.arrayBuffer());
+  const decoded = decodeRegistryBuffer(bytes);
+  return {
+    text: decoded.text,
+    metadata: {
+      sourceUrl: url,
+      downloadedAt: (options.now ?? new Date()).toISOString(),
+      contentLength: bytes.length,
+      sha256: sha256(bytes),
+      encoding: decoded.encoding,
+      format: "csv",
+      fileName: "reestr.csv",
+    },
+  };
 }
 
 function objectRowsFromJson(text: string): Record<string, string>[] {
@@ -101,23 +318,36 @@ function objectRowsFromJson(text: string): Record<string, string>[] {
   });
 }
 
-function objectRowsFromDelimited(text: string): Record<string, string>[] {
+function countChar(text: string, char: string): number {
+  return [...text].filter((value) => value === char).length;
+}
+
+function sniffDelimiter(firstLine: string): string {
+  if (countChar(firstLine, "\t") > 0) return "\t";
+  const semicolons = countChar(firstLine, ";");
+  const commas = countChar(firstLine, ",");
+  return semicolons > commas ? ";" : ",";
+}
+
+function objectRowsFromDelimited(text: string): {
+  rows: Record<string, string>[];
+  delimiter: string;
+} {
   const firstLine = text.split(/\r?\n/, 1)[0] ?? "";
-  const matrix = firstLine.includes("\t")
-    ? text
-        .split(/\r?\n/)
-        .filter((line) => line.trim())
-        .map((line) => line.split("\t"))
-    : parseCsv(text);
-  if (matrix.length === 0) return [];
+  const delimiter = sniffDelimiter(firstLine);
+  const matrix = parseCsv(text, delimiter);
+  if (matrix.length === 0) return { rows: [], delimiter };
   const header = matrix[0].map((cell) => cell.trim());
-  return matrix.slice(1).map((cells) => {
-    const row: Record<string, string> = {};
-    header.forEach((column, idx) => {
-      row[column] = cells[idx] ?? "";
-    });
-    return row;
-  });
+  return {
+    delimiter,
+    rows: matrix.slice(1).map((cells) => {
+      const row: Record<string, string> = {};
+      header.forEach((column, idx) => {
+        row[column] = cells[idx] ?? "";
+      });
+      return row;
+    }),
+  };
 }
 
 function pick(row: Record<string, string>, field: FieldName): string {
@@ -128,11 +358,47 @@ function pick(row: Record<string, string>, field: FieldName): string {
   return "";
 }
 
+function pickByAliases(row: Record<string, string>, aliases: readonly string[]): string {
+  const normalizedAliases = new Set(aliases.map(normalizeHeader));
+  for (const [key, value] of Object.entries(row)) {
+    if (normalizedAliases.has(normalizeHeader(key))) return value.trim();
+  }
+  return "";
+}
+
+function cleanText(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
 function cleanInn(value: string): string {
-  return value
-    .replace(/\s+/g, " ")
-    .replace(/\s*\([^)]*\)\s*/g, " ")
-    .trim();
+  return cleanText(value.replace(/\s*\([^)]*\)\s*/g, " "));
+}
+
+function isPlaceholderInn(value: string): boolean {
+  const normalized = normalize(value);
+  return (
+    !normalized ||
+    normalized === "mono" ||
+    normalized === "monо" ||
+    normalized === "\u043c\u043e\u043d\u043e" ||
+    normalized === "n/a" ||
+    normalized === "na"
+  );
+}
+
+function isMultiIngredient(value: string): boolean {
+  return /[+;/]/.test(value);
+}
+
+function isImportableInn(value: string): boolean {
+  const cleaned = cleanInn(value);
+  return (
+    cleaned.length > 1 &&
+    cleaned.length <= 120 &&
+    !isPlaceholderInn(cleaned) &&
+    !isMultiIngredient(cleaned) &&
+    !/\d|%/.test(cleaned)
+  );
 }
 
 function isInactiveStatus(status: string): boolean {
@@ -140,9 +406,30 @@ function isInactiveStatus(status: string): boolean {
   return (
     normalized.includes("expired") ||
     normalized.includes("withdrawn") ||
-    normalized.includes("ануль") ||
-    normalized.includes("закінч")
+    normalized.includes("\u0430\u043d\u0443\u043b") ||
+    normalized.includes("\u0437\u0430\u043a\u0456\u043d\u0447") ||
+    normalized === "\u0442\u0430\u043a"
   );
+}
+
+function manufacturerAliases(index: number, suffix: "name" | "country"): string[] {
+  const label = suffix === "name"
+    ? "\u043d\u0430\u0437\u0432\u0430 \u0443\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u043e\u044e"
+    : "\u043a\u0440\u0430\u0457\u043d\u0430";
+  return [
+    `manufacturer_${index}_${suffix}`,
+    `\u0412\u0438\u0440\u043e\u0431\u043d\u0438\u043a ${index}: ${label}`,
+  ];
+}
+
+function extractManufacturers(row: Record<string, string>): RegistryManufacturer[] {
+  const manufacturers: RegistryManufacturer[] = [];
+  for (let index = 1; index <= 5; index += 1) {
+    const name = cleanText(pickByAliases(row, manufacturerAliases(index, "name")));
+    const country = cleanText(pickByAliases(row, manufacturerAliases(index, "country")));
+    if (name || country) manufacturers.push({ name, country });
+  }
+  return manufacturers;
 }
 
 function rowToRegistryRawRow(
@@ -151,27 +438,47 @@ function rowToRegistryRawRow(
   sourceId: string,
 ): RegistryRawRow {
   const inn = cleanInn(pick(row, "inn"));
-  const activeIngredient = cleanInn(pick(row, "activeIngredient"));
+  const activeIngredient = cleanText(pick(row, "activeIngredient"));
   const warnings: string[] = [];
-  const canonical = inn || activeIngredient;
 
-  if (!canonical) warnings.push("missing_active_ingredient");
-  if (/[+;/]/.test(canonical)) warnings.push("combination_or_multi_ingredient");
+  if (!isImportableInn(inn)) warnings.push("missing_importable_inn");
+  if (inn && (isPlaceholderInn(inn) || /\d|%/.test(inn))) {
+    warnings.push("non_importable_inn_value");
+  }
+  if (inn && isMultiIngredient(inn)) warnings.push("combination_or_multi_ingredient");
+  if (!inn && activeIngredient) warnings.push("composition_not_imported_as_inn");
 
-  const status = pick(row, "status");
-  if (status && isInactiveStatus(status)) warnings.push("inactive_registration");
+  const status = cleanText(pick(row, "status"));
+  const earlyTermination = cleanText(pick(row, "earlyTermination"));
+  if (
+    (status && isInactiveStatus(status)) ||
+    (earlyTermination && isInactiveStatus(earlyTermination))
+  ) {
+    warnings.push("inactive_registration");
+  }
+
+  const manufacturers = extractManufacturers(row);
+  const firstManufacturer = manufacturers[0] ?? { name: pick(row, "manufacturer"), country: pick(row, "country") };
 
   return {
-    tradeName: pick(row, "tradeName"),
+    registryId: cleanText(pick(row, "registryId")),
+    tradeName: cleanText(pick(row, "tradeName")),
     inn,
     activeIngredient,
-    atcCode: pick(row, "atcCode").toUpperCase(),
-    form: pick(row, "form"),
-    strength: pick(row, "strength"),
-    manufacturer: pick(row, "manufacturer"),
-    country: pick(row, "country"),
-    registrationNumber: pick(row, "registrationNumber"),
+    atcCode: cleanText(pick(row, "atcCode")).toUpperCase(),
+    form: cleanText(pick(row, "form")),
+    strength: cleanText(pick(row, "strength")),
+    applicantName: cleanText(pick(row, "applicantName")),
+    applicantCountry: cleanText(pick(row, "applicantCountry")),
+    manufacturer: cleanText(firstManufacturer.name),
+    country: cleanText(firstManufacturer.country),
+    manufacturers,
+    registrationNumber: cleanText(pick(row, "registrationNumber")),
+    registrationStartDate: cleanText(pick(row, "registrationStartDate")),
+    registrationEndDate: cleanText(pick(row, "registrationEndDate")),
     status,
+    earlyTermination,
+    instructionUrl: cleanText(pick(row, "instructionUrl")),
     sourceId,
     rawIndex,
     warnings,
@@ -182,14 +489,12 @@ function rowToImportRows(
   row: RegistryRawRow,
   includeTradeNames: boolean,
 ): ImportRow[] {
-  const canonicalInn = row.inn || row.activeIngredient;
-  if (!canonicalInn || row.warnings.includes("combination_or_multi_ingredient")) {
-    return [];
-  }
+  const canonicalInn = isImportableInn(row.inn) ? row.inn : "";
+  if (!canonicalInn) return [];
 
   const ingredientId = ingredientIdForInn(canonicalInn);
   const notes = [
-    "v1.5 registry import candidate",
+    "v1.6 official Ukrainian registry import candidate",
     row.registrationNumber ? `registration:${row.registrationNumber}` : "",
     row.warnings.join("|"),
   ]
@@ -213,6 +518,7 @@ function rowToImportRows(
   if (
     includeTradeNames &&
     row.tradeName &&
+    row.tradeName.length <= 180 &&
     normalize(row.tradeName) !== normalize(canonicalInn)
   ) {
     rows.push({
@@ -236,17 +542,22 @@ export function parseRegistryText(
   options: RegistryParseOptions = {},
 ): RegistryParseResult {
   const sourceId = options.sourceId ?? UKRAINE_REGISTRY_SOURCE_ID;
-  const fileName = options.fileName ?? null;
+  const fileName = options.fileName ?? options.snapshot?.fileName ?? null;
   const includeTradeNames = options.includeTradeNames ?? true;
   const parseErrors: string[] = [];
   const warnings: string[] = [];
+  let delimiter: string | null = null;
 
   let objectRows: Record<string, string>[] = [];
   try {
     const ext = fileName ? extname(fileName).toLowerCase() : "";
-    objectRows = ext === ".json"
-      ? objectRowsFromJson(text)
-      : objectRowsFromDelimited(text);
+    if (ext === ".json") {
+      objectRows = objectRowsFromJson(text);
+    } else {
+      const parsed = objectRowsFromDelimited(text);
+      objectRows = parsed.rows;
+      delimiter = parsed.delimiter;
+    }
   } catch (error) {
     parseErrors.push(
       error instanceof Error ? error.message : "Registry parse failed.",
@@ -264,16 +575,18 @@ export function parseRegistryText(
     rowToImportRows(row, includeTradeNames),
   );
   const missingCanonical = rows.filter((row) =>
-    row.warnings.includes("missing_active_ingredient"),
+    row.warnings.includes("missing_importable_inn"),
   ).length;
   if (missingCanonical > 0) {
-    warnings.push(`${missingCanonical} registry rows lacked an INN/active ingredient.`);
+    warnings.push(`${missingCanonical} registry rows lacked an importable single INN.`);
   }
 
   return {
-    version: "1.5-registry-preview",
+    version: "1.6-registry-production",
     sourceId,
     fileName,
+    delimiter,
+    snapshot: options.snapshot ?? null,
     rawRows: objectRows.length,
     parsedRows: rows.length,
     generatedCandidates: candidates.length,
@@ -284,14 +597,131 @@ export function parseRegistryText(
   };
 }
 
+export function parseRegistryBuffer(
+  bytes: Buffer,
+  options: Omit<RegistryParseOptions, "snapshot"> & {
+    sourceUrl?: string | null;
+    downloadedAt?: string | null;
+    encoding?: "auto" | "utf-8" | "windows-1251";
+  } = {},
+): RegistryParseResult {
+  const decoded = decodeRegistryBuffer(bytes, options.encoding ?? "auto");
+  const fileName = options.fileName ?? null;
+  const snapshot: RegistrySnapshotMetadata = {
+    sourceUrl: options.sourceUrl ?? null,
+    downloadedAt: options.downloadedAt ?? null,
+    contentLength: bytes.length,
+    sha256: sha256(bytes),
+    encoding: decoded.encoding,
+    format: formatFromFileName(fileName),
+    fileName,
+  };
+  return parseRegistryText(decoded.text, {
+    ...options,
+    fileName: fileName ?? undefined,
+    snapshot,
+  });
+}
+
 export function parseRegistryFile(
   filePath: string,
-  options: Omit<RegistryParseOptions, "fileName"> = {},
+  options: Omit<RegistryParseOptions, "fileName" | "snapshot"> = {},
 ): RegistryParseResult {
   const resolvedPath = resolveDataFilePath(filePath, { moduleUrl: import.meta.url });
-  const text = readFileSync(resolvedPath, "utf8");
-  return parseRegistryText(text, {
+  const bytes = readFileSync(resolvedPath);
+  return parseRegistryBuffer(bytes, {
     ...options,
-    fileName: resolvedPath.split(/[\\/]/).pop() ?? undefined,
+    fileName: basename(resolvedPath),
   });
+}
+
+export function registryRowHash(row: RegistryRawRow): string {
+  return createHash("sha256")
+    .update([
+      row.registryId,
+      row.tradeName,
+      row.inn,
+      row.atcCode,
+      row.registrationNumber,
+      row.registrationStartDate,
+      row.registrationEndDate,
+    ].join("\u001f"))
+    .digest("hex");
+}
+
+export function buildRegistryProductionSummary(
+  registry: RegistryParseResult,
+  reviewDistribution: Partial<RegistryProductionSummary["review"]> = {},
+): RegistryProductionSummary {
+  const rows = registry.rows;
+  const validProducts = rows.filter((row) => row.tradeName || row.registrationNumber).length;
+  const importableInnRows = rows.filter((row) => isImportableInn(row.inn));
+  const registrationNumbers = rows
+    .map((row) => row.registrationNumber)
+    .filter(Boolean);
+  const uniqueRegistrationNumbers = new Set(registrationNumbers.map(normalize));
+  const manufacturerEntries = rows.flatMap((row) => row.manufacturers);
+  const uniqueManufacturerNames = new Set(
+    manufacturerEntries.map((item) => normalize(item.name)).filter(Boolean),
+  );
+  const manufacturerCountries = new Set(
+    manufacturerEntries.map((item) => normalize(item.country)).filter(Boolean),
+  );
+  const warnings = [
+    ...registry.warnings,
+    ...registry.parseErrors.map(() => "Registry parse errors are blocking."),
+  ];
+
+  return {
+    source: registry.snapshot,
+    rows: {
+      raw: registry.rawRows,
+      parsed: registry.parsedRows,
+      validProducts,
+      invalidProducts: Math.max(0, registry.parsedRows - validProducts),
+      withInstructionUrl: rows.filter((row) => row.instructionUrl).length,
+    },
+    products: {
+      total: rows.length,
+      uniqueTradeNames: new Set(rows.map((row) => normalize(row.tradeName)).filter(Boolean)).size,
+      uniqueRegistrationNumbers: uniqueRegistrationNumbers.size,
+    },
+    ingredients: {
+      withImportableInn: importableInnRows.length,
+      uniqueInn: new Set(importableInnRows.map((row) => normalize(row.inn))).size,
+      multiIngredientOrCombination: rows.filter((row) =>
+        row.warnings.includes("combination_or_multi_ingredient"),
+      ).length,
+      missingImportableInn: rows.filter((row) =>
+        row.warnings.includes("missing_importable_inn"),
+      ).length,
+    },
+    mappings: {
+      generatedCandidates: registry.generatedCandidates,
+      genericCandidates: registry.candidates.filter((row) => row.nameType !== "brand").length,
+      brandCandidates: registry.candidates.filter((row) => row.nameType === "brand").length,
+    },
+    manufacturers: {
+      declaredManufacturers: manufacturerEntries.length,
+      uniqueManufacturers: uniqueManufacturerNames.size,
+      countries: manufacturerCountries.size,
+    },
+    registrations: {
+      uniqueNumbers: uniqueRegistrationNumbers.size,
+      duplicateNumbers: registrationNumbers.length - uniqueRegistrationNumbers.size,
+      earlyTerminated: rows.filter((row) =>
+        row.warnings.includes("inactive_registration"),
+      ).length,
+      unlimited: rows.filter((row) =>
+        normalize(row.registrationEndDate).includes("\u043d\u0435\u043e\u0431\u043c\u0435\u0436"),
+      ).length,
+    },
+    review: {
+      approved: reviewDistribution.approved ?? 0,
+      pending: reviewDistribution.pending ?? 0,
+      needs_review: reviewDistribution.needs_review ?? 0,
+      rejected: reviewDistribution.rejected ?? 0,
+    },
+    warnings,
+  };
 }

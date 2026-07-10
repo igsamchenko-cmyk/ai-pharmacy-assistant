@@ -6,6 +6,8 @@ provenance. A row without a registered source is rejected by review policy.
 ## Allowed
 
 - Official public registries when data is supplied as an official/local export.
+- Official Ukrainian State Drug Registry CSV export for product, registration,
+  manufacturer and dictionary candidate metadata.
 - Public nomenclature and classification references such as WHO INN and WHO ATC.
 - Public reference APIs used as supplementary candidates, not as clinical advice.
 - Project-owned search-miss feedback used only for review candidates.
@@ -25,3 +27,5 @@ provenance. A row without a registered source is rejected by review policy.
 - Typo, search-miss, low-confidence or conflicting rows become `needs_review`.
 - Unknown-source rows become `rejected`.
 - Proprietary/copyright rows are blocked before commit.
+- Official registry trade names and product snapshots remain review/audit data
+  until an admin approves a runtime mapping.

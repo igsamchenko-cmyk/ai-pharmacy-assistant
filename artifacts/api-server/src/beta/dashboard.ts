@@ -73,6 +73,11 @@ export interface BetaDashboardStatus {
   };
   ingestion: {
     sourcesApproved: number;
+    registryRawRows: number;
+    registryProducts: number;
+    registryIngredients: number;
+    registryManufacturers: number;
+    registryRegistrations: number;
     candidateFiles: number;
     candidateRows: number;
     approved: number;
@@ -457,6 +462,11 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
     },
     ingestion: {
       sourcesApproved: ingestion.sourceDiscovery.approvedSources,
+      registryRawRows: ingestion.registry.rawRows,
+      registryProducts: ingestion.registry.validProducts,
+      registryIngredients: ingestion.registry.uniqueIngredients,
+      registryManufacturers: ingestion.registry.uniqueManufacturers,
+      registryRegistrations: ingestion.registry.uniqueRegistrations,
       candidateFiles: ingestion.candidates.files,
       candidateRows: ingestion.candidates.rows,
       approved: ingestion.candidates.approved,

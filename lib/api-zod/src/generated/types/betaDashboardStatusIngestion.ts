@@ -8,6 +8,11 @@
 
 export type BetaDashboardStatusIngestion = {
   sourcesApproved: number;
+  registryRawRows: number;
+  registryProducts: number;
+  registryIngredients: number;
+  registryManufacturers: number;
+  registryRegistrations: number;
   candidateFiles: number;
   candidateRows: number;
   approved: number;

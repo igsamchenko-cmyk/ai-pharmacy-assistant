@@ -24,7 +24,7 @@ export interface IngestionSource {
 }
 
 export interface SourceDiscoveryReport {
-  version: "1.5-source-discovery";
+  version: "1.6-source-discovery";
   generatedAt: string;
   approvedSources: number;
   candidateSources: number;
@@ -44,12 +44,12 @@ export const INGESTION_SOURCES: readonly IngestionSource[] = [
     label: "State Register of Medicinal Products of Ukraine",
     status: "candidate",
     use: "registry_import",
-    url: "https://www.drlz.com.ua/",
-    supportedFormats: ["csv", "tsv", "json", "xlsx-via-csv-export"],
+    url: "http://www.drlz.com.ua/ibp/zvity.nsf/all/zvit/$file/reestr.csv",
+    supportedFormats: ["official-csv-windows-1251", "csv", "tsv", "json"],
     provenanceSourceId: "ukraine_state_drug_registry",
     defaultReviewPolicy: "pending",
     notes: [
-      "Use only an official export or a locally provided CSV/TSV/JSON copy.",
+      "Use the official CSV export or a locally provided CSV/TSV/JSON copy.",
       "Trade-name rows are review candidates and are not auto-approved.",
       "The importer does not scrape the registry web UI.",
     ],
@@ -154,7 +154,7 @@ export function discoverIngestionSources(
   ).length;
 
   return {
-    version: "1.5-source-discovery",
+    version: "1.6-source-discovery",
     generatedAt: now.toISOString(),
     approvedSources,
     candidateSources,

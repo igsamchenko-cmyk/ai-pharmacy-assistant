@@ -131,6 +131,11 @@ export const GetBetaDashboardStatusResponse = zod.object({
 }),
   "ingestion": zod.object({
   "sourcesApproved": zod.number(),
+  "registryRawRows": zod.number(),
+  "registryProducts": zod.number(),
+  "registryIngredients": zod.number(),
+  "registryManufacturers": zod.number(),
+  "registryRegistrations": zod.number(),
   "candidateFiles": zod.number(),
   "candidateRows": zod.number(),
   "approved": zod.number(),
@@ -829,7 +834,7 @@ export const GetDataQualityResponse = zod.object({
   "wouldSucceed": zod.boolean()
 }).optional(),
   "ingestion": zod.object({
-  "version": zod.enum(['1.5-bulk-ingest']),
+  "version": zod.enum(['1.6-bulk-ingest']),
   "generatedAt": zod.string(),
   "sourceDiscovery": zod.object({
   "approvedSources": zod.number(),
@@ -838,8 +843,18 @@ export const GetDataQualityResponse = zod.object({
 }),
   "registry": zod.object({
   "sampleFiles": zod.number(),
+  "sourceUrl": zod.string().nullable(),
+  "snapshotFormat": zod.string().nullable(),
+  "snapshotEncoding": zod.string().nullable(),
+  "snapshotSha256": zod.string().nullable(),
   "rawRows": zod.number(),
+  "validProducts": zod.number(),
+  "uniqueIngredients": zod.number(),
+  "uniqueManufacturers": zod.number(),
+  "uniqueRegistrations": zod.number(),
   "generatedCandidates": zod.number(),
+  "genericCandidates": zod.number(),
+  "brandCandidates": zod.number(),
   "parseErrors": zod.number(),
   "warnings": zod.array(zod.string())
 }),

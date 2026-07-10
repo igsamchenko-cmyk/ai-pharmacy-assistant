@@ -16,41 +16,34 @@ function positionalFile(): string | null {
 
 function safeMessage(error: unknown): string {
   return error instanceof Error
-    ? error.message.replace(/[A-Za-z]:\\[^\s"'`]+/g, "[path]")
+    ? error.message
+        .replace(/[A-Za-z]:\\[^\s"'`]+/g, "[path]")
         .replace(/\/(?:opt|tmp|var|home|Users)\/[^\s"'`]+/g, "[path]")
-    : "Registry preview failed.";
+        .replace(/postgres(?:ql)?:\/\/[^\s"'`]+/gi, "[database-url]")
+    : "Registry production report failed.";
 }
 
 async function main(): Promise<void> {
   const file = argValue("--file=") ?? positionalFile();
-  const download = process.argv.includes("--download");
-  if (!file && !download) {
-    console.error("Provide --file=<registry.csv|tsv|json> or --download.");
-    process.exit(1);
-  }
   const includeTradeNames = !process.argv.includes("--no-trade-names");
-  const downloaded = download
-    ? await downloadOfficialRegistrySnapshot()
-    : null;
+  const downloaded = file ? null : await downloadOfficialRegistrySnapshot();
   const parsedRegistry = downloaded
     ? parseRegistryText(downloaded.text, {
         includeTradeNames,
         snapshot: downloaded.metadata,
       })
     : parseRegistryFile(file as string, { includeTradeNames });
+
   const plan = buildReviewableImportPlan(parsedRegistry.candidates);
-  const productionSummary = buildRegistryProductionSummary(
-    parsedRegistry,
-    plan.preview.reviewDistribution,
-  );
   console.log(JSON.stringify({
-    ...parsedRegistry,
-    rows: undefined,
-    candidates: undefined,
-    productionSummary,
+    ok: plan.blocked.length === 0,
+    productionSummary: buildRegistryProductionSummary(
+      parsedRegistry,
+      plan.preview.reviewDistribution,
+    ),
     preview: plan.preview,
-    reviewableRows: plan.reviewable.length,
     blocked: plan.blocked,
+    parseErrors: parsedRegistry.parseErrors.length,
   }, null, 2));
 }
 

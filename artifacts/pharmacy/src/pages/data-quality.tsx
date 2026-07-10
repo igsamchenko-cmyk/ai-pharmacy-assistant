@@ -473,6 +473,10 @@ function IngestionWorkflowCard({
           <StatCard label="Candidate sources" value={ingestion.sourceDiscovery.candidateSources} />
           <StatCard label="Blocked sources" value={ingestion.sourceDiscovery.blockedSources} />
           <StatCard label="Registry raw rows" value={ingestion.registry.rawRows} />
+          <StatCard label="Registry products" value={ingestion.registry.validProducts} />
+          <StatCard label="Registry ingredients" value={ingestion.registry.uniqueIngredients} />
+          <StatCard label="Registry manufacturers" value={ingestion.registry.uniqueManufacturers} />
+          <StatCard label="Registry registrations" value={ingestion.registry.uniqueRegistrations} />
           <StatCard label="Candidate files" value={ingestion.candidates.files} />
           <StatCard label="Candidate rows" value={ingestion.candidates.rows} />
           <StatCard label="Conflicts" value={ingestion.candidates.conflicts} />

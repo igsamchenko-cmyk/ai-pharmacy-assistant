@@ -5,6 +5,33 @@
 
 ## [Не випущено]
 
+## v1.6.0 - Production Ukrainian Drug Registry Import & Database Scaling - Unreleased
+
+### Added
+
+- Added production-scale Ukrainian State Drug Registry ingestion from the
+  official CSV export at `drlz.com.ua`.
+- Added Windows-1251 and semicolon-delimited CSV parsing for the official
+  registry snapshot format.
+- Added `pnpm knowledge:registry:production-report` for sanitized snapshot
+  metadata, hash, product, ingredient, manufacturer, registration and review
+  distribution counts.
+- Added optional DB product/manufacturer snapshot tables for audit and review;
+  these rows are not used by runtime search.
+- Expanded Beta Dashboard and Data Quality ingestion summaries with registry
+  product, ingredient, manufacturer and registration counts.
+
+### Safety
+
+- Registry preview/import remains dry-run by default.
+- DB writes still require explicit `--commit` and do not print `DATABASE_URL`.
+- Runtime lookup remains approved-only.
+- `pending`, `needs_review` and registry product snapshot rows remain hidden
+  from user-facing runtime lookup until reviewed and approved as mappings.
+- Static fallback and optional local PostgreSQL behavior are preserved.
+- No proprietary catalog scraping, copied instructions, dosing logic, treatment
+  recommendations or invented clinical claims are added.
+
 ## v1.5.0 - Automated Drug Ingestion Pipeline - Unreleased
 
 ### Added

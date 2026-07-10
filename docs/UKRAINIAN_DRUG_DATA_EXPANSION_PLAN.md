@@ -1,10 +1,14 @@
 # Ukrainian Drug Data Expansion Plan
 
-v1.5 focuses on controlled expansion, not a new runtime architecture.
+v1.6 focuses on production-scale Ukrainian registry import without changing the
+runtime safety architecture.
 
 ## Near-Term Scope
 
-- Import official Ukrainian registry exports from local CSV/TSV/JSON.
+- Import the official Ukrainian State Drug Registry CSV export or local
+  CSV/TSV/JSON snapshots.
+- Track product, registration and manufacturer counts separately from runtime
+  dictionary mappings.
 - Generate dictionary candidates in the existing canonical import format.
 - Add deterministic Ukrainian-to-Latin transliteration candidates.
 - Convert beta search misses into review-only typo candidates.
@@ -22,8 +26,11 @@ v1.5 focuses on controlled expansion, not a new runtime architecture.
 1. Pull latest `main` after PR merge.
 2. Set `DATABASE_URL`, `DATABASE_SSL=true` and `KNOWLEDGE_DB_RUNTIME=true` in the local session only.
 3. Run `pnpm db:push`.
-4. Run `pnpm knowledge:candidates:preview`.
-5. Run `pnpm knowledge:candidates:commit -- --commit`.
-6. Run `pnpm knowledge:runtime:verify -- --strict`.
-7. Review pending/needs_review rows in `/review`.
-8. Redeploy Render after verified DB import if runtime behavior changed.
+4. Run `pnpm knowledge:registry:production-report`.
+5. Run `pnpm knowledge:registry:import -- --download` and inspect the dry-run
+   preview.
+6. If the preview is acceptable, run
+   `pnpm knowledge:registry:import -- --download --commit`.
+7. Run `pnpm knowledge:runtime:verify -- --strict`.
+8. Review pending/needs_review rows in `/review`.
+9. Redeploy Render after verified DB import if runtime behavior changed.

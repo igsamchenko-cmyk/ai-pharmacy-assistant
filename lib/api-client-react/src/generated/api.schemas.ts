@@ -158,6 +158,11 @@ export type BetaDashboardStatusRealWorld = {
 
 export type BetaDashboardStatusIngestion = {
   sourcesApproved: number;
+  registryRawRows: number;
+  registryProducts: number;
+  registryIngredients: number;
+  registryManufacturers: number;
+  registryRegistrations: number;
   candidateFiles: number;
   candidateRows: number;
   approved: number;
@@ -788,7 +793,7 @@ export type BulkIngestReportVersion = typeof BulkIngestReportVersion[keyof typeo
 
 
 export const BulkIngestReportVersion = {
-  '1.5-bulk-ingest': '1.5-bulk-ingest',
+  '1.6-bulk-ingest': '1.6-bulk-ingest',
 } as const;
 
 export type BulkIngestReportSourceDiscovery = {
@@ -799,8 +804,22 @@ export type BulkIngestReportSourceDiscovery = {
 
 export type BulkIngestReportRegistry = {
   sampleFiles: number;
+  /** @nullable */
+  sourceUrl: string | null;
+  /** @nullable */
+  snapshotFormat: string | null;
+  /** @nullable */
+  snapshotEncoding: string | null;
+  /** @nullable */
+  snapshotSha256: string | null;
   rawRows: number;
+  validProducts: number;
+  uniqueIngredients: number;
+  uniqueManufacturers: number;
+  uniqueRegistrations: number;
   generatedCandidates: number;
+  genericCandidates: number;
+  brandCandidates: number;
   parseErrors: number;
   warnings: string[];
 };

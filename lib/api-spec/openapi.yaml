@@ -1029,6 +1029,11 @@ components:
           type: object
           required:
             - sourcesApproved
+            - registryRawRows
+            - registryProducts
+            - registryIngredients
+            - registryManufacturers
+            - registryRegistrations
             - candidateFiles
             - candidateRows
             - approved
@@ -1040,6 +1045,16 @@ components:
             - warnings
           properties:
             sourcesApproved:
+              type: integer
+            registryRawRows:
+              type: integer
+            registryProducts:
+              type: integer
+            registryIngredients:
+              type: integer
+            registryManufacturers:
+              type: integer
+            registryRegistrations:
               type: integer
             candidateFiles:
               type: integer
@@ -2045,7 +2060,7 @@ components:
       properties:
         version:
           type: string
-          enum: ["1.5-bulk-ingest"]
+          enum: ["1.6-bulk-ingest"]
         generatedAt:
           type: string
         sourceDiscovery:
@@ -2060,13 +2075,52 @@ components:
               type: integer
         registry:
           type: object
-          required: [sampleFiles, rawRows, generatedCandidates, parseErrors, warnings]
+          required:
+            - sampleFiles
+            - sourceUrl
+            - snapshotFormat
+            - snapshotEncoding
+            - snapshotSha256
+            - rawRows
+            - validProducts
+            - uniqueIngredients
+            - uniqueManufacturers
+            - uniqueRegistrations
+            - generatedCandidates
+            - genericCandidates
+            - brandCandidates
+            - parseErrors
+            - warnings
           properties:
             sampleFiles:
               type: integer
+            sourceUrl:
+              type: string
+              nullable: true
+            snapshotFormat:
+              type: string
+              nullable: true
+            snapshotEncoding:
+              type: string
+              nullable: true
+            snapshotSha256:
+              type: string
+              nullable: true
             rawRows:
               type: integer
+            validProducts:
+              type: integer
+            uniqueIngredients:
+              type: integer
+            uniqueManufacturers:
+              type: integer
+            uniqueRegistrations:
+              type: integer
             generatedCandidates:
+              type: integer
+            genericCandidates:
+              type: integer
+            brandCandidates:
               type: integer
             parseErrors:
               type: integer

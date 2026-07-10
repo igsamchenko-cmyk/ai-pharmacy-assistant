@@ -7,7 +7,7 @@
  */
 
 /** Parse CSV text into a matrix of string cells. Blank trailing lines dropped. */
-export function parseCsv(text: string): string[][] {
+export function parseCsv(text: string, delimiter = ","): string[][] {
   const rows: string[][] = [];
   let field = "";
   let row: string[] = [];
@@ -47,7 +47,7 @@ export function parseCsv(text: string): string[][] {
       i++;
       continue;
     }
-    if (ch === ",") {
+    if (ch === delimiter) {
       endField();
       i++;
       continue;
@@ -71,15 +71,18 @@ export function parseCsv(text: string): string[][] {
   return rows.filter((r) => !(r.length === 1 && r[0].trim() === ""));
 }
 
-/** Quote a single CSV cell if it contains a comma, quote or newline. */
-export function csvCell(value: string): string {
-  if (/[",\r\n]/.test(value)) {
+/** Quote a single CSV cell if it contains a delimiter, quote or newline. */
+export function csvCell(value: string, delimiter = ","): string {
+  if (value.includes(delimiter) || /["\r\n]/.test(value)) {
     return `"${value.replace(/"/g, '""')}"`;
   }
   return value;
 }
 
 /** Serialize a matrix back to CSV text (LF line endings). */
-export function toCsv(rows: readonly (readonly string[])[]): string {
-  return rows.map((r) => r.map(csvCell).join(",")).join("\n");
+export function toCsv(
+  rows: readonly (readonly string[])[],
+  delimiter = ",",
+): string {
+  return rows.map((r) => r.map((cell) => csvCell(cell, delimiter)).join(delimiter)).join("\n");
 }

@@ -8,8 +8,18 @@
 
 export type BulkIngestReportRegistry = {
   sampleFiles: number;
+  sourceUrl: string | null;
+  snapshotFormat: string | null;
+  snapshotEncoding: string | null;
+  snapshotSha256: string | null;
   rawRows: number;
+  validProducts: number;
+  uniqueIngredients: number;
+  uniqueManufacturers: number;
+  uniqueRegistrations: number;
   generatedCandidates: number;
+  genericCandidates: number;
+  brandCandidates: number;
   parseErrors: number;
   warnings: string[];
 };
