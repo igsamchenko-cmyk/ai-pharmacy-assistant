@@ -55,6 +55,19 @@
   product isolation, excluded-status isolation, pool shutdown and no lingering
   idle transaction.
 
+### Production Checkpoint
+
+- Verified the production PostgreSQL registry snapshot with 16,533 products,
+  22,888 manufacturer records and 14,769 unique registrations.
+- Imported 1,218 new unique approved mappings, raising the approved runtime
+  mapping count from 721 to 1,939 without changing registry product totals.
+- Verified idempotent product and approved-only mapping reruns, with no
+  duplicate mappings, approved hard conflicts or lingering idle transactions.
+- Preserved review and quarantine isolation: pending, needs-review, rejected
+  and quarantined candidates remain outside runtime lookup.
+- Interaction-rule coverage remains intentionally incomplete; an absent rule is
+  not evidence that a drug combination is compatible.
+
 ### Safety
 
 - Registry preview/import remains dry-run by default.
