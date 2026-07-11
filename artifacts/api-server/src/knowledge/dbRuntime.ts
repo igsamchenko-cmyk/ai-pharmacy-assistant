@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { normalize } from "../lib/text";
 import { logger } from "../lib/logger";
 import { isDbRuntimeEnabled } from "./runtime";
@@ -114,6 +114,16 @@ export interface DbMappingRow {
 
 export interface RuntimeDbStore {
   listMappings(): Promise<DbMappingRow[]>;
+}
+
+export interface RegistryRuntimeCounts {
+  products: number;
+  manufacturers: number;
+  registrations: number;
+}
+
+export interface RegistryCountsStore {
+  getRegistryCounts(): Promise<RegistryRuntimeCounts>;
 }
 
 interface LoadRowsResult {
@@ -250,6 +260,35 @@ async function createDefaultDbStore(): Promise<RuntimeDbStore> {
   };
 }
 
+async function createRegistryCountsStore(): Promise<RegistryCountsStore> {
+  const dbModule = await import("@workspace/db");
+  const {
+    db,
+    knowledgeRegistryManufacturersTable: manufacturers,
+    knowledgeRegistryProductsTable: products,
+  } = dbModule;
+
+  return {
+    async getRegistryCounts(): Promise<RegistryRuntimeCounts> {
+      const [[productRow], [manufacturerRow], [registrationRow]] = await Promise.all([
+        db.select({ count: sql<number>`count(*)::int` }).from(products),
+        db.select({ count: sql<number>`count(*)::int` }).from(manufacturers),
+        db
+          .select({
+            count: sql<number>`count(distinct nullif(${products.registrationNumber}, ''))::int`,
+          })
+          .from(products),
+      ]);
+
+      return {
+        products: Number(productRow?.count ?? 0),
+        manufacturers: Number(manufacturerRow?.count ?? 0),
+        registrations: Number(registrationRow?.count ?? 0),
+      };
+    },
+  };
+}
+
 async function loadRowsWithDiagnostics(
   store?: RuntimeDbStore,
 ): Promise<LoadRowsResult> {
@@ -354,6 +393,22 @@ export async function getKnowledgeRuntimeStatus(
       fallback: rows === null && dbEnabled ? staticCount : 0,
     },
   };
+}
+
+export async function getRuntimeRegistryCounts(
+  store?: RegistryCountsStore,
+): Promise<RegistryRuntimeCounts | null> {
+  if (!store && (!isDbRuntimeEnabled() || !process.env.DATABASE_URL)) {
+    return null;
+  }
+
+  try {
+    const countStore = store ?? (await createRegistryCountsStore());
+    return await countStore.getRegistryCounts();
+  } catch {
+    logger.warn("Registry count read unavailable");
+    return null;
+  }
 }
 
 export async function resolveRuntimeName(

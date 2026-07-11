@@ -1,10 +1,12 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   getKnowledgeRuntimeStatus,
+  getRuntimeRegistryCounts,
   resolveRuntimeName,
   resolveRuntimeNameFromRows,
   type DbMappingRow,
   type RuntimeDbStore,
+  type RegistryCountsStore,
 } from "../dbRuntime";
 import { knowledgeSearch, clearSearchCache } from "../search";
 
@@ -39,6 +41,16 @@ function store(rows: DbMappingRow[]): RuntimeDbStore {
   return { listMappings: async () => rows };
 }
 
+function registryCountStore(): RegistryCountsStore {
+  return {
+    getRegistryCounts: async () => ({
+      products: 16533,
+      manufacturers: 22888,
+      registrations: 14769,
+    }),
+  };
+}
+
 async function withRuntimeFlag<T>(value: string | undefined, fn: () => Promise<T>) {
   const old = process.env.KNOWLEDGE_DB_RUNTIME;
   if (value === undefined) {
@@ -60,6 +72,14 @@ async function withRuntimeFlag<T>(value: string | undefined, fn: () => Promise<T
 describe("DB-backed knowledge runtime", () => {
   beforeEach(() => {
     clearSearchCache();
+  });
+
+  it("reads production registry counts through the DB count store", async () => {
+    await expect(getRuntimeRegistryCounts(registryCountStore())).resolves.toEqual({
+      products: 16533,
+      manufacturers: 22888,
+      registrations: 14769,
+    });
   });
 
   it("uses the static provider when DB runtime is disabled", async () => {
