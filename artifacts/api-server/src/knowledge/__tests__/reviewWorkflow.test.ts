@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ListReviewQueueResponse } from "@workspace/api-zod";
 import {
   REVIEW_WORKFLOW_UNAVAILABLE_WARNING,
   MemoryReviewWorkflowStore,
@@ -133,6 +134,25 @@ describe("review workflow queue", () => {
   it("preserves provenance on queue items", async () => {
     const queue = await listReviewQueue({ status: "pending" }, storeWithRows());
     expect(queue.items[0]?.provenance).toMatchObject({ sourceKey: "who-inn", evidenceLevel: "reference" });
+  });
+
+  it("keeps nullable source metadata compatible with the API response contract", async () => {
+    const store = new MemoryReviewWorkflowStore([
+      createReviewStoreRow({
+        id: "approved-without-source-metadata",
+        reviewStatus: "approved",
+        sourceLabel: null,
+        sourceType: null,
+        sourceReliability: null,
+        sourceUrl: null,
+      }),
+    ]);
+
+    const queue = await listReviewQueue({ status: "approved" }, store);
+
+    expect(queue.items[0]?.provenance.sourceType).toBeUndefined();
+    expect(queue.items[0]?.provenance.sourceReliability).toBeUndefined();
+    expect(ListReviewQueueResponse.safeParse(queue).success).toBe(true);
   });
 
   it("parses conflict flags from JSON text", async () => {
