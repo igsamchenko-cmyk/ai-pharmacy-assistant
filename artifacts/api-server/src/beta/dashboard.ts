@@ -1,4 +1,4 @@
-﻿import { buildDiagnosticsPanelData } from "../diagnostics";
+import { buildDiagnosticsPanelData } from "../diagnostics";
 import { buildKnowledgeQualityJsonReport } from "../knowledge/qualityReport";
 import {
   getKnowledgeRuntimeStatus,
@@ -507,7 +507,7 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
     reviewQueue: {
       pending: review.counts.pending,
       needsReview: review.counts.needs_review,
-      approved: review.counts.approved,
+      approved: registryCounts?.approvedMappings ?? review.counts.approved,
       rejected: review.counts.rejected,
       warnings: uniqueWarnings(review.warnings),
     },

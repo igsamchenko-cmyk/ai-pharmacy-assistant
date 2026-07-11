@@ -30,7 +30,7 @@ import {
   getKnowledgeEngineStats,
   getAtcInfo,
   compareDrugs,
-  validateKnowledge,
+
   listSources,
   parseImportCsv,
   analyzeImport,
@@ -46,6 +46,7 @@ import {
   REVIEW_WORKFLOW_UNAVAILABLE_WARNING,
 } from "../knowledge";
 import { requireRole } from "../auth";
+import { buildDataQualityApiReport } from "../knowledge/qualityReport";
 
 const router: IRouter = Router();
 function parseBody<T>(schema: { safeParse: (value: unknown) => { success: true; data: T } | { success: false; error: { message: string } } }, body: unknown) {
@@ -104,8 +105,8 @@ router.get("/knowledge/stats", requireRole("user"), (_req, res): void => {
   res.json(GetKnowledgeStatsResponse.parse(getKnowledgeEngineStats()));
 });
 
-router.get("/knowledge/quality", requireRole("reviewer"), (_req, res): void => {
-  res.json(GetDataQualityResponse.parse(validateKnowledge()));
+router.get("/knowledge/quality", requireRole("reviewer"), async (_req, res): Promise<void> => {
+  res.json(GetDataQualityResponse.parse(await buildDataQualityApiReport()));
 });
 
 router.get("/knowledge/sources", requireRole("reviewer"), (_req, res): void => {

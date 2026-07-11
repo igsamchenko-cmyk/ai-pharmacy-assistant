@@ -8,6 +8,7 @@
 import type { BulkIngestReport } from './bulkIngestReport';
 import type { DataQualityReportCounts } from './dataQualityReportCounts';
 import type { DataQualityReportCoverage } from './dataQualityReportCoverage';
+import type { DataQualityReportProductionSnapshot } from './dataQualityReportProductionSnapshot';
 import type { DictionaryBatchQualitySummary } from './dictionaryBatchQualitySummary';
 import type { QualityIssue } from './qualityIssue';
 
@@ -18,6 +19,7 @@ export interface DataQualityReport {
   coverage: DataQualityReportCoverage;
   dictionaryBatches?: DictionaryBatchQualitySummary;
   ingestion: BulkIngestReport;
+  productionSnapshot: DataQualityReportProductionSnapshot;
   errors: QualityIssue[];
   warnings: QualityIssue[];
 }
