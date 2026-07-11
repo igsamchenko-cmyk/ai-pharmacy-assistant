@@ -36,12 +36,24 @@
   mapping counts, including planned, inserted, updated, unchanged, skipped,
   failed, chunks, final counts and elapsed time.
 - DB commit commands close PostgreSQL connections cleanly after CLI completion.
+- Fixed approved-only registry mapping persistence: candidate preparation and
+  deduplication now finish before DB writes, while unique mappings are committed
+  through bounded bulk chunks and short transactions.
+- Mapping chunks apply statement, lock and overall-stage timeouts, emit
+  sanitized progress/timing counters and report actual inserted, unchanged and
+  final approved counts.
+- Added an approved-mapping zero-write invariant and pre-write rejection for
+  non-approved rows or approved hard conflicts.
 
 ### Validation
 
 - Added a non-production PostgreSQL smoke gate for products-only commits,
   persisted product/manufacturer counts, idempotent reruns and runtime mapping
   isolation.
+- Added approved-only mapping PostgreSQL smoke gates for 10, 100, 500 and the
+  full safe set, including idempotent reruns, actual counts, timeout rollback,
+  product isolation, excluded-status isolation, pool shutdown and no lingering
+  idle transaction.
 
 ### Safety
 

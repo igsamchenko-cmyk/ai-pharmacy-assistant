@@ -196,3 +196,16 @@ mapping subset may affect runtime search.
 Expected registry warnings include large review queues for trade names,
 combination products, salt/base ambiguity and same-name conflicts. These are not
 runtime-visible unless an admin later approves a mapping.
+
+## v1.6 Approved Mapping Commit Quality
+
+Mapping commit quality is measured from actual DB results, not planned row
+counts. The report includes planned approved rows, unique normalized mappings,
+attempted, inserted, updated, unchanged, skipped, failed, chunks, elapsed time,
+final approved count and batch status.
+
+The non-production smoke gate checks 10, 100, 500 and the full approved-safe set,
+then reruns each set. It requires no product changes, no new `pending`,
+`needs_review`, `rejected` or quarantined mappings, no duplicate natural keys,
+zero approved hard conflicts, closed DB pools and no lingering `idle in
+transaction` sessions.

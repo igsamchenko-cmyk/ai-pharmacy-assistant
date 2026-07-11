@@ -87,13 +87,14 @@ Before merging a production registry import branch:
 - run `pnpm --filter @workspace/api-spec run codegen`;
 - run `pnpm knowledge:registry:production-report`;
 - run `pnpm knowledge:registry:preview -- --download`;
-- run `pnpm knowledge:registry:import -- --download`;
+- run `pnpm knowledge:registry:import -- --download --mappings-only --only-approved-mappings`;
 - confirm product snapshot readiness is true;
 - confirm the approved mapping subset has zero hard conflicts;
 - confirm review-only and quarantined conflict groups are visible in the report;
 - confirm combinations and salt/base ambiguity are not auto-approved;
-- confirm CI runs a PostgreSQL service products-only smoke with persisted row
-  assertions and an idempotent rerun;
+- confirm CI runs PostgreSQL service smoke for products and approved mappings
+  at 10/100/500/full scale with actual counts, timeout rollback, product
+  isolation, excluded-status isolation, no idle transaction and idempotent reruns;
 - run the full release validation gate with Node 24 on Linux CI;
 - confirm `git diff --check origin/main..HEAD`, `git diff --check` and
   `git diff --exit-code` pass after codegen.
@@ -109,3 +110,10 @@ Do not use production database credentials in CI. Do not use `--force` to bypass
 registry data-quality blockers. Do not run the mapping commit until the
 products-only snapshot reports non-zero persisted or unchanged product rows and
 final DB counts.
+The approved-only production retry remains blocked until this fix is reviewed,
+merged and the Linux Node 24 PostgreSQL workflow is green. After merge, verify
+the existing product snapshot counts without rerunning products, run the
+approved-only dry-run, take a fresh database checkpoint, run the approved-only
+commit once, verify actual counts, then rerun the identical command once to
+prove idempotency. `v1.6.0` remains unreleased until those production checks and
+live verification pass.

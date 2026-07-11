@@ -17,7 +17,7 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:18
@@ -71,12 +71,23 @@ jobs:
           DATABASE_SSL: "false"
           KNOWLEDGE_DB_RUNTIME: "true"
 
+      - name: Registry approved mapping DB smoke
+        run: |
+          pnpm knowledge:registry:mapping-db-smoke -- --download --limit=10 --expect-min-mappings=10 --rerun --verify-timeouts
+          pnpm knowledge:registry:mapping-db-smoke -- --download --limit=100 --expect-min-mappings=100 --rerun
+          pnpm knowledge:registry:mapping-db-smoke -- --download --limit=500 --expect-min-mappings=500 --rerun
+          pnpm knowledge:registry:mapping-db-smoke -- --download --expect-min-mappings=1218 --rerun
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/farmassist_test"
+          DATABASE_SSL: "false"
+          KNOWLEDGE_DB_RUNTIME: "true"
+
       - name: Registry production dry-runs
         run: |
           pnpm knowledge:sources:discover
           pnpm knowledge:registry:production-report
           pnpm knowledge:registry:preview -- --download
-          pnpm knowledge:registry:import -- --download
+          pnpm knowledge:registry:import -- --download --mappings-only --only-approved-mappings
 
       - name: Knowledge validation
         run: |

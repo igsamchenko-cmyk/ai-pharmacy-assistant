@@ -107,6 +107,22 @@ and report final DB counts. If valid planned products exist but no products are
 inserted, updated or detected as unchanged, the command fails instead of
 returning a successful empty snapshot.
 
+## v1.6 Approved Mapping Commit Boundary
+
+Approved registry mappings are prepared and deduplicated before DB writes.
+Persistence uses bounded bulk chunks and one short transaction per chunk, with
+statement and lock timeouts applied inside each transaction. The stage has an
+overall timeout, reports actual inserted/unchanged/final approved counts and
+always closes an owned pool.
+
+The mapping command rejects non-approved rows and approved hard conflicts before
+writing. `--mappings-only` never writes registry products. A failed chunk is
+rolled back and cannot mark the import successful; completed prior chunks remain
+safe to retry because normalized mapping and ingredient natural keys are unique.
+
+The disposable PostgreSQL smoke verifies timeout rollback, idempotency, product
+isolation, excluded-status isolation, pool closure and zero `idle in
+transaction` sessions. Production credentials are never used by this gate.
 Approved runtime mappings remain a separate commit step and still require
 `--only-approved` or `--only-approved-mappings`. Static fallback remains
 available when DB runtime is disabled or unavailable.
