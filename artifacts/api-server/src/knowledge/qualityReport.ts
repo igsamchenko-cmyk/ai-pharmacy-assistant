@@ -2,10 +2,73 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { validateKnowledge } from "./validation";
 import { buildStaticBackfillSnapshot, backfillCounts } from "./backfill";
-import { getKnowledgeRuntimeStatus } from "./dbRuntime";
+import {
+  getKnowledgeRuntimeStatus,
+  getRuntimeRegistryCounts,
+  type KnowledgeRuntimeStatus,
+  type RegistryRuntimeCounts,
+} from "./dbRuntime";
 import { getReviewStats } from "./reviewWorkflow";
 import { buildDictionaryBatchSummary } from "./import/batches";
 import { buildBulkIngestReport } from "./ingestion/report";
+
+export interface ProductionDatabaseSnapshot {
+  source: "db" | "static";
+  products: number | null;
+  manufacturers: number | null;
+  registrations: number | null;
+  approvedMappings: number | null;
+  dbConfigured: boolean;
+  dbAvailable: boolean;
+  dbSchemaStatus: KnowledgeRuntimeStatus["dbSchemaStatus"];
+  warnings: string[];
+}
+
+export type ProductionDatabaseSnapshotRuntime = Pick<
+  KnowledgeRuntimeStatus,
+  | "runtimeMode"
+  | "databaseUrlConfigured"
+  | "dbAvailable"
+  | "dbSchemaStatus"
+  | "warnings"
+>;
+
+export const PRODUCTION_DATABASE_COUNTS_UNAVAILABLE_WARNING =
+  "Production database aggregate counts are unavailable; static fallback remains active.";
+
+export function buildProductionDatabaseSnapshot(
+  runtime: ProductionDatabaseSnapshotRuntime,
+  registryCounts: RegistryRuntimeCounts | null,
+): ProductionDatabaseSnapshot {
+  const databaseReady =
+    runtime.runtimeMode === "db" &&
+    runtime.dbAvailable &&
+    runtime.dbSchemaStatus === "ready";
+  const databaseSnapshot = databaseReady && registryCounts !== null;
+
+  return {
+    source: databaseSnapshot ? "db" : "static",
+    products: databaseSnapshot ? registryCounts.products : null,
+    manufacturers: databaseSnapshot ? registryCounts.manufacturers : null,
+    registrations: databaseSnapshot ? registryCounts.registrations : null,
+    approvedMappings: databaseSnapshot ? registryCounts.approvedMappings : null,
+    dbConfigured: runtime.databaseUrlConfigured,
+    dbAvailable: runtime.dbAvailable,
+    dbSchemaStatus: runtime.dbSchemaStatus,
+    warnings: [
+      ...new Set([
+        ...runtime.warnings,
+        ...(databaseReady && !registryCounts
+          ? [PRODUCTION_DATABASE_COUNTS_UNAVAILABLE_WARNING]
+          : []),
+      ]),
+    ],
+  };
+}
+
+export interface DataQualityApiReport extends ReturnType<typeof validateKnowledge> {
+  productionSnapshot: ProductionDatabaseSnapshot;
+}
 
 export interface KnowledgeQualityJsonReport {
   version: "0.9";
@@ -27,6 +90,19 @@ export interface KnowledgeQualityJsonReport {
 
 function pct(part: number, total: number): number {
   return total === 0 ? 100 : Math.round((part / total) * 100);
+}
+
+export async function buildDataQualityApiReport(): Promise<DataQualityApiReport> {
+  const [runtime] = await Promise.all([getKnowledgeRuntimeStatus()]);
+  const registryCounts =
+    runtime.runtimeMode === "db" && runtime.dbAvailable
+      ? await getRuntimeRegistryCounts()
+      : null;
+
+  return {
+    ...validateKnowledge(),
+    productionSnapshot: buildProductionDatabaseSnapshot(runtime, registryCounts),
+  };
 }
 
 export async function buildKnowledgeQualityJsonReport(): Promise<KnowledgeQualityJsonReport> {

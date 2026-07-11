@@ -2198,6 +2198,7 @@ components:
         - counts
         - coverage
         - ingestion
+        - productionSnapshot
         - errors
         - warnings
       properties:
@@ -2256,6 +2257,49 @@ components:
           $ref: "#/components/schemas/DictionaryBatchQualitySummary"
         ingestion:
           $ref: "#/components/schemas/BulkIngestReport"
+        productionSnapshot:
+          type: object
+          required:
+            - source
+            - products
+            - manufacturers
+            - registrations
+            - approvedMappings
+            - dbConfigured
+            - dbAvailable
+            - dbSchemaStatus
+            - warnings
+          properties:
+            source:
+              type: string
+              enum: [db, static]
+            products:
+              oneOf:
+                - type: integer
+                - type: "null"
+            manufacturers:
+              oneOf:
+                - type: integer
+                - type: "null"
+            registrations:
+              oneOf:
+                - type: integer
+                - type: "null"
+            approvedMappings:
+              oneOf:
+                - type: integer
+                - type: "null"
+            dbConfigured:
+              type: boolean
+            dbAvailable:
+              type: boolean
+            dbSchemaStatus:
+              type: string
+              enum: [ready, not_requested, missing_database_url, unavailable]
+            warnings:
+              type: array
+              items:
+                type: string
         errors:
           type: array
           items:

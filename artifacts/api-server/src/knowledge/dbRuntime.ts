@@ -120,6 +120,7 @@ export interface RegistryRuntimeCounts {
   products: number;
   manufacturers: number;
   registrations: number;
+  approvedMappings: number;
 }
 
 export interface RegistryCountsStore {
@@ -264,13 +265,14 @@ async function createRegistryCountsStore(): Promise<RegistryCountsStore> {
   const dbModule = await import("@workspace/db");
   const {
     db,
+    knowledgeIngredientNamesTable: names,
     knowledgeRegistryManufacturersTable: manufacturers,
     knowledgeRegistryProductsTable: products,
   } = dbModule;
 
   return {
     async getRegistryCounts(): Promise<RegistryRuntimeCounts> {
-      const [[productRow], [manufacturerRow], [registrationRow]] = await Promise.all([
+      const [[productRow], [manufacturerRow], [registrationRow], [approvedRow]] = await Promise.all([
         db.select({ count: sql<number>`count(*)::int` }).from(products),
         db.select({ count: sql<number>`count(*)::int` }).from(manufacturers),
         db
@@ -278,12 +280,18 @@ async function createRegistryCountsStore(): Promise<RegistryCountsStore> {
             count: sql<number>`count(distinct nullif(${products.registrationNumber}, ''))::int`,
           })
           .from(products),
+        db
+          .select({
+            count: sql<number>`count(*) filter (where ${names.reviewStatus} = 'approved')::int`,
+          })
+          .from(names),
       ]);
 
       return {
         products: Number(productRow?.count ?? 0),
         manufacturers: Number(manufacturerRow?.count ?? 0),
         registrations: Number(registrationRow?.count ?? 0),
+        approvedMappings: Number(approvedRow?.count ?? 0),
       };
     },
   };

@@ -10,7 +10,14 @@ import {
   runStaticBackfill,
 } from "../backfill";
 import { buildKnowledgeSnapshot } from "../import/pipeline";
-import { buildKnowledgeQualityJsonReport } from "../qualityReport";
+import { validateKnowledge } from "../validation";
+import {
+  buildKnowledgeQualityJsonReport,
+  buildProductionDatabaseSnapshot,
+  PRODUCTION_DATABASE_COUNTS_UNAVAILABLE_WARNING,
+  type ProductionDatabaseSnapshotRuntime,
+} from "../qualityReport";
+import { GetDataQualityResponse } from "@workspace/api-zod";
 import {
   snapshotToRuntimeRows,
   verifyKnowledgeRuntime,
@@ -255,5 +262,81 @@ describe("static knowledge backfill", () => {
   it("quality report includes runtime status", async () => {
     const report = await buildKnowledgeQualityJsonReport();
     expect(report.runtime.staticFallbackEnabled).toBe(true);
+  });
+});
+
+describe("data quality production database snapshot", () => {
+  const databaseRuntime = {
+    runtimeMode: "db",
+    databaseUrlConfigured: true,
+    dbAvailable: true,
+    dbSchemaStatus: "ready",
+    warnings: [],
+  } satisfies ProductionDatabaseSnapshotRuntime;
+
+  it("uses DB aggregates instead of the static registry preview", () => {
+    const snapshot = buildProductionDatabaseSnapshot(databaseRuntime, {
+      products: 16533,
+      manufacturers: 22888,
+      registrations: 14769,
+      approvedMappings: 1939,
+    });
+
+    expect(snapshot.source).toBe("db");
+    expect(snapshot.products).toBe(16533);
+    expect(snapshot.products).not.toBe(10);
+    expect(snapshot.manufacturers).toBe(22888);
+    expect(snapshot.registrations).toBe(14769);
+    expect(snapshot.approvedMappings).toBe(1939);
+  });
+
+  it("keeps static fallback totals unavailable instead of reusing the preview", () => {
+    const snapshot = buildProductionDatabaseSnapshot(
+      {
+        runtimeMode: "static",
+        databaseUrlConfigured: false,
+        dbAvailable: false,
+        dbSchemaStatus: "missing_database_url",
+        warnings: ["Static fallback is active."],
+      },
+      null,
+    );
+
+    expect(snapshot.source).toBe("static");
+    expect(snapshot.products).toBeNull();
+    expect(snapshot.manufacturers).toBeNull();
+    expect(snapshot.registrations).toBeNull();
+    expect(snapshot.approvedMappings).toBeNull();
+  });
+
+  it("uses a sanitized warning when DB aggregates are unavailable", () => {
+    const snapshot = buildProductionDatabaseSnapshot(databaseRuntime, null);
+    const serialized = JSON.stringify(snapshot);
+
+    expect(snapshot.source).toBe("static");
+    expect(snapshot.warnings).toContain(
+      PRODUCTION_DATABASE_COUNTS_UNAVAILABLE_WARNING,
+    );
+    expect(serialized).not.toContain("postgresql://");
+    expect(serialized).not.toMatch(/[A-Za-z]:\\\\/);
+  });
+
+  it("keeps preview ingestion separate in the API contract", () => {
+    const productionSnapshot = buildProductionDatabaseSnapshot(databaseRuntime, {
+      products: 16533,
+      manufacturers: 22888,
+      registrations: 14769,
+      approvedMappings: 1939,
+    });
+    const response = GetDataQualityResponse.parse({
+      ...validateKnowledge(),
+      productionSnapshot,
+    });
+
+    expect(response.productionSnapshot.products).toBe(16533);
+    expect(response.ingestion.registry.validProducts).toBe(10);
+    expect(response.productionSnapshot.products).not.toBe(
+      response.ingestion.registry.validProducts,
+    );
   });
 });

@@ -871,6 +871,36 @@ export type DataQualityReportCoverage = {
   drugAtcPct: number;
 };
 
+export type DataQualityReportProductionSnapshotSource = typeof DataQualityReportProductionSnapshotSource[keyof typeof DataQualityReportProductionSnapshotSource];
+
+
+export const DataQualityReportProductionSnapshotSource = {
+  db: 'db',
+  static: 'static',
+} as const;
+
+export type DataQualityReportProductionSnapshotDbSchemaStatus = typeof DataQualityReportProductionSnapshotDbSchemaStatus[keyof typeof DataQualityReportProductionSnapshotDbSchemaStatus];
+
+
+export const DataQualityReportProductionSnapshotDbSchemaStatus = {
+  ready: 'ready',
+  not_requested: 'not_requested',
+  missing_database_url: 'missing_database_url',
+  unavailable: 'unavailable',
+} as const;
+
+export type DataQualityReportProductionSnapshot = {
+  source: DataQualityReportProductionSnapshotSource;
+  products: number | null;
+  manufacturers: number | null;
+  registrations: number | null;
+  approvedMappings: number | null;
+  dbConfigured: boolean;
+  dbAvailable: boolean;
+  dbSchemaStatus: DataQualityReportProductionSnapshotDbSchemaStatus;
+  warnings: string[];
+};
+
 export interface DataQualityReport {
   ok: boolean;
   generatedAt: string;
@@ -878,6 +908,7 @@ export interface DataQualityReport {
   coverage: DataQualityReportCoverage;
   dictionaryBatches?: DictionaryBatchQualitySummary;
   ingestion: BulkIngestReport;
+  productionSnapshot: DataQualityReportProductionSnapshot;
   errors: QualityIssue[];
   warnings: QualityIssue[];
 }

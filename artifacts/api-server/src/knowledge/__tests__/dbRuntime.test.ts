@@ -47,6 +47,7 @@ function registryCountStore(): RegistryCountsStore {
       products: 16533,
       manufacturers: 22888,
       registrations: 14769,
+      approvedMappings: 1939,
     }),
   };
 }
@@ -79,6 +80,7 @@ describe("DB-backed knowledge runtime", () => {
       products: 16533,
       manufacturers: 22888,
       registrations: 14769,
+      approvedMappings: 1939,
     });
   });
 

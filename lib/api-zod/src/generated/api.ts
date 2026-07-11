@@ -880,6 +880,17 @@ export const GetDataQualityResponse = zod.object({
 }),
   "warnings": zod.array(zod.string())
 }),
+  "productionSnapshot": zod.object({
+  "source": zod.enum(['db', 'static']),
+  "products": zod.union([zod.number(),zod.null()]),
+  "manufacturers": zod.union([zod.number(),zod.null()]),
+  "registrations": zod.union([zod.number(),zod.null()]),
+  "approvedMappings": zod.union([zod.number(),zod.null()]),
+  "dbConfigured": zod.boolean(),
+  "dbAvailable": zod.boolean(),
+  "dbSchemaStatus": zod.enum(['ready', 'not_requested', 'missing_database_url', 'unavailable']),
+  "warnings": zod.array(zod.string())
+}),
   "errors": zod.array(zod.object({
   "code": zod.string(),
   "severity": zod.enum(['error', 'warning']),
