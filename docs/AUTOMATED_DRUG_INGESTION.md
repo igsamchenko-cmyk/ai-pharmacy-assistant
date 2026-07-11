@@ -75,6 +75,23 @@ counts separately from mapping counts. A planned products-only commit fails if
 no product rows are inserted, updated or detected as unchanged. Run the mapping
 commit only after product snapshot counts are verified.
 
+The approved-only mapping commit now deduplicates the safe plan before opening
+DB transactions and writes at most 250 unique normalized mappings per short
+transaction by default. It bulk-loads existing natural keys, bulk-creates
+ingredients, bulk-inserts mappings and reports actual persisted/unchanged
+counts. Statement, lock and stage timeouts fail visibly and the owned DB pool is
+closed on success or failure. A planned mapping commit cannot report success
+with zero persisted or unchanged rows.
+
+Use the isolated database gate before any production retry:
+
+```bash
+pnpm knowledge:registry:mapping-db-smoke -- --download --limit=10 --rerun --verify-timeouts
+pnpm knowledge:registry:mapping-db-smoke -- --download --limit=100 --rerun
+pnpm knowledge:registry:mapping-db-smoke -- --download --limit=500 --rerun
+pnpm knowledge:registry:mapping-db-smoke -- --download --expect-min-mappings=1218 --rerun
+```
+
 ## Safety Boundaries
 
 - PostgreSQL is optional locally.

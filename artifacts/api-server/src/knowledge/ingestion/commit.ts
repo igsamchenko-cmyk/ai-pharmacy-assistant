@@ -29,12 +29,53 @@ export interface KnowledgeImportCommitStore {
   writeBatch(
     rows: readonly ReviewableImportRow[],
     batchId: string,
-  ): Promise<void>;
+    options?: MappingCommitOptions,
+  ): Promise<MappingCommitStats>;
   writeRegistryProducts?(
     rows: readonly RegistryRawRow[],
     batchId: string,
   ): Promise<RegistryProductCommitStats>;
   close?(): Promise<void>;
+}
+
+export interface MappingCommitProgress {
+  stage: "mapping_chunk";
+  chunk: number;
+  chunks: number;
+  attempted: number;
+  inserted: number;
+  updated: number;
+  unchanged: number;
+  skipped: number;
+  failed: number;
+  elapsedMs: number;
+  lastCompletedChunkAt: string;
+}
+
+export interface MappingCommitOptions {
+  approvedOnly?: boolean;
+  chunkSize?: number;
+  statementTimeoutMs?: number;
+  lockTimeoutMs?: number;
+  stageTimeoutMs?: number;
+  onProgress?: (progress: MappingCommitProgress) => void;
+}
+
+export interface MappingCommitStats {
+  plannedRows: number;
+  uniqueNormalizedMappings: number;
+  attempted: number;
+  inserted: number;
+  updated: number;
+  unchanged: number;
+  skipped: number;
+  failed: number;
+  chunks: number;
+  chunkSize: number;
+  elapsedMs: number;
+  finalMappingCount: number;
+  finalApprovedMappingCount: number;
+  importBatchStatus: "completed";
 }
 
 export interface RegistryProductCommitStats {
@@ -178,6 +219,102 @@ function registryProductStatementTimeoutMs(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 120_000;
 }
 
+function positiveEnv(name: string, fallback: number): number {
+  const parsed = Number.parseInt(process.env[name] ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function mappingChunkSize(): number {
+  return positiveEnv("REGISTRY_MAPPING_IMPORT_CHUNK_SIZE", 250);
+}
+
+function mappingStatementTimeoutMs(): number {
+  return positiveEnv("REGISTRY_MAPPING_IMPORT_STATEMENT_TIMEOUT_MS", 60_000);
+}
+
+function mappingLockTimeoutMs(): number {
+  return positiveEnv("REGISTRY_MAPPING_IMPORT_LOCK_TIMEOUT_MS", 10_000);
+}
+
+function mappingStageTimeoutMs(): number {
+  return positiveEnv("REGISTRY_MAPPING_IMPORT_STAGE_TIMEOUT_MS", 600_000);
+}
+
+interface PreparedMappingValue {
+  normalized: string;
+  name: string;
+  kind: ReturnType<typeof nameTypeToKind>;
+  ingredientInnKey: string;
+  ingredientInn: string;
+  atcCode: string | null;
+  sourceKey: string;
+  locale: string;
+  confidence: ImportRow["confidence"];
+  confidenceScore: number;
+  reviewStatus: ReviewableImportRow["reviewStatus"];
+  conflictFlags: string;
+  validationWarnings: string;
+  importBatchId: string;
+}
+
+function prepareMappingValues(
+  rows: readonly ReviewableImportRow[],
+  batchId: string,
+  approvedOnly: boolean,
+): { values: PreparedMappingValue[]; duplicates: number } {
+  const unique = new Map<string, PreparedMappingValue>();
+  let duplicates = 0;
+
+  for (const item of rows) {
+    if (approvedOnly && item.reviewStatus !== "approved") {
+      throw new Error(
+        "Approved-only mapping commit received a non-approved review status.",
+      );
+    }
+    if (
+      approvedOnly &&
+      item.conflictFlags.some((flag) =>
+        ["name_multiple_ingredients", "brand_conflicting_inn"].includes(flag),
+      )
+    ) {
+      throw new Error("Approved-only mapping commit contains hard conflicts.");
+    }
+
+    const normalized = normalize(item.row.name);
+    const ingredientInnKey = normalize(item.row.canonicalInn);
+    if (!normalized || !ingredientInnKey) {
+      throw new Error("Mapping commit contains an invalid natural key.");
+    }
+    const value: PreparedMappingValue = {
+      normalized,
+      name: item.row.name,
+      kind: nameTypeToKind(item.row.nameType),
+      ingredientInnKey,
+      ingredientInn: item.row.canonicalInn,
+      atcCode: item.row.atcCode ?? null,
+      sourceKey: item.row.sourceId,
+      locale: item.row.locale,
+      confidence: item.row.confidence,
+      confidenceScore: confidenceScore(item.row.confidence),
+      reviewStatus: item.reviewStatus,
+      conflictFlags: encodeList(item.conflictFlags),
+      validationWarnings: encodeList(item.validationWarnings),
+      importBatchId: batchId,
+    };
+    const prior = unique.get(normalized);
+    if (prior) {
+      if (prior.ingredientInnKey !== ingredientInnKey) {
+        throw new Error("Mapping commit contains conflicting natural keys.");
+      }
+      duplicates++;
+      continue;
+    }
+    unique.set(normalized, value);
+  }
+
+  return { values: [...unique.values()], duplicates };
+}
+
 export function buildReviewableImportPlan(
   rows: readonly ImportRow[],
   errors: readonly ImportRowError[] = [],
@@ -256,49 +393,208 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
   } = await import("@workspace/db");
 
   return {
-    async writeBatch(rows, batchId) {
-      await db.transaction(async (tx) => {
-        const seenInn = new Set<string>();
-        for (const item of rows) {
-          const row = item.row;
-          const innKey = normalize(row.canonicalInn);
-          if (!seenInn.has(innKey)) {
-            seenInn.add(innKey);
+    async writeBatch(rows, batchId, options = {}) {
+      const startedAt = Date.now();
+      const chunkSize = options.chunkSize ?? mappingChunkSize();
+      const statementTimeoutMs =
+        options.statementTimeoutMs ?? mappingStatementTimeoutMs();
+      const lockTimeoutMs = options.lockTimeoutMs ?? mappingLockTimeoutMs();
+      const stageTimeoutMs = options.stageTimeoutMs ?? mappingStageTimeoutMs();
+      const prepared = prepareMappingValues(
+        rows,
+        batchId,
+        options.approvedOnly ?? false,
+      );
+      const chunks = chunkRows(prepared.values, chunkSize);
+      let attempted = 0;
+      let inserted = 0;
+      let unchanged = 0;
+
+      for (const [chunkIndex, chunk] of chunks.entries()) {
+        if (Date.now() - startedAt >= stageTimeoutMs) {
+          throw new Error("Approved mapping commit stage timed out.");
+        }
+
+        await db.transaction(async (tx) => {
+          await tx.execute(
+            sql`select set_config('statement_timeout', ${`${statementTimeoutMs}ms`}, true)`,
+          );
+          await tx.execute(
+            sql`select set_config('lock_timeout', ${`${lockTimeoutMs}ms`}, true)`,
+          );
+
+          const normalizedNames = chunk.map((value) => value.normalized);
+          const existingRows = await tx
+            .select({
+              normalized: knowledgeIngredientNamesTable.normalized,
+              ingredientInnKey: knowledgeIngredientNamesTable.ingredientInnKey,
+              reviewStatus: knowledgeIngredientNamesTable.reviewStatus,
+            })
+            .from(knowledgeIngredientNamesTable)
+            .where(
+              inArray(
+                knowledgeIngredientNamesTable.normalized,
+                normalizedNames,
+              ),
+            );
+          const existingByName = new Map(
+            existingRows.map((row) => [row.normalized, row]),
+          );
+
+          const assertCompatible = (
+            value: PreparedMappingValue,
+            existing: {
+              ingredientInnKey: string;
+              reviewStatus: string;
+            },
+          ): void => {
+            if (existing.ingredientInnKey !== value.ingredientInnKey) {
+              throw new Error(
+                "Mapping commit conflicts with an existing ingredient mapping.",
+              );
+            }
+            if (options.approvedOnly && existing.reviewStatus !== "approved") {
+              throw new Error(
+                "Approved-only mapping commit conflicts with a non-approved existing mapping.",
+              );
+            }
+          };
+          for (const value of chunk) {
+            const existing = existingByName.get(value.normalized);
+            if (existing) assertCompatible(value, existing);
+          }
+
+          const newValues = chunk.filter(
+            (value) => !existingByName.has(value.normalized),
+          );
+          const ingredients = [
+            ...new Map(
+              newValues.map((value) => [
+                value.ingredientInnKey,
+                {
+                  innKey: value.ingredientInnKey,
+                  inn: value.ingredientInn,
+                  atcCode: value.atcCode,
+                  sourceKey: value.sourceKey,
+                  evidenceLevel: "reference",
+                },
+              ]),
+            ).values(),
+          ];
+          if (ingredients.length > 0) {
             await tx
               .insert(knowledgeIngredientsTable)
-              .values({
-                innKey,
-                inn: row.canonicalInn,
-                atcCode: row.atcCode ?? null,
-                sourceKey: row.sourceId,
-                evidenceLevel: "reference",
-              })
+              .values(ingredients)
               .onConflictDoNothing({
                 target: knowledgeIngredientsTable.innKey,
               });
           }
-          await tx
-            .insert(knowledgeIngredientNamesTable)
-            .values({
-              normalized: normalize(row.name),
-              name: row.name,
-              kind: nameTypeToKind(row.nameType),
-              ingredientInnKey: innKey,
-              sourceKey: row.sourceId,
-              evidenceLevel: "reference",
-              locale: row.locale,
-              confidence: row.confidence,
-              confidenceScore: confidenceScore(row.confidence),
-              reviewStatus: item.reviewStatus,
-              conflictFlags: encodeList(item.conflictFlags),
-              validationWarnings: encodeList(item.validationWarnings),
-              importBatchId: batchId,
-            })
-            .onConflictDoNothing({
-              target: knowledgeIngredientNamesTable.normalized,
-            });
+
+          if (newValues.length > 0) {
+            const insertedRows = await tx
+              .insert(knowledgeIngredientNamesTable)
+              .values(
+                newValues.map(
+                  ({
+                    ingredientInn: _ingredientInn,
+                    atcCode: _atcCode,
+                    ...value
+                  }) => ({
+                    ...value,
+                    evidenceLevel: "reference",
+                  }),
+                ),
+              )
+              .onConflictDoNothing({
+                target: knowledgeIngredientNamesTable.normalized,
+              })
+              .returning({
+                normalized: knowledgeIngredientNamesTable.normalized,
+              });
+            inserted += insertedRows.length;
+            const insertedNames = new Set(
+              insertedRows.map((row) => row.normalized),
+            );
+            const concurrentValues = newValues.filter(
+              (value) => !insertedNames.has(value.normalized),
+            );
+            if (concurrentValues.length > 0) {
+              const concurrentRows = await tx
+                .select({
+                  normalized: knowledgeIngredientNamesTable.normalized,
+                  ingredientInnKey:
+                    knowledgeIngredientNamesTable.ingredientInnKey,
+                  reviewStatus: knowledgeIngredientNamesTable.reviewStatus,
+                })
+                .from(knowledgeIngredientNamesTable)
+                .where(
+                  inArray(
+                    knowledgeIngredientNamesTable.normalized,
+                    concurrentValues.map((value) => value.normalized),
+                  ),
+                );
+              const concurrentByName = new Map(
+                concurrentRows.map((row) => [row.normalized, row]),
+              );
+              for (const value of concurrentValues) {
+                const concurrent = concurrentByName.get(value.normalized);
+                if (!concurrent) {
+                  throw new Error(
+                    "Mapping commit could not verify a concurrent natural key.",
+                  );
+                }
+                assertCompatible(value, concurrent);
+              }
+              unchanged += concurrentValues.length;
+            }
+          }
+          unchanged += existingRows.length;
+          attempted += chunk.length;
+        });
+
+        try {
+          options.onProgress?.({
+            stage: "mapping_chunk",
+            chunk: chunkIndex + 1,
+            chunks: chunks.length,
+            attempted,
+            inserted,
+            updated: 0,
+            unchanged,
+            skipped: prepared.duplicates,
+            failed: 0,
+            elapsedMs: Date.now() - startedAt,
+            lastCompletedChunkAt: new Date().toISOString(),
+          });
+        } catch {
+          // Progress observers cannot affect a persisted chunk.
         }
-      });
+      }
+
+      const [mappingCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(knowledgeIngredientNamesTable);
+      const [approvedCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(knowledgeIngredientNamesTable)
+        .where(sql`${knowledgeIngredientNamesTable.reviewStatus} = 'approved'`);
+
+      return {
+        plannedRows: rows.length,
+        uniqueNormalizedMappings: prepared.values.length,
+        attempted,
+        inserted,
+        updated: 0,
+        unchanged,
+        skipped: prepared.duplicates,
+        failed: 0,
+        chunks: chunks.length,
+        chunkSize,
+        elapsedMs: Date.now() - startedAt,
+        finalMappingCount: Number(mappingCount?.count ?? 0),
+        finalApprovedMappingCount: Number(approvedCount?.count ?? 0),
+        importBatchStatus: "completed",
+      };
     },
     async writeRegistryProducts(rows, batchId) {
       const startedAt = Date.now();
@@ -482,8 +778,14 @@ export async function commitReviewableImportPlan(
     store?: KnowledgeImportCommitStore;
     batchId?: string;
     force?: boolean;
+    approvedOnly?: boolean;
+    chunkSize?: number;
+    statementTimeoutMs?: number;
+    lockTimeoutMs?: number;
+    stageTimeoutMs?: number;
+    onProgress?: (progress: MappingCommitProgress) => void;
   } = {},
-): Promise<{ committedRows: number; batchId: string }> {
+): Promise<{ committedRows: number; batchId: string } & MappingCommitStats> {
   if (plan.blocked.length > 0 && !options.force) {
     throw new Error(`Import blocked: ${plan.blocked.join(", ")}`);
   }
@@ -492,12 +794,40 @@ export async function commitReviewableImportPlan(
       "Import blocked: copyrighted/proprietary source rows detected.",
     );
   }
+  if (
+    options.approvedOnly &&
+    plan.reviewable.some((item) => item.reviewStatus !== "approved")
+  ) {
+    throw new Error(
+      "Approved-only mapping commit received a non-approved review status.",
+    );
+  }
+  if (options.approvedOnly && plan.blocked.includes("hard_conflicts")) {
+    throw new Error("Approved-only mapping commit contains hard conflicts.");
+  }
   const batchId = options.batchId ?? `bulk-ingest-${new Date().toISOString()}`;
   const ownsStore = options.store === undefined;
   const store = options.store ?? (await createDbCommitStore());
   try {
-    await store.writeBatch(plan.reviewable, batchId);
-    return { committedRows: plan.reviewable.length, batchId };
+    const result = await store.writeBatch(plan.reviewable, batchId, {
+      approvedOnly: options.approvedOnly,
+      chunkSize: options.chunkSize,
+      statementTimeoutMs: options.statementTimeoutMs,
+      lockTimeoutMs: options.lockTimeoutMs,
+      stageTimeoutMs: options.stageTimeoutMs,
+      onProgress: options.onProgress,
+    });
+    const persisted = result.inserted + result.updated + result.unchanged;
+    if (plan.reviewable.length > 0 && persisted === 0) {
+      throw new Error(
+        "Approved mappings commit completed with zero persisted rows.",
+      );
+    }
+    return {
+      ...result,
+      committedRows: result.inserted + result.updated,
+      batchId,
+    };
   } finally {
     if (ownsStore) await store.close?.();
   }

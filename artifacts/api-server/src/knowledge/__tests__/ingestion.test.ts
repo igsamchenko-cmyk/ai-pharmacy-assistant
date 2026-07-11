@@ -16,6 +16,7 @@ import {
   searchMissesToImportRows,
   type ImportRow,
   type KnowledgeImportCommitStore,
+  type MappingCommitStats,
   type RegistryProductCommitStats,
 } from "../index";
 
@@ -30,6 +31,28 @@ function row(overrides: Partial<ImportRow> = {}): ImportRow {
     confidence: "high",
     atcCode: "N02BE01",
     notes: "test row",
+    ...overrides,
+  };
+}
+
+function mappingStats(
+  overrides: Partial<MappingCommitStats> = {},
+): MappingCommitStats {
+  return {
+    plannedRows: 1,
+    uniqueNormalizedMappings: 1,
+    attempted: 1,
+    inserted: 1,
+    updated: 0,
+    unchanged: 0,
+    skipped: 0,
+    failed: 0,
+    chunks: 1,
+    chunkSize: 250,
+    elapsedMs: 1,
+    finalMappingCount: 1,
+    finalApprovedMappingCount: 1,
+    importBatchStatus: "completed",
     ...overrides,
   };
 }
@@ -312,19 +335,81 @@ describe("candidate generation", () => {
 describe("candidate commit flow", () => {
   it("writes through an injected store without requiring a real database", async () => {
     const plan = buildReviewableImportPlan([row({ confidence: "medium" })]);
-    const written: { rows: number; batchId: string }[] = [];
+    const written: { rows: number; batchId: string; chunkSize?: number }[] = [];
     const store: KnowledgeImportCommitStore = {
-      async writeBatch(rows, batchId) {
-        written.push({ rows: rows.length, batchId });
+      async writeBatch(rows, batchId, options) {
+        written.push({
+          rows: rows.length,
+          batchId,
+          chunkSize: options?.chunkSize,
+        });
+        return mappingStats();
       },
     };
     const result = await commitReviewableImportPlan(plan, {
       store,
       batchId: "test-batch",
+      chunkSize: 100,
     });
 
-    expect(result).toEqual({ committedRows: 1, batchId: "test-batch" });
-    expect(written).toEqual([{ rows: 1, batchId: "test-batch" }]);
+    expect(result).toMatchObject({
+      committedRows: 1,
+      batchId: "test-batch",
+      inserted: 1,
+      unchanged: 0,
+      importBatchStatus: "completed",
+    });
+    expect(written).toEqual([
+      { rows: 1, batchId: "test-batch", chunkSize: 100 },
+    ]);
+  });
+
+  it("fails when an approved mapping commit persists zero rows", async () => {
+    const plan = buildReviewableImportPlan([row()]);
+    const store: KnowledgeImportCommitStore = {
+      async writeBatch() {
+        return mappingStats({
+          attempted: 0,
+          inserted: 0,
+          updated: 0,
+          unchanged: 0,
+          finalMappingCount: 0,
+          finalApprovedMappingCount: 0,
+        });
+      },
+    };
+
+    await expect(
+      commitReviewableImportPlan(plan, {
+        store,
+        batchId: "zero-write",
+        approvedOnly: true,
+      }),
+    ).rejects.toThrow(
+      "Approved mappings commit completed with zero persisted rows.",
+    );
+  });
+
+  it("rejects non-approved rows before an approved-only DB write", async () => {
+    const plan = buildReviewableImportPlan([
+      row({ confidence: "low", name: "Review Candidate" }),
+    ]);
+    let called = false;
+    const store: KnowledgeImportCommitStore = {
+      async writeBatch() {
+        called = true;
+        return mappingStats();
+      },
+    };
+
+    await expect(
+      commitReviewableImportPlan(plan, {
+        store,
+        batchId: "approved-only",
+        approvedOnly: true,
+      }),
+    ).rejects.toThrow(/non-approved review status/);
+    expect(called).toBe(false);
   });
 
   it("can commit registry product snapshots through an injected store", async () => {

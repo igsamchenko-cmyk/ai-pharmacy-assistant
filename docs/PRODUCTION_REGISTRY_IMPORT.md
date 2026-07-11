@@ -79,6 +79,46 @@ Products-only commit completed with zero persisted rows.
 This protects production from a silent "success" while snapshot tables remain
 empty.
 
+## Approved-Only Mapping Persistence
+
+The mapping commit prepares, validates, normalizes and deduplicates the complete
+approved-safe plan before opening a write transaction. The default mapping
+batch size is 250 unique normalized names. Each batch uses one short transaction
+with bulk existing-key lookup, bulk ingredient insertion and bulk mapping
+insertion.
+
+Configuration is optional:
+
+```bash
+REGISTRY_MAPPING_IMPORT_CHUNK_SIZE=250
+REGISTRY_MAPPING_IMPORT_STATEMENT_TIMEOUT_MS=60000
+REGISTRY_MAPPING_IMPORT_LOCK_TIMEOUT_MS=10000
+REGISTRY_MAPPING_IMPORT_STAGE_TIMEOUT_MS=600000
+```
+
+The chunk size can also be set with `--mapping-chunk-size=<n>`. Progress is
+written as sanitized counters with stage, chunk number, attempted, inserted,
+updated, unchanged, skipped, failed, elapsed time and last completed chunk
+timestamp. Reports include final total and approved mapping counts.
+
+If approved candidates exist but `inserted + updated + unchanged = 0`, the
+command exits non-zero with:
+
+```text
+Approved mappings commit completed with zero persisted rows.
+```
+
+A non-approved status, approved hard conflict or conflict with an existing
+natural key fails before that row is written. Products are never touched in
+`--mappings-only` mode.
+
+The previous production attempt held one transaction open while issuing
+sequential ingredient and mapping inserts for every candidate. Network
+round-trips left PostgreSQL `idle in transaction` between client queries; the
+process was stopped and the single transaction rolled back, so production
+remained at 721 approved mappings with no partial writes. Bounded chunks,
+timeouts and actual persisted counters remove that failure mode.
+
 ## Candidate Policy
 
 Auto-approved generic mappings require a single clear INN, official provenance,
@@ -106,8 +146,7 @@ The import is idempotent: product snapshots use stable registry IDs or row
 hashes, and mapping rows use normalized-name uniqueness. Re-running the same
 snapshot is safe.
 
-To retry safely, rerun the products-only dry-run, run a product snapshot commit,
-verify final DB counts, then run the approved-only mapping dry-run and commit.
+To retry safely after this fix is reviewed, merged and green in Linux CI, do not rerun products. Verify the existing product counts, run the approved-only mapping dry-run, create a fresh backup/checkpoint, then run the approved-only mapping commit once. Verify final counts and run the identical command once more for idempotency.
 To roll back a bad reviewed mapping, change its review status away from
 `approved`; runtime lookup only reads approved rows.
 
@@ -121,6 +160,6 @@ that failure mode from looking successful.
 
 v1.6 requires a clean Node 24 Linux gate. The workflow
 `.github/workflows/v16-registry-validation.yml` runs codegen, schema push
-against a PostgreSQL service, products-only DB smoke, official registry dry-runs,
+against a PostgreSQL service, products-only DB smoke, approved-only mapping DB smoke at 10/100/500/full scale, official registry dry-runs,
 full knowledge validation, beta readiness, tests, build and diff checks without
 production database credentials.

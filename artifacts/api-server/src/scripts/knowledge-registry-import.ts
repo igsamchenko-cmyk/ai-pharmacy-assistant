@@ -6,9 +6,11 @@ import {
   commitReviewableImportPlan,
   downloadOfficialRegistrySnapshot,
   parseRegistryFile,
+  parseRegistryImportFlags,
   parseRegistryText,
   summarizeImportPreview,
 } from "../knowledge/ingestion";
+import { normalize } from "../lib/text";
 
 function argValue(prefix: string): string | null {
   return (
@@ -24,9 +26,9 @@ function positionalFile(): string | null {
 function safeMessage(error: unknown): string {
   return error instanceof Error
     ? error.message
-        .replace(/[A-Za-z]:\\[^\s"'`]+/g, "[path]")
-        .replace(/\/(?:opt|tmp|var|home|Users)\/[^\s"'`]+/g, "[path]")
-        .replace(/postgres(?:ql)?:\/\/[^\s"'`]+/gi, "[database-url]")
+        .replace(/[A-Za-z]:\\[^\s"']+/g, "[path]")
+        .replace(/\/(?:opt|tmp|var|home|Users)\/[^\s"']+/g, "[path]")
+        .replace(/postgres(?:ql)?:\/\/[^\s"']+/gi, "[database-url]")
     : "Registry import failed.";
 }
 
@@ -42,61 +44,63 @@ async function main(): Promise<void> {
     console.error("Provide --file=<registry.csv|tsv|json> or --download.");
     process.exit(1);
   }
-  const doCommit = process.argv.includes("--commit");
-  if (process.argv.includes("--force")) {
-    throw new Error(
-      "Registry import does not support --force. Resolve approved blockers instead.",
-    );
-  }
-  const requireDb = process.argv.includes("--require-db");
-  const productsOnly = process.argv.includes("--products-only");
-  const mappingsOnly = process.argv.includes("--mappings-only");
-  if (productsOnly && mappingsOnly) {
-    throw new Error("Use either --products-only or --mappings-only, not both.");
-  }
-  if (process.argv.includes("--products") && mappingsOnly) {
-    throw new Error("Use either --products or --mappings-only, not both.");
-  }
-  const products =
-    process.argv.includes("--products") ||
-    productsOnly ||
-    (!productsOnly && !mappingsOnly);
-  const mappings = mappingsOnly || !productsOnly;
-  const onlyApproved =
-    process.argv.includes("--only-approved") ||
-    process.argv.includes("--only-approved-mappings");
-  const includeTradeNames = !process.argv.includes("--no-trade-names");
+
+  const flags = parseRegistryImportFlags(process.argv.slice(2));
   const downloaded = download ? await downloadOfficialRegistrySnapshot() : null;
   const registry = downloaded
     ? parseRegistryText(downloaded.text, {
-        includeTradeNames,
+        includeTradeNames: flags.includeTradeNames,
         snapshot: downloaded.metadata,
       })
-    : parseRegistryFile(file as string, { includeTradeNames });
+    : parseRegistryFile(file as string, {
+        includeTradeNames: flags.includeTradeNames,
+      });
   const plan = buildRegistryMappingPlan(registry);
   const productionSummary = buildRegistryProductionSummary(
     registry,
     plan.stats,
   );
-  const chunkSize = positiveIntEnv("REGISTRY_PRODUCT_IMPORT_CHUNK_SIZE", 500);
+  const productChunkSize = positiveIntEnv(
+    "REGISTRY_PRODUCT_IMPORT_CHUNK_SIZE",
+    500,
+  );
+  const mappingChunkSize =
+    flags.mappingChunkSize ??
+    positiveIntEnv("REGISTRY_MAPPING_IMPORT_CHUNK_SIZE", 250);
+  const uniqueApprovedMappings = new Set(
+    plan.approvedReviewableRows.map((item) => normalize(item.row.name)),
+  ).size;
   const productPlan = {
     plannedProducts: registry.rows.length,
     plannedManufacturers: productionSummary.manufacturers.declaredManufacturers,
     plannedRegistrations: productionSummary.registrations.uniqueNumbers,
-    chunkSize,
-    chunkCount: Math.ceil(registry.rows.length / chunkSize),
+    chunkSize: productChunkSize,
+    chunkCount: Math.ceil(registry.rows.length / productChunkSize),
+  };
+  const mappingPlan = {
+    plannedApprovedRows: plan.approvedReviewableRows.length,
+    uniqueNormalizedMappings: uniqueApprovedMappings,
+    chunkSize: mappingChunkSize,
+    chunkCount: Math.ceil(uniqueApprovedMappings / mappingChunkSize),
+    excludedPending: plan.reviewDistribution.pending,
+    excludedNeedsReview: plan.reviewDistribution.needs_review,
+    excludedRejected: plan.reviewDistribution.rejected,
+    excludedQuarantined: plan.reviewDistribution.quarantined,
+    approvedHardConflicts: plan.approvedCandidateConflicts,
   };
   const execution = {
-    commitRequested: doCommit,
-    dryRun: !doCommit,
-    productsEnabled: products,
-    mappingsEnabled: mappings,
-    requireDb,
+    commitRequested: flags.commit,
+    dryRun: !flags.commit,
+    productsEnabled: flags.products,
+    mappingsEnabled: flags.mappings,
+    requireDb: flags.requireDb,
     parsedRows: registry.parsedRows,
     validRows: productionSummary.rows.validProducts,
     productPlan,
+    mappingPlan,
   };
-  if (!doCommit) {
+
+  if (!flags.commit) {
     console.log(
       JSON.stringify(
         {
@@ -104,9 +108,9 @@ async function main(): Promise<void> {
           ...execution,
           dryRun: true,
           mode: {
-            products,
-            mappings,
-            onlyApprovedMappings: mappings,
+            products: flags.products,
+            mappings: flags.mappings,
+            onlyApprovedMappings: flags.onlyApprovedMappings,
           },
           generatedCandidates: registry.generatedCandidates,
           productionSummary,
@@ -133,14 +137,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  if (!requireDb) {
-    throw new Error("Registry commit requires --require-db.");
-  }
-  if (!productsOnly && !onlyApproved) {
-    throw new Error(
-      "Registry mapping commit requires --only-approved or --only-approved-mappings.",
-    );
-  }
   if (plan.blocked.length > 0) {
     throw new Error(`Registry import blocked: ${plan.blocked.join(", ")}`);
   }
@@ -148,16 +144,26 @@ async function main(): Promise<void> {
   const store = await createDbCommitStore();
   try {
     const batchId = `registry-import-${new Date().toISOString()}`;
-    const productResult = products
+    const productResult = flags.products
       ? await commitRegistryProducts(registry.rows, {
           store,
           batchId,
         })
       : null;
-    const mappingResult = mappings
+    const mappingResult = flags.mappings
       ? await commitReviewableImportPlan(plan.approvedCandidatesPlan, {
           store,
           batchId,
+          approvedOnly: true,
+          chunkSize: mappingChunkSize,
+          onProgress(progress) {
+            console.error(
+              JSON.stringify({
+                type: "registry_mapping_commit_progress",
+                ...progress,
+              }),
+            );
+          },
         })
       : null;
 
@@ -169,9 +175,14 @@ async function main(): Promise<void> {
           dryRun: false,
           committedMappings: mappingResult?.committedRows ?? 0,
           mappingBatchId: mappingResult?.batchId ?? null,
+          mappings: mappingResult,
           products: productResult,
-          skippedReviewOnlyRows: plan.reviewOnlyRows.length,
-          quarantinedRows: plan.quarantinedRows.length,
+          excludedMappings: {
+            pending: plan.reviewDistribution.pending,
+            needsReview: plan.reviewDistribution.needs_review,
+            rejected: plan.reviewDistribution.rejected,
+            quarantined: plan.reviewDistribution.quarantined,
+          },
         },
         null,
         2,

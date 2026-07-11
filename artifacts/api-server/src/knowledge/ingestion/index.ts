@@ -2,6 +2,7 @@ export * from "./sources";
 export * from "./transliteration";
 export * from "./registry";
 export * from "./registryPlan";
+export * from "./registryImportOptions";
 export * from "./candidates";
 export * from "./commit";
 export * from "./report";
