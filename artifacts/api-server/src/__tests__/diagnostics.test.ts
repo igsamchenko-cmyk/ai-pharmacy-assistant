@@ -8,11 +8,21 @@ describe("diagnostics panel data", () => {
       OPENAI_API_KEY: "openai-secret",
       ENABLE_OPENAI: "true",
       APP_RELEASE_LABEL: "test-release",
+      APP_RELEASE_VERSION: "v1.2.3",
       npm_package_version: "1.2.3",
     });
     expect(data.app.releaseLabel).toBe("test-release");
+    expect(data.app.version).toBe("v1.2.3");
     expect(data.providers.geminiConfigured).toBe(true);
     expect(data.providers.openAiEnabled).toBe(true);
+  });
+
+  it("uses the production release metadata when package env is unavailable", async () => {
+    const data = await buildDiagnosticsPanelData({ npm_package_version: "0.0.0" });
+
+    expect(data.app.releaseLabel).toContain("v1.6.0");
+    expect(data.app.version).toBe("v1.6.0");
+    expect(data.app.version).not.toBe("0.0.0");
   });
 
   it("never exposes provider keys", async () => {
