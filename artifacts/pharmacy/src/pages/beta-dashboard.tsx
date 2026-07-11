@@ -28,6 +28,7 @@ import type {
   BetaDashboardRunResponse,
   BetaDashboardStatus,
 } from "@workspace/api-client-react";
+import { buildDashboardProductionSummary } from "./beta-dashboard-summary";
 
 type RunnableCheck = Exclude<BetaDashboardCheckType, "full_safe_check">;
 type RunMap = Partial<Record<BetaDashboardCheckType, BetaDashboardRunResponse>>;
@@ -106,6 +107,13 @@ const UI = {
     release: "\u0420\u0435\u043b\u0456\u0437",
     version: "\u0412\u0435\u0440\u0441\u0456\u044f",
     overallStatus: "\u0421\u0442\u0430\u0442\u0443\u0441",
+    productionSummary: "Production summary",
+    runtime: "Runtime",
+    approvedMappings: "Approved mappings",
+    databaseStatus: "DB status",
+    databaseReady: "Ready",
+    productionBlockers: "Production blockers",
+    reportNotices: "Test and report notices",
     availableChecks: "\u0414\u043e\u0441\u0442\u0443\u043f\u043d\u0456 \u043f\u0435\u0440\u0435\u0432\u0456\u0440\u043a\u0438",
   },
   messages: {
@@ -164,6 +172,57 @@ function WarningBlock({ warnings }: { warnings: string[] }) {
       ))}
       {warnings.length > 4 && <div>+{warnings.length - 4} {UI.messages.extraWarnings}</div>}
     </div>
+  );
+}
+
+function ProductionSummary({ status }: { status: BetaDashboardStatus }) {
+  const summary = buildDashboardProductionSummary(status);
+  const isReady = summary.blockers.length === 0;
+
+  return (
+    <Card className="bg-card/50 border-l-4 border-l-primary" data-testid="production-summary">
+      <CardContent className="p-5 space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="font-bold text-foreground">{UI.labels.productionSummary}</h2>
+            <p className="text-sm text-muted-foreground">{status.diagnostics.releaseLabel}</p>
+          </div>
+          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusClass(isReady ? "ok" : "failed")}`}>
+            {isReady ? UI.labels.ready : UI.labels.review}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <StatCard label={UI.labels.release} value={summary.release} />
+          <StatCard label={UI.labels.runtime} value={summary.runtime} />
+          <StatCard label={UI.labels.registryProducts} value={summary.products} />
+          <StatCard label={UI.labels.approvedMappings} value={summary.approvedMappings} />
+          <StatCard label={UI.labels.registryRegistrations} value={summary.registrations} />
+          <StatCard
+            label={UI.labels.databaseStatus}
+            value={summary.databaseReady ? UI.labels.databaseReady : UI.status.no}
+          />
+        </div>
+
+        {summary.blockers.length > 0 && (
+          <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive space-y-1">
+            <div className="font-semibold">{UI.labels.productionBlockers}</div>
+            {summary.blockers.map((blocker) => (
+              <div key={blocker}>{blocker}</div>
+            ))}
+          </div>
+        )}
+
+        {summary.reportNotices.length > 0 && (
+          <div className="rounded-lg bg-sky-500/10 px-3 py-2 text-sm text-sky-900 space-y-1">
+            <div className="font-semibold">{UI.labels.reportNotices}</div>
+            {summary.reportNotices.map((notice) => (
+              <div key={notice}>{notice}</div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -595,12 +654,7 @@ export default function BetaDashboard() {
 
       {statusQuery.data && (
         <>
-          <div className="rounded-lg bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
-            {UI.labels.release}: {statusQuery.data.diagnostics.releaseLabel} | {UI.labels.version}: {statusQuery.data.diagnostics.version} | {UI.labels.overallStatus}:{" "}
-            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusClass(statusQuery.data.status)}`}>
-              {statusLabel(statusQuery.data.status)}
-            </span>
-          </div>
+          <ProductionSummary status={statusQuery.data} />
           <DashboardContent
             status={statusQuery.data}
             lastRuns={lastRuns}

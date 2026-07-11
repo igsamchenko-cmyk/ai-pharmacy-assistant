@@ -7,6 +7,7 @@ import { buildStaticBackfillSnapshot, backfillCounts } from "./knowledge/backfil
 import { buildDictionaryBatchSummary } from "./knowledge/import/batches";
 import { getKnowledgeEngineStats } from "./knowledge";
 import { getKnowledgeRuntimeStatus } from "./knowledge/dbRuntime";
+import { resolveReleaseMetadata } from "./releaseMetadata";
 
 export interface DiagnosticsReportStatus {
   exists: boolean;
@@ -84,12 +85,13 @@ export async function buildDiagnosticsPanelData(
   const stats = getKnowledgeEngineStats();
   const batches = buildDictionaryBatchSummary();
   const snapshotCounts = backfillCounts(buildStaticBackfillSnapshot());
+  const release = resolveReleaseMetadata(env);
 
   return {
     app: {
       name: "FarmAssist",
-      releaseLabel: env.APP_RELEASE_LABEL ?? "v1.0 closed beta readiness",
-      version: env.npm_package_version ?? "0.0.0",
+      releaseLabel: release.label,
+      version: release.version,
     },
     runtime: {
       mode: runtime.runtimeMode,

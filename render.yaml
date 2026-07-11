@@ -10,6 +10,10 @@ services:
         value: 24.14.1
       - key: NODE_ENV
         value: production
+      - key: APP_RELEASE_VERSION
+        value: v1.6.0
+      - key: APP_RELEASE_LABEL
+        value: v1.6.0 - Ukrainian Registry Database Scaling
       - key: AUTH_PROVIDER
         value: local
       - key: AUTH_REQUIRED
