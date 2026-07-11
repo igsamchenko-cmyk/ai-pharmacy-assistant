@@ -38,6 +38,27 @@ function safeMessage(error: unknown): string {
     : "Registry mapping DB smoke failed.";
 }
 
+function errorMessageChain(error: unknown): string {
+  const messages: string[] = [];
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+
+  while (current && !seen.has(current)) {
+    seen.add(current);
+    if (current instanceof Error) {
+      messages.push(current.message);
+      current = current.cause;
+      continue;
+    }
+    if (typeof current === "string") {
+      messages.push(current);
+    }
+    break;
+  }
+
+  return messages.join("\n") || "Registry mapping DB smoke failed.";
+}
+
 function assertNonProductionDatabaseUrl(): void {
   const raw = process.env.DATABASE_URL;
   if (!raw) {
@@ -170,7 +191,7 @@ async function verifyTimeoutRollback(
   if (!caught) {
     throw new Error("Registry mapping timeout probe unexpectedly succeeded.");
   }
-  const message = safeMessage(caught);
+  const message = safeMessage(new Error(errorMessageChain(caught)));
   const expected =
     kind === "statement" ? /statement timeout/i : /lock timeout/i;
   if (!expected.test(message)) {
