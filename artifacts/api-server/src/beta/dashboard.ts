@@ -1,6 +1,9 @@
 ﻿import { buildDiagnosticsPanelData } from "../diagnostics";
 import { buildKnowledgeQualityJsonReport } from "../knowledge/qualityReport";
-import { getKnowledgeRuntimeStatus } from "../knowledge/dbRuntime";
+import {
+  getKnowledgeRuntimeStatus,
+  getRuntimeRegistryCounts,
+} from "../knowledge/dbRuntime";
 import { getReviewStats } from "../knowledge/reviewWorkflow";
 import { buildBulkIngestReport } from "../knowledge/ingestion/report";
 import { buildBetaReadinessReport } from "./readiness";
@@ -416,6 +419,14 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
     buildRealWorldPharmacyReport(),
   ]);
   const ingestion = buildBulkIngestReport();
+  const registryCounts =
+    runtime.runtimeMode === "db" && runtime.dbAvailable
+      ? await getRuntimeRegistryCounts()
+      : null;
+  const registryCountWarnings =
+    runtime.runtimeMode === "db" && runtime.dbAvailable && !registryCounts
+      ? ["Production registry count read unavailable; static snapshot counts shown."]
+      : [];
   const warnings = uniqueWarnings([
     ...readiness.warnings,
     ...quality.warnings,
@@ -424,6 +435,7 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
     ...review.warnings,
     ...realWorld.warnings,
     ...ingestion.warnings,
+    ...registryCountWarnings,
   ]);
   return {
     generatedAt: new Date().toISOString(),
@@ -463,10 +475,10 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
     ingestion: {
       sourcesApproved: ingestion.sourceDiscovery.approvedSources,
       registryRawRows: ingestion.registry.rawRows,
-      registryProducts: ingestion.registry.validProducts,
+      registryProducts: registryCounts?.products ?? ingestion.registry.validProducts,
       registryIngredients: ingestion.registry.uniqueIngredients,
-      registryManufacturers: ingestion.registry.uniqueManufacturers,
-      registryRegistrations: ingestion.registry.uniqueRegistrations,
+      registryManufacturers: registryCounts?.manufacturers ?? ingestion.registry.uniqueManufacturers,
+      registryRegistrations: registryCounts?.registrations ?? ingestion.registry.uniqueRegistrations,
       candidateFiles: ingestion.candidates.files,
       candidateRows: ingestion.candidates.rows,
       approved: ingestion.candidates.approved,
@@ -475,7 +487,7 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
       rejected: ingestion.candidates.rejected,
       conflicts: ingestion.candidates.conflicts,
       ok: ingestion.candidates.wouldSucceed,
-      warnings: uniqueWarnings(ingestion.warnings),
+      warnings: uniqueWarnings([...ingestion.warnings, ...registryCountWarnings]),
     },
     runtime: {
       mode: runtime.runtimeMode,
