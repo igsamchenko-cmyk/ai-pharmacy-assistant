@@ -62,13 +62,14 @@ describe("TtlCache", () => {
     expect(await c.getOrSet("k", () => Promise.resolve(9))).toBe(9);
   });
 
-  it("evicts the oldest entry past maxEntries", () => {
+  it("evicts the least recently used entry past maxEntries", () => {
     const c = new TtlCache<number>({ ttlMs: 1000, maxEntries: 2 });
     c.set("a", 1);
     c.set("b", 2);
+    expect(c.get("a")).toBe(1);
     c.set("c", 3);
-    expect(c.get("a")).toBeUndefined();
-    expect(c.get("b")).toBe(2);
+    expect(c.get("a")).toBe(1);
+    expect(c.get("b")).toBeUndefined();
     expect(c.get("c")).toBe(3);
   });
 });

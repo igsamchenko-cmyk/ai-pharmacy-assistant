@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { SearchCatalogQueryParams, SearchCatalogResponse } from "@workspace/api-zod";
 import {
   CATALOG_BROWSE_RANK_SQL,
+  createPostgresRegistryCatalogStore,
   assembleRegistryProducts,
   extractRegistryStrength,
+  resetRegistrySearchCachesForTests,
   searchCatalog,
   type RegistryCatalogStore,
 } from "../catalogSearchService";
@@ -279,5 +281,70 @@ describe("catalog search service", () => {
     expect(result.warnings).toEqual([
       "Production registry is unavailable; static reference fallback is active.",
     ]);
+  });
+  it("reuses one bounded grouped snapshot without N+1 queries", async () => {
+    resetRegistrySearchCachesForTests();
+    const labels: string[] = [];
+    const query = vi.fn(async (sql: string) => {
+      if (sql.includes("SELECT COUNT(*)::int AS count")) {
+        return { rows: [{ count: 16_533 }] };
+      }
+      if (sql.includes("SELECT product_registry_id, name, country")) {
+        return { rows: [manufacturer] };
+      }
+      if (sql.includes("n.normalized") && sql.includes("ingredient_id")) {
+        return { rows: [approvedMapping] };
+      }
+      if (sql.includes("p.registry_id")) {
+        return { rows: [productRow] };
+      }
+      throw new Error("Unexpected test query");
+    });
+    const dbStore = await createPostgresRegistryCatalogStore({
+      executor: { query },
+      onQuery: ({ label }) => labels.push(label),
+    });
+
+    const first = await dbStore.searchProductsForGrouping!(
+      input({ q: "Nurofen", view: "grouped" }),
+    );
+    expect(first.items).toHaveLength(1);
+    expect(query).toHaveBeenCalledTimes(4);
+    expect(labels).toHaveLength(4);
+    expect(labels).toEqual(expect.arrayContaining([
+      "catalog-total",
+      "registry-grouped-page",
+      "registry-manufacturers",
+      "approved-mappings",
+    ]));
+    const groupedSql = query.mock.calls
+      .map(([sql]) => sql)
+      .find((sql) => sql.includes("knowledge_registry_products p"));
+    expect(groupedSql).toContain("query_alias.normalized = $2");
+    expect(groupedSql).toContain("query_alias.normalized LIKE $4");
+    expect(groupedSql).not.toContain("query_alias.normalized = 2");
+    expect(groupedSql).toContain("exact_approved_alias");
+    expect(groupedSql).toContain("normalized_name");
+    expect(
+      query.mock.calls.filter(([sql]) =>
+        sql.includes("SELECT COUNT(*)::int AS count"),
+      ),
+    ).toHaveLength(1);
+
+    await dbStore.searchProductsForGrouping!(
+      input({
+        q: "Nurofen",
+        view: "grouped",
+        tradeName: "Nurofen",
+        variantPage: 2,
+      }),
+    );
+    expect(query).toHaveBeenCalledTimes(4);
+
+    await dbStore.searchProductsForGrouping!(
+      input({ q: "Ibuprofen", view: "grouped" }),
+    );
+    expect(query).toHaveBeenCalledTimes(7);
+    resetRegistrySearchCachesForTests();
   });
 });

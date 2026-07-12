@@ -5,8 +5,10 @@ import type { CatalogSearchResponse, RegistryProductResult } from "@workspace/ap
 import {
   GroupedRegistryResults,
   RegistryProductCard,
+  mergeCatalogVariantPage,
   REGISTRY_CATALOG_SAFETY_COPY,
   resolveCatalogViewState,
+  shouldRetryCatalogRequest,
 } from "./search";
 import { REGISTRY_CATALOG_HREF } from "./home";
 
@@ -188,7 +190,67 @@ describe("registry catalog UI", () => {
     expect(html).toContain("Amlodipine Pharma");
     expect(html).toContain("aria-expanded=\"false\"");
     expect(html).not.toContain("postgresql://");
+
+    const group = catalog.groups.items[0];
+    const trade = group.tradeNames.items[0];
+    const variantCatalog: typeof catalog = {
+      ...catalog,
+      groups: {
+        ...catalog.groups,
+        items: [{
+          ...group,
+          tradeNames: {
+            ...group.tradeNames,
+            items: [{
+              ...trade,
+              variants: {
+                items: [product],
+                total: 1,
+                page: 1,
+                pageSize: 10,
+                totalPages: 1,
+                hasNext: false,
+              },
+            }],
+          },
+        }],
+      },
+    };
+    const merged = mergeCatalogVariantPage(
+      catalog,
+      variantCatalog,
+      group.key,
+      trade.key,
+    );
+    expect(catalog.groups.items[0].tradeNames.items[0].variants).toBeNull();
+    expect(
+      merged?.groups.items[0].tradeNames.items[0].variants?.items,
+    ).toEqual([product]);
+
+    const loadingHtml = renderToStaticMarkup(createElement(GroupedRegistryResults, {
+      catalog,
+      query: "Amlodipine",
+      isFetching: true,
+      isVariantFetching: true,
+      isVariantError: false,
+      selectedTradeNameKey: trade.key,
+      onRetryVariants: () => undefined,
+      onSelectTrade: () => undefined,
+      onGroupPage: () => undefined,
+      onTradePage: () => undefined,
+      onVariantPage: () => undefined,
+    }));
+    expect(loadingHtml).toContain('data-testid="variant-loading"');
+    expect(loadingHtml).not.toContain('data-testid="registry-product-registry-1"');
   });
+
+  it("retries one network or server failure but never retries client errors", () => {
+    expect(shouldRetryCatalogRequest(0, new TypeError("network"))).toBe(true);
+    expect(shouldRetryCatalogRequest(1, new TypeError("network"))).toBe(false);
+    expect(shouldRetryCatalogRequest(0, { status: 503 })).toBe(true);
+    expect(shouldRetryCatalogRequest(0, { status: 401 })).toBe(false);
+  });
+
   it("has deterministic loading, error, empty, and results states", () => {
     expect(resolveCatalogViewState(true, false, false)).toBe("loading");
     expect(resolveCatalogViewState(false, true, false)).toBe("error");
