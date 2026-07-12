@@ -216,6 +216,15 @@ paths:
             type: string
             enum: [all, ingredients, registry_products]
             default: all
+        - name: view
+          in: query
+          required: false
+          description: >-
+            Flat keeps registry browse pagination. When omitted for a non-empty
+            registry query, the server resolves grouped view.
+          schema:
+            type: string
+            enum: [flat, grouped]
         - name: page
           in: query
           required: false
@@ -252,6 +261,92 @@ paths:
           schema:
             type: string
             enum: [active, terminated, unknown]
+        - name: tradeName
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 180
+        - name: strength
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 80
+        - name: compositionType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, monotherapy, combination, unknown]
+            default: all
+        - name: mappingStatus
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, approved, unmapped]
+            default: all
+        - name: groupPage
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            multipleOf: 1
+            default: 1
+        - name: groupPageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [10, 25]
+            default: 10
+        - name: tradePage
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            multipleOf: 1
+            default: 1
+        - name: tradePageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [10, 25]
+            default: 10
+        - name: variantPage
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            multipleOf: 1
+            default: 1
+        - name: variantPageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [10, 25]
+            default: 10
+        - name: groupKey
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 500
+        - name: tradeNameKey
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 240
       responses:
         "200":
           description: Bounded catalog search results
@@ -1574,6 +1669,7 @@ components:
         - source
         - mappingStatus
         - approvedMapping
+        - sourceRecordCount
       properties:
         resultType:
           type: string
@@ -1607,6 +1703,105 @@ components:
           oneOf:
             - $ref: "#/components/schemas/ApprovedIngredientMapping"
             - type: "null"
+        sourceRecordCount:
+          type: integer
+          minimum: 1
+    CatalogGroupingSummary:
+      type: object
+      required: [totalRegistryPositions, uniqueTradeNames, uniqueStrengths, uniqueDosageForms, uniqueManufacturers, monotherapyCount, combinationCount, unknownCompositionCount, approvedMappedCount, unmappedCount]
+      properties:
+        totalRegistryPositions: { type: integer, minimum: 0 }
+        uniqueTradeNames: { type: integer, minimum: 0 }
+        uniqueStrengths: { type: integer, minimum: 0 }
+        uniqueDosageForms: { type: integer, minimum: 0 }
+        uniqueManufacturers: { type: integer, minimum: 0 }
+        monotherapyCount: { type: integer, minimum: 0 }
+        combinationCount: { type: integer, minimum: 0 }
+        unknownCompositionCount: { type: integer, minimum: 0 }
+        approvedMappedCount: { type: integer, minimum: 0 }
+        unmappedCount: { type: integer, minimum: 0 }
+    RegistryVariantPage:
+      type: object
+      required: [items, total, totalRegistryPositions, page, pageSize, totalPages, hasNext]
+      properties:
+        items:
+          type: array
+          maxItems: 25
+          items:
+            $ref: "#/components/schemas/RegistryProductResult"
+        total: { type: integer, minimum: 0 }
+        totalRegistryPositions: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, enum: [10, 25] }
+        totalPages: { type: integer, minimum: 0 }
+        hasNext: { type: boolean }
+    CatalogTradeNameGroup:
+      type: object
+      required: [key, tradeName, normalizedTradeName, summary, forms, strengths, manufacturers, variants]
+      properties:
+        key: { type: string }
+        tradeName: { type: string }
+        normalizedTradeName: { type: string }
+        summary: { $ref: "#/components/schemas/CatalogGroupingSummary" }
+        forms: { type: array, maxItems: 25, items: { type: string } }
+        strengths: { type: array, maxItems: 25, items: { type: string } }
+        manufacturers: { type: array, maxItems: 25, items: { type: string } }
+        variants:
+          oneOf:
+            - $ref: "#/components/schemas/RegistryVariantPage"
+            - type: "null"
+    CatalogTradeNameGroupPage:
+      type: object
+      required: [items, total, page, pageSize, totalPages, hasNext]
+      properties:
+        items: { type: array, maxItems: 25, items: { $ref: "#/components/schemas/CatalogTradeNameGroup" } }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, enum: [10, 25] }
+        totalPages: { type: integer, minimum: 0 }
+        hasNext: { type: boolean }
+    CatalogCompositionGroup:
+      type: object
+      required: [key, displayName, officialCompositions, compositionType, mappingStatus, summary, source, tradeNames]
+      properties:
+        key: { type: string }
+        displayName: { type: string }
+        officialCompositions: { type: array, maxItems: 20, items: { type: string } }
+        compositionType: { type: string, enum: [monotherapy, combination, unknown] }
+        mappingStatus: { type: string, enum: [approved, unmapped, mixed, ambiguous] }
+        summary: { $ref: "#/components/schemas/CatalogGroupingSummary" }
+        source: { $ref: "#/components/schemas/CatalogSource" }
+        tradeNames: { $ref: "#/components/schemas/CatalogTradeNameGroupPage" }
+    CatalogCompositionGroupPage:
+      type: object
+      required: [items, total, page, pageSize, totalPages, hasNext]
+      properties:
+        items: { type: array, maxItems: 25, items: { $ref: "#/components/schemas/CatalogCompositionGroup" } }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, enum: [10, 25] }
+        totalPages: { type: integer, minimum: 0 }
+        hasNext: { type: boolean }
+    CatalogAppliedFilters:
+      type: object
+      required: [query, tradeName, manufacturer, form, strength, compositionType, mappingStatus, registrationStatus]
+      properties:
+        query: { type: string }
+        tradeName: { type: ["string", "null"] }
+        manufacturer: { type: ["string", "null"] }
+        form: { type: ["string", "null"] }
+        strength: { type: ["string", "null"] }
+        compositionType: { type: string, enum: [all, monotherapy, combination, unknown] }
+        mappingStatus: { type: string, enum: [all, approved, unmapped] }
+        registrationStatus: { type: ["string", "null"] }
+    GroupedRegistryCatalog:
+      type: object
+      required: [summary, groups, appliedFilters, bounded]
+      properties:
+        summary: { $ref: "#/components/schemas/CatalogGroupingSummary" }
+        groups: { $ref: "#/components/schemas/CatalogCompositionGroupPage" }
+        appliedFilters: { $ref: "#/components/schemas/CatalogAppliedFilters" }
+        bounded: { type: boolean }
     RegistryProductPage:
       type: object
       required: [items, total, page, pageSize, totalPages, hasNext]
@@ -1636,8 +1831,10 @@ components:
         - type
         - runtimeMode
         - catalogTotal
+        - view
         - ingredients
         - registryProducts
+        - registryGroups
         - warnings
       properties:
         query:
@@ -1651,6 +1848,9 @@ components:
         catalogTotal:
           type: integer
           minimum: 0
+        view:
+          type: string
+          enum: [flat, grouped]
         ingredients:
           type: array
           maxItems: 25
@@ -1658,6 +1858,10 @@ components:
             $ref: "#/components/schemas/CatalogIngredientResult"
         registryProducts:
           $ref: "#/components/schemas/RegistryProductPage"
+        registryGroups:
+          oneOf:
+            - $ref: "#/components/schemas/GroupedRegistryCatalog"
+            - type: "null"
         warnings:
           type: array
           items:

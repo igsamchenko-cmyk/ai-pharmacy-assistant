@@ -3,6 +3,7 @@ import {
   getSearchCatalogQueryKey,
   useSearchCatalog,
   type CatalogIngredientResult,
+  type CatalogSearchResponse,
   type RegistryProductResult,
 } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,8 @@ import { ReportIssueButton } from "@/components/report-issue-button";
 type SearchType = "all" | "ingredients" | "registry_products";
 type RegistrationStatus = "active" | "terminated" | "unknown";
 type PageSize = 25 | 50;
+type CompositionFilter = "all" | "monotherapy" | "combination";
+type MappingFilter = "all" | "approved" | "unmapped";
 
 const SEARCH_TYPES: Array<{ value: SearchType; label: string }> = [
   { value: "all", label: "Усі" },
@@ -132,6 +135,11 @@ export function RegistryProductCard({
                   ? "Підтверджено"
                   : "Реєстровий запис - mapping не підтверджений"}
               </Badge>
+              {product.sourceRecordCount > 1 ? (
+                <Badge variant="outline">
+                  Джерельних записів: {product.sourceRecordCount}
+                </Badge>
+              ) : null}
             </div>
           </div>
         </div>
@@ -266,6 +274,166 @@ function IngredientCard({ ingredient }: { ingredient: CatalogIngredientResult })
   );
 }
 
+type GroupedRegistryCatalog = NonNullable<CatalogSearchResponse["registryGroups"]>;
+
+export function GroupedRegistryResults({
+  catalog,
+  query,
+  isFetching,
+  onSelectTrade,
+  onGroupPage,
+  onTradePage,
+  onVariantPage,
+}: {
+  catalog: GroupedRegistryCatalog;
+  query: string;
+  isFetching: boolean;
+  onSelectTrade: (groupKey: string | null, tradeNameKey: string | null) => void;
+  onGroupPage: (page: number) => void;
+  onTradePage: (groupKey: string, page: number) => void;
+  onVariantPage: (page: number) => void;
+}) {
+  const summary = catalog.summary;
+  const [openGroupKeys, setOpenGroupKeys] = useState<Set<string>>(
+    () => new Set(catalog.groups.items.slice(0, 1).map((group) => group.key)),
+  );
+
+  useEffect(() => {
+    setOpenGroupKeys(new Set(catalog.groups.items.slice(0, 1).map((group) => group.key)));
+  }, [catalog.groups.page, catalog.groups.items[0]?.key]);
+
+  return (
+    <section className="space-y-5" data-testid="grouped-registry-results">
+      <div className="space-y-2 border-y py-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Згруповані результати реєстру</h2>
+          <Badge variant="secondary">
+            {numberFormatter.format(summary.totalRegistryPositions)} реєстрових позицій
+          </Badge>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+          <span>Торгові назви: {numberFormatter.format(summary.uniqueTradeNames)}</span>
+          <span>Форми: {numberFormatter.format(summary.uniqueDosageForms)}</span>
+          <span>Дозування: {numberFormatter.format(summary.uniqueStrengths)}</span>
+          <span>Виробники: {numberFormatter.format(summary.uniqueManufacturers)}</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Монопрепарати: {numberFormatter.format(summary.monotherapyCount)}; комбінації: {numberFormatter.format(summary.combinationCount)}; підтверджені: {numberFormatter.format(summary.approvedMappedCount)}; registry-only: {numberFormatter.format(summary.unmappedCount)}; склад потребує уточнення: {numberFormatter.format(summary.unknownCompositionCount)}.
+        </p>
+      </div>
+
+      {catalog.groups.items.map((group) => {
+        const hasOpenTrade = group.tradeNames.items.some((trade) => Boolean(trade.variants));
+        const groupExpanded = openGroupKeys.has(group.key) || hasOpenTrade;
+        return (
+          <section key={group.key} className="space-y-3 border-b pb-5" data-testid={`composition-group-${group.key}`}>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-semibold break-words">{group.displayName}</h3>
+                <Badge variant="outline">
+                  {group.compositionType === "monotherapy"
+                    ? "Монопрепарат"
+                    : group.compositionType === "combination"
+                      ? "Комбінація"
+                      : "Склад потребує уточнення"}
+                </Badge>
+                <Badge variant={group.mappingStatus === "approved" ? "default" : "secondary"}>
+                  {group.mappingStatus === "approved" ? "Mapping підтверджено" : "Registry-only / mixed"}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {numberFormatter.format(group.summary.totalRegistryPositions)} позицій; {numberFormatter.format(group.summary.uniqueTradeNames)} торгових назв
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 w-full justify-between sm:w-auto"
+                aria-expanded={groupExpanded}
+                onClick={() => setOpenGroupKeys((current) => {
+                  const next = new Set(current);
+                  if (next.has(group.key)) next.delete(group.key);
+                  else next.add(group.key);
+                  return next;
+                })}
+              >
+                {groupExpanded ? "Сховати торгові назви" : "Показати торгові назви"}
+                {groupExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            {groupExpanded ? (
+              <div className="space-y-2">
+                {group.tradeNames.items.map((trade) => {
+                  const expanded = Boolean(trade.variants);
+                  return (
+                    <div key={trade.key} className="border-l-2 border-primary/30 pl-3">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-auto min-h-11 w-full justify-between whitespace-normal px-2 text-left"
+                        onClick={() => onSelectTrade(expanded ? null : group.key, expanded ? null : trade.key)}
+                        aria-expanded={expanded}
+                      >
+                        <span className="min-w-0">
+                          <span className="block font-medium break-words">{trade.tradeName}</span>
+                          <span className="block text-xs font-normal text-muted-foreground">
+                            {numberFormatter.format(trade.summary.totalRegistryPositions)} позицій; форм: {trade.summary.uniqueDosageForms}; дозувань: {trade.summary.uniqueStrengths}; виробників: {trade.summary.uniqueManufacturers}
+                          </span>
+                        </span>
+                        {expanded ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
+                      </Button>
+
+                      {trade.variants ? (
+                        <div className="mt-3 space-y-3" data-testid={`trade-variants-${trade.key}`}>
+                          {trade.variants.items.map((product) => (
+                            <RegistryProductCard key={product.id} product={product} query={query} />
+                          ))}
+                          {trade.variants.totalPages > 1 ? (
+                            <nav className="flex items-center justify-between gap-2" aria-label="Сторінки варіантів препарату">
+                              <Button type="button" variant="outline" disabled={trade.variants.page <= 1 || isFetching} onClick={() => onVariantPage(Math.max(1, trade.variants!.page - 1))}>
+                                <ArrowLeft className="h-4 w-4" /><span className="sr-only sm:not-sr-only">Попередня</span>
+                              </Button>
+                              <span className="text-xs text-muted-foreground">{trade.variants.page} / {trade.variants.totalPages}</span>
+                              <Button type="button" variant="outline" disabled={!trade.variants.hasNext || isFetching} onClick={() => onVariantPage(trade.variants!.page + 1)}>
+                                <span className="sr-only sm:not-sr-only">Наступна</span><ArrowRight className="h-4 w-4" />
+                              </Button>
+                            </nav>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+                {group.tradeNames.totalPages > 1 ? (
+                  <nav className="flex items-center justify-between gap-2 pt-2" aria-label="Сторінки торгових назв">
+                    <Button type="button" variant="outline" disabled={group.tradeNames.page <= 1 || isFetching} onClick={() => onTradePage(group.key, Math.max(1, group.tradeNames.page - 1))}>
+                      <ArrowLeft className="h-4 w-4" /><span className="sr-only sm:not-sr-only">Попередня</span>
+                    </Button>
+                    <span className="text-xs text-muted-foreground">{group.tradeNames.page} / {group.tradeNames.totalPages}</span>
+                    <Button type="button" variant="outline" disabled={!group.tradeNames.hasNext || isFetching} onClick={() => onTradePage(group.key, group.tradeNames.page + 1)}>
+                      <span className="sr-only sm:not-sr-only">Наступна</span><ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </nav>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+        );
+      })}
+      {catalog.groups.totalPages > 1 ? (
+        <nav className="grid grid-cols-[1fr_auto_1fr] items-center gap-2" aria-label="Сторінки груп складу">
+          <Button type="button" variant="outline" className="min-h-11 justify-self-start" disabled={catalog.groups.page <= 1 || isFetching} onClick={() => onGroupPage(Math.max(1, catalog.groups.page - 1))}>
+            <ArrowLeft className="h-4 w-4" /><span className="sr-only sm:not-sr-only">Попередня</span>
+          </Button>
+          <span className="text-xs text-muted-foreground">Група {catalog.groups.page} з {catalog.groups.totalPages}</span>
+          <Button type="button" variant="outline" className="min-h-11 justify-self-end" disabled={!catalog.groups.hasNext || isFetching} onClick={() => onGroupPage(catalog.groups.page + 1)}>
+            <span className="sr-only sm:not-sr-only">Наступна</span><ArrowRight className="h-4 w-4" />
+          </Button>
+        </nav>
+      ) : null}
+    </section>
+  );
+}
 export default function SearchPage() {
   const initial = useMemo(initialSearchState, []);
   const [q, setQ] = useState(initial.q);
@@ -274,20 +442,37 @@ export default function SearchPage() {
   const [pageSize, setPageSize] = useState<PageSize>(25);
   const [manufacturer, setManufacturer] = useState("");
   const [form, setForm] = useState("");
+  const [strength, setStrength] = useState("");
+  const [compositionType, setCompositionType] = useState<CompositionFilter>("all");
+  const [mappingStatus, setMappingStatus] = useState<MappingFilter>("all");
   const [registrationStatus, setRegistrationStatus] =
     useState<RegistrationStatus | "all">("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [groupPage, setGroupPage] = useState(1);
+  const [selectedGroupKey, setSelectedGroupKey] = useState<string | null>(null);
+  const [selectedTradeNameKey, setSelectedTradeNameKey] = useState<string | null>(null);
+  const [tradePage, setTradePage] = useState(1);
+  const [variantPage, setVariantPage] = useState(1);
 
   const debouncedQ = useDebounce(q, 300);
   const debouncedManufacturer = useDebounce(manufacturer, 300);
   const debouncedForm = useDebounce(form, 300);
+  const debouncedStrength = useDebounce(strength, 300);
 
   useEffect(() => {
     setPage(1);
+    setGroupPage(1);
+    setSelectedGroupKey(null);
+    setSelectedTradeNameKey(null);
+    setTradePage(1);
+    setVariantPage(1);
   }, [
     debouncedQ,
     debouncedManufacturer,
     debouncedForm,
+    debouncedStrength,
+    compositionType,
+    mappingStatus,
     registrationStatus,
     type,
     pageSize,
@@ -299,10 +484,22 @@ export default function SearchPage() {
       type,
       page,
       pageSize,
+      view: debouncedQ.trim() && type !== "ingredients" ? "grouped" as const : "flat" as const,
+      groupPage,
+      groupPageSize: 10 as const,
+      tradePage,
+      tradePageSize: 10 as const,
+      variantPage,
+      variantPageSize: 10 as const,
+      ...(selectedGroupKey ? { groupKey: selectedGroupKey } : {}),
+      ...(selectedTradeNameKey ? { tradeNameKey: selectedTradeNameKey } : {}),
       ...(debouncedManufacturer.trim()
         ? { manufacturer: debouncedManufacturer.trim() }
         : {}),
       ...(debouncedForm.trim() ? { form: debouncedForm.trim() } : {}),
+      ...(debouncedStrength.trim() ? { strength: debouncedStrength.trim() } : {}),
+      compositionType,
+      mappingStatus,
       ...(registrationStatus !== "all" ? { registrationStatus } : {}),
     }),
     [
@@ -310,8 +507,16 @@ export default function SearchPage() {
       type,
       page,
       pageSize,
+      groupPage,
+      tradePage,
+      variantPage,
+      selectedGroupKey,
+      selectedTradeNameKey,
       debouncedManufacturer,
       debouncedForm,
+      debouncedStrength,
+      compositionType,
+      mappingStatus,
       registrationStatus,
     ],
   );
@@ -334,12 +539,16 @@ export default function SearchPage() {
   const isUpdating =
     q.trim() !== debouncedQ.trim() ||
     manufacturer.trim() !== debouncedManufacturer.trim() ||
-    form.trim() !== debouncedForm.trim();
+    form.trim() !== debouncedForm.trim() ||
+    strength.trim() !== debouncedStrength.trim();
   const registry = data?.registryProducts;
+  const registryGroups = data?.registryGroups;
   const hasFilters =
-    Boolean(manufacturer || form) || registrationStatus !== "all";
+    Boolean(manufacturer || form || strength) ||
+    compositionType !== "all" || mappingStatus !== "all" ||
+    registrationStatus !== "all";
   const hasResults =
-    Boolean(data?.ingredients.length) || Boolean(registry?.items.length);
+    Boolean(data?.ingredients.length) || Boolean(registry?.items.length) || Boolean(registryGroups?.groups.items.length);
   const viewState = resolveCatalogViewState(isLoading, isError, hasResults);
 
   return (
@@ -420,6 +629,24 @@ export default function SearchPage() {
           ))}
         </div>
 
+        <div className="grid grid-cols-3 gap-1 rounded-md border bg-muted/30 p-1" aria-label="Фільтр за типом складу">
+          {([
+            ["all", "Усі"],
+            ["monotherapy", "Монопрепарати"],
+            ["combination", "Комбінації"],
+          ] as const).map(([value, label]) => (
+            <Button
+              key={value}
+              type="button"
+              variant={compositionType === value ? "secondary" : "ghost"}
+              className="min-h-11 h-auto whitespace-normal px-2 py-2 text-xs sm:text-sm"
+              onClick={() => setCompositionType(value)}
+              aria-pressed={compositionType === value}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
         <Button
           type="button"
           variant="outline"
@@ -442,7 +669,7 @@ export default function SearchPage() {
         {filtersOpen && (
           <div
             id="catalog-filters"
-            className="grid gap-3 border-y py-4 sm:grid-cols-3"
+            className="grid gap-3 border-y py-4 sm:grid-cols-2 lg:grid-cols-3"
           >
             <label className="space-y-1 text-sm">
               <span className="font-medium">Виробник</span>
@@ -463,6 +690,28 @@ export default function SearchPage() {
               />
             </label>
             <label className="space-y-1 text-sm">
+              <span className="font-medium">Дозування / strength</span>
+              <Input
+                value={strength}
+                onChange={(event) => setStrength(event.target.value)}
+                placeholder="5 mg, 500 мг..."
+                className="min-h-11"
+              />
+            </label>
+            <label className="space-y-1 text-sm">
+              <span className="font-medium">Ingredient mapping</span>
+              <Select
+                value={mappingStatus}
+                onValueChange={(value) => setMappingStatus(value as MappingFilter)}
+              >
+                <SelectTrigger className="min-h-11"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Усі записи</SelectItem>
+                  <SelectItem value="approved">Підтверджені</SelectItem>
+                  <SelectItem value="unmapped">Registry-only / непідтверджені</SelectItem>
+                </SelectContent>
+              </Select>
+            </label>            <label className="space-y-1 text-sm">
               <span className="font-medium">Статус реєстрації</span>
               <Select
                 value={registrationStatus}
@@ -481,6 +730,25 @@ export default function SearchPage() {
                 </SelectContent>
               </Select>
             </label>
+            {hasFilters ? (
+              <div className="flex items-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-11 w-full"
+                  onClick={() => {
+                    setManufacturer("");
+                    setForm("");
+                    setStrength("");
+                    setCompositionType("all");
+                    setMappingStatus("all");
+                    setRegistrationStatus("all");
+                  }}
+                >
+                  Очистити фільтри
+                </Button>
+              </div>
+            ) : null}
           </div>
         )}
       </div>
@@ -542,7 +810,32 @@ export default function SearchPage() {
             </section>
           ) : null}
 
-          {type !== "ingredients" && registry ? (
+          {type !== "ingredients" && registryGroups ? (
+            <GroupedRegistryResults
+              catalog={registryGroups}
+              query={debouncedQ}
+              isFetching={isFetching}
+              onSelectTrade={(groupKey, tradeNameKey) => {
+                setSelectedGroupKey(groupKey);
+                setSelectedTradeNameKey(tradeNameKey);
+                setVariantPage(1);
+              }}
+              onGroupPage={(nextPage) => {
+                setGroupPage(nextPage);
+                setSelectedGroupKey(null);
+                setSelectedTradeNameKey(null);
+                setVariantPage(1);
+              }}
+              onTradePage={(groupKey, nextPage) => {
+                setSelectedGroupKey(groupKey);
+                setSelectedTradeNameKey(null);
+                setTradePage(nextPage);
+                setVariantPage(1);
+              }}
+              onVariantPage={setVariantPage}
+            />
+          ) : null}
+          {type !== "ingredients" && registry && !registryGroups ? (
             <section className="space-y-3">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>

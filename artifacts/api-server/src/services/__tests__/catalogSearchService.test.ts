@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SearchCatalogQueryParams } from "@workspace/api-zod";
+import { SearchCatalogQueryParams, SearchCatalogResponse } from "@workspace/api-zod";
 import {
   CATALOG_BROWSE_RANK_SQL,
   assembleRegistryProducts,
@@ -150,6 +150,16 @@ describe("catalog search service", () => {
     }
   });
 
+  it("sanitizes unsafe registry source metadata", () => {
+    const [result] = assembleRegistryProducts(
+      [{ ...productRow, source_key: "postgresql://secret@host/C:/private" }],
+      [],
+      [],
+    );
+    expect(result.source.key).toBe("state_registry");
+    expect(JSON.stringify(result)).not.toContain("postgresql://");
+    expect(JSON.stringify(result)).not.toContain("C:/private");
+  });
   it("does not merge distinct forms or strengths", () => {
     const results = assembleRegistryProducts(
       [
@@ -195,10 +205,14 @@ describe("catalog search service", () => {
       resultType: "ingredient",
       mappingStatus: "approved",
     });
-    expect(result.registryProducts.items[0]).toMatchObject({
-      resultType: "registry_product",
+    expect(result.view).toBe("grouped");
+    expect(result.registryProducts.items).toEqual([]);
+    expect(result.registryGroups?.groups.items[0]).toMatchObject({
+      compositionType: "monotherapy",
       mappingStatus: "approved",
     });
+    expect(result.registryGroups?.summary.totalRegistryPositions).toBe(1);
+    expect(SearchCatalogResponse.safeParse(result).success).toBe(true);
   });
 
   it("does not fabricate a registry product for an ingredient-only alias", async () => {

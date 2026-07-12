@@ -483,6 +483,183 @@ export interface RegistryProductResult {
   source: CatalogSource;
   mappingStatus: RegistryProductResultMappingStatus;
   approvedMapping: ApprovedIngredientMapping | null;
+  /** @minimum 1 */
+  sourceRecordCount: number;
+}
+
+export interface CatalogGroupingSummary {
+  /** @minimum 0 */
+  totalRegistryPositions: number;
+  /** @minimum 0 */
+  uniqueTradeNames: number;
+  /** @minimum 0 */
+  uniqueStrengths: number;
+  /** @minimum 0 */
+  uniqueDosageForms: number;
+  /** @minimum 0 */
+  uniqueManufacturers: number;
+  /** @minimum 0 */
+  monotherapyCount: number;
+  /** @minimum 0 */
+  combinationCount: number;
+  /** @minimum 0 */
+  unknownCompositionCount: number;
+  /** @minimum 0 */
+  approvedMappedCount: number;
+  /** @minimum 0 */
+  unmappedCount: number;
+}
+
+export type RegistryVariantPagePageSize = typeof RegistryVariantPagePageSize[keyof typeof RegistryVariantPagePageSize];
+
+
+export const RegistryVariantPagePageSize = {
+  NUMBER_10: 10,
+  NUMBER_25: 25,
+} as const;
+
+export interface RegistryVariantPage {
+  /** @maxItems 25 */
+  items: RegistryProductResult[];
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 0 */
+  totalRegistryPositions: number;
+  /** @minimum 1 */
+  page: number;
+  pageSize: RegistryVariantPagePageSize;
+  /** @minimum 0 */
+  totalPages: number;
+  hasNext: boolean;
+}
+
+export interface CatalogTradeNameGroup {
+  key: string;
+  tradeName: string;
+  normalizedTradeName: string;
+  summary: CatalogGroupingSummary;
+  /** @maxItems 25 */
+  forms: string[];
+  /** @maxItems 25 */
+  strengths: string[];
+  /** @maxItems 25 */
+  manufacturers: string[];
+  variants: RegistryVariantPage | null;
+}
+
+export type CatalogTradeNameGroupPagePageSize = typeof CatalogTradeNameGroupPagePageSize[keyof typeof CatalogTradeNameGroupPagePageSize];
+
+
+export const CatalogTradeNameGroupPagePageSize = {
+  NUMBER_10: 10,
+  NUMBER_25: 25,
+} as const;
+
+export interface CatalogTradeNameGroupPage {
+  /** @maxItems 25 */
+  items: CatalogTradeNameGroup[];
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 1 */
+  page: number;
+  pageSize: CatalogTradeNameGroupPagePageSize;
+  /** @minimum 0 */
+  totalPages: number;
+  hasNext: boolean;
+}
+
+export type CatalogCompositionGroupCompositionType = typeof CatalogCompositionGroupCompositionType[keyof typeof CatalogCompositionGroupCompositionType];
+
+
+export const CatalogCompositionGroupCompositionType = {
+  monotherapy: 'monotherapy',
+  combination: 'combination',
+  unknown: 'unknown',
+} as const;
+
+export type CatalogCompositionGroupMappingStatus = typeof CatalogCompositionGroupMappingStatus[keyof typeof CatalogCompositionGroupMappingStatus];
+
+
+export const CatalogCompositionGroupMappingStatus = {
+  approved: 'approved',
+  unmapped: 'unmapped',
+  mixed: 'mixed',
+  ambiguous: 'ambiguous',
+} as const;
+
+export interface CatalogCompositionGroup {
+  key: string;
+  displayName: string;
+  /** @maxItems 20 */
+  officialCompositions: string[];
+  compositionType: CatalogCompositionGroupCompositionType;
+  mappingStatus: CatalogCompositionGroupMappingStatus;
+  summary: CatalogGroupingSummary;
+  source: CatalogSource;
+  tradeNames: CatalogTradeNameGroupPage;
+}
+
+export type CatalogCompositionGroupPagePageSize = typeof CatalogCompositionGroupPagePageSize[keyof typeof CatalogCompositionGroupPagePageSize];
+
+
+export const CatalogCompositionGroupPagePageSize = {
+  NUMBER_10: 10,
+  NUMBER_25: 25,
+} as const;
+
+export interface CatalogCompositionGroupPage {
+  /** @maxItems 25 */
+  items: CatalogCompositionGroup[];
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 1 */
+  page: number;
+  pageSize: CatalogCompositionGroupPagePageSize;
+  /** @minimum 0 */
+  totalPages: number;
+  hasNext: boolean;
+}
+
+export type CatalogAppliedFiltersCompositionType = typeof CatalogAppliedFiltersCompositionType[keyof typeof CatalogAppliedFiltersCompositionType];
+
+
+export const CatalogAppliedFiltersCompositionType = {
+  all: 'all',
+  monotherapy: 'monotherapy',
+  combination: 'combination',
+  unknown: 'unknown',
+} as const;
+
+export type CatalogAppliedFiltersMappingStatus = typeof CatalogAppliedFiltersMappingStatus[keyof typeof CatalogAppliedFiltersMappingStatus];
+
+
+export const CatalogAppliedFiltersMappingStatus = {
+  all: 'all',
+  approved: 'approved',
+  unmapped: 'unmapped',
+} as const;
+
+export interface CatalogAppliedFilters {
+  query: string;
+  /** @nullable */
+  tradeName: string | null;
+  /** @nullable */
+  manufacturer: string | null;
+  /** @nullable */
+  form: string | null;
+  /** @nullable */
+  strength: string | null;
+  compositionType: CatalogAppliedFiltersCompositionType;
+  mappingStatus: CatalogAppliedFiltersMappingStatus;
+  /** @nullable */
+  registrationStatus: string | null;
+}
+
+export interface GroupedRegistryCatalog {
+  summary: CatalogGroupingSummary;
+  groups: CatalogCompositionGroupPage;
+  appliedFilters: CatalogAppliedFilters;
+  bounded: boolean;
 }
 
 export type RegistryProductPagePageSize = typeof RegistryProductPagePageSize[keyof typeof RegistryProductPagePageSize];
@@ -522,15 +699,25 @@ export const CatalogSearchResponseRuntimeMode = {
   static: 'static',
 } as const;
 
+export type CatalogSearchResponseView = typeof CatalogSearchResponseView[keyof typeof CatalogSearchResponseView];
+
+
+export const CatalogSearchResponseView = {
+  flat: 'flat',
+  grouped: 'grouped',
+} as const;
+
 export interface CatalogSearchResponse {
   query: string;
   type: CatalogSearchResponseType;
   runtimeMode: CatalogSearchResponseRuntimeMode;
   /** @minimum 0 */
   catalogTotal: number;
+  view: CatalogSearchResponseView;
   /** @maxItems 25 */
   ingredients: CatalogIngredientResult[];
   registryProducts: RegistryProductPage;
+  registryGroups: GroupedRegistryCatalog | null;
   warnings: string[];
 }
 
@@ -1321,6 +1508,10 @@ export type SearchCatalogParams = {
 q?: string;
 type?: SearchCatalogType;
 /**
+ * Flat keeps registry browse pagination. When omitted for a non-empty registry query, the server resolves grouped view.
+ */
+view?: SearchCatalogView;
+/**
  * @minimum 1
  * @maximum 10000
  */
@@ -1339,6 +1530,42 @@ manufacturer?: string;
  */
 form?: string;
 registrationStatus?: SearchCatalogRegistrationStatus;
+/**
+ * @maxLength 180
+ */
+tradeName?: string;
+/**
+ * @maxLength 80
+ */
+strength?: string;
+compositionType?: SearchCatalogCompositionType;
+mappingStatus?: SearchCatalogMappingStatus;
+/**
+ * @minimum 1
+ * @maximum 10000
+ */
+groupPage?: number;
+groupPageSize?: SearchCatalogGroupPageSize;
+/**
+ * @minimum 1
+ * @maximum 10000
+ */
+tradePage?: number;
+tradePageSize?: SearchCatalogTradePageSize;
+/**
+ * @minimum 1
+ * @maximum 10000
+ */
+variantPage?: number;
+variantPageSize?: SearchCatalogVariantPageSize;
+/**
+ * @maxLength 500
+ */
+groupKey?: string;
+/**
+ * @maxLength 240
+ */
+tradeNameKey?: string;
 };
 
 export type SearchCatalogType = typeof SearchCatalogType[keyof typeof SearchCatalogType];
@@ -1350,6 +1577,14 @@ export const SearchCatalogType = {
   registry_products: 'registry_products',
 } as const;
 
+export type SearchCatalogView = typeof SearchCatalogView[keyof typeof SearchCatalogView];
+
+
+export const SearchCatalogView = {
+  flat: 'flat',
+  grouped: 'grouped',
+} as const;
+
 export type SearchCatalogRegistrationStatus = typeof SearchCatalogRegistrationStatus[keyof typeof SearchCatalogRegistrationStatus];
 
 
@@ -1357,6 +1592,49 @@ export const SearchCatalogRegistrationStatus = {
   active: 'active',
   terminated: 'terminated',
   unknown: 'unknown',
+} as const;
+
+export type SearchCatalogCompositionType = typeof SearchCatalogCompositionType[keyof typeof SearchCatalogCompositionType];
+
+
+export const SearchCatalogCompositionType = {
+  all: 'all',
+  monotherapy: 'monotherapy',
+  combination: 'combination',
+  unknown: 'unknown',
+} as const;
+
+export type SearchCatalogMappingStatus = typeof SearchCatalogMappingStatus[keyof typeof SearchCatalogMappingStatus];
+
+
+export const SearchCatalogMappingStatus = {
+  all: 'all',
+  approved: 'approved',
+  unmapped: 'unmapped',
+} as const;
+
+export type SearchCatalogGroupPageSize = typeof SearchCatalogGroupPageSize[keyof typeof SearchCatalogGroupPageSize];
+
+
+export const SearchCatalogGroupPageSize = {
+  NUMBER_10: 10,
+  NUMBER_25: 25,
+} as const;
+
+export type SearchCatalogTradePageSize = typeof SearchCatalogTradePageSize[keyof typeof SearchCatalogTradePageSize];
+
+
+export const SearchCatalogTradePageSize = {
+  NUMBER_10: 10,
+  NUMBER_25: 25,
+} as const;
+
+export type SearchCatalogVariantPageSize = typeof SearchCatalogVariantPageSize[keyof typeof SearchCatalogVariantPageSize];
+
+
+export const SearchCatalogVariantPageSize = {
+  NUMBER_10: 10,
+  NUMBER_25: 25,
 } as const;
 
 export type GetExternalDrugReferenceParams = {

@@ -1,8 +1,9 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { RegistryProductResult } from "@workspace/api-client-react";
+import type { CatalogSearchResponse, RegistryProductResult } from "@workspace/api-client-react";
 import {
+  GroupedRegistryResults,
   RegistryProductCard,
   REGISTRY_CATALOG_SAFETY_COPY,
   resolveCatalogViewState,
@@ -30,6 +31,7 @@ const product: RegistryProductResult = {
     label: "State Register of Medicines of Ukraine",
   },
   mappingStatus: "approved",
+  sourceRecordCount: 1,
   approvedMapping: {
     ingredientId: "ingredient-1",
     inn: "Ібупрофен",
@@ -89,6 +91,104 @@ describe("registry catalog UI", () => {
     expect(html).not.toContain("DATABASE_URL");
   });
 
+  it("renders composition and trade-name hierarchy before variants", () => {
+    const catalog: NonNullable<CatalogSearchResponse["registryGroups"]> = {
+      summary: {
+        totalRegistryPositions: 302,
+        uniqueTradeNames: 18,
+        uniqueStrengths: 6,
+        uniqueDosageForms: 3,
+        uniqueManufacturers: 12,
+        monotherapyCount: 280,
+        combinationCount: 22,
+        unknownCompositionCount: 0,
+        approvedMappedCount: 120,
+        unmappedCount: 182,
+      },
+      groups: {
+        items: [{
+          key: "composition-amlodipine",
+          displayName: "Amlodipine",
+          officialCompositions: ["Amlodipine"],
+          compositionType: "monotherapy",
+          mappingStatus: "mixed",
+          summary: {
+            totalRegistryPositions: 302,
+            uniqueTradeNames: 18,
+            uniqueStrengths: 6,
+            uniqueDosageForms: 3,
+            uniqueManufacturers: 12,
+            monotherapyCount: 302,
+            combinationCount: 0,
+            unknownCompositionCount: 0,
+            approvedMappedCount: 120,
+            unmappedCount: 182,
+          },
+          source: { key: "state_registry", label: "State registry" },
+          tradeNames: {
+            items: [{
+              key: "trade-amlodipine-pharma",
+              tradeName: "Amlodipine Pharma",
+              normalizedTradeName: "amlodipine pharma",
+              summary: {
+                totalRegistryPositions: 24,
+                uniqueTradeNames: 1,
+                uniqueStrengths: 2,
+                uniqueDosageForms: 1,
+                uniqueManufacturers: 2,
+                monotherapyCount: 24,
+                combinationCount: 0,
+                unknownCompositionCount: 0,
+                approvedMappedCount: 12,
+                unmappedCount: 12,
+              },
+              forms: ["tablets"],
+              strengths: ["5 mg", "10 mg"],
+              manufacturers: ["Example Pharma"],
+              variants: null,
+            }],
+            total: 1,
+            page: 1,
+            pageSize: 10,
+            totalPages: 1,
+            hasNext: false,
+          },
+        }],
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        totalPages: 1,
+        hasNext: false,
+      },
+      appliedFilters: {
+        query: "Amlodipine",
+        tradeName: null,
+        manufacturer: null,
+        form: null,
+        strength: null,
+        compositionType: "all",
+        mappingStatus: "all",
+        registrationStatus: null,
+      },
+      bounded: true,
+    };
+    const html = renderToStaticMarkup(createElement(GroupedRegistryResults, {
+      catalog,
+      query: "Amlodipine",
+      isFetching: false,
+      onSelectTrade: () => undefined,
+      onGroupPage: () => undefined,
+      onTradePage: () => undefined,
+      onVariantPage: () => undefined,
+    }));
+
+    expect(html).toContain('data-testid="grouped-registry-results"');
+    expect(html).toContain("302");
+    expect(html).toContain("Amlodipine");
+    expect(html).toContain("Amlodipine Pharma");
+    expect(html).toContain("aria-expanded=\"false\"");
+    expect(html).not.toContain("postgresql://");
+  });
   it("has deterministic loading, error, empty, and results states", () => {
     expect(resolveCatalogViewState(true, false, false)).toBe("loading");
     expect(resolveCatalogViewState(false, true, false)).toBe("error");

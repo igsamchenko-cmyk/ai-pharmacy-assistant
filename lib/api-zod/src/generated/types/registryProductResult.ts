@@ -28,4 +28,6 @@ export interface RegistryProductResult {
   source: CatalogSource;
   mappingStatus: RegistryProductResultMappingStatus;
   approvedMapping: ApprovedIngredientMapping | null;
+  /** @minimum 1 */
+  sourceRecordCount: number;
 }
