@@ -38,6 +38,8 @@ export interface CatalogQueryExecutor {
 export interface CatalogQueryMetric {
   label: string;
   durationMs: number;
+  startedAtMs: number;
+  finishedAtMs: number;
   statement: string;
   values: readonly unknown[];
 }
@@ -420,9 +422,12 @@ export async function createPostgresRegistryCatalogStore(
       const result = await executor.query(text, values);
       return { rows: result.rows as T[] };
     } finally {
+      const finished = performance.now();
       options.onQuery?.({
         label,
-        durationMs: performance.now() - started,
+        durationMs: finished - started,
+        startedAtMs: started,
+        finishedAtMs: finished,
         statement: text,
         values,
       });

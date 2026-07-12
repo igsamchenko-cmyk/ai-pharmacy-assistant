@@ -203,10 +203,10 @@ async function main(): Promise<void> {
       const cold = await searchCatalog(groupedInput, store);
       const coldMs = performance.now() - coldStarted;
       const coldMetrics = queryMetrics.slice(metricStart);
-      const coldSqlMs = coldMetrics.reduce(
-        (total, metric) => total + metric.durationMs,
-        0,
-      );
+      const coldSqlMs = coldMetrics.length
+        ? Math.max(...coldMetrics.map((metric) => metric.finishedAtMs)) -
+          Math.min(...coldMetrics.map((metric) => metric.startedAtMs))
+        : 0;
       const groups = cold.registryGroups;
       assert(groups, "Grouped search returned no hierarchy: " + query);
       assert(groups.bounded, "Grouped search exceeded its row bound: " + query);
