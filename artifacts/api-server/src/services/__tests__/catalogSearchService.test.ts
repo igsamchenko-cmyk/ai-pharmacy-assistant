@@ -189,6 +189,24 @@ describe("catalog search service", () => {
     });
   });
 
+  it("does not fabricate a registry product for an ingredient-only alias", async () => {
+    const result = await searchCatalog(
+      input({ q: "Nurofen", type: "all" }),
+      store({
+        searchProducts: vi.fn(async () => ({
+          catalogTotal: 16_533,
+          filteredTotal: 0,
+          items: [],
+        })),
+      }),
+    );
+    expect(result.ingredients[0]).toMatchObject({
+      matchedName: "Nurofen",
+      mappingStatus: "approved",
+    });
+    expect(result.registryProducts.items).toEqual([]);
+  });
+
   it("uses count-only mode when browsing ingredients", async () => {
     const testStore = store();
     const result = await searchCatalog(

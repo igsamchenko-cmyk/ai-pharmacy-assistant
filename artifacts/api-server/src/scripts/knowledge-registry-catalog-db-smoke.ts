@@ -8,7 +8,7 @@ import {
 const REPRESENTATIVE_QUERIES = [
   "Цефтріаксон",
   "Амоксиклав",
-  "Нурофен",
+  "Ібупрофен",
   "Еліквіс",
   "Ксарелто",
   "Метформін",
@@ -106,13 +106,23 @@ async function main(): Promise<void> {
     }> = [];
     for (const query of REPRESENTATIVE_QUERIES) {
       const warmup = await store.searchProducts(input({ q: query }));
-      assert(warmup.filteredTotal > 0, "A representative registry query returned zero rows.");
+      assert(
+        warmup.filteredTotal > 0,
+        `Representative registry query returned zero rows: ${query}`,
+      );
       const started = performance.now();
       const measured = await store.searchProducts(input({ q: query }));
       const warmMs = performance.now() - started;
-      assert(measured.filteredTotal > 0, "A warmed registry query returned zero rows.");
+      assert(
+        measured.filteredTotal > 0,
+        `Warmed registry query returned zero rows: ${query}`,
+      );
       assert(measured.items.length <= 25, "A registry query exceeded its response bound.");
-      assert(warmMs <= maxWarmMs, "A warmed registry query exceeded the latency budget.");
+      assert(
+        warmMs <= maxWarmMs,
+        `Warmed registry query exceeded the latency budget: ${query} ` +
+          `(${warmMs.toFixed(1)} ms > ${maxWarmMs} ms).`,
+      );
       representative.push({
         query,
         total: measured.filteredTotal,
