@@ -270,7 +270,7 @@ function buildProductFilter(input: CatalogSearchInput) {
   const clauses: string[] = [];
   const add = (value: unknown): string => {
     values.push(value);
-    return `${values.length}`;
+    return `$${values.length}`;
   };
 
   const query = input.q.trim();

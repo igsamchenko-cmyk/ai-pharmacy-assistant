@@ -320,6 +320,9 @@ describe("catalog search service", () => {
     const groupedSql = query.mock.calls
       .map(([sql]) => sql)
       .find((sql) => sql.includes("knowledge_registry_products p"));
+    expect(groupedSql).toContain("query_alias.normalized = $2");
+    expect(groupedSql).toContain("query_alias.normalized LIKE $4");
+    expect(groupedSql).not.toContain("query_alias.normalized = 2");
     expect(groupedSql).toContain("exact_approved_alias");
     expect(groupedSql).toContain("normalized_name");
     expect(
