@@ -163,12 +163,12 @@ async function main(): Promise<void> {
       `SELECT p.trade_name
        FROM knowledge_registry_products p
        JOIN knowledge_ingredient_names n
-         ON n.normalized = p.normalized_trade_name
+         ON LOWER(n.name) = LOWER(p.inn)
         AND n.review_status = 'approved'
        ORDER BY p.trade_name
        LIMIT 1`,
     );
-    assert(mappedRow.rows[0], "Isolated fixture has no approved product mapping.");
+    assert(mappedRow.rows[0], "Isolated fixture has no approved registry INN mapping.");
     const mapped = await store.searchProducts(
       input({ q: mappedRow.rows[0].trade_name }),
     );

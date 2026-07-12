@@ -99,6 +99,18 @@ describe("catalog search service", () => {
     ]);
   });
 
+  it("attaches an approved mapping through the registry INN alias", () => {
+    const [result] = assembleRegistryProducts(
+      [productRow],
+      [],
+      [{ ...approvedMapping, normalized: "ibuprofen" }],
+    );
+    expect(result).toMatchObject({
+      mappingStatus: "approved",
+      approvedMapping: { ingredientId: "ingredient-1" },
+    });
+  });
+
   it("keeps unmapped and ambiguous registry rows unconfirmed", () => {
     const [unmapped] = assembleRegistryProducts([productRow], [], []);
     const [ambiguous] = assembleRegistryProducts(
