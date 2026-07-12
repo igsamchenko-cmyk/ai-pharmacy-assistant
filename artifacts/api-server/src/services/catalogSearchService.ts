@@ -99,7 +99,7 @@ interface IngredientRow {
   matched_name: string;
 }
 
-const REGISTRY_SEARCH_CACHE_VERSION = "registry-search-v2";
+const REGISTRY_SEARCH_CACHE_VERSION = "registry-search-v3";
 const catalogTotalCache = new TtlCache<number>({
   ttlMs: 120_000,
   maxEntries: 1,
@@ -310,7 +310,13 @@ function buildProductFilter(input: CatalogSearchInput) {
           AND query_alias.review_status = 'approved'
           AND query_alias.normalized LIKE ${normalizedPrefix} ESCAPE '\\'
       ) prefix_approved_alias
-        ON prefix_approved_alias.normalized = p.normalized_trade_name`;
+        ON prefix_approved_alias.normalized = p.normalized_trade_name
+      LEFT JOIN (
+        SELECT DISTINCT product_registry_id
+        FROM knowledge_registry_manufacturers
+        WHERE normalized_name LIKE ${normalizedContains} ESCAPE '\\'
+      ) search_manufacturer_match
+        ON search_manufacturer_match.product_registry_id = p.registry_id`;
 
     const directContains = `(
       LOWER(p.trade_name) LIKE ${contains} ESCAPE '\\'
@@ -320,12 +326,7 @@ function buildProductFilter(input: CatalogSearchInput) {
       OR LOWER(p.registration_number) LIKE ${contains} ESCAPE '\\'
       OR LOWER(p.form) LIKE ${contains} ESCAPE '\\'
       OR LOWER(COALESCE(p.atc_code, '')) LIKE ${contains} ESCAPE '\\'
-      OR EXISTS (
-        SELECT 1 FROM knowledge_registry_manufacturers search_manufacturer
-        WHERE search_manufacturer.product_registry_id = p.registry_id
-          AND search_manufacturer.normalized_name
-            LIKE ${normalizedContains} ESCAPE '\\'
-      )
+      OR search_manufacturer_match.product_registry_id IS NOT NULL
     )`;
 
     clauses.push(`(
@@ -362,14 +363,16 @@ function buildProductFilter(input: CatalogSearchInput) {
       `%${escapeLike(manufacturer.toLocaleLowerCase("uk-UA"))}%`,
     );
     const normalizedRef = add(`%${escapeLike(normalize(manufacturer))}%`);
+    joinSql += `
+      LEFT JOIN (
+        SELECT DISTINCT product_registry_id
+        FROM knowledge_registry_manufacturers
+        WHERE normalized_name LIKE ${normalizedRef} ESCAPE '\\'
+      ) filter_manufacturer_match
+        ON filter_manufacturer_match.product_registry_id = p.registry_id`;
     clauses.push(`(
       LOWER(p.applicant_name) LIKE ${lowerRef} ESCAPE '\\'
-      OR EXISTS (
-        SELECT 1 FROM knowledge_registry_manufacturers filter_manufacturer
-        WHERE filter_manufacturer.product_registry_id = p.registry_id
-          AND filter_manufacturer.normalized_name
-            LIKE ${normalizedRef} ESCAPE '\\'
-      )
+      OR filter_manufacturer_match.product_registry_id IS NOT NULL
     )`);
   }
 

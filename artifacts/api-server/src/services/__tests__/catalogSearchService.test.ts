@@ -325,6 +325,9 @@ describe("catalog search service", () => {
     expect(groupedSql).not.toContain("query_alias.normalized = 2");
     expect(groupedSql).toContain("exact_approved_alias");
     expect(groupedSql).toContain("normalized_name");
+    expect(groupedSql).toContain("search_manufacturer_match");
+    expect(groupedSql).toContain("normalized_name LIKE $6 ESCAPE '\\'");
+    expect(groupedSql).not.toContain("SELECT 1 FROM knowledge_registry_manufacturers");
     expect(
       query.mock.calls.filter(([sql]) =>
         sql.includes("SELECT COUNT(*)::int AS count"),
