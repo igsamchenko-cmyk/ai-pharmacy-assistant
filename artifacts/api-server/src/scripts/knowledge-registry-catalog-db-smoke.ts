@@ -2,8 +2,11 @@ import { performance } from "node:perf_hooks";
 import { SearchCatalogQueryParams } from "@workspace/api-zod";
 import {
   createPostgresRegistryCatalogStore,
+  searchCatalog,
   type CatalogSearchInput,
 } from "../services/catalogSearchService";
+
+const GROUPED_QUERIES = ["Метформін", "Омепразол", "Амлодипін"] as const;
 
 const REPRESENTATIVE_QUERIES = [
   "Цефтріаксон",
@@ -131,6 +134,37 @@ async function main(): Promise<void> {
       });
     }
 
+    const groupedRepresentative: Array<{
+      query: string;
+      positions: number;
+      groups: number;
+      warmMs: number;
+    }> = [];
+    for (const query of GROUPED_QUERIES) {
+      const groupedInput = input({ q: query, view: "grouped" });
+      const warmup = await searchCatalog(groupedInput, store);
+      assert(warmup.registryGroups, `Grouped warmup returned no hierarchy: ${query}`);
+      const started = performance.now();
+      const measured = await searchCatalog(groupedInput, store);
+      const warmMs = performance.now() - started;
+      const groups = measured.registryGroups;
+      assert(groups, `Grouped search returned no hierarchy: ${query}`);
+      assert(groups.bounded, `Grouped search exceeded its row bound: ${query}`);
+      assert(groups.summary.totalRegistryPositions > 0, `Grouped search returned zero positions: ${query}`);
+      assert(groups.groups.items.length <= 10, "Grouped response exceeded its default group page size.");
+      assert(measured.registryProducts.items.length === 0, "Grouped response returned flat product cards.");
+      assert(
+        warmMs <= maxWarmMs,
+        `Warmed grouped query exceeded the latency budget: ${query} ` +
+          `(${warmMs.toFixed(1)} ms > ${maxWarmMs} ms).`,
+      );
+      groupedRepresentative.push({
+        query,
+        positions: groups.summary.totalRegistryPositions,
+        groups: groups.groups.total,
+        warmMs: Number(warmMs.toFixed(1)),
+      });
+    }
     const sample = first.items.find(
       (item) =>
         item.manufacturers[0]?.name &&
@@ -189,6 +223,7 @@ async function main(): Promise<void> {
       page25: first.items.length,
       page50: page50.items.length,
       representative,
+      groupedRepresentative,
       queryPlan: planResult.rows[0]?.["QUERY PLAN"] ?? null,
     });
     assert(serialized.length < 100_000, "Catalog smoke report is unexpectedly large.");
@@ -203,6 +238,7 @@ async function main(): Promise<void> {
           page25: first.items.length,
           page50: page50.items.length,
           representative,
+          groupedRepresentative,
           queryPlan: planResult.rows[0]?.["QUERY PLAN"] ?? null,
         },
         null,

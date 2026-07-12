@@ -7,6 +7,10 @@ import { normalize } from "../lib/text";
 import { logger } from "../lib/logger";
 import { isDbRuntimeEnabled } from "../knowledge/runtime";
 import { searchDrugs } from "./drugService";
+import {
+  GROUPED_CATALOG_ROW_LIMIT,
+  groupRegistryProducts,
+} from "./catalogGrouping";
 
 export type CatalogSearchInput = z.infer<typeof SearchCatalogQueryParams>;
 export type CatalogSearchResult = z.infer<typeof SearchCatalogResponse>;
@@ -20,11 +24,15 @@ interface ProductSearchResult {
   catalogTotal: number;
   filteredTotal: number;
   items: ProductResult[];
+  bounded?: boolean;
 }
 
 export interface RegistryCatalogStore {
   getCatalogTotal(): Promise<number>;
   searchProducts(input: CatalogSearchInput): Promise<ProductSearchResult>;
+  searchProductsForGrouping?(
+    input: CatalogSearchInput,
+  ): Promise<ProductSearchResult>;
   searchIngredients(query: string, limit: number): Promise<IngredientResult[]>;
 }
 
@@ -99,6 +107,11 @@ function escapeLike(value: string): string {
 function cleanNullable(value: string | null | undefined): string | null {
   const cleaned = value?.trim() ?? "";
   return cleaned || null;
+}
+
+function sanitizedSourceKey(value: string): string {
+  const key = value.trim();
+  return /^[a-z0-9._-]{1,80}$/iu.test(key) ? key : "state_registry";
 }
 
 export function extractRegistryStrength(...values: string[]): string | null {
@@ -184,7 +197,7 @@ export function assembleRegistryProducts(
         status: row.registration_status,
       },
       source: {
-        key: row.source_key,
+        key: sanitizedSourceKey(row.source_key),
         label: "State Register of Medicines of Ukraine",
       },
       mappingStatus,
@@ -197,6 +210,7 @@ export function assembleRegistryProducts(
             atcCode: selected.atc_code,
           }
         : null,
+      sourceRecordCount: 1,
     };
   });
 }
@@ -295,6 +309,21 @@ function buildProductFilter(input: CatalogSearchInput) {
     )`);
   }
 
+  const tradeName = input.tradeName?.trim();
+  if (tradeName) {
+    const ref = add(`%${escapeLike(normalize(tradeName))}%`);
+    clauses.push(`p.normalized_trade_name LIKE ${ref} ESCAPE '\\'`);
+  }
+
+  const strength = input.strength?.trim();
+  if (strength) {
+    const ref = add(`%${escapeLike(strength.toLocaleLowerCase("uk-UA"))}%`);
+    clauses.push(`(
+      LOWER(p.active_ingredient) LIKE ${ref} ESCAPE '\\'
+      OR LOWER(p.form) LIKE ${ref} ESCAPE '\\'
+    )`);
+  }
+
   const form = input.form?.trim();
   if (form) {
     const ref = add(`%${escapeLike(form.toLocaleLowerCase("uk-UA"))}%`);
@@ -315,6 +344,45 @@ function buildProductFilter(input: CatalogSearchInput) {
 
 export async function createPostgresRegistryCatalogStore(): Promise<RegistryCatalogStore> {
   const { pool } = await import("@workspace/db");
+
+  const hydrateProducts = async (rows: ProductRow[]): Promise<ProductResult[]> => {
+    if (!rows.length) return [];
+    const productIds = rows.map((row) => row.registry_id);
+    const aliases = [...new Set(rows.flatMap(aliasesForProduct))];
+    const [manufacturerResult, mappingResult] = await Promise.all([
+      pool.query<ManufacturerRow>(
+        `SELECT product_registry_id, name, country
+         FROM knowledge_registry_manufacturers
+         WHERE product_registry_id = ANY($1::text[])
+         ORDER BY product_registry_id, LOWER(name), LOWER(country)`,
+        [productIds],
+      ),
+      aliases.length
+        ? pool.query<MappingRow>(
+            `SELECT
+               n.normalized,
+               n.review_status,
+               i.id::text AS ingredient_id,
+               i.inn,
+               i.latin,
+               i.english,
+               i.atc_code
+             FROM knowledge_ingredient_names n
+             JOIN knowledge_ingredients i
+               ON i.inn_key = n.ingredient_inn_key
+             WHERE n.review_status = 'approved'
+               AND n.normalized = ANY($1::text[])
+             ORDER BY n.normalized, i.inn_key`,
+            [aliases],
+          )
+        : Promise.resolve({ rows: [] as MappingRow[] }),
+    ]);
+    return assembleRegistryProducts(
+      rows,
+      manufacturerResult.rows,
+      mappingResult.rows,
+    );
+  };
 
   return {
     async getCatalogTotal(): Promise<number> {
@@ -372,48 +440,60 @@ export async function createPostgresRegistryCatalogStore(): Promise<RegistryCata
         };
       }
 
-      const productIds = pageResult.rows.map((row) => row.registry_id);
-      const aliases = [...new Set(pageResult.rows.flatMap(aliasesForProduct))];
-      const [manufacturerResult, mappingResult] = await Promise.all([
-        pool.query<ManufacturerRow>(
-          `SELECT product_registry_id, name, country
-           FROM knowledge_registry_manufacturers
-           WHERE product_registry_id = ANY($1::text[])
-           ORDER BY product_registry_id, LOWER(name), LOWER(country)`,
-          [productIds],
-        ),
-        aliases.length
-          ? pool.query<MappingRow>(
-              `SELECT
-                 n.normalized,
-                 n.review_status,
-                 i.id::text AS ingredient_id,
-                 i.inn,
-                 i.latin,
-                 i.english,
-                 i.atc_code
-               FROM knowledge_ingredient_names n
-               JOIN knowledge_ingredients i
-                 ON i.inn_key = n.ingredient_inn_key
-               WHERE n.review_status = 'approved'
-                 AND n.normalized = ANY($1::text[])
-               ORDER BY n.normalized, i.inn_key`,
-              [aliases],
-            )
-          : Promise.resolve({ rows: [] as MappingRow[] }),
-      ]);
-
       return {
         catalogTotal: Number(catalogCount.rows[0]?.count ?? 0),
         filteredTotal: Number(filteredCount.rows[0]?.count ?? 0),
-        items: assembleRegistryProducts(
-          pageResult.rows,
-          manufacturerResult.rows,
-          mappingResult.rows,
-        ),
+        items: await hydrateProducts(pageResult.rows),
       };
     },
 
+    async searchProductsForGrouping(input): Promise<ProductSearchResult> {
+      const filter = buildProductFilter(input);
+      const rowLimit = GROUPED_CATALOG_ROW_LIMIT + 1;
+      const pageValues = [...filter.values, rowLimit];
+      const limitRef = `$${filter.values.length + 1}`;
+      const [catalogCount, filteredCount, pageResult] = await Promise.all([
+        pool.query<{ count: number }>(
+          "SELECT COUNT(*)::int AS count FROM knowledge_registry_products",
+        ),
+        pool.query<{ count: number }>(
+          `SELECT COUNT(*)::int AS count
+           FROM knowledge_registry_products p
+           ${filter.whereSql}`,
+          filter.values,
+        ),
+        pool.query<ProductRow>(
+          `SELECT
+             p.registry_id,
+             p.trade_name,
+             p.normalized_trade_name,
+             p.inn,
+             p.active_ingredient,
+             p.atc_code,
+             p.form,
+             p.registration_number,
+             p.registration_start_date,
+             p.registration_end_date,
+             p.source_key,
+             ${REGISTRATION_STATUS_SQL} AS registration_status
+           FROM knowledge_registry_products p
+           ${filter.whereSql}
+           ORDER BY ${filter.rankSql},
+             LOWER(p.trade_name), LOWER(p.form),
+             LOWER(p.registration_number), p.registry_id
+           LIMIT ${limitRef}`,
+          pageValues,
+        ),
+      ]);
+      const bounded = pageResult.rows.length <= GROUPED_CATALOG_ROW_LIMIT;
+      const rows = pageResult.rows.slice(0, GROUPED_CATALOG_ROW_LIMIT);
+      return {
+        catalogTotal: Number(catalogCount.rows[0]?.count ?? 0),
+        filteredTotal: Number(filteredCount.rows[0]?.count ?? 0),
+        items: await hydrateProducts(rows),
+        bounded,
+      };
+    },
     async searchIngredients(query, limit): Promise<IngredientResult[]> {
       const values: unknown[] = [];
       let whereQuery = "";
@@ -487,6 +567,11 @@ export async function createPostgresRegistryCatalogStore(): Promise<RegistryCata
   };
 }
 
+function resolveCatalogView(input: CatalogSearchInput): "flat" | "grouped" {
+  return input.view ??
+    (input.q.trim() && input.type !== "ingredients" ? "grouped" : "flat");
+}
+
 function responsePageSize(input: CatalogSearchInput): 25 | 50 {
   return input.pageSize === 50 ? 50 : 25;
 }
@@ -524,10 +609,12 @@ function staticFallback(input: CatalogSearchInput, warning: string): CatalogSear
   return {
     query: input.q,
     type: input.type,
+    view: resolveCatalogView(input),
     runtimeMode: "static",
     catalogTotal: 0,
     ingredients,
     registryProducts: emptyRegistryPage(input),
+    registryGroups: null,
     warnings: [warning],
   };
 }
@@ -544,37 +631,62 @@ export async function searchCatalog(
 
   try {
     const activeStore = store ?? (await createPostgresRegistryCatalogStore());
+    const view = resolveCatalogView(input);
     const includeProducts = input.type !== "ingredients";
     const includeIngredients =
       input.type === "ingredients" ||
       (input.type === "all" && Boolean(input.q.trim()));
+    const productSearch = includeProducts
+      ? view === "grouped" && activeStore.searchProductsForGrouping
+        ? activeStore.searchProductsForGrouping(input)
+        : activeStore.searchProducts(input)
+      : Promise.resolve(null);
     const [products, catalogTotal, ingredients] = await Promise.all([
-      includeProducts ? activeStore.searchProducts(input) : null,
+      productSearch,
       includeProducts ? null : activeStore.getCatalogTotal(),
       includeIngredients
         ? activeStore.searchIngredients(input.q, input.type === "ingredients" ? 25 : 8)
         : Promise.resolve([]),
     ]);
-    const total = products?.filteredTotal ?? 0;
+    const registryGroups =
+      view === "grouped" && products
+        ? groupRegistryProducts(products.items, input, products.bounded ?? true)
+        : null;
+    const total = registryGroups?.summary.totalRegistryPositions ??
+      products?.filteredTotal ?? 0;
     const totalPages = total ? Math.ceil(total / input.pageSize) : 0;
+    const warnings = products?.bounded === false
+      ? ["Grouped catalog results exceeded the safety bound; refine the filters for a complete grouping."]
+      : [];
 
     return {
       query: input.q,
       type: input.type,
+      view,
       runtimeMode: "db",
       catalogTotal: products?.catalogTotal ?? catalogTotal ?? 0,
       ingredients,
       registryProducts: products
-        ? {
-            items: products.items,
-            total,
-            page: input.page,
-            pageSize: responsePageSize(input),
-            totalPages,
-            hasNext: input.page < totalPages,
-          }
+        ? view === "grouped"
+          ? {
+              items: [],
+              total,
+              page: 1,
+              pageSize: responsePageSize(input),
+              totalPages: 0,
+              hasNext: false,
+            }
+          : {
+              items: products.items,
+              total,
+              page: input.page,
+              pageSize: responsePageSize(input),
+              totalPages,
+              hasNext: input.page < totalPages,
+            }
         : emptyRegistryPage(input),
-      warnings: [],
+      registryGroups,
+      warnings,
     };
   } catch {
     logger.warn("Registry catalog read unavailable");

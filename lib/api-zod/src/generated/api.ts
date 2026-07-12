@@ -309,26 +309,157 @@ export const searchCatalogQueryManufacturerMax = 120;
 
 export const searchCatalogQueryFormMax = 120;
 
+export const searchCatalogQueryTradeNameMax = 180;
+
+export const searchCatalogQueryStrengthMax = 80;
+
+export const searchCatalogQueryCompositionTypeDefault = `all`;
+export const searchCatalogQueryMappingStatusDefault = `all`;
+export const searchCatalogQueryGroupPageDefault = 1;
+export const searchCatalogQueryGroupPageMax = 10000;
+export const searchCatalogQueryGroupPageMultipleOf = 1;
+
+export const searchCatalogQueryGroupPageSizeDefault = 10;
+export const searchCatalogQueryTradePageDefault = 1;
+export const searchCatalogQueryTradePageMax = 10000;
+export const searchCatalogQueryTradePageMultipleOf = 1;
+
+export const searchCatalogQueryTradePageSizeDefault = 10;
+export const searchCatalogQueryVariantPageDefault = 1;
+export const searchCatalogQueryVariantPageMax = 10000;
+export const searchCatalogQueryVariantPageMultipleOf = 1;
+
+export const searchCatalogQueryVariantPageSizeDefault = 10;
+export const searchCatalogQueryGroupKeyMax = 500;
+
+export const searchCatalogQueryTradeNameKeyMax = 240;
+
 
 
 export const SearchCatalogQueryParams = zod.object({
   "q": zod.coerce.string().max(searchCatalogQueryQMax).default(searchCatalogQueryQDefault),
   "type": zod.enum(['all', 'ingredients', 'registry_products']).default(searchCatalogQueryTypeDefault),
+  "view": zod.enum(['flat', 'grouped']).optional().describe('Flat keeps registry browse pagination. When omitted for a non-empty registry query, the server resolves grouped view.'),
   "page": zod.coerce.number().min(1).max(searchCatalogQueryPageMax).multipleOf(searchCatalogQueryPageMultipleOf).default(searchCatalogQueryPageDefault),
   "pageSize": zod.coerce.number().min(searchCatalogQueryPageSizeMin).max(searchCatalogQueryPageSizeMax).multipleOf(searchCatalogQueryPageSizeMultipleOf).default(searchCatalogQueryPageSizeDefault),
   "manufacturer": zod.coerce.string().max(searchCatalogQueryManufacturerMax).optional(),
   "form": zod.coerce.string().max(searchCatalogQueryFormMax).optional(),
-  "registrationStatus": zod.enum(['active', 'terminated', 'unknown']).optional()
+  "registrationStatus": zod.enum(['active', 'terminated', 'unknown']).optional(),
+  "tradeName": zod.coerce.string().max(searchCatalogQueryTradeNameMax).optional(),
+  "strength": zod.coerce.string().max(searchCatalogQueryStrengthMax).optional(),
+  "compositionType": zod.enum(['all', 'monotherapy', 'combination', 'unknown']).default(searchCatalogQueryCompositionTypeDefault),
+  "mappingStatus": zod.enum(['all', 'approved', 'unmapped']).default(searchCatalogQueryMappingStatusDefault),
+  "groupPage": zod.coerce.number().min(1).max(searchCatalogQueryGroupPageMax).multipleOf(searchCatalogQueryGroupPageMultipleOf).default(searchCatalogQueryGroupPageDefault),
+  "groupPageSize": zod.union([zod.literal(10),zod.literal(25)]).default(searchCatalogQueryGroupPageSizeDefault),
+  "tradePage": zod.coerce.number().min(1).max(searchCatalogQueryTradePageMax).multipleOf(searchCatalogQueryTradePageMultipleOf).default(searchCatalogQueryTradePageDefault),
+  "tradePageSize": zod.union([zod.literal(10),zod.literal(25)]).default(searchCatalogQueryTradePageSizeDefault),
+  "variantPage": zod.coerce.number().min(1).max(searchCatalogQueryVariantPageMax).multipleOf(searchCatalogQueryVariantPageMultipleOf).default(searchCatalogQueryVariantPageDefault),
+  "variantPageSize": zod.union([zod.literal(10),zod.literal(25)]).default(searchCatalogQueryVariantPageSizeDefault),
+  "groupKey": zod.coerce.string().max(searchCatalogQueryGroupKeyMax).optional(),
+  "tradeNameKey": zod.coerce.string().max(searchCatalogQueryTradeNameKeyMax).optional()
 })
 
 export const searchCatalogResponseCatalogTotalMin = 0;
 
 export const searchCatalogResponseIngredientsMax = 25;
 
+
 export const searchCatalogResponseRegistryProductsTotalMin = 0;
 
 
 export const searchCatalogResponseRegistryProductsTotalPagesMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneSummaryTotalRegistryPositionsMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneSummaryUniqueTradeNamesMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneSummaryUniqueStrengthsMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneSummaryUniqueDosageFormsMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneSummaryUniqueManufacturersMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneSummaryMonotherapyCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneSummaryCombinationCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneSummaryUnknownCompositionCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneSummaryApprovedMappedCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneSummaryUnmappedCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemOfficialCompositionsMax = 20;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryTotalRegistryPositionsMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUniqueTradeNamesMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUniqueStrengthsMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUniqueDosageFormsMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUniqueManufacturersMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryMonotherapyCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryCombinationCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUnknownCompositionCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryApprovedMappedCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUnmappedCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryTotalRegistryPositionsMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUniqueTradeNamesMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUniqueStrengthsMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUniqueDosageFormsMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUniqueManufacturersMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryMonotherapyCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryCombinationCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUnknownCompositionCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryApprovedMappedCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUnmappedCountMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemFormsMax = 25;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemStrengthsMax = 25;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemManufacturersMax = 25;
+
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsMax = 25;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalRegistryPositionsMin = 0;
+
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalPagesMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsMax = 25;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesTotalMin = 0;
+
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesTotalPagesMin = 0;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsMax = 25;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsTotalMin = 0;
+
+
+export const searchCatalogResponseRegistryGroupsOneGroupsTotalPagesMin = 0;
 
 
 
@@ -337,6 +468,7 @@ export const SearchCatalogResponse = zod.object({
   "type": zod.enum(['all', 'ingredients', 'registry_products']),
   "runtimeMode": zod.enum(['db', 'static']),
   "catalogTotal": zod.number().min(searchCatalogResponseCatalogTotalMin),
+  "view": zod.enum(['flat', 'grouped']),
   "ingredients": zod.array(zod.object({
   "resultType": zod.enum(['ingredient']),
   "ingredientId": zod.string(),
@@ -379,7 +511,8 @@ export const SearchCatalogResponse = zod.object({
   "latin": zod.string(),
   "english": zod.string(),
   "atcCode": zod.string().nullable()
-}),zod.null()])
+}),zod.null()]),
+  "sourceRecordCount": zod.number().min(1)
 })),
   "total": zod.number().min(searchCatalogResponseRegistryProductsTotalMin),
   "page": zod.number().min(1),
@@ -387,6 +520,129 @@ export const SearchCatalogResponse = zod.object({
   "totalPages": zod.number().min(searchCatalogResponseRegistryProductsTotalPagesMin),
   "hasNext": zod.boolean()
 }),
+  "registryGroups": zod.union([zod.object({
+  "summary": zod.object({
+  "totalRegistryPositions": zod.number().min(searchCatalogResponseRegistryGroupsOneSummaryTotalRegistryPositionsMin),
+  "uniqueTradeNames": zod.number().min(searchCatalogResponseRegistryGroupsOneSummaryUniqueTradeNamesMin),
+  "uniqueStrengths": zod.number().min(searchCatalogResponseRegistryGroupsOneSummaryUniqueStrengthsMin),
+  "uniqueDosageForms": zod.number().min(searchCatalogResponseRegistryGroupsOneSummaryUniqueDosageFormsMin),
+  "uniqueManufacturers": zod.number().min(searchCatalogResponseRegistryGroupsOneSummaryUniqueManufacturersMin),
+  "monotherapyCount": zod.number().min(searchCatalogResponseRegistryGroupsOneSummaryMonotherapyCountMin),
+  "combinationCount": zod.number().min(searchCatalogResponseRegistryGroupsOneSummaryCombinationCountMin),
+  "unknownCompositionCount": zod.number().min(searchCatalogResponseRegistryGroupsOneSummaryUnknownCompositionCountMin),
+  "approvedMappedCount": zod.number().min(searchCatalogResponseRegistryGroupsOneSummaryApprovedMappedCountMin),
+  "unmappedCount": zod.number().min(searchCatalogResponseRegistryGroupsOneSummaryUnmappedCountMin)
+}),
+  "groups": zod.object({
+  "items": zod.array(zod.object({
+  "key": zod.string(),
+  "displayName": zod.string(),
+  "officialCompositions": zod.array(zod.string()).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemOfficialCompositionsMax),
+  "compositionType": zod.enum(['monotherapy', 'combination', 'unknown']),
+  "mappingStatus": zod.enum(['approved', 'unmapped', 'mixed', 'ambiguous']),
+  "summary": zod.object({
+  "totalRegistryPositions": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryTotalRegistryPositionsMin),
+  "uniqueTradeNames": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUniqueTradeNamesMin),
+  "uniqueStrengths": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUniqueStrengthsMin),
+  "uniqueDosageForms": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUniqueDosageFormsMin),
+  "uniqueManufacturers": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUniqueManufacturersMin),
+  "monotherapyCount": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryMonotherapyCountMin),
+  "combinationCount": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryCombinationCountMin),
+  "unknownCompositionCount": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUnknownCompositionCountMin),
+  "approvedMappedCount": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryApprovedMappedCountMin),
+  "unmappedCount": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemSummaryUnmappedCountMin)
+}),
+  "source": zod.object({
+  "key": zod.string(),
+  "label": zod.string()
+}),
+  "tradeNames": zod.object({
+  "items": zod.array(zod.object({
+  "key": zod.string(),
+  "tradeName": zod.string(),
+  "normalizedTradeName": zod.string(),
+  "summary": zod.object({
+  "totalRegistryPositions": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryTotalRegistryPositionsMin),
+  "uniqueTradeNames": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUniqueTradeNamesMin),
+  "uniqueStrengths": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUniqueStrengthsMin),
+  "uniqueDosageForms": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUniqueDosageFormsMin),
+  "uniqueManufacturers": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUniqueManufacturersMin),
+  "monotherapyCount": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryMonotherapyCountMin),
+  "combinationCount": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryCombinationCountMin),
+  "unknownCompositionCount": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUnknownCompositionCountMin),
+  "approvedMappedCount": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryApprovedMappedCountMin),
+  "unmappedCount": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemSummaryUnmappedCountMin)
+}),
+  "forms": zod.array(zod.string()).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemFormsMax),
+  "strengths": zod.array(zod.string()).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemStrengthsMax),
+  "manufacturers": zod.array(zod.string()).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemManufacturersMax),
+  "variants": zod.union([zod.object({
+  "items": zod.array(zod.object({
+  "resultType": zod.enum(['registry_product']),
+  "id": zod.string(),
+  "tradeName": zod.string(),
+  "inn": zod.string(),
+  "activeIngredient": zod.string(),
+  "atcCode": zod.string().nullable(),
+  "dosageForm": zod.string(),
+  "strength": zod.string().nullable(),
+  "manufacturers": zod.array(zod.object({
+  "name": zod.string(),
+  "country": zod.string().nullable()
+})),
+  "registration": zod.object({
+  "number": zod.string(),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "status": zod.enum(['active', 'terminated', 'unknown'])
+}),
+  "source": zod.object({
+  "key": zod.string(),
+  "label": zod.string()
+}),
+  "mappingStatus": zod.enum(['approved', 'unmapped', 'ambiguous']),
+  "approvedMapping": zod.union([zod.object({
+  "ingredientId": zod.string(),
+  "inn": zod.string(),
+  "latin": zod.string(),
+  "english": zod.string(),
+  "atcCode": zod.string().nullable()
+}),zod.null()]),
+  "sourceRecordCount": zod.number().min(1)
+})).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsMax),
+  "total": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalMin),
+  "totalRegistryPositions": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalRegistryPositionsMin),
+  "page": zod.number().min(1),
+  "pageSize": zod.union([zod.literal(10),zod.literal(25)]),
+  "totalPages": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalPagesMin),
+  "hasNext": zod.boolean()
+}),zod.null()])
+})).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsMax),
+  "total": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesTotalMin),
+  "page": zod.number().min(1),
+  "pageSize": zod.union([zod.literal(10),zod.literal(25)]),
+  "totalPages": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesTotalPagesMin),
+  "hasNext": zod.boolean()
+})
+})).max(searchCatalogResponseRegistryGroupsOneGroupsItemsMax),
+  "total": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsTotalMin),
+  "page": zod.number().min(1),
+  "pageSize": zod.union([zod.literal(10),zod.literal(25)]),
+  "totalPages": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsTotalPagesMin),
+  "hasNext": zod.boolean()
+}),
+  "appliedFilters": zod.object({
+  "query": zod.string(),
+  "tradeName": zod.string().nullable(),
+  "manufacturer": zod.string().nullable(),
+  "form": zod.string().nullable(),
+  "strength": zod.string().nullable(),
+  "compositionType": zod.enum(['all', 'monotherapy', 'combination', 'unknown']),
+  "mappingStatus": zod.enum(['all', 'approved', 'unmapped']),
+  "registrationStatus": zod.string().nullable()
+}),
+  "bounded": zod.boolean()
+}),zod.null()]),
   "warnings": zod.array(zod.string())
 })
 

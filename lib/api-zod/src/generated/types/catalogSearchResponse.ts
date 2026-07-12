@@ -8,6 +8,8 @@
 import type { CatalogIngredientResult } from './catalogIngredientResult';
 import type { CatalogSearchResponseRuntimeMode } from './catalogSearchResponseRuntimeMode';
 import type { CatalogSearchResponseType } from './catalogSearchResponseType';
+import type { CatalogSearchResponseView } from './catalogSearchResponseView';
+import type { GroupedRegistryCatalog } from './groupedRegistryCatalog';
 import type { RegistryProductPage } from './registryProductPage';
 
 export interface CatalogSearchResponse {
@@ -16,8 +18,10 @@ export interface CatalogSearchResponse {
   runtimeMode: CatalogSearchResponseRuntimeMode;
   /** @minimum 0 */
   catalogTotal: number;
+  view: CatalogSearchResponseView;
   /** @maxItems 25 */
   ingredients: CatalogIngredientResult[];
   registryProducts: RegistryProductPage;
+  registryGroups: GroupedRegistryCatalog | null;
   warnings: string[];
 }

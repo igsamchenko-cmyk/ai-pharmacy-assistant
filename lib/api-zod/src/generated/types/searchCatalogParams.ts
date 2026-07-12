@@ -5,8 +5,14 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
+import type { SearchCatalogCompositionType } from './searchCatalogCompositionType';
+import type { SearchCatalogGroupPageSize } from './searchCatalogGroupPageSize';
+import type { SearchCatalogMappingStatus } from './searchCatalogMappingStatus';
 import type { SearchCatalogRegistrationStatus } from './searchCatalogRegistrationStatus';
+import type { SearchCatalogTradePageSize } from './searchCatalogTradePageSize';
 import type { SearchCatalogType } from './searchCatalogType';
+import type { SearchCatalogVariantPageSize } from './searchCatalogVariantPageSize';
+import type { SearchCatalogView } from './searchCatalogView';
 
 export type SearchCatalogParams = {
 /**
@@ -14,6 +20,10 @@ export type SearchCatalogParams = {
  */
 q?: string;
 type?: SearchCatalogType;
+/**
+ * Flat keeps registry browse pagination. When omitted for a non-empty registry query, the server resolves grouped view.
+ */
+view?: SearchCatalogView;
 /**
  * @minimum 1
  * @maximum 10000
@@ -33,4 +43,40 @@ manufacturer?: string;
  */
 form?: string;
 registrationStatus?: SearchCatalogRegistrationStatus;
+/**
+ * @maxLength 180
+ */
+tradeName?: string;
+/**
+ * @maxLength 80
+ */
+strength?: string;
+compositionType?: SearchCatalogCompositionType;
+mappingStatus?: SearchCatalogMappingStatus;
+/**
+ * @minimum 1
+ * @maximum 10000
+ */
+groupPage?: number;
+groupPageSize?: SearchCatalogGroupPageSize;
+/**
+ * @minimum 1
+ * @maximum 10000
+ */
+tradePage?: number;
+tradePageSize?: SearchCatalogTradePageSize;
+/**
+ * @minimum 1
+ * @maximum 10000
+ */
+variantPage?: number;
+variantPageSize?: SearchCatalogVariantPageSize;
+/**
+ * @maxLength 500
+ */
+groupKey?: string;
+/**
+ * @maxLength 240
+ */
+tradeNameKey?: string;
 };
