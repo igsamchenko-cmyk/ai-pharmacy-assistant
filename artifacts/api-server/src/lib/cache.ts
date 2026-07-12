@@ -9,7 +9,7 @@
 export interface TtlCacheOptions {
   /** Default time-to-live in milliseconds for entries. */
   ttlMs: number;
-  /** Max number of live entries kept; oldest are evicted first. */
+  /** Max number of live entries kept; least recently used are evicted first. */
   maxEntries?: number;
   /** Injectable clock (defaults to Date.now) for testability. */
   now?: () => number;
@@ -39,6 +39,9 @@ export class TtlCache<V> {
       this.store.delete(key);
       return undefined;
     }
+    // Refresh insertion order so the bounded cache evicts the least recently used entry.
+    this.store.delete(key);
+    this.store.set(key, entry);
     return entry.value;
   }
 
@@ -47,7 +50,7 @@ export class TtlCache<V> {
   }
 
   set(key: string, value: V, ttlMs?: number): void {
-    // Evict the oldest entry when at capacity (Map preserves insertion order).
+    // Evict the least recently used entry when at capacity.
     if (!this.store.has(key) && this.store.size >= this.maxEntries) {
       const oldest = this.store.keys().next().value;
       if (oldest !== undefined) this.store.delete(oldest);

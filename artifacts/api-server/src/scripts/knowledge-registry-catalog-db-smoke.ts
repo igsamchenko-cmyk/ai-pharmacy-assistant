@@ -2,11 +2,19 @@ import { performance } from "node:perf_hooks";
 import { SearchCatalogQueryParams } from "@workspace/api-zod";
 import {
   createPostgresRegistryCatalogStore,
+  resetRegistrySearchCachesForTests,
   searchCatalog,
+  type CatalogQueryMetric,
   type CatalogSearchInput,
 } from "../services/catalogSearchService";
 
-const GROUPED_QUERIES = ["Метформін", "Омепразол", "Амлодипін"] as const;
+const GROUPED_QUERIES = [
+  "Метформін",
+  "Омепразол",
+  "Амлодипін",
+  "Ібупрофен",
+  "Цефтріаксон",
+] as const;
 
 const REPRESENTATIVE_QUERIES = [
   "Цефтріаксон",
@@ -62,6 +70,43 @@ function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
+function percentile(values: readonly number[], percentileValue: number): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.max(
+    0,
+    Math.min(sorted.length - 1, Math.ceil(sorted.length * percentileValue) - 1),
+  );
+  return sorted[index] ?? 0;
+}
+
+function timingSummary(values: readonly number[]) {
+  return {
+    samples: values.length,
+    p50Ms: Number(percentile(values, 0.5).toFixed(1)),
+    p95Ms: Number(percentile(values, 0.95).toFixed(1)),
+    maxMs: Number(Math.max(...values).toFixed(1)),
+  };
+}
+
+function summarizeQueryPlan(value: unknown) {
+  const root = Array.isArray(value) ? value[0] : value;
+  if (!root || typeof root !== "object") return null;
+  const report = root as Record<string, unknown>;
+  const plan =
+    report.Plan && typeof report.Plan === "object"
+      ? report.Plan as Record<string, unknown>
+      : {};
+  return {
+    planningTimeMs: report["Planning Time"] ?? null,
+    executionTimeMs: report["Execution Time"] ?? null,
+    rootNodeType: plan["Node Type"] ?? null,
+    actualRows: plan["Actual Rows"] ?? null,
+    totalCost: plan["Total Cost"] ?? null,
+    sharedHitBlocks: plan["Shared Hit Blocks"] ?? null,
+    sharedReadBlocks: plan["Shared Read Blocks"] ?? null,
+  };
+}
+
 function safeMessage(error: unknown): string {
   if (!(error instanceof Error)) return "Catalog DB smoke failed.";
   return error.message
@@ -74,7 +119,11 @@ async function main(): Promise<void> {
   assertNonProductionDatabase();
   const expectedProducts = positiveIntArg("--expect-min-products=", 16_000);
   const maxWarmMs = positiveIntArg("--max-warm-ms=", 2_000);
-  const store = await createPostgresRegistryCatalogStore();
+  const maxGroupedP95Ms = positiveIntArg("--max-grouped-p95-ms=", 900);
+  const queryMetrics: CatalogQueryMetric[] = [];
+  const store = await createPostgresRegistryCatalogStore({
+    onQuery: (metric) => queryMetrics.push(metric),
+  });
   const { pool } = await import("@workspace/db");
 
   try {
@@ -138,31 +187,125 @@ async function main(): Promise<void> {
       query: string;
       positions: number;
       groups: number;
-      warmMs: number;
+      coldMs: number;
+      coldSqlMs: number;
+      backendMs: number;
+      coldQueries: number;
+      warm: ReturnType<typeof timingSummary>;
+      responseBytes: number;
+      navigationMaxMs: number;
     }> = [];
     for (const query of GROUPED_QUERIES) {
+      resetRegistrySearchCachesForTests();
       const groupedInput = input({ q: query, view: "grouped" });
-      const warmup = await searchCatalog(groupedInput, store);
-      assert(warmup.registryGroups, `Grouped warmup returned no hierarchy: ${query}`);
-      const started = performance.now();
-      const measured = await searchCatalog(groupedInput, store);
-      const warmMs = performance.now() - started;
-      const groups = measured.registryGroups;
-      assert(groups, `Grouped search returned no hierarchy: ${query}`);
-      assert(groups.bounded, `Grouped search exceeded its row bound: ${query}`);
-      assert(groups.summary.totalRegistryPositions > 0, `Grouped search returned zero positions: ${query}`);
-      assert(groups.groups.items.length <= 10, "Grouped response exceeded its default group page size.");
-      assert(measured.registryProducts.items.length === 0, "Grouped response returned flat product cards.");
-      assert(
-        warmMs <= maxWarmMs,
-        `Warmed grouped query exceeded the latency budget: ${query} ` +
-          `(${warmMs.toFixed(1)} ms > ${maxWarmMs} ms).`,
+      const metricStart = queryMetrics.length;
+      const coldStarted = performance.now();
+      const cold = await searchCatalog(groupedInput, store);
+      const coldMs = performance.now() - coldStarted;
+      const coldMetrics = queryMetrics.slice(metricStart);
+      const coldSqlMs = coldMetrics.reduce(
+        (total, metric) => total + metric.durationMs,
+        0,
       );
+      const groups = cold.registryGroups;
+      assert(groups, "Grouped search returned no hierarchy: " + query);
+      assert(groups.bounded, "Grouped search exceeded its row bound: " + query);
+      assert(
+        groups.summary.totalRegistryPositions > 0,
+        "Grouped search returned zero positions: " + query,
+      );
+      assert(
+        coldMetrics.length <= 4,
+        "Grouped search exceeded the SQL query-count budget: " + query,
+      );
+      const responseBytes = Buffer.byteLength(JSON.stringify(cold), "utf8");
+      assert(
+        responseBytes <= 150_000,
+        "Grouped response exceeded 150 KB: " + query,
+      );
+
+      const warmTimings: number[] = [];
+      const warmMetricStart = queryMetrics.length;
+      for (let sampleIndex = 0; sampleIndex < 10; sampleIndex += 1) {
+        const started = performance.now();
+        const measured = await searchCatalog(groupedInput, store);
+        warmTimings.push(performance.now() - started);
+        assert(
+          measured.registryGroups?.summary.totalRegistryPositions ===
+            groups.summary.totalRegistryPositions,
+          "Cached grouped totals changed: " + query,
+        );
+      }
+      assert(
+        queryMetrics.length === warmMetricStart,
+        "Cached grouped search unexpectedly executed SQL: " + query,
+      );
+      const warm = timingSummary(warmTimings);
+      assert(
+        warm.p95Ms <= maxGroupedP95Ms,
+        "Grouped p95 exceeded the warm latency budget: " + query +
+          " (" + warm.p95Ms + " ms > " + maxGroupedP95Ms + " ms).",
+      );
+      assert(
+        warm.maxMs <= 1_500,
+        "A grouped warm query exceeded 1500 ms: " + query,
+      );
+
+      const firstGroup = groups.groups.items[0];
+      const firstTrade = firstGroup?.tradeNames.items[0];
+      assert(firstGroup && firstTrade, "Grouped hierarchy is incomplete: " + query);
+      const navigationInputs = [
+        input({
+          q: query,
+          view: "grouped",
+          groupPage: Math.min(2, groups.groups.totalPages),
+        }),
+        input({
+          q: query,
+          view: "grouped",
+          groupKey: firstGroup.key,
+          tradePage: Math.min(2, firstGroup.tradeNames.totalPages),
+        }),
+        input({
+          q: query,
+          view: "grouped",
+          groupKey: firstGroup.key,
+          tradeNameKey: firstTrade.key,
+          variantPage: 1,
+        }),
+      ];
+      const navigationTimings: number[] = [];
+      for (const navigationInput of navigationInputs) {
+        const started = performance.now();
+        const navigation = await searchCatalog(navigationInput, store);
+        navigationTimings.push(performance.now() - started);
+        assert(navigation.registryGroups, "Grouped navigation returned no hierarchy.");
+        assert(
+          Buffer.byteLength(JSON.stringify(navigation), "utf8") <= 150_000,
+          "Grouped navigation response exceeded 150 KB.",
+        );
+      }
+      assert(
+        queryMetrics.length === warmMetricStart,
+        "Grouped navigation unexpectedly executed SQL: " + query,
+      );
+      const navigationMaxMs = Math.max(...navigationTimings);
+      assert(
+        navigationMaxMs <= 700,
+        "Grouped navigation exceeded 700 ms: " + query,
+      );
+
       groupedRepresentative.push({
         query,
         positions: groups.summary.totalRegistryPositions,
         groups: groups.groups.total,
-        warmMs: Number(warmMs.toFixed(1)),
+        coldMs: Number(coldMs.toFixed(1)),
+        coldSqlMs: Number(coldSqlMs.toFixed(1)),
+        backendMs: Number(Math.max(0, coldMs - coldSqlMs).toFixed(1)),
+        coldQueries: coldMetrics.length,
+        warm,
+        responseBytes,
+        navigationMaxMs: Number(navigationMaxMs.toFixed(1)),
       });
     }
     const sample = first.items.find(
@@ -211,12 +354,23 @@ async function main(): Promise<void> {
       "Approved product mapping was not exposed as approved.",
     );
 
-    const planResult = await pool.query<{ "QUERY PLAN": unknown }>(
-      `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
-       SELECT p.registry_id
-       FROM knowledge_registry_products p
-       ORDER BY LOWER(p.trade_name), LOWER(p.form), p.registry_id
-       LIMIT 25`,
+    const groupedStatement = queryMetrics.find(
+      (metric) => metric.label === "registry-grouped-page",
+    );
+    assert(groupedStatement, "Grouped SQL statement was not observed.");
+    await pool.query("BEGIN TRANSACTION READ ONLY");
+    let planResult: { rows: Array<{ "QUERY PLAN": unknown }> };
+    try {
+      planResult = await pool.query<{ "QUERY PLAN": unknown }>(
+        "EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON, TIMING OFF) " +
+          groupedStatement.statement,
+        [...groupedStatement.values],
+      );
+    } finally {
+      await pool.query("ROLLBACK");
+    }
+    const queryPlan = summarizeQueryPlan(
+      planResult.rows[0]?.["QUERY PLAN"] ?? null,
     );
     const serialized = JSON.stringify({
       catalogTotal: first.catalogTotal,
@@ -224,7 +378,7 @@ async function main(): Promise<void> {
       page50: page50.items.length,
       representative,
       groupedRepresentative,
-      queryPlan: planResult.rows[0]?.["QUERY PLAN"] ?? null,
+      queryPlan,
     });
     assert(serialized.length < 100_000, "Catalog smoke report is unexpectedly large.");
     assert(!/DATABASE_URL|postgres(?:ql)?:\/\/|[A-Za-z]:\\/i.test(serialized), "Catalog smoke output leaks sensitive diagnostics.");
@@ -239,7 +393,7 @@ async function main(): Promise<void> {
           page50: page50.items.length,
           representative,
           groupedRepresentative,
-          queryPlan: planResult.rows[0]?.["QUERY PLAN"] ?? null,
+          queryPlan,
         },
         null,
         2,

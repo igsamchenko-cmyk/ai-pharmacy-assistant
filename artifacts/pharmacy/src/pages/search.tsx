@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   getSearchCatalogQueryKey,
+  getSearchCatalogQueryOptions,
   useSearchCatalog,
   type CatalogIngredientResult,
   type CatalogSearchResponse,
@@ -37,6 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ReportIssueButton } from "@/components/report-issue-button";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 
 type SearchType = "all" | "ingredients" | "registry_products";
 type RegistrationStatus = "active" | "terminated" | "unknown";
@@ -276,10 +278,65 @@ function IngredientCard({ ingredient }: { ingredient: CatalogIngredientResult })
 
 type GroupedRegistryCatalog = NonNullable<CatalogSearchResponse["registryGroups"]>;
 
+export const CATALOG_QUERY_STALE_MS = 120_000;
+
+export function shouldRetryCatalogRequest(
+  failureCount: number,
+  error: unknown,
+): boolean {
+  if (failureCount >= 1) return false;
+  const status =
+    typeof error === "object" && error !== null && "status" in error &&
+    typeof (error as { status?: unknown }).status === "number"
+      ? (error as { status: number }).status
+      : null;
+  return status === null || status >= 500;
+}
+
+export function mergeCatalogVariantPage(
+  catalog: GroupedRegistryCatalog | null | undefined,
+  variantCatalog: GroupedRegistryCatalog | null | undefined,
+  groupKey: string | null,
+  tradeNameKey: string | null,
+): GroupedRegistryCatalog | null | undefined {
+  if (!catalog || !variantCatalog || !groupKey || !tradeNameKey) return catalog;
+  const variantGroup = variantCatalog.groups.items.find(
+    (group) => group.key === groupKey,
+  );
+  const variants = variantGroup?.tradeNames.items.find(
+    (trade) => trade.key === tradeNameKey,
+  )?.variants;
+  if (!variants) return catalog;
+
+  return {
+    ...catalog,
+    groups: {
+      ...catalog.groups,
+      items: catalog.groups.items.map((group) =>
+        group.key !== groupKey
+          ? group
+          : {
+              ...group,
+              tradeNames: {
+                ...group.tradeNames,
+                items: group.tradeNames.items.map((trade) =>
+                  trade.key === tradeNameKey ? { ...trade, variants } : trade,
+                ),
+              },
+            },
+      ),
+    },
+  };
+}
+
 export function GroupedRegistryResults({
   catalog,
   query,
   isFetching,
+  isVariantFetching,
+  isVariantError,
+  selectedTradeNameKey,
+  onRetryVariants,
   onSelectTrade,
   onGroupPage,
   onTradePage,
@@ -288,6 +345,10 @@ export function GroupedRegistryResults({
   catalog: GroupedRegistryCatalog;
   query: string;
   isFetching: boolean;
+  isVariantFetching: boolean;
+  isVariantError: boolean;
+  selectedTradeNameKey: string | null;
+  onRetryVariants: () => void;
   onSelectTrade: (groupKey: string | null, tradeNameKey: string | null) => void;
   onGroupPage: (page: number) => void;
   onTradePage: (groupKey: string, page: number) => void;
@@ -323,7 +384,9 @@ export function GroupedRegistryResults({
       </div>
 
       {catalog.groups.items.map((group) => {
-        const hasOpenTrade = group.tradeNames.items.some((trade) => Boolean(trade.variants));
+        const hasOpenTrade = group.tradeNames.items.some(
+          (trade) => Boolean(trade.variants) || trade.key === selectedTradeNameKey,
+        );
         const groupExpanded = openGroupKeys.has(group.key) || hasOpenTrade;
         return (
           <section key={group.key} className="space-y-3 border-b pb-5" data-testid={`composition-group-${group.key}`}>
@@ -364,7 +427,7 @@ export function GroupedRegistryResults({
             {groupExpanded ? (
               <div className="space-y-2">
                 {group.tradeNames.items.map((trade) => {
-                  const expanded = Boolean(trade.variants);
+                  const expanded = Boolean(trade.variants) || trade.key === selectedTradeNameKey;
                   return (
                     <div key={trade.key} className="border-l-2 border-primary/30 pl-3">
                       <Button
@@ -399,6 +462,34 @@ export function GroupedRegistryResults({
                               </Button>
                             </nav>
                           ) : null}
+                        </div>
+                      ) : trade.key === selectedTradeNameKey && isVariantFetching ? (
+                        <div
+                          className="mt-3 space-y-2"
+                          aria-label="Завантаження варіантів препарату"
+                          data-testid="variant-loading"
+                        >
+                          <div className="h-36 w-full animate-pulse rounded-md bg-primary/10" />
+                          <div className="h-36 w-full animate-pulse rounded-md bg-primary/10" />
+                        </div>
+                      ) : trade.key === selectedTradeNameKey && isVariantError ? (
+                        <div
+                          className="mt-3 space-y-3 border-y py-4"
+                          role="alert"
+                          data-testid="variant-error"
+                        >
+                          <p className="text-sm text-muted-foreground">
+                            Не вдалося завантажити варіанти. Сервіс може прокидатися після паузи.
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="min-h-11"
+                            onClick={onRetryVariants}
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            Спробувати ще раз
+                          </Button>
                         </div>
                       ) : null}
                     </div>
@@ -454,10 +545,37 @@ export default function SearchPage() {
   const [tradePage, setTradePage] = useState(1);
   const [variantPage, setVariantPage] = useState(1);
 
+  const queryClient = useQueryClient();
   const debouncedQ = useDebounce(q, 300);
   const debouncedManufacturer = useDebounce(manufacturer, 300);
   const debouncedForm = useDebounce(form, 300);
   const debouncedStrength = useDebounce(strength, 300);
+  const criteriaKey = useMemo(
+    () => JSON.stringify([
+      debouncedQ.trim(),
+      debouncedManufacturer.trim(),
+      debouncedForm.trim(),
+      debouncedStrength.trim(),
+      compositionType,
+      mappingStatus,
+      registrationStatus,
+      type,
+      pageSize,
+    ]),
+    [
+      debouncedQ,
+      debouncedManufacturer,
+      debouncedForm,
+      debouncedStrength,
+      compositionType,
+      mappingStatus,
+      registrationStatus,
+      type,
+      pageSize,
+    ],
+  );
+  const [paginationCriteriaKey, setPaginationCriteriaKey] = useState(criteriaKey);
+  const paginationIsCurrent = paginationCriteriaKey === criteriaKey;
 
   useEffect(() => {
     setPage(1);
@@ -466,33 +584,35 @@ export default function SearchPage() {
     setSelectedTradeNameKey(null);
     setTradePage(1);
     setVariantPage(1);
-  }, [
-    debouncedQ,
-    debouncedManufacturer,
-    debouncedForm,
-    debouncedStrength,
-    compositionType,
-    mappingStatus,
-    registrationStatus,
-    type,
-    pageSize,
-  ]);
+    setPaginationCriteriaKey(criteriaKey);
+  }, [criteriaKey]);
+
+  const requestedPage = paginationIsCurrent ? page : 1;
+  const requestedGroupPage = paginationIsCurrent ? groupPage : 1;
+  const requestedTradePage = paginationIsCurrent ? tradePage : 1;
+  const requestedVariantPage = paginationIsCurrent ? variantPage : 1;
+  const requestedGroupKey = paginationIsCurrent ? selectedGroupKey : null;
+  const requestedTradeNameKey = paginationIsCurrent
+    ? selectedTradeNameKey
+    : null;
 
   const params = useMemo(
     () => ({
       q: debouncedQ.trim(),
       type,
-      page,
+      page: requestedPage,
       pageSize,
-      view: debouncedQ.trim() && type !== "ingredients" ? "grouped" as const : "flat" as const,
-      groupPage,
+      view: debouncedQ.trim() && type !== "ingredients"
+        ? "grouped" as const
+        : "flat" as const,
+      groupPage: requestedGroupPage,
       groupPageSize: 10 as const,
-      tradePage,
+      tradePage: requestedTradePage,
       tradePageSize: 10 as const,
-      variantPage,
       variantPageSize: 10 as const,
-      ...(selectedGroupKey ? { groupKey: selectedGroupKey } : {}),
-      ...(selectedTradeNameKey ? { tradeNameKey: selectedTradeNameKey } : {}),
+      ...(requestedGroupKey && !requestedTradeNameKey
+        ? { groupKey: requestedGroupKey }
+        : {}),
       ...(debouncedManufacturer.trim()
         ? { manufacturer: debouncedManufacturer.trim() }
         : {}),
@@ -505,13 +625,12 @@ export default function SearchPage() {
     [
       debouncedQ,
       type,
-      page,
+      requestedPage,
       pageSize,
-      groupPage,
-      tradePage,
-      variantPage,
-      selectedGroupKey,
-      selectedTradeNameKey,
+      requestedGroupPage,
+      requestedTradePage,
+      requestedGroupKey,
+      requestedTradeNameKey,
       debouncedManufacturer,
       debouncedForm,
       debouncedStrength,
@@ -521,28 +640,129 @@ export default function SearchPage() {
     ],
   );
 
+  const variantParams = useMemo(
+    () =>
+      requestedGroupKey && requestedTradeNameKey
+        ? {
+            ...params,
+            groupKey: requestedGroupKey,
+            tradeNameKey: requestedTradeNameKey,
+            variantPage: requestedVariantPage,
+          }
+        : null,
+    [
+      params,
+      requestedGroupKey,
+      requestedTradeNameKey,
+      requestedVariantPage,
+    ],
+  );
+
   const {
     data,
     isLoading,
-    isFetching,
+    isFetching: isBaseFetching,
     isError,
+    isPlaceholderData,
     refetch,
   } = useSearchCatalog(params, {
     query: {
       queryKey: getSearchCatalogQueryKey(params),
-      retry: 2,
-      retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 4_000),
-      staleTime: 15_000,
+      placeholderData: keepPreviousData,
+      retry: shouldRetryCatalogRequest,
+      retryDelay: 1_000,
+      staleTime: CATALOG_QUERY_STALE_MS,
+      gcTime: 600_000,
+      refetchOnWindowFocus: false,
     },
   });
 
+  const {
+    data: variantData,
+    isFetching: isVariantFetching,
+    isError: isVariantError,
+    refetch: refetchVariants,
+  } = useSearchCatalog(variantParams ?? params, {
+    query: {
+      queryKey: getSearchCatalogQueryKey(variantParams ?? params),
+      enabled: Boolean(variantParams),
+      placeholderData: keepPreviousData,
+      retry: shouldRetryCatalogRequest,
+      retryDelay: 1_000,
+      staleTime: CATALOG_QUERY_STALE_MS,
+      gcTime: 600_000,
+      refetchOnWindowFocus: false,
+    },
+  });
+
+  useEffect(() => {
+    if (!data || isPlaceholderData) return;
+    const activeGroup = requestedGroupKey
+      ? data.registryGroups?.groups.items.find(
+          (group) => group.key === requestedGroupKey,
+        )
+      : null;
+    const nextParams = activeGroup?.tradeNames.hasNext
+      ? {
+          ...params,
+          groupKey: activeGroup.key,
+          tradePage: activeGroup.tradeNames.page + 1,
+        }
+      : data.registryGroups?.groups.hasNext
+        ? { ...params, groupPage: data.registryGroups.groups.page + 1 }
+        : data.registryProducts.hasNext
+          ? { ...params, page: data.registryProducts.page + 1 }
+          : null;
+    if (!nextParams) return;
+    void queryClient.prefetchQuery({
+      ...getSearchCatalogQueryOptions(nextParams),
+      staleTime: CATALOG_QUERY_STALE_MS,
+    });
+  }, [
+    data,
+    isPlaceholderData,
+    params,
+    queryClient,
+    requestedGroupKey,
+  ]);
+
+  useEffect(() => {
+    if (!variantParams || !variantData || !requestedTradeNameKey) return;
+    const variants = variantData.registryGroups?.groups.items
+      .find((group) => group.key === requestedGroupKey)
+      ?.tradeNames.items
+      .find((trade) => trade.key === requestedTradeNameKey)
+      ?.variants;
+    if (!variants?.hasNext) return;
+    const nextParams = {
+      ...variantParams,
+      variantPage: variants.page + 1,
+    };
+    void queryClient.prefetchQuery({
+      ...getSearchCatalogQueryOptions(nextParams),
+      staleTime: CATALOG_QUERY_STALE_MS,
+    });
+  }, [
+    queryClient,
+    requestedGroupKey,
+    requestedTradeNameKey,
+    variantData,
+    variantParams,
+  ]);
+
+  const isFetching = isBaseFetching || isVariantFetching;
   const isUpdating =
     q.trim() !== debouncedQ.trim() ||
     manufacturer.trim() !== debouncedManufacturer.trim() ||
     form.trim() !== debouncedForm.trim() ||
     strength.trim() !== debouncedStrength.trim();
   const registry = data?.registryProducts;
-  const registryGroups = data?.registryGroups;
+  const registryGroups = mergeCatalogVariantPage(
+    data?.registryGroups,
+    variantData?.registryGroups,
+    requestedGroupKey,
+    requestedTradeNameKey,
+  );
   const hasFilters =
     Boolean(manufacturer || form || strength) ||
     compositionType !== "all" || mappingStatus !== "all" ||
@@ -815,6 +1035,10 @@ export default function SearchPage() {
               catalog={registryGroups}
               query={debouncedQ}
               isFetching={isFetching}
+              isVariantFetching={isVariantFetching}
+              isVariantError={isVariantError}
+              selectedTradeNameKey={requestedTradeNameKey}
+              onRetryVariants={() => void refetchVariants()}
               onSelectTrade={(groupKey, tradeNameKey) => {
                 setSelectedGroupKey(groupKey);
                 setSelectedTradeNameKey(tradeNameKey);
