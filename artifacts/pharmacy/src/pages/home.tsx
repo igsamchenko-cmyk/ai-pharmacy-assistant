@@ -1,6 +1,8 @@
 import {
   useGetDrugStats,
   getGetDrugStatsQueryKey,
+  useSearchCatalog,
+  getSearchCatalogQueryKey,
 } from "@workspace/api-client-react";
 import {
   Card,
@@ -21,15 +23,33 @@ import {
   Pill,
   Star,
   ChevronRight,
+  Database,
 } from "lucide-react";
 import { GlobalDisclaimer } from "@/components/disclaimer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DEMO_LABEL } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useFavorites, useRecentlyViewed } from "@/hooks/use-favorites";
+
+export const REGISTRY_CATALOG_HREF = "/search?type=registry_products";
 
 export default function Home() {
   const { data: stats, isLoading, isError } = useGetDrugStats();
+  const { data: catalogSummary } = useSearchCatalog(
+    { q: "", type: "registry_products", page: 1, pageSize: 25 },
+    {
+      query: {
+        queryKey: getSearchCatalogQueryKey({
+          q: "",
+          type: "registry_products",
+          page: 1,
+          pageSize: 25,
+        }),
+        staleTime: 60_000,
+      },
+    },
+  );
   const { favorites } = useFavorites();
   const recentlyViewed = useRecentlyViewed();
 
@@ -121,6 +141,26 @@ export default function Home() {
         ))}
       </section>
 
+      <Button
+        asChild
+        variant="outline"
+        className="min-h-12 h-auto w-full justify-start whitespace-normal px-4 py-3 text-left"
+      >
+        <Link
+          href={REGISTRY_CATALOG_HREF}
+          data-testid="link-registry-catalog"
+        >
+          <Database className="h-5 w-5 shrink-0 text-primary" />
+          <span className="min-w-0 flex-1 break-words">
+            Каталог препаратів
+            {catalogSummary?.catalogTotal
+              ? ` - ${catalogSummary.catalogTotal.toLocaleString("uk-UA")} позицій`
+              : " - відкрити"}
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0" />
+        </Link>
+      </Button>
+
       {favorites.length > 0 && (
         <section className="space-y-3 pt-2">
           <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -171,6 +211,10 @@ export default function Home() {
       )}
 
       <section className="space-y-4 pt-4">
+        <p className="text-xs text-muted-foreground">
+          Основні групи нижче належать локальному довіднику та не є повним
+          державним реєстром. Повний каталог доступний у вкладці «Пошук».
+        </p>
         <h2 className="text-xl font-semibold flex items-center gap-2">
           <Pill className="w-5 h-5 text-muted-foreground" />
           База препаратів
