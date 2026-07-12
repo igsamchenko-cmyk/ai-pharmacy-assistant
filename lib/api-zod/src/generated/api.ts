@@ -289,6 +289,109 @@ export const SearchDrugsResponse = zod.array(SearchDrugsResponseItem)
 
 
 /**
+ * Searches approved internal ingredients and the official registry product snapshot without loading the full catalog into the client.
+ * @summary Search and browse the production medicine catalog
+ */
+export const searchCatalogQueryQDefault = ``;
+export const searchCatalogQueryQMax = 200;
+
+export const searchCatalogQueryTypeDefault = `all`;
+export const searchCatalogQueryPageDefault = 1;
+export const searchCatalogQueryPageMax = 10000;
+export const searchCatalogQueryPageMultipleOf = 1;
+
+export const searchCatalogQueryPageSizeDefault = 25;
+export const searchCatalogQueryPageSizeMin = 25;
+export const searchCatalogQueryPageSizeMax = 50;
+export const searchCatalogQueryPageSizeMultipleOf = 25;
+
+export const searchCatalogQueryManufacturerMax = 120;
+
+export const searchCatalogQueryFormMax = 120;
+
+
+
+export const SearchCatalogQueryParams = zod.object({
+  "q": zod.coerce.string().max(searchCatalogQueryQMax).default(searchCatalogQueryQDefault),
+  "type": zod.enum(['all', 'ingredients', 'registry_products']).default(searchCatalogQueryTypeDefault),
+  "page": zod.coerce.number().min(1).max(searchCatalogQueryPageMax).multipleOf(searchCatalogQueryPageMultipleOf).default(searchCatalogQueryPageDefault),
+  "pageSize": zod.coerce.number().min(searchCatalogQueryPageSizeMin).max(searchCatalogQueryPageSizeMax).multipleOf(searchCatalogQueryPageSizeMultipleOf).default(searchCatalogQueryPageSizeDefault),
+  "manufacturer": zod.coerce.string().max(searchCatalogQueryManufacturerMax).optional(),
+  "form": zod.coerce.string().max(searchCatalogQueryFormMax).optional(),
+  "registrationStatus": zod.enum(['active', 'terminated', 'unknown']).optional()
+})
+
+export const searchCatalogResponseCatalogTotalMin = 0;
+
+export const searchCatalogResponseIngredientsMax = 25;
+
+export const searchCatalogResponseRegistryProductsTotalMin = 0;
+
+
+export const searchCatalogResponseRegistryProductsTotalPagesMin = 0;
+
+
+
+export const SearchCatalogResponse = zod.object({
+  "query": zod.string(),
+  "type": zod.enum(['all', 'ingredients', 'registry_products']),
+  "runtimeMode": zod.enum(['db', 'static']),
+  "catalogTotal": zod.number().min(searchCatalogResponseCatalogTotalMin),
+  "ingredients": zod.array(zod.object({
+  "resultType": zod.enum(['ingredient']),
+  "ingredientId": zod.string(),
+  "inn": zod.string(),
+  "latin": zod.string(),
+  "english": zod.string(),
+  "atcCode": zod.string().nullable(),
+  "group": zod.string(),
+  "matchedName": zod.string(),
+  "mappingStatus": zod.enum(['approved'])
+})).max(searchCatalogResponseIngredientsMax),
+  "registryProducts": zod.object({
+  "items": zod.array(zod.object({
+  "resultType": zod.enum(['registry_product']),
+  "id": zod.string(),
+  "tradeName": zod.string(),
+  "inn": zod.string(),
+  "activeIngredient": zod.string(),
+  "atcCode": zod.string().nullable(),
+  "dosageForm": zod.string(),
+  "strength": zod.string().nullable(),
+  "manufacturers": zod.array(zod.object({
+  "name": zod.string(),
+  "country": zod.string().nullable()
+})),
+  "registration": zod.object({
+  "number": zod.string(),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "status": zod.enum(['active', 'terminated', 'unknown'])
+}),
+  "source": zod.object({
+  "key": zod.string(),
+  "label": zod.string()
+}),
+  "mappingStatus": zod.enum(['approved', 'unmapped', 'ambiguous']),
+  "approvedMapping": zod.union([zod.object({
+  "ingredientId": zod.string(),
+  "inn": zod.string(),
+  "latin": zod.string(),
+  "english": zod.string(),
+  "atcCode": zod.string().nullable()
+}),zod.null()])
+})),
+  "total": zod.number().min(searchCatalogResponseRegistryProductsTotalMin),
+  "page": zod.number().min(1),
+  "pageSize": zod.union([zod.literal(25),zod.literal(50)]),
+  "totalPages": zod.number().min(searchCatalogResponseRegistryProductsTotalPagesMin),
+  "hasNext": zod.boolean()
+}),
+  "warnings": zod.array(zod.string())
+})
+
+
+/**
  * Aggregate statistics about the demo drug database.
  * @summary Drug database statistics
  */

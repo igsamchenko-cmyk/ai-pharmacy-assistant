@@ -31,6 +31,7 @@ import type {
   BetaDashboardRunRequest,
   BetaDashboardRunResponse,
   BetaDashboardStatus,
+  CatalogSearchResponse,
   CompareInput,
   CompareResult,
   DataQualityReport,
@@ -61,6 +62,7 @@ import type {
   ReviewActionResponse,
   ReviewQueueResponse,
   ReviewStats,
+  SearchCatalogParams,
   SearchDrugsParams
 } from './api.schemas';
 
@@ -689,6 +691,91 @@ export function useSearchDrugs<TData = Awaited<ReturnType<typeof searchDrugs>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getSearchDrugsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSearchCatalogUrl = (params?: SearchCatalogParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/catalog/search?${stringifiedParams}` : `/api/catalog/search`
+}
+
+/**
+ * Searches approved internal ingredients and the official registry product snapshot without loading the full catalog into the client.
+ * @summary Search and browse the production medicine catalog
+ */
+export const searchCatalog = async (params?: SearchCatalogParams, options?: RequestInit): Promise<CatalogSearchResponse> => {
+
+  return customFetch<CatalogSearchResponse>(getSearchCatalogUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchCatalogQueryKey = (params?: SearchCatalogParams,) => {
+    return [
+    `/api/catalog/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchCatalogQueryOptions = <TData = Awaited<ReturnType<typeof searchCatalog>>, TError = ErrorType<void>>(params?: SearchCatalogParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchCatalog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchCatalogQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchCatalog>>> = ({ signal }) => searchCatalog(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchCatalog>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchCatalogQueryResult = NonNullable<Awaited<ReturnType<typeof searchCatalog>>>
+export type SearchCatalogQueryError = ErrorType<void>
+
+
+/**
+ * @summary Search and browse the production medicine catalog
+ */
+
+export function useSearchCatalog<TData = Awaited<ReturnType<typeof searchCatalog>>, TError = ErrorType<void>>(
+ params?: SearchCatalogParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchCatalog>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchCatalogQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

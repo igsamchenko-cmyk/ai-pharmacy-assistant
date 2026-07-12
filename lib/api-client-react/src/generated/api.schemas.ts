@@ -386,6 +386,154 @@ export interface Drug {
   source: string;
 }
 
+export interface CatalogManufacturer {
+  name: string;
+  /** @nullable */
+  country: string | null;
+}
+
+export type CatalogRegistrationStatus = typeof CatalogRegistrationStatus[keyof typeof CatalogRegistrationStatus];
+
+
+export const CatalogRegistrationStatus = {
+  active: 'active',
+  terminated: 'terminated',
+  unknown: 'unknown',
+} as const;
+
+export interface CatalogRegistration {
+  number: string;
+  /** @nullable */
+  startDate: string | null;
+  /** @nullable */
+  endDate: string | null;
+  status: CatalogRegistrationStatus;
+}
+
+export interface CatalogSource {
+  key: string;
+  label: string;
+}
+
+export interface ApprovedIngredientMapping {
+  ingredientId: string;
+  inn: string;
+  latin: string;
+  english: string;
+  /** @nullable */
+  atcCode: string | null;
+}
+
+export type CatalogIngredientResultResultType = typeof CatalogIngredientResultResultType[keyof typeof CatalogIngredientResultResultType];
+
+
+export const CatalogIngredientResultResultType = {
+  ingredient: 'ingredient',
+} as const;
+
+export type CatalogIngredientResultMappingStatus = typeof CatalogIngredientResultMappingStatus[keyof typeof CatalogIngredientResultMappingStatus];
+
+
+export const CatalogIngredientResultMappingStatus = {
+  approved: 'approved',
+} as const;
+
+export interface CatalogIngredientResult {
+  resultType: CatalogIngredientResultResultType;
+  ingredientId: string;
+  inn: string;
+  latin: string;
+  english: string;
+  /** @nullable */
+  atcCode: string | null;
+  group: string;
+  matchedName: string;
+  mappingStatus: CatalogIngredientResultMappingStatus;
+}
+
+export type RegistryProductResultResultType = typeof RegistryProductResultResultType[keyof typeof RegistryProductResultResultType];
+
+
+export const RegistryProductResultResultType = {
+  registry_product: 'registry_product',
+} as const;
+
+export type RegistryProductResultMappingStatus = typeof RegistryProductResultMappingStatus[keyof typeof RegistryProductResultMappingStatus];
+
+
+export const RegistryProductResultMappingStatus = {
+  approved: 'approved',
+  unmapped: 'unmapped',
+  ambiguous: 'ambiguous',
+} as const;
+
+export interface RegistryProductResult {
+  resultType: RegistryProductResultResultType;
+  id: string;
+  tradeName: string;
+  inn: string;
+  activeIngredient: string;
+  /** @nullable */
+  atcCode: string | null;
+  dosageForm: string;
+  /** @nullable */
+  strength: string | null;
+  manufacturers: CatalogManufacturer[];
+  registration: CatalogRegistration;
+  source: CatalogSource;
+  mappingStatus: RegistryProductResultMappingStatus;
+  approvedMapping: ApprovedIngredientMapping | null;
+}
+
+export type RegistryProductPagePageSize = typeof RegistryProductPagePageSize[keyof typeof RegistryProductPagePageSize];
+
+
+export const RegistryProductPagePageSize = {
+  NUMBER_25: 25,
+  NUMBER_50: 50,
+} as const;
+
+export interface RegistryProductPage {
+  items: RegistryProductResult[];
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 1 */
+  page: number;
+  pageSize: RegistryProductPagePageSize;
+  /** @minimum 0 */
+  totalPages: number;
+  hasNext: boolean;
+}
+
+export type CatalogSearchResponseType = typeof CatalogSearchResponseType[keyof typeof CatalogSearchResponseType];
+
+
+export const CatalogSearchResponseType = {
+  all: 'all',
+  ingredients: 'ingredients',
+  registry_products: 'registry_products',
+} as const;
+
+export type CatalogSearchResponseRuntimeMode = typeof CatalogSearchResponseRuntimeMode[keyof typeof CatalogSearchResponseRuntimeMode];
+
+
+export const CatalogSearchResponseRuntimeMode = {
+  db: 'db',
+  static: 'static',
+} as const;
+
+export interface CatalogSearchResponse {
+  query: string;
+  type: CatalogSearchResponseType;
+  runtimeMode: CatalogSearchResponseRuntimeMode;
+  /** @minimum 0 */
+  catalogTotal: number;
+  /** @maxItems 25 */
+  ingredients: CatalogIngredientResult[];
+  registryProducts: RegistryProductPage;
+  warnings: string[];
+}
+
 export interface GroupCount {
   group: string;
   count: number;
@@ -1164,6 +1312,51 @@ export const SearchDrugsField = {
   atc: 'atc',
   form: 'form',
   dosage: 'dosage',
+} as const;
+
+export type SearchCatalogParams = {
+/**
+ * @maxLength 200
+ */
+q?: string;
+type?: SearchCatalogType;
+/**
+ * @minimum 1
+ * @maximum 10000
+ */
+page?: number;
+/**
+ * @minimum 25
+ * @maximum 50
+ */
+pageSize?: number;
+/**
+ * @maxLength 120
+ */
+manufacturer?: string;
+/**
+ * @maxLength 120
+ */
+form?: string;
+registrationStatus?: SearchCatalogRegistrationStatus;
+};
+
+export type SearchCatalogType = typeof SearchCatalogType[keyof typeof SearchCatalogType];
+
+
+export const SearchCatalogType = {
+  all: 'all',
+  ingredients: 'ingredients',
+  registry_products: 'registry_products',
+} as const;
+
+export type SearchCatalogRegistrationStatus = typeof SearchCatalogRegistrationStatus[keyof typeof SearchCatalogRegistrationStatus];
+
+
+export const SearchCatalogRegistrationStatus = {
+  active: 'active',
+  terminated: 'terminated',
+  unknown: 'unknown',
 } as const;
 
 export type GetExternalDrugReferenceParams = {

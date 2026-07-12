@@ -36,7 +36,8 @@
     "knowledge:bulk-ingest:report": "tsx src/scripts/knowledge-bulk-ingest-report.ts",
     "beta:scenarios": "tsx src/scripts/beta-scenarios.ts",
     "beta:readiness": "tsx src/scripts/beta-readiness.ts",
-    "deploy:verify": "tsx src/scripts/deploy-verify.ts"
+    "deploy:verify": "tsx src/scripts/deploy-verify.ts",
+    "knowledge:registry:catalog-db-smoke": "tsx src/scripts/knowledge-registry-catalog-db-smoke.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",

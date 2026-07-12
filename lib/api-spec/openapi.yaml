@@ -193,6 +193,74 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Drug"
+  /catalog/search:
+    get:
+      operationId: searchCatalog
+      tags: [drugs]
+      summary: Search and browse the production medicine catalog
+      description: >-
+        Searches approved internal ingredients and the official registry product
+        snapshot without loading the full catalog into the client.
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 200
+            default: ""
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, ingredients, registry_products]
+            default: all
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            multipleOf: 1
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 25
+            maximum: 50
+            multipleOf: 25
+            default: 25
+        - name: manufacturer
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 120
+        - name: form
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 120
+        - name: registrationStatus
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, terminated, unknown]
+      responses:
+        "200":
+          description: Bounded catalog search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogSearchResponse"
+        "400":
+          description: Invalid search parameters
   /drugs/stats:
     get:
       operationId: getDrugStats
@@ -1414,6 +1482,186 @@ components:
           type: string
         source:
           type: string
+    CatalogManufacturer:
+      type: object
+      required: [name, country]
+      properties:
+        name:
+          type: string
+        country:
+          type: ["string", "null"]
+    CatalogRegistration:
+      type: object
+      required: [number, startDate, endDate, status]
+      properties:
+        number:
+          type: string
+        startDate:
+          type: ["string", "null"]
+        endDate:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, terminated, unknown]
+    CatalogSource:
+      type: object
+      required: [key, label]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+    ApprovedIngredientMapping:
+      type: object
+      required: [ingredientId, inn, latin, english, atcCode]
+      properties:
+        ingredientId:
+          type: string
+        inn:
+          type: string
+        latin:
+          type: string
+        english:
+          type: string
+        atcCode:
+          type: ["string", "null"]
+    CatalogIngredientResult:
+      type: object
+      required:
+        - resultType
+        - ingredientId
+        - inn
+        - latin
+        - english
+        - atcCode
+        - group
+        - matchedName
+        - mappingStatus
+      properties:
+        resultType:
+          type: string
+          enum: [ingredient]
+        ingredientId:
+          type: string
+        inn:
+          type: string
+        latin:
+          type: string
+        english:
+          type: string
+        atcCode:
+          type: ["string", "null"]
+        group:
+          type: string
+        matchedName:
+          type: string
+        mappingStatus:
+          type: string
+          enum: [approved]
+    RegistryProductResult:
+      type: object
+      required:
+        - resultType
+        - id
+        - tradeName
+        - inn
+        - activeIngredient
+        - atcCode
+        - dosageForm
+        - strength
+        - manufacturers
+        - registration
+        - source
+        - mappingStatus
+        - approvedMapping
+      properties:
+        resultType:
+          type: string
+          enum: [registry_product]
+        id:
+          type: string
+        tradeName:
+          type: string
+        inn:
+          type: string
+        activeIngredient:
+          type: string
+        atcCode:
+          type: ["string", "null"]
+        dosageForm:
+          type: string
+        strength:
+          type: ["string", "null"]
+        manufacturers:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogManufacturer"
+        registration:
+          $ref: "#/components/schemas/CatalogRegistration"
+        source:
+          $ref: "#/components/schemas/CatalogSource"
+        mappingStatus:
+          type: string
+          enum: [approved, unmapped, ambiguous]
+        approvedMapping:
+          oneOf:
+            - $ref: "#/components/schemas/ApprovedIngredientMapping"
+            - type: "null"
+    RegistryProductPage:
+      type: object
+      required: [items, total, page, pageSize, totalPages, hasNext]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RegistryProductResult"
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          enum: [25, 50]
+        totalPages:
+          type: integer
+          minimum: 0
+        hasNext:
+          type: boolean
+    CatalogSearchResponse:
+      type: object
+      required:
+        - query
+        - type
+        - runtimeMode
+        - catalogTotal
+        - ingredients
+        - registryProducts
+        - warnings
+      properties:
+        query:
+          type: string
+        type:
+          type: string
+          enum: [all, ingredients, registry_products]
+        runtimeMode:
+          type: string
+          enum: [db, static]
+        catalogTotal:
+          type: integer
+          minimum: 0
+        ingredients:
+          type: array
+          maxItems: 25
+          items:
+            $ref: "#/components/schemas/CatalogIngredientResult"
+        registryProducts:
+          $ref: "#/components/schemas/RegistryProductPage"
+        warnings:
+          type: array
+          items:
+            type: string
     DrugStats:
       type: object
       required:
