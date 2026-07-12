@@ -14,6 +14,8 @@ type ProductResult = CatalogSearchResult["registryProducts"]["items"][number];
 type IngredientResult = CatalogSearchResult["ingredients"][number];
 type RegistrationStatus = "active" | "terminated" | "unknown";
 
+export const CATALOG_BROWSE_RANK_SQL = "NULL::int";
+
 interface ProductSearchResult {
   catalogTotal: number;
   filteredTotal: number;
@@ -208,7 +210,7 @@ function buildProductFilter(input: CatalogSearchInput) {
   };
 
   const query = input.q.trim();
-  let rankSql = "0";
+  let rankSql = CATALOG_BROWSE_RANK_SQL;
   if (query) {
     const lower = query.toLocaleLowerCase("uk-UA");
     const normalized = normalize(query) || lower;
@@ -415,7 +417,7 @@ export async function createPostgresRegistryCatalogStore(): Promise<RegistryCata
     async searchIngredients(query, limit): Promise<IngredientResult[]> {
       const values: unknown[] = [];
       let whereQuery = "";
-      let rankSql = "0";
+      let rankSql = CATALOG_BROWSE_RANK_SQL;
       if (query.trim()) {
         const lower = query.trim().toLocaleLowerCase("uk-UA");
         const normalized = normalize(query) || lower;

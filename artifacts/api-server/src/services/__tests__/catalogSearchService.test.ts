@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { SearchCatalogQueryParams } from "@workspace/api-zod";
 import {
+  CATALOG_BROWSE_RANK_SQL,
   assembleRegistryProducts,
   extractRegistryStrength,
   searchCatalog,
@@ -75,6 +76,11 @@ function store(
 }
 
 describe("catalog search service", () => {
+  it("uses a non-positional PostgreSQL rank expression in browse mode", () => {
+    expect(CATALOG_BROWSE_RANK_SQL).toBe("NULL::int");
+    expect(CATALOG_BROWSE_RANK_SQL).not.toMatch(/^\d+$/);
+  });
+
   it("extracts strength without inventing missing values", () => {
     expect(extractRegistryStrength("Ibuprofen 200 mg", "tablets")).toBe("200 mg");
     expect(extractRegistryStrength("solution", "ampoule")).toBeNull();
