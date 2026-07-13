@@ -5,6 +5,14 @@
 
 ## [Не випущено]
 
+### Added
+
+- Added the v1.8 verified-interaction foundation: a bounded severity model,
+  approved-only source policy, deterministic 2-10 item engine, safe no-rule
+  wording, legacy provenance audit, and regression tests.
+- Legacy interaction rules now have a lossless review-candidate migration;
+  incomplete provenance is reported and never auto-approved.
+
 ## v1.6.0 - Production Ukrainian Drug Registry Import & Database Scaling - Unreleased
 
 ### Added

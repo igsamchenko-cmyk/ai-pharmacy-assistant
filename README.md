@@ -171,6 +171,15 @@ DATABASE_URL=... pnpm --filter @workspace/api-server run import:knowledge -- --c
 `source`, `confidence` and `provenance` fields so admins can confirm whether a
 result came from DB, static data or fallback behavior.
 
+## v1.8 Verified Interaction Foundation (in progress)
+
+PR 1 introduces an internal approved-only interaction model and deterministic
+2-10 item engine without changing the current public endpoint. Run
+pnpm knowledge:interactions:audit to see the legacy rule count and exact
+provenance/review blockers. The legacy 287-rule dataset is migrated as
+needs_review candidates, not automatically promoted to verified medical facts.
+See docs/INTERACTIONS_V18_FOUNDATION.md.
+
 ## v0.6 Real Data Backfill and DB Runtime Hardening
 
 The knowledge DB runtime remains optional. Static runtime data is still the
@@ -252,7 +261,6 @@ rows remain review/audit-only. See `docs/DICTIONARY_BATCHES.md` and
 - Use `docs/FEEDBACK_POLICY.md` before collecting beta reports; reports must not contain patient-identifiable data or secrets.
 - DB runtime remains optional behind `KNOWLEDGE_DB_RUNTIME=true`; static fallback must keep working.
 - FarmAssist remains a reference tool only and must not be used for diagnosis, treatment selection, pediatric dosing, cancellation of medication, or emergency triage.
-
 
 ## Beta Dashboard
 
