@@ -287,6 +287,13 @@ paths:
             type: string
             enum: [all, approved, unmapped]
             default: all
+        - name: nationalListStatus
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, exact, ingredient_only, uncertain, not_listed]
+            default: all
         - name: groupPage
           in: query
           required: false
@@ -1606,6 +1613,29 @@ components:
           type: string
         label:
           type: string
+    NationalListSource:
+      type: object
+      required: [title, actNumber, actDate, revisionDate, effectiveDate, url]
+      properties:
+        title: { type: string }
+        actNumber: { type: string }
+        actDate: { type: string }
+        revisionDate: { type: string }
+        effectiveDate: { type: string }
+        url: { type: string }
+    NationalListMatchDetails:
+      type: object
+      required: [officialName, ingredients, dosageForms, routes, strengths, ingredientMatch, formMatch, routeMatch, strengthMatch]
+      properties:
+        officialName: { type: string }
+        ingredients: { type: array, maxItems: 12, items: { type: string } }
+        dosageForms: { type: array, maxItems: 20, items: { type: string } }
+        routes: { type: array, maxItems: 12, items: { type: string } }
+        strengths: { type: array, maxItems: 30, items: { type: string } }
+        ingredientMatch: { type: string, enum: [match, mismatch, unknown, not_applicable] }
+        formMatch: { type: string, enum: [match, mismatch, unknown, not_applicable] }
+        routeMatch: { type: string, enum: [match, mismatch, unknown, not_applicable] }
+        strengthMatch: { type: string, enum: [match, mismatch, unknown, not_applicable] }
     ApprovedIngredientMapping:
       type: object
       required: [ingredientId, inn, latin, english, atcCode]
@@ -1670,6 +1700,13 @@ components:
         - mappingStatus
         - approvedMapping
         - sourceRecordCount
+        - nationalListStatus
+        - nationalListRelease
+        - nationalListMatchReason
+        - nationalListSection
+        - nationalListSource
+        - nationalListCheckedAt
+        - nationalListMatchDetails
       properties:
         resultType:
           type: string
@@ -1706,6 +1743,25 @@ components:
         sourceRecordCount:
           type: integer
           minimum: 1
+        nationalListStatus:
+          type: string
+          enum: [exact, ingredient_only, uncertain, not_listed, not_applicable]
+        nationalListRelease:
+          type: ["string", "null"]
+        nationalListMatchReason:
+          type: string
+        nationalListSection:
+          type: ["string", "null"]
+        nationalListSource:
+          oneOf:
+            - $ref: "#/components/schemas/NationalListSource"
+            - type: "null"
+        nationalListCheckedAt:
+          type: ["string", "null"]
+        nationalListMatchDetails:
+          oneOf:
+            - $ref: "#/components/schemas/NationalListMatchDetails"
+            - type: "null"
     CatalogGroupingSummary:
       type: object
       required: [totalRegistryPositions, uniqueTradeNames, uniqueStrengths, uniqueDosageForms, uniqueManufacturers, monotherapyCount, combinationCount, unknownCompositionCount, approvedMappedCount, unmappedCount]
@@ -1784,7 +1840,7 @@ components:
         hasNext: { type: boolean }
     CatalogAppliedFilters:
       type: object
-      required: [query, tradeName, manufacturer, form, strength, compositionType, mappingStatus, registrationStatus]
+      required: [query, tradeName, manufacturer, form, strength, compositionType, mappingStatus, nationalListStatus, registrationStatus]
       properties:
         query: { type: string }
         tradeName: { type: ["string", "null"] }
@@ -1793,6 +1849,7 @@ components:
         strength: { type: ["string", "null"] }
         compositionType: { type: string, enum: [all, monotherapy, combination, unknown] }
         mappingStatus: { type: string, enum: [all, approved, unmapped] }
+        nationalListStatus: { type: string, enum: [all, exact, ingredient_only, uncertain, not_listed] }
         registrationStatus: { type: ["string", "null"] }
     GroupedRegistryCatalog:
       type: object

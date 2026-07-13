@@ -101,6 +101,78 @@ describe("catalog search service", () => {
     ]);
   });
 
+  it("attaches one bounded exact National List result from the batch query", () => {
+    const [result] = assembleRegistryProducts(
+      [{
+        ...productRow,
+        national_list_status: "exact" as const,
+        national_list_reason: "INN, form, route and strength match.",
+        national_list_checked_at: "2026-07-13T00:00:00.000Z",
+        national_list_release_id: "ua-national-list-2025-10-10",
+        national_list_title: "Національний перелік основних лікарських засобів",
+        national_list_act_number: "333",
+        national_list_act_date: "2009-03-25",
+        national_list_revision_date: "2025-10-10",
+        national_list_effective_date: "2025-10-10",
+        national_list_source_url: "https://zakon.rada.gov.ua/laws/show/333-2009-%D0%BF#Text",
+        national_list_section: "II. Знеболення",
+        national_list_official_name: "Ібупрофен",
+        national_list_ingredients_json: JSON.stringify(["Ibuprofen"]),
+        national_list_dosage_forms_json: JSON.stringify(["таблетки"]),
+        national_list_routes_json: JSON.stringify(["oral"]),
+        national_list_strengths_json: JSON.stringify(["200 мг"]),
+        national_list_ingredient_match: "match" as const,
+        national_list_form_match: "match" as const,
+        national_list_route_match: "match" as const,
+        national_list_strength_match: "match" as const,
+      }],
+      [],
+      [],
+    );
+    expect(result).toMatchObject({
+      nationalListStatus: "exact",
+      nationalListRelease: "ua-national-list-2025-10-10",
+      nationalListSource: { actNumber: "333" },
+      nationalListMatchDetails: {
+        officialName: "Ібупрофен",
+        strengthMatch: "match",
+      },
+    });
+  });
+
+  it("sanitizes National List metadata before returning it to the API", () => {
+    const [result] = assembleRegistryProducts(
+      [{
+        ...productRow,
+        national_list_status: "exact" as const,
+        national_list_reason: "DATABASE_URL=postgresql://secret@host/db",
+        national_list_release_id: "C:/private/release",
+        national_list_title: "api_key=secret",
+        national_list_act_number: "333",
+        national_list_act_date: "2009-03-25",
+        national_list_revision_date: "2025-10-10",
+        national_list_effective_date: "2025-10-10",
+        national_list_source_url: "https://zakon.rada.gov.ua/laws/show/333?token=secret",
+        national_list_section: "/opt/render/project/src/data",
+        national_list_official_name: "C:/private/list",
+        national_list_ingredients_json: JSON.stringify(["Ibuprofen", "Bearer secret-token"]),
+      }],
+      [],
+      [],
+    );
+    expect(result).toMatchObject({
+      nationalListRelease: null,
+      nationalListMatchReason: "National-list status is unavailable for this product.",
+      nationalListSection: null,
+      nationalListSource: null,
+      nationalListMatchDetails: null,
+    });
+    const serialized = JSON.stringify(result);
+    for (const unsafe of ["DATABASE_URL", "postgresql://", "api_key", "Bearer", "C:/", "/opt/"]) {
+      expect(serialized).not.toContain(unsafe);
+    }
+  });
+
   it("attaches an approved mapping through the registry INN alias", () => {
     const [result] = assembleRegistryProducts(
       [productRow],
@@ -285,7 +357,7 @@ describe("catalog search service", () => {
   it("reuses one bounded grouped snapshot without N+1 queries", async () => {
     resetRegistrySearchCachesForTests();
     const labels: string[] = [];
-    const query = vi.fn(async (sql: string) => {
+    const query = vi.fn(async (sql: string, _values: unknown[] = []) => {
       if (sql.includes("SELECT COUNT(*)::int AS count")) {
         return { rows: [{ count: 16_533 }] };
       }
@@ -325,6 +397,8 @@ describe("catalog search service", () => {
     expect(groupedSql).not.toContain("query_alias.normalized = 2");
     expect(groupedSql).toContain("exact_approved_alias");
     expect(groupedSql).toContain("normalized_name");
+    expect(groupedSql).toContain("LEFT JOIN LATERAL");
+    expect(groupedSql).toContain("national_list_match_results");
     expect(
       query.mock.calls.filter(([sql]) =>
         sql.includes("SELECT COUNT(*)::int AS count"),
@@ -342,9 +416,13 @@ describe("catalog search service", () => {
     expect(query).toHaveBeenCalledTimes(4);
 
     await dbStore.searchProductsForGrouping!(
-      input({ q: "Ibuprofen", view: "grouped" }),
+      input({ q: "Ibuprofen", view: "grouped", nationalListStatus: "exact" }),
     );
     expect(query).toHaveBeenCalledTimes(7);
+    const filteredCall = query.mock.calls.find(([sql, values]) =>
+      sql.includes("national_list_match_results") && values?.includes("exact"));
+    expect(filteredCall?.[0]).toContain("COALESCE(nlm.status");
+    expect(filteredCall?.[1]).toContain("exact");
     resetRegistrySearchCachesForTests();
   });
 });

@@ -37,6 +37,13 @@ function product(
     mappingStatus: "approved",
     approvedMapping,
     sourceRecordCount: 1,
+    nationalListStatus: "not_applicable",
+    nationalListRelease: null,
+    nationalListMatchReason: "No active release.",
+    nationalListSection: null,
+    nationalListSource: null,
+    nationalListCheckedAt: null,
+    nationalListMatchDetails: null,
     ...overrides,
   };
 }

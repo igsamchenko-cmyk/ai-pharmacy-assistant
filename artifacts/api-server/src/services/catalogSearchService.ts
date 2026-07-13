@@ -71,6 +71,26 @@ interface ProductRow {
   registration_end_date: string;
   source_key: string;
   registration_status: RegistrationStatus;
+  national_list_status?: "exact" | "ingredient_only" | "uncertain" | "not_listed" | "not_applicable" | null;
+  national_list_reason?: string | null;
+  national_list_checked_at?: string | null;
+  national_list_release_id?: string | null;
+  national_list_title?: string | null;
+  national_list_act_number?: string | null;
+  national_list_act_date?: string | null;
+  national_list_revision_date?: string | null;
+  national_list_effective_date?: string | null;
+  national_list_source_url?: string | null;
+  national_list_section?: string | null;
+  national_list_official_name?: string | null;
+  national_list_ingredients_json?: string | null;
+  national_list_dosage_forms_json?: string | null;
+  national_list_routes_json?: string | null;
+  national_list_strengths_json?: string | null;
+  national_list_ingredient_match?: "match" | "mismatch" | "unknown" | "not_applicable" | null;
+  national_list_form_match?: "match" | "mismatch" | "unknown" | "not_applicable" | null;
+  national_list_route_match?: "match" | "mismatch" | "unknown" | "not_applicable" | null;
+  national_list_strength_match?: "match" | "mismatch" | "unknown" | "not_applicable" | null;
 }
 
 interface ManufacturerRow {
@@ -100,6 +120,46 @@ interface IngredientRow {
 }
 
 const REGISTRY_SEARCH_CACHE_VERSION = "registry-search-v2";
+const NATIONAL_LIST_MATCH_JOIN_SQL = `
+  LEFT JOIN LATERAL (
+    SELECT id, title, act_number, act_date, revision_date, effective_date, source_url
+    FROM national_list_releases
+    WHERE status = 'active'
+    ORDER BY activated_at DESC NULLS LAST, id
+    LIMIT 1
+  ) nlr ON TRUE
+  LEFT JOIN national_list_match_results nlm
+    ON nlm.release_id = nlr.id
+   AND nlm.product_registry_id = p.registry_id
+  LEFT JOIN national_list_entries nle
+    ON nle.release_id = nlr.id
+   AND nle.stable_key = nlm.entry_stable_key`;
+
+const NATIONAL_LIST_MATCH_SELECT_SQL = `
+  COALESCE(nlm.status, CASE WHEN nlr.id IS NULL THEN 'not_applicable' ELSE 'uncertain' END)
+    AS national_list_status,
+  COALESCE(nlm.reason, CASE WHEN nlr.id IS NULL
+    THEN 'No active National Medicines List release is configured.'
+    ELSE 'The active release has no validated resolver result for this product.' END)
+    AS national_list_reason,
+  nlm.checked_at::text AS national_list_checked_at,
+  nlr.id AS national_list_release_id,
+  nlr.title AS national_list_title,
+  nlr.act_number AS national_list_act_number,
+  nlr.act_date AS national_list_act_date,
+  nlr.revision_date AS national_list_revision_date,
+  nlr.effective_date AS national_list_effective_date,
+  nlr.source_url AS national_list_source_url,
+  nle.section AS national_list_section,
+  nle.official_name_ua AS national_list_official_name,
+  nle.ingredients_json AS national_list_ingredients_json,
+  nle.dosage_forms_json AS national_list_dosage_forms_json,
+  nle.routes_json AS national_list_routes_json,
+  nle.strengths_json AS national_list_strengths_json,
+  nlm.ingredient_match AS national_list_ingredient_match,
+  nlm.form_match AS national_list_form_match,
+  nlm.route_match AS national_list_route_match,
+  nlm.strength_match AS national_list_strength_match`;
 const catalogTotalCache = new TtlCache<number>({
   ttlMs: 120_000,
   maxEntries: 1,
@@ -120,6 +180,7 @@ function groupedProductCacheKey(input: CatalogSearchInput): string {
     cacheValue(input.manufacturer),
     cacheValue(input.form),
     cacheValue(input.strength),
+    input.nationalListStatus ?? "all",
     input.registrationStatus ?? "",
   ]);
 }
@@ -159,6 +220,67 @@ function escapeLike(value: string): string {
 function cleanNullable(value: string | null | undefined): string | null {
   const cleaned = value?.trim() ?? "";
   return cleaned || null;
+}
+
+const UNSAFE_NATIONAL_LIST_TEXT =
+  /DATABASE_URL|postgres(?:ql)?:\/\/|api[_-]?key|auth[_-]?token|bearer\s+[a-z\d._-]+|[A-Za-z]:[\\/]|\/(?:opt|home|var|tmp)\//iu;
+
+function safeNationalListText(
+  value: string | null | undefined,
+  limit = 500,
+): string | null {
+  const cleaned = value?.trim() ?? "";
+  return cleaned && !UNSAFE_NATIONAL_LIST_TEXT.test(cleaned)
+    ? cleaned.slice(0, limit)
+    : null;
+}
+
+function safeJsonArray(value: string | null | undefined, limit: number): string[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return Array.isArray(parsed)
+      ? parsed
+          .filter((item): item is string => typeof item === "string")
+          .map((item) => safeNationalListText(item, 200))
+          .filter((item): item is string => item !== null)
+          .slice(0, limit)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function sanitizedNationalListReason(value: string | null | undefined): string {
+  return safeNationalListText(value) ??
+    "National-list status is unavailable for this product.";
+}
+
+function officialNationalListUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" &&
+        url.hostname === "zakon.rada.gov.ua" &&
+        url.pathname.startsWith("/laws/show/") &&
+        !url.username && !url.password && !url.search
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeNationalListRelease(value: string | null | undefined): string | null {
+  const release = value?.trim() ?? "";
+  return /^[a-z\d][a-z\d._-]{0,99}$/iu.test(release) ? release : null;
+}
+
+function safeNationalListDateTime(value: string | null | undefined): string | null {
+  const timestamp = value?.trim() ?? "";
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u.test(timestamp)
+    ? timestamp
+    : null;
 }
 
 function sanitizedSourceKey(value: string): string {
@@ -228,6 +350,17 @@ export function assembleRegistryProducts(
       : unique.length > 1
         ? "ambiguous" as const
         : "unmapped" as const;
+    const nationalListRelease = safeNationalListRelease(row.national_list_release_id);
+    const nationalListTitle = safeNationalListText(row.national_list_title, 300);
+    const nationalListActNumber = safeNationalListText(row.national_list_act_number, 40);
+    const nationalListActDate = safeNationalListText(row.national_list_act_date, 20);
+    const nationalListRevisionDate = safeNationalListText(row.national_list_revision_date, 20);
+    const nationalListEffectiveDate = safeNationalListText(row.national_list_effective_date, 20);
+    const nationalListSourceUrl = officialNationalListUrl(row.national_list_source_url);
+    const nationalListOfficialName = safeNationalListText(
+      row.national_list_official_name,
+      300,
+    );
 
     return {
       resultType: "registry_product",
@@ -263,6 +396,41 @@ export function assembleRegistryProducts(
           }
         : null,
       sourceRecordCount: 1,
+      nationalListStatus: row.national_list_status ?? "not_applicable",
+      nationalListRelease,
+      nationalListMatchReason: sanitizedNationalListReason(row.national_list_reason ??
+        "No active National Medicines List release is configured."),
+      nationalListSection: safeNationalListText(row.national_list_section, 300),
+      nationalListSource: nationalListRelease &&
+          nationalListTitle &&
+          nationalListActNumber &&
+          nationalListActDate &&
+          nationalListRevisionDate &&
+          nationalListEffectiveDate &&
+          nationalListSourceUrl
+        ? {
+            title: nationalListTitle,
+            actNumber: nationalListActNumber,
+            actDate: nationalListActDate,
+            revisionDate: nationalListRevisionDate,
+            effectiveDate: nationalListEffectiveDate,
+            url: nationalListSourceUrl,
+          }
+        : null,
+      nationalListCheckedAt: safeNationalListDateTime(row.national_list_checked_at),
+      nationalListMatchDetails: nationalListOfficialName
+        ? {
+            officialName: nationalListOfficialName,
+            ingredients: safeJsonArray(row.national_list_ingredients_json, 12),
+            dosageForms: safeJsonArray(row.national_list_dosage_forms_json, 20),
+            routes: safeJsonArray(row.national_list_routes_json, 12),
+            strengths: safeJsonArray(row.national_list_strengths_json, 30),
+            ingredientMatch: row.national_list_ingredient_match ?? "unknown",
+            formMatch: row.national_list_form_match ?? "unknown",
+            routeMatch: row.national_list_route_match ?? "unknown",
+            strengthMatch: row.national_list_strength_match ?? "unknown",
+          }
+        : null,
     };
   });
 }
@@ -399,9 +567,14 @@ function buildProductFilter(input: CatalogSearchInput) {
     clauses.push(`(${REGISTRATION_STATUS_SQL}) = ${ref}`);
   }
 
+  if (input.nationalListStatus && input.nationalListStatus !== "all") {
+    const ref = add(input.nationalListStatus);
+    clauses.push(`COALESCE(nlm.status, CASE WHEN nlr.id IS NULL THEN 'not_applicable' ELSE 'uncertain' END) = ${ref}`);
+  }
+
   return {
     values,
-    joinSql,
+    joinSql: `${joinSql}\n${NATIONAL_LIST_MATCH_JOIN_SQL}`,
     whereSql: clauses.length ? `WHERE ${clauses.join("\n AND ")}` : "",
     rankSql,
   };
@@ -519,7 +692,8 @@ export async function createPostgresRegistryCatalogStore(
              p.registration_start_date,
              p.registration_end_date,
              p.source_key,
-             ${REGISTRATION_STATUS_SQL} AS registration_status
+             ${REGISTRATION_STATUS_SQL} AS registration_status,
+             ${NATIONAL_LIST_MATCH_SELECT_SQL}
            FROM knowledge_registry_products p
            ${filter.joinSql}
            ${filter.whereSql}
@@ -571,7 +745,8 @@ export async function createPostgresRegistryCatalogStore(
                p.registration_start_date,
                p.registration_end_date,
                p.source_key,
-               ${REGISTRATION_STATUS_SQL} AS registration_status
+               ${REGISTRATION_STATUS_SQL} AS registration_status,
+               ${NATIONAL_LIST_MATCH_SELECT_SQL}
              FROM knowledge_registry_products p
              ${filter.joinSql}
              ${filter.whereSql}

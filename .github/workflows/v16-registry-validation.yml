@@ -95,6 +95,16 @@ jobs:
           pnpm knowledge:registry:production-report
           pnpm knowledge:registry:preview -- --download
           pnpm knowledge:registry:import -- --download --mappings-only --only-approved-mappings
+          pnpm knowledge:national-list:source
+          pnpm knowledge:national-list:dry-run
+          pnpm knowledge:national-list:match-report
+
+      - name: National List PostgreSQL smoke
+        run: pnpm knowledge:national-list:db-smoke
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/farmassist_test"
+          DATABASE_SSL: "false"
+          KNOWLEDGE_DB_RUNTIME: "true"
 
       - name: Knowledge validation
         run: |

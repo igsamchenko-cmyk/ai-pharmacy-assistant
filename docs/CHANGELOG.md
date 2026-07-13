@@ -7,6 +7,17 @@
 
 ### Added
 
+- Added a versioned National Medicines List pipeline from the official
+  consolidated Resolution No. 333 revision dated 10 October 2025: 678 valid
+  structured positions with 100% provenance and no parser loss.
+- Added deterministic `exact`, `ingredient_only`, `uncertain`, `not_listed` and
+  `not_applicable` matching. Only `exact` can render the `Нацперелік` badge;
+  fixed combinations are never inferred from separately listed components.
+- Added additive release/entry/resolver-cache tables, dry-run source/match
+  reports, guarded commit/activation/rollback, catalog API metadata and UI
+  filters without activating a production release.
+- Added Node 24 PostgreSQL validation for idempotency, activation/rollback,
+  mapping isolation, indexed bulk reads and warm-search regression.
 - Added the v1.8 verified-interaction foundation: a bounded severity model,
   approved-only source policy, deterministic 2-10 item engine, safe no-rule
   wording, legacy provenance audit, and regression tests.

@@ -9,7 +9,10 @@ import type { ApprovedIngredientMapping } from './approvedIngredientMapping';
 import type { CatalogManufacturer } from './catalogManufacturer';
 import type { CatalogRegistration } from './catalogRegistration';
 import type { CatalogSource } from './catalogSource';
+import type { NationalListMatchDetails } from './nationalListMatchDetails';
+import type { NationalListSource } from './nationalListSource';
 import type { RegistryProductResultMappingStatus } from './registryProductResultMappingStatus';
+import type { RegistryProductResultNationalListStatus } from './registryProductResultNationalListStatus';
 import type { RegistryProductResultResultType } from './registryProductResultResultType';
 
 export interface RegistryProductResult {
@@ -30,4 +33,14 @@ export interface RegistryProductResult {
   approvedMapping: ApprovedIngredientMapping | null;
   /** @minimum 1 */
   sourceRecordCount: number;
+  nationalListStatus: RegistryProductResultNationalListStatus;
+  /** @nullable */
+  nationalListRelease: string | null;
+  nationalListMatchReason: string;
+  /** @nullable */
+  nationalListSection: string | null;
+  nationalListSource: NationalListSource | null;
+  /** @nullable */
+  nationalListCheckedAt: string | null;
+  nationalListMatchDetails: NationalListMatchDetails | null;
 }

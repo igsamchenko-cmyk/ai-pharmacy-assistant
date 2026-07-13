@@ -20,6 +20,7 @@ export interface CatalogGroupingInput {
   registrationStatus?: "active" | "terminated" | "unknown";
   compositionType: "all" | CompositionType;
   mappingStatus: "all" | "approved" | "unmapped";
+  nationalListStatus: "all" | "exact" | "ingredient_only" | "uncertain" | "not_listed";
   groupPage: number;
   groupPageSize: 10 | 25;
   tradePage: number;
@@ -188,6 +189,7 @@ function filterGroupedProducts(
     if (input.compositionType !== "all" && composition.type !== input.compositionType) return false;
     if (input.mappingStatus === "approved" && product.mappingStatus !== "approved") return false;
     if (input.mappingStatus === "unmapped" && product.mappingStatus === "approved") return false;
+    if (input.nationalListStatus !== "all" && product.nationalListStatus !== input.nationalListStatus) return false;
     return true;
   });
 }
@@ -286,6 +288,7 @@ export function groupRegistryProducts(
       strength: input.strength?.trim() || null,
       compositionType: input.compositionType,
       mappingStatus: input.mappingStatus,
+      nationalListStatus: input.nationalListStatus,
       registrationStatus: input.registrationStatus ?? null,
     },
     bounded,

@@ -45,6 +45,7 @@ type RegistrationStatus = "active" | "terminated" | "unknown";
 type PageSize = 25 | 50;
 type CompositionFilter = "all" | "monotherapy" | "combination";
 type MappingFilter = "all" | "approved" | "unmapped";
+type NationalListFilter = "all" | "exact" | "ingredient_only" | "uncertain" | "not_listed";
 
 const SEARCH_TYPES: Array<{ value: SearchType; label: string }> = [
   { value: "all", label: "Усі" },
@@ -87,6 +88,32 @@ function statusLabel(status: RegistryProductResult["registration"]["status"]) {
 
 function registryComposition(product: RegistryProductResult): string {
   return product.inn || product.activeIngredient || "Склад у реєстрі не зазначено";
+}
+
+function NationalListBadge({ product }: { product: RegistryProductResult }) {
+  if (product.nationalListStatus === "not_applicable") return null;
+  if (product.nationalListStatus === "exact") {
+    return (
+      <Badge className="gap-1 whitespace-normal" data-testid="national-list-exact">
+        <CheckCircle2 className="h-3 w-3" />
+        Нацперелік
+      </Badge>
+    );
+  }
+  if (product.nationalListStatus === "ingredient_only") {
+    return (
+      <Badge variant="outline" className="whitespace-normal text-left">
+        МНН у Нацпереліку — форму/дозування не підтверджено
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="secondary" className="whitespace-normal text-left">
+      {product.nationalListStatus === "uncertain"
+        ? "Потребує уточнення"
+        : "Не в Нацпереліку"}
+    </Badge>
+  );
 }
 
 export function RegistryProductCard({
@@ -137,6 +164,7 @@ export function RegistryProductCard({
                   ? "Підтверджено"
                   : "Реєстровий запис - mapping не підтверджений"}
               </Badge>
+              <NationalListBadge product={product} />
               {product.sourceRecordCount > 1 ? (
                 <Badge variant="outline">
                   Джерельних записів: {product.sourceRecordCount}
@@ -183,6 +211,33 @@ export function RegistryProductCard({
             </dd>
           </div>
         </dl>
+
+        {product.nationalListStatus !== "not_applicable" ? (
+          <div className="border-y py-3 text-sm" data-testid="national-list-details">
+            <p className="font-medium">Національний перелік</p>
+            <p className="mt-1 text-muted-foreground">{product.nationalListMatchReason}</p>
+            {product.nationalListMatchDetails ? (
+              <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div><dt className="text-xs text-muted-foreground">МНН / комбінація</dt><dd>{product.nationalListMatchDetails.officialName}</dd></div>
+                <div><dt className="text-xs text-muted-foreground">Форма / route / strength</dt><dd>{product.nationalListMatchDetails.formMatch} / {product.nationalListMatchDetails.routeMatch} / {product.nationalListMatchDetails.strengthMatch}</dd></div>
+                {product.nationalListSection ? <div><dt className="text-xs text-muted-foreground">Розділ</dt><dd>{product.nationalListSection}</dd></div> : null}
+                {product.nationalListSource ? (
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Нормативний акт</dt>
+                    <dd>
+                      <a className="underline underline-offset-2" href={product.nationalListSource.url} target="_blank" rel="noreferrer">
+                        Постанова №{product.nationalListSource.actNumber}, редакція {product.nationalListSource.revisionDate}
+                      </a>
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
+            ) : null}
+            <p className="mt-2 text-xs text-muted-foreground">
+              Статус у Нацпереліку не є клінічною рекомендацією та не підтверджує взаємозамінність.
+            </p>
+          </div>
+        ) : null}
 
         {product.atcCode && (
           <p className="text-xs text-muted-foreground break-words">
@@ -536,6 +591,7 @@ export default function SearchPage() {
   const [strength, setStrength] = useState("");
   const [compositionType, setCompositionType] = useState<CompositionFilter>("all");
   const [mappingStatus, setMappingStatus] = useState<MappingFilter>("all");
+  const [nationalListStatus, setNationalListStatus] = useState<NationalListFilter>("all");
   const [registrationStatus, setRegistrationStatus] =
     useState<RegistrationStatus | "all">("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -558,6 +614,7 @@ export default function SearchPage() {
       debouncedStrength.trim(),
       compositionType,
       mappingStatus,
+      nationalListStatus,
       registrationStatus,
       type,
       pageSize,
@@ -569,6 +626,7 @@ export default function SearchPage() {
       debouncedStrength,
       compositionType,
       mappingStatus,
+      nationalListStatus,
       registrationStatus,
       type,
       pageSize,
@@ -620,6 +678,7 @@ export default function SearchPage() {
       ...(debouncedStrength.trim() ? { strength: debouncedStrength.trim() } : {}),
       compositionType,
       mappingStatus,
+      nationalListStatus,
       ...(registrationStatus !== "all" ? { registrationStatus } : {}),
     }),
     [
@@ -636,6 +695,7 @@ export default function SearchPage() {
       debouncedStrength,
       compositionType,
       mappingStatus,
+      nationalListStatus,
       registrationStatus,
     ],
   );
@@ -765,7 +825,7 @@ export default function SearchPage() {
   );
   const hasFilters =
     Boolean(manufacturer || form || strength) ||
-    compositionType !== "all" || mappingStatus !== "all" ||
+    compositionType !== "all" || mappingStatus !== "all" || nationalListStatus !== "all" ||
     registrationStatus !== "all";
   const hasResults =
     Boolean(data?.ingredients.length) || Boolean(registry?.items.length) || Boolean(registryGroups?.groups.items.length);
@@ -931,7 +991,24 @@ export default function SearchPage() {
                   <SelectItem value="unmapped">Registry-only / непідтверджені</SelectItem>
                 </SelectContent>
               </Select>
-            </label>            <label className="space-y-1 text-sm">
+            </label>
+            <label className="space-y-1 text-sm">
+              <span className="font-medium">Національний перелік</span>
+              <Select
+                value={nationalListStatus}
+                onValueChange={(value) => setNationalListStatus(value as NationalListFilter)}
+              >
+                <SelectTrigger className="min-h-11"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Усі</SelectItem>
+                  <SelectItem value="exact">Нацперелік</SelectItem>
+                  <SelectItem value="ingredient_only">МНН у Нацпереліку</SelectItem>
+                  <SelectItem value="uncertain">Потребує уточнення</SelectItem>
+                  <SelectItem value="not_listed">Не в Нацпереліку</SelectItem>
+                </SelectContent>
+              </Select>
+            </label>
+            <label className="space-y-1 text-sm">
               <span className="font-medium">Статус реєстрації</span>
               <Select
                 value={registrationStatus}
@@ -962,6 +1039,7 @@ export default function SearchPage() {
                     setStrength("");
                     setCompositionType("all");
                     setMappingStatus("all");
+                    setNationalListStatus("all");
                     setRegistrationStatus("all");
                   }}
                 >

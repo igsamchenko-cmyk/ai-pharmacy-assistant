@@ -415,6 +415,71 @@ export interface CatalogSource {
   label: string;
 }
 
+export interface NationalListSource {
+  title: string;
+  actNumber: string;
+  actDate: string;
+  revisionDate: string;
+  effectiveDate: string;
+  url: string;
+}
+
+export type NationalListMatchDetailsIngredientMatch = typeof NationalListMatchDetailsIngredientMatch[keyof typeof NationalListMatchDetailsIngredientMatch];
+
+
+export const NationalListMatchDetailsIngredientMatch = {
+  match: 'match',
+  mismatch: 'mismatch',
+  unknown: 'unknown',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type NationalListMatchDetailsFormMatch = typeof NationalListMatchDetailsFormMatch[keyof typeof NationalListMatchDetailsFormMatch];
+
+
+export const NationalListMatchDetailsFormMatch = {
+  match: 'match',
+  mismatch: 'mismatch',
+  unknown: 'unknown',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type NationalListMatchDetailsRouteMatch = typeof NationalListMatchDetailsRouteMatch[keyof typeof NationalListMatchDetailsRouteMatch];
+
+
+export const NationalListMatchDetailsRouteMatch = {
+  match: 'match',
+  mismatch: 'mismatch',
+  unknown: 'unknown',
+  not_applicable: 'not_applicable',
+} as const;
+
+export type NationalListMatchDetailsStrengthMatch = typeof NationalListMatchDetailsStrengthMatch[keyof typeof NationalListMatchDetailsStrengthMatch];
+
+
+export const NationalListMatchDetailsStrengthMatch = {
+  match: 'match',
+  mismatch: 'mismatch',
+  unknown: 'unknown',
+  not_applicable: 'not_applicable',
+} as const;
+
+export interface NationalListMatchDetails {
+  officialName: string;
+  /** @maxItems 12 */
+  ingredients: string[];
+  /** @maxItems 20 */
+  dosageForms: string[];
+  /** @maxItems 12 */
+  routes: string[];
+  /** @maxItems 30 */
+  strengths: string[];
+  ingredientMatch: NationalListMatchDetailsIngredientMatch;
+  formMatch: NationalListMatchDetailsFormMatch;
+  routeMatch: NationalListMatchDetailsRouteMatch;
+  strengthMatch: NationalListMatchDetailsStrengthMatch;
+}
+
 export interface ApprovedIngredientMapping {
   ingredientId: string;
   inn: string;
@@ -467,6 +532,17 @@ export const RegistryProductResultMappingStatus = {
   ambiguous: 'ambiguous',
 } as const;
 
+export type RegistryProductResultNationalListStatus = typeof RegistryProductResultNationalListStatus[keyof typeof RegistryProductResultNationalListStatus];
+
+
+export const RegistryProductResultNationalListStatus = {
+  exact: 'exact',
+  ingredient_only: 'ingredient_only',
+  uncertain: 'uncertain',
+  not_listed: 'not_listed',
+  not_applicable: 'not_applicable',
+} as const;
+
 export interface RegistryProductResult {
   resultType: RegistryProductResultResultType;
   id: string;
@@ -485,6 +561,16 @@ export interface RegistryProductResult {
   approvedMapping: ApprovedIngredientMapping | null;
   /** @minimum 1 */
   sourceRecordCount: number;
+  nationalListStatus: RegistryProductResultNationalListStatus;
+  /** @nullable */
+  nationalListRelease: string | null;
+  nationalListMatchReason: string;
+  /** @nullable */
+  nationalListSection: string | null;
+  nationalListSource: NationalListSource | null;
+  /** @nullable */
+  nationalListCheckedAt: string | null;
+  nationalListMatchDetails: NationalListMatchDetails | null;
 }
 
 export interface CatalogGroupingSummary {
@@ -639,6 +725,17 @@ export const CatalogAppliedFiltersMappingStatus = {
   unmapped: 'unmapped',
 } as const;
 
+export type CatalogAppliedFiltersNationalListStatus = typeof CatalogAppliedFiltersNationalListStatus[keyof typeof CatalogAppliedFiltersNationalListStatus];
+
+
+export const CatalogAppliedFiltersNationalListStatus = {
+  all: 'all',
+  exact: 'exact',
+  ingredient_only: 'ingredient_only',
+  uncertain: 'uncertain',
+  not_listed: 'not_listed',
+} as const;
+
 export interface CatalogAppliedFilters {
   query: string;
   /** @nullable */
@@ -651,6 +748,7 @@ export interface CatalogAppliedFilters {
   strength: string | null;
   compositionType: CatalogAppliedFiltersCompositionType;
   mappingStatus: CatalogAppliedFiltersMappingStatus;
+  nationalListStatus: CatalogAppliedFiltersNationalListStatus;
   /** @nullable */
   registrationStatus: string | null;
 }
@@ -1540,6 +1638,7 @@ tradeName?: string;
 strength?: string;
 compositionType?: SearchCatalogCompositionType;
 mappingStatus?: SearchCatalogMappingStatus;
+nationalListStatus?: SearchCatalogNationalListStatus;
 /**
  * @minimum 1
  * @maximum 10000
@@ -1611,6 +1710,17 @@ export const SearchCatalogMappingStatus = {
   all: 'all',
   approved: 'approved',
   unmapped: 'unmapped',
+} as const;
+
+export type SearchCatalogNationalListStatus = typeof SearchCatalogNationalListStatus[keyof typeof SearchCatalogNationalListStatus];
+
+
+export const SearchCatalogNationalListStatus = {
+  all: 'all',
+  exact: 'exact',
+  ingredient_only: 'ingredient_only',
+  uncertain: 'uncertain',
+  not_listed: 'not_listed',
 } as const;
 
 export type SearchCatalogGroupPageSize = typeof SearchCatalogGroupPageSize[keyof typeof SearchCatalogGroupPageSize];

@@ -8,6 +8,7 @@
 import type { SearchCatalogCompositionType } from './searchCatalogCompositionType';
 import type { SearchCatalogGroupPageSize } from './searchCatalogGroupPageSize';
 import type { SearchCatalogMappingStatus } from './searchCatalogMappingStatus';
+import type { SearchCatalogNationalListStatus } from './searchCatalogNationalListStatus';
 import type { SearchCatalogRegistrationStatus } from './searchCatalogRegistrationStatus';
 import type { SearchCatalogTradePageSize } from './searchCatalogTradePageSize';
 import type { SearchCatalogType } from './searchCatalogType';
@@ -53,6 +54,7 @@ tradeName?: string;
 strength?: string;
 compositionType?: SearchCatalogCompositionType;
 mappingStatus?: SearchCatalogMappingStatus;
+nationalListStatus?: SearchCatalogNationalListStatus;
 /**
  * @minimum 1
  * @maximum 10000

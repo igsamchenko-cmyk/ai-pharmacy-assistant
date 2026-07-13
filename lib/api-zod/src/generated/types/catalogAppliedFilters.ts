@@ -7,6 +7,7 @@
  */
 import type { CatalogAppliedFiltersCompositionType } from './catalogAppliedFiltersCompositionType';
 import type { CatalogAppliedFiltersMappingStatus } from './catalogAppliedFiltersMappingStatus';
+import type { CatalogAppliedFiltersNationalListStatus } from './catalogAppliedFiltersNationalListStatus';
 
 export interface CatalogAppliedFilters {
   query: string;
@@ -20,6 +21,7 @@ export interface CatalogAppliedFilters {
   strength: string | null;
   compositionType: CatalogAppliedFiltersCompositionType;
   mappingStatus: CatalogAppliedFiltersMappingStatus;
+  nationalListStatus: CatalogAppliedFiltersNationalListStatus;
   /** @nullable */
   registrationStatus: string | null;
 }
