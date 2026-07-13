@@ -227,6 +227,120 @@ export const knowledgeRegistryManufacturersTable = pgTable(
   ],
 );
 
+export const NATIONAL_LIST_RELEASE_STATUSES = [
+  "draft",
+  "reviewed",
+  "active",
+  "superseded",
+] as const;
+export type NationalListReleaseStatusValue =
+  (typeof NATIONAL_LIST_RELEASE_STATUSES)[number];
+
+export const NATIONAL_LIST_MATCH_STATUSES = [
+  "exact",
+  "ingredient_only",
+  "uncertain",
+  "not_listed",
+  "not_applicable",
+] as const;
+export type NationalListMatchStatusValue =
+  (typeof NATIONAL_LIST_MATCH_STATUSES)[number];
+
+/** Immutable metadata for one official National Medicines List publication. */
+export const nationalListReleasesTable = pgTable(
+  "national_list_releases",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    actNumber: text("act_number").notNull(),
+    actDate: text("act_date").notNull(),
+    revisionDate: text("revision_date").notNull(),
+    effectiveDate: text("effective_date").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    sourceDomain: text("source_domain").notNull(),
+    sourceFormat: text("source_format").notNull(),
+    documentHash: text("document_hash").notNull(),
+    parserVersion: text("parser_version").notNull(),
+    rawCount: integer("raw_count").notNull(),
+    parsedCount: integer("parsed_count").notNull(),
+    validCount: integer("valid_count").notNull(),
+    invalidCount: integer("invalid_count").notNull(),
+    provenanceCoverage: integer("provenance_coverage").notNull(),
+    status: text("status").notNull().default("draft"),
+    checkedAt: timestamp("checked_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    activatedAt: timestamp("activated_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("national_list_release_hash_idx").on(t.documentHash),
+    index("national_list_release_status_idx").on(t.status),
+    index("national_list_release_revision_idx").on(t.revisionDate),
+  ],
+);
+
+/** Structured facts parsed from an official, versioned release. */
+export const nationalListEntriesTable = pgTable(
+  "national_list_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    releaseId: text("release_id").notNull(),
+    stableKey: text("stable_key").notNull(),
+    officialNameUa: text("official_name_ua").notNull(),
+    officialNameEn: text("official_name_en").notNull(),
+    compositionSignature: text("composition_signature").notNull(),
+    ingredientsJson: text("ingredients_json").notNull(),
+    dosageFormsJson: text("dosage_forms_json").notNull(),
+    routesJson: text("routes_json").notNull(),
+    strengthsJson: text("strengths_json").notNull(),
+    section: text("section").notNull(),
+    category: text("category").notNull(),
+    restrictions: text("restrictions").notNull().default(""),
+    sourceUrl: text("source_url").notNull(),
+    sourceHash: text("source_hash").notNull(),
+    sourceLocator: text("source_locator").notNull(),
+    reviewStatus: text("review_status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("national_list_entry_release_key_idx").on(t.releaseId, t.stableKey),
+    index("national_list_entry_signature_idx").on(t.releaseId, t.compositionSignature),
+    index("national_list_entry_review_idx").on(t.releaseId, t.reviewStatus),
+  ],
+);
+
+/** Versioned resolver cache; never treated as a clinical recommendation. */
+export const nationalListMatchResultsTable = pgTable(
+  "national_list_match_results",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    releaseId: text("release_id").notNull(),
+    productRegistryId: text("product_registry_id").notNull(),
+    entryStableKey: text("entry_stable_key"),
+    status: text("status").notNull(),
+    reason: text("reason").notNull(),
+    ingredientMatch: text("ingredient_match").notNull(),
+    formMatch: text("form_match").notNull(),
+    routeMatch: text("route_match").notNull(),
+    strengthMatch: text("strength_match").notNull(),
+    resolverVersion: text("resolver_version").notNull(),
+    checkedAt: timestamp("checked_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("national_list_match_release_product_idx").on(
+      t.releaseId,
+      t.productRegistryId,
+    ),
+    index("national_list_match_status_idx").on(t.releaseId, t.status),
+    index("national_list_match_entry_idx").on(t.releaseId, t.entryStableKey),
+  ],
+);
+
 /** Append-only audit trail for admin review decisions. */
 export const knowledgeReviewAuditLogTable = pgTable(
   "knowledge_review_audit_log",
@@ -322,6 +436,11 @@ export type InsertKnowledgeRegistryManufacturer = z.infer<
 >;
 export type KnowledgeRegistryManufacturer =
   typeof knowledgeRegistryManufacturersTable.$inferSelect;
+
+export type NationalListRelease = typeof nationalListReleasesTable.$inferSelect;
+export type NationalListEntry = typeof nationalListEntriesTable.$inferSelect;
+export type NationalListMatchResult =
+  typeof nationalListMatchResultsTable.$inferSelect;
 
 export const insertKnowledgeAtcCodeSchema = createInsertSchema(
   knowledgeAtcCodesTable,

@@ -315,6 +315,7 @@ export const searchCatalogQueryStrengthMax = 80;
 
 export const searchCatalogQueryCompositionTypeDefault = `all`;
 export const searchCatalogQueryMappingStatusDefault = `all`;
+export const searchCatalogQueryNationalListStatusDefault = `all`;
 export const searchCatalogQueryGroupPageDefault = 1;
 export const searchCatalogQueryGroupPageMax = 10000;
 export const searchCatalogQueryGroupPageMultipleOf = 1;
@@ -349,6 +350,7 @@ export const SearchCatalogQueryParams = zod.object({
   "strength": zod.coerce.string().max(searchCatalogQueryStrengthMax).optional(),
   "compositionType": zod.enum(['all', 'monotherapy', 'combination', 'unknown']).default(searchCatalogQueryCompositionTypeDefault),
   "mappingStatus": zod.enum(['all', 'approved', 'unmapped']).default(searchCatalogQueryMappingStatusDefault),
+  "nationalListStatus": zod.enum(['all', 'exact', 'ingredient_only', 'uncertain', 'not_listed']).default(searchCatalogQueryNationalListStatusDefault),
   "groupPage": zod.coerce.number().min(1).max(searchCatalogQueryGroupPageMax).multipleOf(searchCatalogQueryGroupPageMultipleOf).default(searchCatalogQueryGroupPageDefault),
   "groupPageSize": zod.union([zod.literal(10),zod.literal(25)]).default(searchCatalogQueryGroupPageSizeDefault),
   "tradePage": zod.coerce.number().min(1).max(searchCatalogQueryTradePageMax).multipleOf(searchCatalogQueryTradePageMultipleOf).default(searchCatalogQueryTradePageDefault),
@@ -363,6 +365,14 @@ export const searchCatalogResponseCatalogTotalMin = 0;
 
 export const searchCatalogResponseIngredientsMax = 25;
 
+
+export const searchCatalogResponseRegistryProductsItemsItemNationalListMatchDetailsOneIngredientsMax = 12;
+
+export const searchCatalogResponseRegistryProductsItemsItemNationalListMatchDetailsOneDosageFormsMax = 20;
+
+export const searchCatalogResponseRegistryProductsItemsItemNationalListMatchDetailsOneRoutesMax = 12;
+
+export const searchCatalogResponseRegistryProductsItemsItemNationalListMatchDetailsOneStrengthsMax = 30;
 
 export const searchCatalogResponseRegistryProductsTotalMin = 0;
 
@@ -438,6 +448,14 @@ export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItem
 export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemManufacturersMax = 25;
 
 
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsItemNationalListMatchDetailsOneIngredientsMax = 12;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsItemNationalListMatchDetailsOneDosageFormsMax = 20;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsItemNationalListMatchDetailsOneRoutesMax = 12;
+
+export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsItemNationalListMatchDetailsOneStrengthsMax = 30;
+
 export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsMax = 25;
 
 export const searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalMin = 0;
@@ -512,7 +530,31 @@ export const SearchCatalogResponse = zod.object({
   "english": zod.string(),
   "atcCode": zod.string().nullable()
 }),zod.null()]),
-  "sourceRecordCount": zod.number().min(1)
+  "sourceRecordCount": zod.number().min(1),
+  "nationalListStatus": zod.enum(['exact', 'ingredient_only', 'uncertain', 'not_listed', 'not_applicable']),
+  "nationalListRelease": zod.string().nullable(),
+  "nationalListMatchReason": zod.string(),
+  "nationalListSection": zod.string().nullable(),
+  "nationalListSource": zod.union([zod.object({
+  "title": zod.string(),
+  "actNumber": zod.string(),
+  "actDate": zod.string(),
+  "revisionDate": zod.string(),
+  "effectiveDate": zod.string(),
+  "url": zod.string()
+}),zod.null()]),
+  "nationalListCheckedAt": zod.string().nullable(),
+  "nationalListMatchDetails": zod.union([zod.object({
+  "officialName": zod.string(),
+  "ingredients": zod.array(zod.string()).max(searchCatalogResponseRegistryProductsItemsItemNationalListMatchDetailsOneIngredientsMax),
+  "dosageForms": zod.array(zod.string()).max(searchCatalogResponseRegistryProductsItemsItemNationalListMatchDetailsOneDosageFormsMax),
+  "routes": zod.array(zod.string()).max(searchCatalogResponseRegistryProductsItemsItemNationalListMatchDetailsOneRoutesMax),
+  "strengths": zod.array(zod.string()).max(searchCatalogResponseRegistryProductsItemsItemNationalListMatchDetailsOneStrengthsMax),
+  "ingredientMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "formMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "routeMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "strengthMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable'])
+}),zod.null()])
 })),
   "total": zod.number().min(searchCatalogResponseRegistryProductsTotalMin),
   "page": zod.number().min(1),
@@ -608,7 +650,31 @@ export const SearchCatalogResponse = zod.object({
   "english": zod.string(),
   "atcCode": zod.string().nullable()
 }),zod.null()]),
-  "sourceRecordCount": zod.number().min(1)
+  "sourceRecordCount": zod.number().min(1),
+  "nationalListStatus": zod.enum(['exact', 'ingredient_only', 'uncertain', 'not_listed', 'not_applicable']),
+  "nationalListRelease": zod.string().nullable(),
+  "nationalListMatchReason": zod.string(),
+  "nationalListSection": zod.string().nullable(),
+  "nationalListSource": zod.union([zod.object({
+  "title": zod.string(),
+  "actNumber": zod.string(),
+  "actDate": zod.string(),
+  "revisionDate": zod.string(),
+  "effectiveDate": zod.string(),
+  "url": zod.string()
+}),zod.null()]),
+  "nationalListCheckedAt": zod.string().nullable(),
+  "nationalListMatchDetails": zod.union([zod.object({
+  "officialName": zod.string(),
+  "ingredients": zod.array(zod.string()).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsItemNationalListMatchDetailsOneIngredientsMax),
+  "dosageForms": zod.array(zod.string()).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsItemNationalListMatchDetailsOneDosageFormsMax),
+  "routes": zod.array(zod.string()).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsItemNationalListMatchDetailsOneRoutesMax),
+  "strengths": zod.array(zod.string()).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsItemNationalListMatchDetailsOneStrengthsMax),
+  "ingredientMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "formMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "routeMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "strengthMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable'])
+}),zod.null()])
 })).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsMax),
   "total": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalMin),
   "totalRegistryPositions": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalRegistryPositionsMin),
@@ -639,6 +705,7 @@ export const SearchCatalogResponse = zod.object({
   "strength": zod.string().nullable(),
   "compositionType": zod.enum(['all', 'monotherapy', 'combination', 'unknown']),
   "mappingStatus": zod.enum(['all', 'approved', 'unmapped']),
+  "nationalListStatus": zod.enum(['all', 'exact', 'ingredient_only', 'uncertain', 'not_listed']),
   "registrationStatus": zod.string().nullable()
 }),
   "bounded": zod.boolean()

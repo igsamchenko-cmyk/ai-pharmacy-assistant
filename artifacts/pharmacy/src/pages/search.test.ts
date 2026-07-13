@@ -41,6 +41,30 @@ const product: RegistryProductResult = {
     english: "Ibuprofen",
     atcCode: "M01AE01",
   },
+  nationalListStatus: "exact",
+  nationalListRelease: "ua-national-list-2025-10-10",
+  nationalListMatchReason: "INN, form, route and strength match.",
+  nationalListSection: "II. Pain and palliative care",
+  nationalListSource: {
+    title: "National Medicines List",
+    actNumber: "333",
+    actDate: "2009-03-25",
+    revisionDate: "2025-10-10",
+    effectiveDate: "2025-10-10",
+    url: "https://zakon.rada.gov.ua/laws/show/333-2009-%D0%BF#Text",
+  },
+  nationalListCheckedAt: "2026-07-13T00:00:00.000Z",
+  nationalListMatchDetails: {
+    officialName: "Ібупрофен",
+    ingredients: ["Ibuprofen"],
+    dosageForms: ["таблетки"],
+    routes: ["oral"],
+    strengths: ["200 мг"],
+    ingredientMatch: "match",
+    formMatch: "match",
+    routeMatch: "match",
+    strengthMatch: "match",
+  },
 };
 
 describe("registry catalog UI", () => {
@@ -58,7 +82,39 @@ describe("registry catalog UI", () => {
     expect(html).toContain("Підтверджено");
     expect(html).toContain("break-words");
     expect(html).toContain("overflow-hidden");
+    expect(html).toContain("Нацперелік");
+    expect(html).toContain('data-testid="national-list-exact"');
     expect(html).not.toContain("truncate");
+  });
+
+  it("shows the National List badge only for exact matches", () => {
+    const ingredientOnly = renderToStaticMarkup(createElement(RegistryProductCard, {
+      product: { ...product, nationalListStatus: "ingredient_only" },
+      query: "",
+      showReportIssue: false,
+    }));
+    expect(ingredientOnly).toContain("МНН у Нацпереліку");
+    expect(ingredientOnly).not.toContain('data-testid="national-list-exact"');
+    const uncertain = renderToStaticMarkup(createElement(RegistryProductCard, {
+      product: { ...product, nationalListStatus: "uncertain" },
+      query: "",
+      showReportIssue: false,
+    }));
+    expect(uncertain).toContain("Потребує уточнення");
+    expect(uncertain).not.toContain('data-testid="national-list-exact"');
+    const unavailable = renderToStaticMarkup(createElement(RegistryProductCard, {
+      product: {
+        ...product,
+        nationalListStatus: "not_applicable",
+        nationalListRelease: null,
+        nationalListSource: null,
+        nationalListMatchDetails: null,
+      },
+      query: "",
+      showReportIssue: false,
+    }));
+    expect(unavailable).not.toContain('data-testid="national-list-exact"');
+    expect(unavailable).not.toContain('data-testid="national-list-details"');
   });
 
   it("clearly labels a product without an approved mapping", () => {
@@ -170,6 +226,7 @@ describe("registry catalog UI", () => {
         strength: null,
         compositionType: "all",
         mappingStatus: "all",
+        nationalListStatus: "all",
         registrationStatus: null,
       },
       bounded: true,

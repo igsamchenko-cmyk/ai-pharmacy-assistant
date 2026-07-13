@@ -43,7 +43,12 @@
     "knowledge:import:validate:all": "pnpm --filter @workspace/api-server run import:validate:all",
     "knowledge:batches:generate": "pnpm --filter @workspace/api-server run generate:dictionary-batches",
     "knowledge:registry:catalog-db-smoke": "pnpm --filter @workspace/api-server run knowledge:registry:catalog-db-smoke",
-    "knowledge:interactions:audit": "pnpm --filter @workspace/api-server run knowledge:interactions:audit"
+    "knowledge:interactions:audit": "pnpm --filter @workspace/api-server run knowledge:interactions:audit",
+    "knowledge:national-list:source": "pnpm --filter @workspace/api-server run knowledge:national-list -- --source-report",
+    "knowledge:national-list:dry-run": "pnpm --filter @workspace/api-server run knowledge:national-list",
+    "knowledge:national-list:match-report": "pnpm --filter @workspace/api-server run knowledge:national-list -- --match-report",
+    "knowledge:national-list:import": "pnpm --filter @workspace/api-server run knowledge:national-list --",
+    "knowledge:national-list:db-smoke": "pnpm --filter @workspace/api-server run knowledge:national-list:db-smoke"
   },
   "private": true,
   "devDependencies": {

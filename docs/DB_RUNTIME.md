@@ -126,3 +126,17 @@ transaction` sessions. Production credentials are never used by this gate.
 Approved runtime mappings remain a separate commit step and still require
 `--only-approved` or `--only-approved-mappings`. Static fallback remains
 available when DB runtime is disabled or unavailable.
+
+## v1.8 National List Boundary
+
+National-list releases and entries are additive audit data. A DB commit creates
+or reuses an immutable `reviewed` snapshot; it does not activate that snapshot.
+Runtime catalog enrichment reads only one explicitly `active` release and its
+release-versioned resolver cache. If no release is active, the result is
+`not_applicable` and catalog/static fallback behavior is unchanged.
+
+Activation and rollback require `--commit --require-db` plus a release-specific
+`CONFIRM_NATIONAL_LIST_ACTIVATION` value. The activation transaction builds the
+complete product match cache before switching release status. It does not
+modify registry products, ingredient mappings, interaction rules, or review
+states. Production activation is outside this pull request.
