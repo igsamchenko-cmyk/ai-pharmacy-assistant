@@ -105,6 +105,7 @@ jobs:
           pnpm knowledge:quality:report
           pnpm knowledge:search:report
           pnpm knowledge:real-world:report
+          pnpm knowledge:interactions:audit
           pnpm beta:scenarios
           pnpm beta:readiness
 

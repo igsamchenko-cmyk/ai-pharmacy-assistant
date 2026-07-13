@@ -37,7 +37,8 @@
     "beta:scenarios": "tsx src/scripts/beta-scenarios.ts",
     "beta:readiness": "tsx src/scripts/beta-readiness.ts",
     "deploy:verify": "tsx src/scripts/deploy-verify.ts",
-    "knowledge:registry:catalog-db-smoke": "tsx src/scripts/knowledge-registry-catalog-db-smoke.ts"
+    "knowledge:registry:catalog-db-smoke": "tsx src/scripts/knowledge-registry-catalog-db-smoke.ts",
+    "knowledge:interactions:audit": "tsx src/scripts/knowledge-interactions-audit.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",

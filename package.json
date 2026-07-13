@@ -42,7 +42,8 @@
     "knowledge:import:preview:all": "pnpm --filter @workspace/api-server run import:preview:all",
     "knowledge:import:validate:all": "pnpm --filter @workspace/api-server run import:validate:all",
     "knowledge:batches:generate": "pnpm --filter @workspace/api-server run generate:dictionary-batches",
-    "knowledge:registry:catalog-db-smoke": "pnpm --filter @workspace/api-server run knowledge:registry:catalog-db-smoke"
+    "knowledge:registry:catalog-db-smoke": "pnpm --filter @workspace/api-server run knowledge:registry:catalog-db-smoke",
+    "knowledge:interactions:audit": "pnpm --filter @workspace/api-server run knowledge:interactions:audit"
   },
   "private": true,
   "devDependencies": {
