@@ -17,6 +17,8 @@ const GROUPED_QUERIES = [
   "Еліквіс",
 ] as const;
 
+const PREFIX_QUERIES = ["Амло", "Метф", "Омеп"] as const;
+
 const WARM_SAMPLES = 20;
 const RESPONSE_SIZE_LIMIT_BYTES = 100_000;
 
@@ -100,6 +102,34 @@ function summarizeQueryPlan(value: unknown) {
     report.Plan && typeof report.Plan === "object"
       ? report.Plan as Record<string, unknown>
       : {};
+  const scans: Array<{
+    nodeType: string;
+    relationName: string | null;
+    indexName: string | null;
+  }> = [];
+  const visit = (node: Record<string, unknown>) => {
+    const nodeType = typeof node["Node Type"] === "string"
+      ? node["Node Type"]
+      : "Unknown";
+    if (nodeType.includes("Scan")) {
+      scans.push({
+        nodeType,
+        relationName: typeof node["Relation Name"] === "string"
+          ? node["Relation Name"]
+          : null,
+        indexName: typeof node["Index Name"] === "string"
+          ? node["Index Name"]
+          : null,
+      });
+    }
+    const children = Array.isArray(node.Plans) ? node.Plans : [];
+    for (const child of children) {
+      if (child && typeof child === "object") {
+        visit(child as Record<string, unknown>);
+      }
+    }
+  };
+  visit(plan);
   return {
     planningTimeMs: report["Planning Time"] ?? null,
     executionTimeMs: report["Execution Time"] ?? null,
@@ -108,6 +138,7 @@ function summarizeQueryPlan(value: unknown) {
     totalCost: plan["Total Cost"] ?? null,
     sharedHitBlocks: plan["Shared Hit Blocks"] ?? null,
     sharedReadBlocks: plan["Shared Read Blocks"] ?? null,
+    scans,
   };
 }
 
@@ -125,6 +156,7 @@ async function main(): Promise<void> {
   const maxWarmMs = positiveIntArg("--max-warm-ms=", 2_000);
   const maxGroupedP95Ms = positiveIntArg("--max-grouped-p95-ms=", 900);
   const maxExactP50Ms = positiveIntArg("--max-exact-p50-ms=", 150);
+  const maxPrefixP50Ms = positiveIntArg("--max-prefix-p50-ms=", 250);
   const maxNavigationP95Ms = positiveIntArg("--max-navigation-p95-ms=", 400);
   const queryMetrics: CatalogQueryMetric[] = [];
   const store = await createPostgresRegistryCatalogStore({
@@ -322,6 +354,42 @@ async function main(): Promise<void> {
         navigation,
       });
     }
+    const prefixPerformance: Array<{
+      query: string;
+      coldMs: number;
+      warm: ReturnType<typeof timingSummary>;
+      responseBytes: number;
+    }> = [];
+    for (const query of PREFIX_QUERIES) {
+      resetRegistrySearchCachesForTests();
+      const prefixInput = input({ q: query, view: "grouped" });
+      const coldStarted = performance.now();
+      const cold = await searchCatalog(prefixInput, store);
+      const coldMs = performance.now() - coldStarted;
+      assert(cold.registryGroups, "Prefix search returned no grouped hierarchy.");
+      const responseBytes = Buffer.byteLength(JSON.stringify(cold), "utf8");
+      assert(responseBytes <= RESPONSE_SIZE_LIMIT_BYTES,
+        "Prefix response exceeded 100 KB.");
+      const timings: number[] = [];
+      const metricStart = queryMetrics.length;
+      for (let sampleIndex = 0; sampleIndex < WARM_SAMPLES; sampleIndex += 1) {
+        const started = performance.now();
+        const warm = await searchCatalog(prefixInput, store);
+        timings.push(performance.now() - started);
+        assert(warm.registryGroups, "Cached prefix search lost grouped hierarchy.");
+      }
+      assert(queryMetrics.length === metricStart,
+        "Cached prefix search unexpectedly executed SQL.");
+      const warm = timingSummary(timings);
+      assert(warm.p50Ms <= maxPrefixP50Ms,
+        "Prefix p50 exceeded the latency budget: " + query + ".");
+      prefixPerformance.push({
+        query,
+        coldMs: Number(coldMs.toFixed(1)),
+        warm,
+        responseBytes,
+      });
+    }
     const sample = first.items.find(
       (item) =>
         item.manufacturers[0]?.name &&
@@ -496,6 +564,7 @@ async function main(): Promise<void> {
       page50: page50.items.length,
       representative,
       groupedRepresentative,
+      prefixPerformance,
       queryPlan,
       exactPerformance,
       exactQueryPlan,
@@ -514,6 +583,7 @@ async function main(): Promise<void> {
           page50: page50.items.length,
           representative,
           groupedRepresentative,
+          prefixPerformance,
           queryPlan,
           exactPerformance,
           exactQueryPlan,
