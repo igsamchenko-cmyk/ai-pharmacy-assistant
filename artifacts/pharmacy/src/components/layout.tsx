@@ -16,6 +16,7 @@ import {
   Moon,
   Sun,
 } from "lucide-react";
+import { ServiceWarmupStatus } from "@/components/service-warmup-status";
 import { useThemeContext } from "./theme-provider";
 import { AuthStatus } from "./auth-status";
 
@@ -153,6 +154,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 md:ml-64 w-full max-w-3xl mx-auto p-4 md:p-8 overflow-x-hidden">
+        <ServiceWarmupStatus />
         {children}
       </main>
 

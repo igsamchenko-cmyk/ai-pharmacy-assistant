@@ -51,6 +51,9 @@ export interface RegistryCatalogStoreOptions {
 
 export interface RegistryCatalogStore {
   getCatalogTotal(): Promise<number>;
+  findUniqueExactProduct?(
+    input: CatalogSearchInput,
+  ): Promise<ProductSearchResult | null>;
   searchProducts(input: CatalogSearchInput): Promise<ProductSearchResult>;
   searchProductsForGrouping?(
     input: CatalogSearchInput,
@@ -119,7 +122,14 @@ interface IngredientRow {
   matched_name: string;
 }
 
-const REGISTRY_SEARCH_CACHE_VERSION = "registry-search-v2";
+interface CatalogSnapshot {
+  catalogTotal: number;
+  version: string;
+}
+
+const REGISTRY_SEARCH_CACHE_VERSION = "registry-search-v3";
+const REGISTRY_CACHE_TTL_MS = 120_000;
+const REGISTRY_NEGATIVE_CACHE_TTL_MS = 30_000;
 const NATIONAL_LIST_MATCH_JOIN_SQL = `
   LEFT JOIN LATERAL (
     SELECT id, title, act_number, act_date, revision_date, effective_date, source_url
@@ -160,22 +170,33 @@ const NATIONAL_LIST_MATCH_SELECT_SQL = `
   nlm.form_match AS national_list_form_match,
   nlm.route_match AS national_list_route_match,
   nlm.strength_match AS national_list_strength_match`;
-const catalogTotalCache = new TtlCache<number>({
-  ttlMs: 120_000,
+const catalogSnapshotCache = new TtlCache<CatalogSnapshot>({
+  ttlMs: 300_000,
   maxEntries: 1,
 });
 const groupedProductCache = new TtlCache<ProductSearchResult>({
-  ttlMs: 60_000,
-  maxEntries: 8,
+  ttlMs: REGISTRY_CACHE_TTL_MS,
+  maxEntries: 64,
+});
+const exactProductCache = new TtlCache<ProductSearchResult | null>({
+  ttlMs: REGISTRY_CACHE_TTL_MS,
+  maxEntries: 128,
 });
 
-function groupedProductCacheKey(input: CatalogSearchInput): string {
+export function registrySearchCacheKey(
+  scope: "exact" | "grouped",
+  input: CatalogSearchInput,
+  snapshotVersion: string,
+): string {
   const cacheValue = (value: string | null | undefined) => {
     const lower = value?.trim().toLocaleLowerCase("uk-UA") ?? "";
     return [lower, normalize(lower)];
   };
   return JSON.stringify([
     REGISTRY_SEARCH_CACHE_VERSION,
+    snapshotVersion,
+    scope,
+    input.view ?? "auto",
     cacheValue(input.q),
     cacheValue(input.manufacturer),
     cacheValue(input.form),
@@ -186,8 +207,9 @@ function groupedProductCacheKey(input: CatalogSearchInput): string {
 }
 
 export function resetRegistrySearchCachesForTests(): void {
-  catalogTotalCache.clear();
+  catalogSnapshotCache.clear();
   groupedProductCache.clear();
+  exactProductCache.clear();
 }
 
 const REGISTRATION_STATUS_SQL = `CASE
@@ -607,14 +629,26 @@ export async function createPostgresRegistryCatalogStore(
     }
   };
 
-  const getCatalogTotal = (): Promise<number> =>
-    catalogTotalCache.getOrSet(REGISTRY_SEARCH_CACHE_VERSION, async () => {
-      const result = await runQuery<{ count: number }>(
-        "catalog-total",
-        "SELECT COUNT(*)::int AS count FROM knowledge_registry_products",
+  const getCatalogSnapshot = (): Promise<CatalogSnapshot> =>
+    catalogSnapshotCache.getOrSet(REGISTRY_SEARCH_CACHE_VERSION, async () => {
+      const result = await runQuery<{ count: number; snapshot_version: string | null }>(
+        "catalog-snapshot",
+        `SELECT COUNT(*)::int AS count,
+                CONCAT(
+                  COUNT(*)::text, ':',
+                  COALESCE(MAX(updated_at)::text, ''), ':',
+                  COALESCE(MAX(import_batch_id), 'unversioned')
+                ) AS snapshot_version
+         FROM knowledge_registry_products`,
       );
-      return Number(result.rows[0]?.count ?? 0);
+      return {
+        catalogTotal: Number(result.rows[0]?.count ?? 0),
+        version: result.rows[0]?.snapshot_version ?? "unversioned",
+      };
     });
+
+  const getCatalogTotal = async (): Promise<number> =>
+    (await getCatalogSnapshot()).catalogTotal;
 
   const hydrateProducts = async (rows: ProductRow[]): Promise<ProductResult[]> => {
     if (!rows.length) return [];
@@ -660,6 +694,105 @@ export async function createPostgresRegistryCatalogStore(
   return {
     async getCatalogTotal(): Promise<number> {
       return getCatalogTotal();
+    },
+
+    async findUniqueExactProduct(input): Promise<ProductSearchResult | null> {
+      const cachedSnapshot = catalogSnapshotCache.get(REGISTRY_SEARCH_CACHE_VERSION);
+      const cacheKey = registrySearchCacheKey(
+        "exact",
+        input,
+        cachedSnapshot?.version ?? "pending",
+      );
+      return exactProductCache.getOrSet(
+        cacheKey,
+        async () => {
+          const query = input.q.trim();
+          const normalized = normalize(query) || query.toLocaleLowerCase("uk-UA");
+          const [snapshot, exactResult] = await Promise.all([
+            getCatalogSnapshot(),
+            runQuery<ProductRow>(
+              "registry-exact-product",
+              `WITH exact_candidates AS (
+                 SELECT p.registry_id, 1 AS priority
+                 FROM knowledge_registry_products p
+                 WHERE p.registration_number = $1
+                 UNION ALL
+                 SELECT p.registry_id, 2 AS priority
+                 FROM knowledge_registry_products p
+                 WHERE p.normalized_trade_name = $2
+                 UNION ALL
+                 SELECT DISTINCT p.registry_id, 3 AS priority
+                 FROM knowledge_ingredient_names query_alias
+                 JOIN knowledge_ingredient_names product_alias
+                   ON product_alias.ingredient_inn_key = query_alias.ingredient_inn_key
+                  AND product_alias.review_status = 'approved'
+                 JOIN knowledge_registry_products p
+                   ON p.normalized_trade_name = product_alias.normalized
+                 WHERE query_alias.review_status = 'approved'
+                   AND query_alias.normalized = $2
+                 UNION ALL
+                 SELECT p.registry_id, 4 AS priority
+                 FROM knowledge_registry_products p
+                 WHERE LOWER(p.inn) = $3 OR LOWER(p.active_ingredient) = $3
+               ), winning_priority AS (
+                 SELECT MIN(priority) AS priority FROM exact_candidates
+               ), unique_candidates AS (
+                 SELECT DISTINCT candidate.registry_id
+                 FROM exact_candidates candidate
+                 JOIN winning_priority winner ON winner.priority = candidate.priority
+                 ORDER BY candidate.registry_id
+                 LIMIT 2
+               )
+               SELECT
+                 p.registry_id,
+                 p.trade_name,
+                 p.normalized_trade_name,
+                 p.inn,
+                 p.active_ingredient,
+                 p.atc_code,
+                 p.form,
+                 p.registration_number,
+                 p.registration_start_date,
+                 p.registration_end_date,
+                 p.source_key,
+                 ${REGISTRATION_STATUS_SQL} AS registration_status,
+                 ${NATIONAL_LIST_MATCH_SELECT_SQL}
+               FROM knowledge_registry_products p
+               JOIN unique_candidates candidate ON candidate.registry_id = p.registry_id
+               ${NATIONAL_LIST_MATCH_JOIN_SQL}
+               ORDER BY p.registry_id`,
+              [
+                query.toUpperCase(),
+                normalized,
+                query.toLocaleLowerCase("uk-UA"),
+              ],
+            ),
+          ]);
+          const result = exactResult.rows.length === 1
+            ? {
+                catalogTotal: snapshot.catalogTotal,
+                filteredTotal: 1,
+                items: await hydrateProducts(exactResult.rows),
+              }
+            : null;
+          const versionedKey = registrySearchCacheKey(
+            "exact",
+            input,
+            snapshot.version,
+          );
+          if (versionedKey !== cacheKey) {
+            exactProductCache.set(
+              versionedKey,
+              result,
+              result ? REGISTRY_CACHE_TTL_MS : REGISTRY_NEGATIVE_CACHE_TTL_MS,
+            );
+          }
+          return result;
+        },
+        (result) => result
+          ? REGISTRY_CACHE_TTL_MS
+          : REGISTRY_NEGATIVE_CACHE_TTL_MS,
+      );
     },
 
     async searchProducts(input): Promise<ProductSearchResult> {
@@ -721,7 +854,12 @@ export async function createPostgresRegistryCatalogStore(
     },
 
     async searchProductsForGrouping(input): Promise<ProductSearchResult> {
-      const cacheKey = groupedProductCacheKey(input);
+      const cachedSnapshot = catalogSnapshotCache.get(REGISTRY_SEARCH_CACHE_VERSION);
+      const cacheKey = registrySearchCacheKey(
+        "grouped",
+        input,
+        cachedSnapshot?.version ?? "pending",
+      );
       return groupedProductCache.getOrSet(cacheKey, async () => {
         // Group/trade/variant pagination is derived from the same bounded raw snapshot.
         const rawInput = { ...input, tradeName: undefined };
@@ -729,8 +867,8 @@ export async function createPostgresRegistryCatalogStore(
         const rowLimit = GROUPED_CATALOG_ROW_LIMIT + 1;
         const pageValues = [...filter.values, rowLimit];
         const limitRef = `$${filter.values.length + 1}`;
-        const [catalogTotal, pageResult] = await Promise.all([
-          getCatalogTotal(),
+        const [snapshot, pageResult] = await Promise.all([
+          getCatalogSnapshot(),
           runQuery<ProductRow>(
             "registry-grouped-page",
             `SELECT
@@ -759,12 +897,19 @@ export async function createPostgresRegistryCatalogStore(
         ]);
         const bounded = pageResult.rows.length <= GROUPED_CATALOG_ROW_LIMIT;
         const rows = pageResult.rows.slice(0, GROUPED_CATALOG_ROW_LIMIT);
-        return {
-          catalogTotal,
+        const result = {
+          catalogTotal: snapshot.catalogTotal,
           filteredTotal: rows.length,
           items: await hydrateProducts(rows),
           bounded,
         };
+        const versionedKey = registrySearchCacheKey(
+          "grouped",
+          input,
+          snapshot.version,
+        );
+        if (versionedKey !== cacheKey) groupedProductCache.set(versionedKey, result);
+        return result;
       });
     },
     async searchIngredients(query, limit): Promise<IngredientResult[]> {
@@ -846,6 +991,26 @@ function resolveCatalogView(input: CatalogSearchInput): "flat" | "grouped" {
     (input.q.trim() && input.type !== "ingredients" ? "grouped" : "flat");
 }
 
+export function isExactFastPathEligible(input: CatalogSearchInput): boolean {
+  return Boolean(input.q.trim()) &&
+    input.type !== "ingredients" &&
+    resolveCatalogView(input) === "grouped" &&
+    input.page === 1 &&
+    input.groupPage === 1 &&
+    input.tradePage === 1 &&
+    input.variantPage === 1 &&
+    !input.groupKey &&
+    !input.tradeNameKey &&
+    !input.tradeName?.trim() &&
+    !input.manufacturer?.trim() &&
+    !input.form?.trim() &&
+    !input.strength?.trim() &&
+    !input.registrationStatus &&
+    input.compositionType === "all" &&
+    input.mappingStatus === "all" &&
+    input.nationalListStatus === "all";
+}
+
 function responsePageSize(input: CatalogSearchInput): 25 | 50 {
   return input.pageSize === 50 ? 50 : 25;
 }
@@ -910,6 +1075,38 @@ export async function searchCatalog(
     const includeIngredients =
       input.type === "ingredients" ||
       (input.type === "all" && Boolean(input.q.trim()));
+    const ingredientSearch = includeIngredients
+      ? activeStore.searchIngredients(input.q, input.type === "ingredients" ? 25 : 8)
+      : Promise.resolve([]);
+    if (
+      activeStore.findUniqueExactProduct &&
+      isExactFastPathEligible(input)
+    ) {
+      const [exact, exactIngredients] = await Promise.all([
+        activeStore.findUniqueExactProduct(input),
+        ingredientSearch,
+      ]);
+      if (exact) {
+        return {
+          query: input.q,
+          type: input.type,
+          view: "flat",
+          runtimeMode: "db",
+          catalogTotal: exact.catalogTotal,
+          ingredients: exactIngredients,
+          registryProducts: {
+            items: exact.items,
+            total: 1,
+            page: 1,
+            pageSize: responsePageSize(input),
+            totalPages: 1,
+            hasNext: false,
+          },
+          registryGroups: null,
+          warnings: [],
+        };
+      }
+    }
     const productSearch = includeProducts
       ? view === "grouped" && activeStore.searchProductsForGrouping
         ? activeStore.searchProductsForGrouping(input)
@@ -918,9 +1115,7 @@ export async function searchCatalog(
     const [products, catalogTotal, ingredients] = await Promise.all([
       productSearch,
       includeProducts ? null : activeStore.getCatalogTotal(),
-      includeIngredients
-        ? activeStore.searchIngredients(input.q, input.type === "ingredients" ? 25 : 8)
-        : Promise.resolve([]),
+      ingredientSearch,
     ]);
     const registryGroups =
       view === "grouped" && products

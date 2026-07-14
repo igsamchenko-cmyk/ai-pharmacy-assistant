@@ -57,6 +57,44 @@ const numberFormatter = new Intl.NumberFormat("uk-UA");
 
 export const REGISTRY_CATALOG_SAFETY_COPY =
   "Наявність препарату в реєстрі не підтверджує взаємозамінність, відсутність взаємодій або доцільність застосування.";
+export const CATALOG_QUERY_DEBOUNCE_MS = 175;
+export const EXACT_REGISTRATION_DEBOUNCE_MS = 75;
+
+export function isCompleteRegistrationQuery(value: string): boolean {
+  return /^UA\/\d{1,6}\/\d{1,3}\/\d{1,3}$/i.test(value.trim());
+}
+
+export function catalogQueryDebounceMs(value: string): number {
+  return isCompleteRegistrationQuery(value)
+    ? EXACT_REGISTRATION_DEBOUNCE_MS
+    : CATALOG_QUERY_DEBOUNCE_MS;
+}
+
+export function isCatalogQueryEnabled(value: string): boolean {
+  const length = value.trim().length;
+  return length === 0 || length >= 3;
+}
+
+export function shouldDisplayCatalogResponse(
+  draft: string,
+  effective: string,
+  isPlaceholder: boolean,
+): boolean {
+  return draft.trim() === effective.trim() &&
+    isCatalogQueryEnabled(effective) &&
+    !isPlaceholder;
+}
+
+export function applyPastedQuery(
+  current: string,
+  selectionStart: number | null,
+  selectionEnd: number | null,
+  pasted: string,
+): string {
+  const start = selectionStart ?? current.length;
+  const end = selectionEnd ?? start;
+  return current.slice(0, start) + pasted + current.slice(end);
+}
 
 export function resolveCatalogViewState(
   isLoading: boolean,
@@ -600,15 +638,15 @@ export default function SearchPage() {
   const [selectedTradeNameKey, setSelectedTradeNameKey] = useState<string | null>(null);
   const [tradePage, setTradePage] = useState(1);
   const [variantPage, setVariantPage] = useState(1);
+  const [effectiveQ, setEffectiveQ] = useState(initial.q.trim());
 
   const queryClient = useQueryClient();
-  const debouncedQ = useDebounce(q, 300);
-  const debouncedManufacturer = useDebounce(manufacturer, 300);
-  const debouncedForm = useDebounce(form, 300);
-  const debouncedStrength = useDebounce(strength, 300);
+  const debouncedManufacturer = useDebounce(manufacturer, 200);
+  const debouncedForm = useDebounce(form, 200);
+  const debouncedStrength = useDebounce(strength, 200);
   const criteriaKey = useMemo(
     () => JSON.stringify([
-      debouncedQ.trim(),
+      effectiveQ,
       debouncedManufacturer.trim(),
       debouncedForm.trim(),
       debouncedStrength.trim(),
@@ -620,7 +658,7 @@ export default function SearchPage() {
       pageSize,
     ]),
     [
-      debouncedQ,
+      effectiveQ,
       debouncedManufacturer,
       debouncedForm,
       debouncedStrength,
@@ -656,11 +694,11 @@ export default function SearchPage() {
 
   const params = useMemo(
     () => ({
-      q: debouncedQ.trim(),
+      q: effectiveQ,
       type,
       page: requestedPage,
       pageSize,
-      view: debouncedQ.trim() && type !== "ingredients"
+      view: effectiveQ && type !== "ingredients"
         ? "grouped" as const
         : "flat" as const,
       groupPage: requestedGroupPage,
@@ -682,7 +720,7 @@ export default function SearchPage() {
       ...(registrationStatus !== "all" ? { registrationStatus } : {}),
     }),
     [
-      debouncedQ,
+      effectiveQ,
       type,
       requestedPage,
       pageSize,
@@ -699,6 +737,36 @@ export default function SearchPage() {
       registrationStatus,
     ],
   );
+
+  useEffect(() => {
+    const nextQ = q.trim();
+    if (nextQ === effectiveQ) return;
+    if (!isCatalogQueryEnabled(nextQ)) {
+      setEffectiveQ(nextQ);
+      return;
+    }
+    const { groupKey: _groupKey, ...baseParams } = params;
+    const cachedParams = {
+      ...baseParams,
+      q: nextQ,
+      page: 1,
+      groupPage: 1,
+      tradePage: 1,
+      view: nextQ && type !== "ingredients" ? "grouped" as const : "flat" as const,
+    };
+    if (
+      queryClient.getQueryData(getSearchCatalogQueryKey(cachedParams)) !==
+        undefined
+    ) {
+      setEffectiveQ(nextQ);
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setEffectiveQ(nextQ),
+      catalogQueryDebounceMs(nextQ),
+    );
+    return () => window.clearTimeout(timer);
+  }, [effectiveQ, params, q, queryClient, type]);
 
   const variantParams = useMemo(
     () =>
@@ -728,6 +796,7 @@ export default function SearchPage() {
   } = useSearchCatalog(params, {
     query: {
       queryKey: getSearchCatalogQueryKey(params),
+      enabled: isCatalogQueryEnabled(effectiveQ),
       placeholderData: keepPreviousData,
       retry: shouldRetryCatalogRequest,
       retryDelay: 1_000,
@@ -745,7 +814,7 @@ export default function SearchPage() {
   } = useSearchCatalog(variantParams ?? params, {
     query: {
       queryKey: getSearchCatalogQueryKey(variantParams ?? params),
-      enabled: Boolean(variantParams),
+      enabled: Boolean(variantParams) && isCatalogQueryEnabled(effectiveQ),
       placeholderData: keepPreviousData,
       retry: shouldRetryCatalogRequest,
       retryDelay: 1_000,
@@ -812,14 +881,21 @@ export default function SearchPage() {
 
   const isFetching = isBaseFetching || isVariantFetching;
   const isUpdating =
-    q.trim() !== debouncedQ.trim() ||
+    q.trim() !== effectiveQ ||
     manufacturer.trim() !== debouncedManufacturer.trim() ||
     form.trim() !== debouncedForm.trim() ||
     strength.trim() !== debouncedStrength.trim();
-  const registry = data?.registryProducts;
+  const queryIsCurrent = q.trim() === effectiveQ;
+  const shortQuery = q.trim().length > 0 && !isCatalogQueryEnabled(q);
+  const visibleData = shouldDisplayCatalogResponse(
+    q,
+    effectiveQ,
+    isPlaceholderData,
+  ) ? data : undefined;
+  const registry = visibleData?.registryProducts;
   const registryGroups = mergeCatalogVariantPage(
-    data?.registryGroups,
-    variantData?.registryGroups,
+    visibleData?.registryGroups,
+    queryIsCurrent ? variantData?.registryGroups : undefined,
     requestedGroupKey,
     requestedTradeNameKey,
   );
@@ -828,8 +904,12 @@ export default function SearchPage() {
     compositionType !== "all" || mappingStatus !== "all" || nationalListStatus !== "all" ||
     registrationStatus !== "all";
   const hasResults =
-    Boolean(data?.ingredients.length) || Boolean(registry?.items.length) || Boolean(registryGroups?.groups.items.length);
-  const viewState = resolveCatalogViewState(isLoading, isError, hasResults);
+    Boolean(visibleData?.ingredients.length) || Boolean(registry?.items.length) || Boolean(registryGroups?.groups.items.length);
+  const viewState = resolveCatalogViewState(
+    isCatalogQueryEnabled(effectiveQ) && (isLoading || isUpdating),
+    queryIsCurrent && isError,
+    hasResults,
+  );
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
@@ -870,23 +950,56 @@ export default function SearchPage() {
       </section>
 
       <div className="space-y-3">
-        <label className="relative block">
+        <form
+          className="relative block"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const nextQ = q.trim();
+            if (nextQ === effectiveQ && isCatalogQueryEnabled(nextQ)) {
+              void refetch();
+            } else {
+              setEffectiveQ(nextQ);
+            }
+          }}
+        >
+          <label>
           <span className="sr-only">
             Пошук за назвою, МНН, виробником або реєстраційним номером
           </span>
           <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Назва, МНН, виробник, реєстраційний номер..."
-            className="min-h-11 bg-card pl-9"
+            className="min-h-11 bg-card pl-9 pr-20"
             value={q}
             onChange={(event) => setQ(event.target.value)}
+            onPaste={(event) => {
+              const next = applyPastedQuery(
+                q,
+                event.currentTarget.selectionStart,
+                event.currentTarget.selectionEnd,
+                event.clipboardData.getData("text"),
+              );
+              event.preventDefault();
+              setQ(next);
+              setEffectiveQ(next.trim());
+            }}
             aria-label="Пошук у каталозі препаратів"
             data-testid="input-search-q"
           />
           {(isUpdating || isFetching) && (
-            <LoaderCircle className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            <LoaderCircle className="absolute right-12 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
           )}
-        </label>
+          </label>
+          <Button
+            type="submit"
+            size="icon"
+            className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2"
+            title="Шукати"
+            aria-label="Шукати"
+          >
+            <SearchIcon className="h-4 w-4" />
+          </Button>
+        </form>
 
         <div
           className="grid grid-cols-3 gap-1 rounded-md border bg-muted/30 p-1"
@@ -1089,7 +1202,7 @@ export default function SearchPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {data?.ingredients.length ? (
+          {visibleData?.ingredients.length ? (
             <section className="space-y-3">
               <div>
                 <h2 className="text-lg font-semibold">Діючі речовини</h2>
@@ -1098,7 +1211,7 @@ export default function SearchPage() {
                 </p>
               </div>
               <div className="space-y-3">
-                {data.ingredients.map((ingredient) => (
+                {visibleData.ingredients.map((ingredient) => (
                   <IngredientCard
                     key={ingredient.ingredientId}
                     ingredient={ingredient}
@@ -1111,7 +1224,7 @@ export default function SearchPage() {
           {type !== "ingredients" && registryGroups ? (
             <GroupedRegistryResults
               catalog={registryGroups}
-              query={debouncedQ}
+              query={effectiveQ}
               isFetching={isFetching}
               isVariantFetching={isVariantFetching}
               isVariantError={isVariantError}
@@ -1172,7 +1285,7 @@ export default function SearchPage() {
                   <RegistryProductCard
                     key={product.id}
                     product={product}
-                    query={debouncedQ}
+                    query={effectiveQ}
                   />
                 ))}
               </div>
@@ -1210,7 +1323,7 @@ export default function SearchPage() {
             </section>
           ) : null}
 
-          {viewState === "empty" && (
+          {viewState === "empty" && !shortQuery && (
             <div className="space-y-3 border-y py-10 text-center">
               <SearchIcon className="mx-auto h-8 w-8 text-muted-foreground" />
               <div>
@@ -1220,12 +1333,12 @@ export default function SearchPage() {
                   реєстраційний номер.
                 </p>
               </div>
-              {debouncedQ && (
+              {effectiveQ && (
                 <ReportIssueButton
                   type="search_miss"
-                  context={`catalog-search-miss:${debouncedQ}`}
+                  context={`catalog-search-miss:${effectiveQ}`}
                   sourceSnapshot={{
-                    query: debouncedQ,
+                    query: effectiveQ,
                     type,
                     manufacturer: debouncedManufacturer,
                     form: debouncedForm,

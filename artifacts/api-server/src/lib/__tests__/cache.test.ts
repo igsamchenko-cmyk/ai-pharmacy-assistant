@@ -52,6 +52,20 @@ describe("TtlCache", () => {
     expect(loader).toHaveBeenCalledTimes(1);
   });
 
+  it("uses a shorter computed TTL for negative results", async () => {
+    const t = clock();
+    const c = new TtlCache<string | null>({ ttlMs: 1000, now: t.now });
+    const loader = vi.fn().mockResolvedValue(null);
+    const ttl = (value: string | null) => value === null ? 100 : 1000;
+
+    expect(await c.getOrSet("missing", loader, ttl)).toBeNull();
+    expect(await c.getOrSet("missing", loader, ttl)).toBeNull();
+    expect(loader).toHaveBeenCalledTimes(1);
+    t.advance(101);
+    expect(await c.getOrSet("missing", loader, ttl)).toBeNull();
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+
   it("does not cache a rejected loader", async () => {
     const c = new TtlCache<number>({ ttlMs: 1000 });
     await expect(

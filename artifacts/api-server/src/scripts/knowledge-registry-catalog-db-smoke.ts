@@ -14,7 +14,11 @@ const GROUPED_QUERIES = [
   "Амлодипін",
   "Ібупрофен",
   "Цефтріаксон",
+  "Еліквіс",
 ] as const;
+
+const WARM_SAMPLES = 20;
+const RESPONSE_SIZE_LIMIT_BYTES = 100_000;
 
 const REPRESENTATIVE_QUERIES = [
   "Цефтріаксон",
@@ -120,6 +124,8 @@ async function main(): Promise<void> {
   const expectedProducts = positiveIntArg("--expect-min-products=", 16_000);
   const maxWarmMs = positiveIntArg("--max-warm-ms=", 2_000);
   const maxGroupedP95Ms = positiveIntArg("--max-grouped-p95-ms=", 900);
+  const maxExactP50Ms = positiveIntArg("--max-exact-p50-ms=", 150);
+  const maxNavigationP95Ms = positiveIntArg("--max-navigation-p95-ms=", 400);
   const queryMetrics: CatalogQueryMetric[] = [];
   const store = await createPostgresRegistryCatalogStore({
     onQuery: (metric) => queryMetrics.push(metric),
@@ -193,7 +199,8 @@ async function main(): Promise<void> {
       coldQueries: number;
       warm: ReturnType<typeof timingSummary>;
       responseBytes: number;
-      navigationMaxMs: number;
+      serializationMs: number;
+      navigation: ReturnType<typeof timingSummary>;
     }> = [];
     for (const query of GROUPED_QUERIES) {
       resetRegistrySearchCachesForTests();
@@ -215,18 +222,20 @@ async function main(): Promise<void> {
         "Grouped search returned zero positions: " + query,
       );
       assert(
-        coldMetrics.length <= 4,
+        coldMetrics.length <= 5,
         "Grouped search exceeded the SQL query-count budget: " + query,
       );
+      const serializationStarted = performance.now();
       const responseBytes = Buffer.byteLength(JSON.stringify(cold), "utf8");
+      const serializationMs = performance.now() - serializationStarted;
       assert(
-        responseBytes <= 150_000,
-        "Grouped response exceeded 150 KB: " + query,
+        responseBytes <= RESPONSE_SIZE_LIMIT_BYTES,
+        "Grouped response exceeded 100 KB: " + query,
       );
 
       const warmTimings: number[] = [];
       const warmMetricStart = queryMetrics.length;
-      for (let sampleIndex = 0; sampleIndex < 10; sampleIndex += 1) {
+      for (let sampleIndex = 0; sampleIndex < WARM_SAMPLES; sampleIndex += 1) {
         const started = performance.now();
         const measured = await searchCatalog(groupedInput, store);
         warmTimings.push(performance.now() - started);
@@ -275,24 +284,28 @@ async function main(): Promise<void> {
         }),
       ];
       const navigationTimings: number[] = [];
-      for (const navigationInput of navigationInputs) {
-        const started = performance.now();
-        const navigation = await searchCatalog(navigationInput, store);
-        navigationTimings.push(performance.now() - started);
-        assert(navigation.registryGroups, "Grouped navigation returned no hierarchy.");
-        assert(
-          Buffer.byteLength(JSON.stringify(navigation), "utf8") <= 150_000,
-          "Grouped navigation response exceeded 150 KB.",
-        );
+      for (let sampleIndex = 0; sampleIndex < WARM_SAMPLES; sampleIndex += 1) {
+        for (const navigationInput of navigationInputs) {
+          const started = performance.now();
+          const navigation = await searchCatalog(navigationInput, store);
+          navigationTimings.push(performance.now() - started);
+          assert(navigation.registryGroups, "Grouped navigation returned no hierarchy.");
+          assert(
+            Buffer.byteLength(JSON.stringify(navigation), "utf8") <=
+              RESPONSE_SIZE_LIMIT_BYTES,
+            "Grouped navigation response exceeded 100 KB.",
+          );
+        }
       }
       assert(
         queryMetrics.length === warmMetricStart,
         "Grouped navigation unexpectedly executed SQL: " + query,
       );
-      const navigationMaxMs = Math.max(...navigationTimings);
+      const navigation = timingSummary(navigationTimings);
       assert(
-        navigationMaxMs <= 700,
-        "Grouped navigation exceeded 700 ms: " + query,
+        navigation.p95Ms <= maxNavigationP95Ms,
+        "Grouped navigation p95 exceeded the latency budget: " + query +
+          " (" + navigation.p95Ms + " ms > " + maxNavigationP95Ms + " ms).",
       );
 
       groupedRepresentative.push({
@@ -305,7 +318,8 @@ async function main(): Promise<void> {
         coldQueries: coldMetrics.length,
         warm,
         responseBytes,
-        navigationMaxMs: Number(navigationMaxMs.toFixed(1)),
+        serializationMs: Number(serializationMs.toFixed(1)),
+        navigation,
       });
     }
     const sample = first.items.find(
@@ -316,6 +330,82 @@ async function main(): Promise<void> {
         item.dosageForm,
     );
     assert(sample, "Browse page has no complete registry sample.");
+
+    const uniqueRegistration = await pool.query<{
+      registration_number: string;
+      registry_id: string;
+    }>(
+      `SELECT registration_number, MIN(registry_id) AS registry_id
+       FROM knowledge_registry_products
+       WHERE NULLIF(TRIM(registration_number), '') IS NOT NULL
+       GROUP BY registration_number
+       HAVING COUNT(*) = 1
+       ORDER BY registration_number
+       LIMIT 1`,
+    );
+    const exactFixture = uniqueRegistration.rows[0];
+    assert(exactFixture, "Isolated fixture has no unique registration number.");
+    resetRegistrySearchCachesForTests();
+    const exactInput = input({
+      q: exactFixture.registration_number,
+      type: "registry_products",
+      view: "grouped",
+    });
+    const exactMetricStart = queryMetrics.length;
+    const exactColdStarted = performance.now();
+    const exactCold = await searchCatalog(exactInput, store);
+    const exactColdMs = performance.now() - exactColdStarted;
+    const exactColdMetrics = queryMetrics.slice(exactMetricStart);
+    assert(exactCold.view === "flat", "Unique registration did not use exact fast path.");
+    assert(
+      exactCold.registryProducts.items[0]?.id === exactFixture.registry_id,
+      "Exact registration returned a different product.",
+    );
+    assert(exactColdMetrics.length <= 4, "Exact fast path exceeded four SQL queries.");
+    const exactResponseBytes = Buffer.byteLength(JSON.stringify(exactCold), "utf8");
+    assert(
+      exactResponseBytes <= RESPONSE_SIZE_LIMIT_BYTES,
+      "Exact response exceeded 100 KB.",
+    );
+    const exactWarmTimings: number[] = [];
+    const exactWarmMetricStart = queryMetrics.length;
+    for (let sampleIndex = 0; sampleIndex < WARM_SAMPLES; sampleIndex += 1) {
+      const started = performance.now();
+      const result = await searchCatalog(exactInput, store);
+      exactWarmTimings.push(performance.now() - started);
+      assert(result.registryProducts.items[0]?.id === exactFixture.registry_id,
+        "Cached exact result changed.");
+    }
+    assert(
+      queryMetrics.length === exactWarmMetricStart,
+      "Cached exact search unexpectedly executed SQL.",
+    );
+    const exactWarm = timingSummary(exactWarmTimings);
+    assert(
+      exactWarm.p50Ms <= maxExactP50Ms,
+      "Exact p50 exceeded the latency budget.",
+    );
+
+    const browseTimings: number[] = [];
+    let browseResponseBytes = 0;
+    for (let sampleIndex = 0; sampleIndex < WARM_SAMPLES; sampleIndex += 1) {
+      const started = performance.now();
+      const browse = await store.searchProducts(input({ page: sampleIndex % 2 + 1 }));
+      browseTimings.push(performance.now() - started);
+      browseResponseBytes = Math.max(
+        browseResponseBytes,
+        Buffer.byteLength(JSON.stringify(browse), "utf8"),
+      );
+    }
+    const browseWarm = timingSummary(browseTimings);
+    assert(
+      browseWarm.p95Ms <= maxNavigationP95Ms,
+      "Browse pagination p95 exceeded the latency budget.",
+    );
+    assert(
+      browseResponseBytes <= RESPONSE_SIZE_LIMIT_BYTES,
+      "Browse response exceeded 100 KB.",
+    );
 
     const manufacturer = await store.searchProducts(
       input({ manufacturer: sample.manufacturers[0].name }),
@@ -372,6 +462,34 @@ async function main(): Promise<void> {
     const queryPlan = summarizeQueryPlan(
       planResult.rows[0]?.["QUERY PLAN"] ?? null,
     );
+    const exactStatement = queryMetrics.find(
+      (metric) => metric.label === "registry-exact-product",
+    );
+    assert(exactStatement, "Exact SQL statement was not observed.");
+    await pool.query("BEGIN TRANSACTION READ ONLY");
+    let exactPlanResult: { rows: Array<{ "QUERY PLAN": unknown }> };
+    try {
+      exactPlanResult = await pool.query<{ "QUERY PLAN": unknown }>(
+        "EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON, TIMING OFF) " +
+          exactStatement.statement,
+        [...exactStatement.values],
+      );
+    } finally {
+      await pool.query("ROLLBACK");
+    }
+    const exactQueryPlan = summarizeQueryPlan(
+      exactPlanResult.rows[0]?.["QUERY PLAN"] ?? null,
+    );
+    const exactPerformance = {
+      coldMs: Number(exactColdMs.toFixed(1)),
+      coldQueries: exactColdMetrics.length,
+      warm: exactWarm,
+      responseBytes: exactResponseBytes,
+    };
+    const browsePerformance = {
+      warm: browseWarm,
+      responseBytes: browseResponseBytes,
+    };
     const serialized = JSON.stringify({
       catalogTotal: first.catalogTotal,
       page25: first.items.length,
@@ -379,6 +497,9 @@ async function main(): Promise<void> {
       representative,
       groupedRepresentative,
       queryPlan,
+      exactPerformance,
+      exactQueryPlan,
+      browsePerformance,
     });
     assert(serialized.length < 100_000, "Catalog smoke report is unexpectedly large.");
     assert(!/DATABASE_URL|postgres(?:ql)?:\/\/|[A-Za-z]:\\/i.test(serialized), "Catalog smoke output leaks sensitive diagnostics.");
@@ -394,6 +515,9 @@ async function main(): Promise<void> {
           representative,
           groupedRepresentative,
           queryPlan,
+          exactPerformance,
+          exactQueryPlan,
+          browsePerformance,
         },
         null,
         2,
