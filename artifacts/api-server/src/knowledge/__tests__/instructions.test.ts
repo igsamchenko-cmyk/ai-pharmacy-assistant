@@ -102,6 +102,15 @@ describe("official drug instruction parser", () => {
     expect(result.provenance.registrationMatched).toBe(false);
   });
 
+  it("rejects a registration that is only a prefix of the document registration", () => {
+    const result = parse(syntheticMht(), {
+      ...source,
+      registrationNumber: "UA/12345/01/0",
+    });
+    expect(result.status).toBe("needs_review");
+    expect(result.provenance.registrationMatched).toBe(false);
+  });
+
   it("keeps a missing section null and reports partial coverage", () => {
     const result = parse(syntheticMht(sectionParagraphs.slice(0, -1)));
     expect(result.status).toBe("partial");

@@ -78,6 +78,18 @@ function sourceDocumentId(sourceUrl: string): string | null {
   }
 }
 
+function sourceRegistrationKey(sourceUrl: string): string | null {
+  try {
+    const url = new URL(sourceUrl);
+    const match = decodeURIComponent(url.pathname).match(
+      /\/\$file\/(UA\d+)_[A-F0-9]+\.mht$/iu,
+    );
+    return match?.[1]?.toUpperCase() ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function isAllowedInstructionSource(sourceUrl: string): boolean {
   try {
     const url = new URL(sourceUrl);
@@ -294,7 +306,9 @@ function parsedDocumentDate(html: string, lastModified?: string | null): string 
 function contentLocationMatches(html: string, registrationNumber: string): boolean {
   const key = registrationKey(registrationNumber);
   return [...html.matchAll(/Content-Location:\s*([^\r\n]+)/giu)]
-    .some((match) => registrationKey(match[1] ?? "").includes(key));
+    .some((match) => [...(match[1] ?? "").matchAll(
+      /(?:^|[^A-Z0-9])(UA\d+)(?=[^0-9]|$)/giu,
+    )].some((token) => token[1]?.toUpperCase() === key));
 }
 
 export function parseOfficialInstructionMht(
@@ -309,7 +323,7 @@ export function parseOfficialInstructionMht(
   if (!sourceAllowed || !documentId) throw new Error("instruction_source_not_allowed");
 
   const sourceKey = registrationKey(options.source.registrationNumber);
-  const sourceRegistrationMatched = registrationKey(options.source.sourceUrl).includes(sourceKey);
+  const sourceRegistrationMatched = sourceRegistrationKey(options.source.sourceUrl) === sourceKey;
   const html = extractHtmlFromMht(raw);
   const locationMatched = contentLocationMatches(raw.toString("latin1"), options.source.registrationNumber);
   const registrationMatched = sourceRegistrationMatched && locationMatched;
