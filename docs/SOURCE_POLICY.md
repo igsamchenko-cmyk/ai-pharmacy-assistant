@@ -8,6 +8,9 @@ provenance. A row without a registered source is rejected by review policy.
 - Official public registries when data is supplied as an official/local export.
 - Official Ukrainian State Drug Registry CSV export for product, registration,
   manufacturer and dictionary candidate metadata.
+- Official public regulatory instruction documents linked by the Ukrainian
+  State Drug Registry when the exact registration, source document, version or
+  date, reproducible hash, attribution and open-data reuse basis are retained.
 - Public nomenclature and classification references such as WHO INN and WHO ATC.
 - Public reference APIs used as supplementary candidates, not as clinical advice.
 - Project-owned search-miss feedback used only for review candidates.
@@ -16,7 +19,8 @@ provenance. A row without a registered source is rejected by review policy.
 
 - Scraping commercial pharmacy catalogs.
 - Copying proprietary compendia or paywalled databases.
-- Importing protected label text as user-facing clinical advice.
+- Importing proprietary or protected label text without an explicit reuse
+  basis, exact attribution and product-registration binding.
 - Inventing clinical claims, indications, dosing or treatment guidance.
 - Committing secrets, API keys, tokens, raw env values or database URLs.
 

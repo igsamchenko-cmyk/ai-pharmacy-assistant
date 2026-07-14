@@ -1,0 +1,215 @@
+{
+  "version": "1.0",
+  "generatedAt": "2026-07-14T10:07:53.957Z",
+  "dataset": {
+    "title": "Державний реєстр лікарських засобів",
+    "publisher": "Міністерство охорони здоров'я України",
+    "url": "https://data.gov.ua/dataset/fded13b8-4e2c-4c48-bf14-65d0e3106463",
+    "license": "Creative Commons Attribution 4.0",
+    "registryUrl": "http://www.drlz.com.ua/ibp/zvity.nsf/all/zvit/$file/reestr.csv",
+    "registrySha256": "228b8a201491de53d85788d398143586cd20fcd461731892d5db4ab2d8f4dd96",
+    "registryCheckedAt": "2026-07-14T09:09:11.000Z"
+  },
+  "products": [
+    {
+      "registryProductId": "FDF34C07D1E7F97CC2258C8400321E41",
+      "registrationNumber": "UA/13141/01/01",
+      "tradeName": "АЛВОКОК",
+      "status": "available",
+      "documentHash": "28c0413facb8f8f214091adb6c4e51a87077d3ac584bed11cc7207257efc978e",
+      "documentDate": "2025-05-18T18:58:00.000Z",
+      "snapshotFile": "snapshots/ua131410101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "C1EB3A18F8EFE467C2258DD4004B35ED",
+      "registrationNumber": "UA/7064/01/02",
+      "tradeName": "АМОКСИКЛАВ® 2Х",
+      "status": "available",
+      "documentHash": "bdee136e1b636f809f1c54e6374b621ca7d8d695d35f2eb3fbd2b254c25de6fb",
+      "documentDate": "2024-05-14T10:01:00.000Z",
+      "snapshotFile": "snapshots/ua70640102.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "47A6458AE39FBFF9C2258E0A002A5B57",
+      "registrationNumber": "UA/20748/01/01",
+      "tradeName": "АПІРОЛ",
+      "status": "available",
+      "documentHash": "2cc53a6242fb02fa038f668e9ae113ba83c9cb5b1ac343a458b4b150dbc04f15",
+      "documentDate": "2026-06-05T11:03:00.000Z",
+      "snapshotFile": "snapshots/ua207480101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "C964B4EE30400928C2258D3A004144EB",
+      "registrationNumber": "UA/20900/01/01",
+      "tradeName": "МЕТФОРМІН",
+      "status": "available",
+      "documentHash": "5d126eecf8bb24fc8873fd0c4bf311223e6494859d5078a93b9bcf4a3cb17b4f",
+      "documentDate": "2025-07-14T09:29:00.000Z",
+      "snapshotFile": "snapshots/ua209000101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "7A2C7632C5AD2BDDC2258D1D0041AB27",
+      "registrationNumber": "UA/17985/01/01",
+      "tradeName": "ОМЕПРАЗОЛ",
+      "status": "available",
+      "documentHash": "8c66b8707e1249beac0409c3c7d9b5a437baef946954b8176ff4ec11fcbc47b5",
+      "documentDate": "2024-11-25T09:44:00.000Z",
+      "snapshotFile": "snapshots/ua179850101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "1811564409F05C08C2258D9D00491C42",
+      "registrationNumber": "UA/11314/01/01",
+      "tradeName": "АЛАДИН®",
+      "status": "available",
+      "documentHash": "1a95c4e99b80c359157d05f8293c08b13f34fb9f029a8c3c5c1e61d1bf74cfc3",
+      "documentDate": "2023-05-29T12:01:00.000Z",
+      "snapshotFile": "snapshots/ua113140101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "C7B888C3C0124CC8C22589BA0028EC27",
+      "registrationNumber": "UA/7943/01/01",
+      "tradeName": "ВАРФАРЕКС®",
+      "status": "available",
+      "documentHash": "a14ebe7a080ca8821f5020678294ab29f730b00c37d93bf03faee379d248a619",
+      "documentDate": "2023-05-29T12:43:00.000Z",
+      "snapshotFile": "snapshots/ua79430101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "3100C9CB2A81D315C2258CC00032ED38",
+      "registrationNumber": "UA/13699/01/01",
+      "tradeName": "ЕЛІКВІС",
+      "status": "available",
+      "documentHash": "43f266e47215afab1246124db4bbc3cc0c677558f37db75b15f6e78a67d1a9b1",
+      "documentDate": "2025-05-08T09:53:00.000Z",
+      "snapshotFile": "snapshots/ua136990101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "6FF5E6F472124BE4C2258D8500493EC3",
+      "registrationNumber": "UA/20423/01/01",
+      "tradeName": "ДЕКСАМЕТАЗОН-4-ДАРНИЦЯ",
+      "status": "available",
+      "documentHash": "567bf8f7b518cc2b64db6ee18b91e84d278482b355001c3ace55e27b920cd546",
+      "documentDate": "2025-11-11T13:00:00.000Z",
+      "snapshotFile": "snapshots/ua204230101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "9986A88FDE502961C2258CE700449F91",
+      "registrationNumber": "UA/10250/01/01",
+      "tradeName": "ОНДАНСЕТРОН",
+      "status": "available",
+      "documentHash": "1a3772ed68a6d2fe25fc75f9406995b8aaddc6d8432a655043125b5e128338d2",
+      "documentDate": "2022-07-13T10:16:00.000Z",
+      "snapshotFile": "snapshots/ua102500101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    }
+  ]
+}

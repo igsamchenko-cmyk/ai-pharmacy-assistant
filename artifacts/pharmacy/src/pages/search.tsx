@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  BookOpenText,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -271,20 +272,30 @@ export function RegistryProductCard({
           )}
         </div>
 
-        {showReportIssue && (
-          <ReportIssueButton
-            type="wrong_mapping"
-            context={`registry-product:${product.id}:query:${query || "browse"}`}
-            sourceSnapshot={{
-              id: product.id,
-              tradeName: product.tradeName,
-              registrationNumber: product.registration.number,
-              mappingStatus: product.mappingStatus,
-              sourceKey: product.source.key,
-            }}
-            compact
-          />
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {product.instructionAvailable ? (
+            <Button asChild variant="outline" size="sm">
+              <a href={`/instructions/${product.id}`}>
+                <BookOpenText className="h-4 w-4" />
+                Інструкція
+              </a>
+            </Button>
+          ) : null}
+          {showReportIssue ? (
+            <ReportIssueButton
+              type="wrong_mapping"
+              context={`registry-product:${product.id}:query:${query || "browse"}`}
+              sourceSnapshot={{
+                id: product.id,
+                tradeName: product.tradeName,
+                registrationNumber: product.registration.number,
+                mappingStatus: product.mappingStatus,
+                sourceKey: product.source.key,
+              }}
+              compact
+            />
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   );

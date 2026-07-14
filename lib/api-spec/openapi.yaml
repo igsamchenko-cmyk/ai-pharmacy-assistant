@@ -363,6 +363,42 @@ paths:
                 $ref: "#/components/schemas/CatalogSearchResponse"
         "400":
           description: Invalid search parameters
+  /catalog/products/{productId}/instruction:
+    get:
+      operationId: getDrugInstruction
+      tags: [drugs]
+      summary: Get a structured official instruction for one registry product
+      description: >-
+        Lazily returns a bounded structured snapshot parsed from the official
+        Ukrainian registry document for this exact registry product. Missing
+        sections remain null. The response contains no generated clinical text,
+        secrets, raw environment values or server filesystem paths.
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-F0-9]{32}$"
+      responses:
+        "200":
+          description: Structured official instruction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DrugInstruction"
+        "400":
+          description: Invalid registry product identifier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: No verified structured instruction for this product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /drugs/stats:
     get:
       operationId: getDrugStats
@@ -1707,6 +1743,7 @@ components:
         - nationalListSource
         - nationalListCheckedAt
         - nationalListMatchDetails
+        - instructionAvailable
       properties:
         resultType:
           type: string
@@ -1762,6 +1799,69 @@ components:
           oneOf:
             - $ref: "#/components/schemas/NationalListMatchDetails"
             - type: "null"
+        instructionAvailable:
+          type: boolean
+          description: Whether an exact-registration official instruction snapshot is available
+    DrugInstructionSections:
+      type: object
+      required: [indications, contraindications, adverseReactions, interactions, specialWarnings, pregnancyAndLactation, administration, overdose, storage]
+      properties:
+        indications: { type: ["string", "null"], maxLength: 60000 }
+        contraindications: { type: ["string", "null"], maxLength: 60000 }
+        adverseReactions: { type: ["string", "null"], maxLength: 60000 }
+        interactions: { type: ["string", "null"], maxLength: 60000 }
+        specialWarnings: { type: ["string", "null"], maxLength: 60000 }
+        pregnancyAndLactation: { type: ["string", "null"], maxLength: 60000 }
+        administration: { type: ["string", "null"], maxLength: 60000 }
+        overdose: { type: ["string", "null"], maxLength: 60000 }
+        storage: { type: ["string", "null"], maxLength: 60000 }
+    DrugInstructionSource:
+      type: object
+      required: [url, documentId, documentDate, checkedAt, documentHash, contentLength, parserVersion, datasetTitle, datasetUrl, license]
+      properties:
+        url: { type: string, format: uri, maxLength: 1000 }
+        documentId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        documentDate: { type: ["string", "null"], format: date-time }
+        checkedAt: { type: string, format: date-time }
+        documentHash: { type: string, pattern: "^[a-f0-9]{64}$" }
+        contentLength: { type: integer, minimum: 1, maximum: 3000000 }
+        parserVersion: { type: string, enum: [ua-drlz-mht-v1] }
+        datasetTitle: { type: string, minLength: 1 }
+        datasetUrl: { type: string, format: uri }
+        license: { type: string, minLength: 1 }
+    DrugInstructionProvenance:
+      type: object
+      required: [sourceAllowed, registrationMatched, contentLocationMatched, availableSectionCount, coveragePct]
+      properties:
+        sourceAllowed: { type: boolean }
+        registrationMatched: { type: boolean }
+        contentLocationMatched: { type: boolean }
+        availableSectionCount: { type: integer, minimum: 0, maximum: 9 }
+        coveragePct: { type: integer, minimum: 0, maximum: 100 }
+    DrugInstruction:
+      type: object
+      required: [version, registryProductId, registrationNumber, tradeName, inn, activeIngredient, dosageForm, strength, manufacturer, manufacturerCountry, registrationStartDate, registrationEndDate, status, sections, source, provenance, warnings]
+      properties:
+        version: { type: string, enum: ["1.0"] }
+        registryProductId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        registrationNumber: { type: string, pattern: "^UA/\\d+/\\d+/\\d+$" }
+        tradeName: { type: string, minLength: 1, maxLength: 300 }
+        inn: { type: string, minLength: 1, maxLength: 300 }
+        activeIngredient: { type: string, minLength: 1, maxLength: 2000 }
+        dosageForm: { type: string, minLength: 1, maxLength: 2000 }
+        strength: { type: string, minLength: 1, maxLength: 120 }
+        manufacturer: { type: string, minLength: 1, maxLength: 1000 }
+        manufacturerCountry: { type: string, minLength: 1, maxLength: 120 }
+        registrationStartDate: { type: string, minLength: 1, maxLength: 40 }
+        registrationEndDate: { type: string, minLength: 1, maxLength: 40 }
+        status: { type: string, enum: [available, partial, unavailable, needs_review] }
+        sections: { $ref: "#/components/schemas/DrugInstructionSections" }
+        source: { $ref: "#/components/schemas/DrugInstructionSource" }
+        provenance: { $ref: "#/components/schemas/DrugInstructionProvenance" }
+        warnings:
+          type: array
+          maxItems: 20
+          items: { type: string, pattern: "^[a-z0-9:_-]{1,80}$" }
     CatalogGroupingSummary:
       type: object
       required: [totalRegistryPositions, uniqueTradeNames, uniqueStrengths, uniqueDosageForms, uniqueManufacturers, monotherapyCount, combinationCount, unknownCompositionCount, approvedMappedCount, unmappedCount]

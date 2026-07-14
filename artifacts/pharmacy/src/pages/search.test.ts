@@ -65,6 +65,7 @@ const product: RegistryProductResult = {
     routeMatch: "match",
     strengthMatch: "match",
   },
+  instructionAvailable: true,
 };
 
 describe("registry catalog UI", () => {
@@ -84,7 +85,19 @@ describe("registry catalog UI", () => {
     expect(html).toContain("overflow-hidden");
     expect(html).toContain("Нацперелік");
     expect(html).toContain('data-testid="national-list-exact"');
+    expect(html).toContain(`/instructions/${product.id}`);
+    expect(html).toContain("Інструкція");
     expect(html).not.toContain("truncate");
+  });
+
+  it("does not offer another product's instruction when exact binding is absent", () => {
+    const html = renderToStaticMarkup(createElement(RegistryProductCard, {
+      product: { ...product, instructionAvailable: false },
+      query: "",
+      showReportIssue: false,
+    }));
+    expect(html).not.toContain(`/instructions/${product.id}`);
+    expect(html).not.toContain("Інструкція");
   });
 
   it("shows the National List badge only for exact matches", () => {

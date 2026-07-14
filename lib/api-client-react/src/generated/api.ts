@@ -38,6 +38,7 @@ import type {
   DataSourcesResponse,
   DiagnosticsPanelData,
   Drug,
+  DrugInstruction,
   DrugStats,
   ErrorResponse,
   ExternalDrugReference,
@@ -776,6 +777,84 @@ export function useSearchCatalog<TData = Awaited<ReturnType<typeof searchCatalog
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getSearchCatalogQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetDrugInstructionUrl = (productId: string,) => {
+
+
+
+
+  return `/api/catalog/products/${productId}/instruction`
+}
+
+/**
+ * Lazily returns a bounded structured snapshot parsed from the official Ukrainian registry document for this exact registry product. Missing sections remain null. The response contains no generated clinical text, secrets, raw environment values or server filesystem paths.
+ * @summary Get a structured official instruction for one registry product
+ */
+export const getDrugInstruction = async (productId: string, options?: RequestInit): Promise<DrugInstruction> => {
+
+  return customFetch<DrugInstruction>(getGetDrugInstructionUrl(productId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDrugInstructionQueryKey = (productId: string,) => {
+    return [
+    `/api/catalog/products/${productId}/instruction`
+    ] as const;
+    }
+
+
+export const getGetDrugInstructionQueryOptions = <TData = Awaited<ReturnType<typeof getDrugInstruction>>, TError = ErrorType<ErrorResponse>>(productId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDrugInstruction>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDrugInstructionQueryKey(productId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDrugInstruction>>> = ({ signal }) => getDrugInstruction(productId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: productId !== null && productId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDrugInstruction>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDrugInstructionQueryResult = NonNullable<Awaited<ReturnType<typeof getDrugInstruction>>>
+export type GetDrugInstructionQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Get a structured official instruction for one registry product
+ */
+
+export function useGetDrugInstruction<TData = Awaited<ReturnType<typeof getDrugInstruction>>, TError = ErrorType<ErrorResponse>>(
+ productId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDrugInstruction>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDrugInstructionQueryOptions(productId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
