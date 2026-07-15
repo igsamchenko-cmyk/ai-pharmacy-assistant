@@ -23,6 +23,10 @@ import {
 } from "./search";
 import { REGISTRY_CATALOG_HREF } from "./home";
 
+vi.mock("@/components/report-issue-button", () => ({
+  ReportIssueButton: () => null,
+}));
+
 const product: RegistryProductResult = {
   resultType: "registry_product",
   id: "registry-1",
@@ -162,7 +166,50 @@ describe("registry catalog UI", () => {
     expect(html).toContain('data-testid="national-list-exact"');
     expect(html).toContain(`/instructions/${product.id}`);
     expect(html).toContain("Інструкція");
+    expect(html).toContain("Є інструкція");
+    expect(html).toContain(`data-testid="instruction-action-${product.id}"`);
+    expect(html).toContain("w-full");
+    expect(html).toContain("max-w-full");
     expect(html).not.toContain("truncate");
+  });
+
+  it.each([
+    {
+      tradeName: "МЕТФОРМІН",
+      productId: "C964B4EE30400928C2258D3A004144EB",
+      registrationNumber: "UA/20900/01/01",
+    },
+    {
+      tradeName: "ОМЕПРАЗОЛ",
+      productId: "7A2C7632C5AD2BDDC2258D1D0041AB27",
+      registrationNumber: "UA/17985/01/01",
+    },
+    {
+      tradeName: "ЕЛІКВІС",
+      productId: "3100C9CB2A81D315C2258CC00032ED38",
+      registrationNumber: "UA/13699/01/01",
+    },
+  ])("routes $tradeName to the exact registry product instruction", ({
+    tradeName,
+    productId,
+    registrationNumber,
+  }) => {
+    const exactProduct = {
+      ...product,
+      id: productId,
+      tradeName,
+      registration: {
+        ...product.registration,
+        number: registrationNumber,
+      },
+    };
+    const html = renderToStaticMarkup(createElement(RegistryProductCard, {
+      product: exactProduct,
+      query: tradeName,
+      showReportIssue: false,
+    }));
+    expect(html).toContain(`href="/instructions/${productId}"`);
+    expect(html).toContain(`data-testid="instruction-discovery-${productId}"`);
   });
 
   it("does not offer another product's instruction when exact binding is absent", () => {
@@ -173,6 +220,8 @@ describe("registry catalog UI", () => {
     }));
     expect(html).not.toContain(`/instructions/${product.id}`);
     expect(html).not.toContain("Інструкція");
+    expect(html).not.toContain("Є інструкція");
+    expect(html).not.toContain("instruction-action-");
   });
 
   it("shows the National List badge only for exact matches", () => {
@@ -371,6 +420,26 @@ describe("registry catalog UI", () => {
     expect(
       merged?.groups.items[0].tradeNames.items[0].variants?.items,
     ).toEqual([product]);
+
+    const expandedHtml = renderToStaticMarkup(createElement(GroupedRegistryResults, {
+      catalog: variantCatalog,
+      query: "Amlodipine",
+      isFetching: false,
+      isVariantFetching: false,
+      isVariantError: false,
+      selectedTradeNameKey: trade.key,
+      onRetryVariants: () => undefined,
+      onSelectTrade: () => undefined,
+      onGroupPage: () => undefined,
+      onTradePage: () => undefined,
+      onVariantPage: () => undefined,
+    }));
+    expect(expandedHtml).toContain('data-testid="instruction-badge-trade-trade-amlodipine-pharma"');
+    expect(expandedHtml).toContain(`data-testid="instruction-action-${product.id}"`);
+    expect(expandedHtml).toContain(`/instructions/${product.id}`);
+    expect(expandedHtml).toContain("Є інструкція");
+    expect(expandedHtml).toContain("min-w-0");
+    expect(expandedHtml).not.toContain("overflow-x-auto");
 
     const loadingHtml = renderToStaticMarkup(createElement(GroupedRegistryResults, {
       catalog,

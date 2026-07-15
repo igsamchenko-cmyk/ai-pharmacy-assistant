@@ -129,6 +129,45 @@ function registryComposition(product: RegistryProductResult): string {
   return product.inn || product.activeIngredient || "Склад у реєстрі не зазначено";
 }
 
+export function InstructionAvailabilityBadge({
+  productId,
+  available,
+}: {
+  productId: string;
+  available: boolean;
+}) {
+  if (!available) return null;
+  return (
+    <Badge
+      variant="outline"
+      className="gap-1 whitespace-normal text-left"
+      data-testid={`instruction-badge-${productId}`}
+    >
+      <BookOpenText className="h-3 w-3 shrink-0" />
+      Є інструкція
+    </Badge>
+  );
+}
+
+export function InstructionAction({ product }: { product: RegistryProductResult }) {
+  if (!product.instructionAvailable) return null;
+  return (
+    <Button
+      asChild
+      size="sm"
+      className="w-full min-w-0 max-w-full justify-center whitespace-normal sm:w-auto"
+    >
+      <a
+        href={`/instructions/${product.id}`}
+        data-testid={`instruction-action-${product.id}`}
+      >
+        <BookOpenText className="h-4 w-4 shrink-0" />
+        Інструкція
+      </a>
+    </Button>
+  );
+}
+
 function NationalListBadge({ product }: { product: RegistryProductResult }) {
   if (product.nationalListStatus === "not_applicable") return null;
   if (product.nationalListStatus === "exact") {
@@ -204,6 +243,10 @@ export function RegistryProductCard({
                   : "Реєстровий запис - mapping не підтверджений"}
               </Badge>
               <NationalListBadge product={product} />
+              <InstructionAvailabilityBadge
+                productId={product.id}
+                available={product.instructionAvailable}
+              />
               {product.sourceRecordCount > 1 ? (
                 <Badge variant="outline">
                   Джерельних записів: {product.sourceRecordCount}
@@ -212,6 +255,18 @@ export function RegistryProductCard({
             </div>
           </div>
         </div>
+
+        {product.instructionAvailable ? (
+          <div
+            className="flex min-w-0 flex-wrap items-center gap-2"
+            data-testid={`instruction-discovery-${product.id}`}
+          >
+            <InstructionAction product={product} />
+            <span className="text-xs text-muted-foreground">
+              Офіційна інструкція для цієї реєстрової позиції
+            </span>
+          </div>
+        ) : null}
 
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div className="min-w-0">
@@ -311,14 +366,6 @@ export function RegistryProductCard({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {product.instructionAvailable ? (
-            <Button asChild variant="outline" size="sm">
-              <a href={`/instructions/${product.id}`}>
-                <BookOpenText className="h-4 w-4" />
-                Інструкція
-              </a>
-            </Button>
-          ) : null}
           {showReportIssue ? (
             <ReportIssueButton
               type="wrong_mapping"
@@ -532,23 +579,32 @@ export function GroupedRegistryResults({
               <div className="space-y-2">
                 {group.tradeNames.items.map((trade) => {
                   const expanded = Boolean(trade.variants) || trade.key === selectedTradeNameKey;
+                  const instructionAvailable = trade.variants?.items.some(
+                    (product) => product.instructionAvailable,
+                  ) ?? false;
                   return (
                     <div key={trade.key} className="border-l-2 border-primary/30 pl-3">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="h-auto min-h-11 w-full justify-between whitespace-normal px-2 text-left"
-                        onClick={() => onSelectTrade(expanded ? null : group.key, expanded ? null : trade.key)}
-                        aria-expanded={expanded}
-                      >
-                        <span className="min-w-0">
-                          <span className="block font-medium break-words">{trade.tradeName}</span>
-                          <span className="block text-xs font-normal text-muted-foreground">
-                            {numberFormatter.format(trade.summary.totalRegistryPositions)} позицій; форм: {trade.summary.uniqueDosageForms}; дозувань: {trade.summary.uniqueStrengths}; виробників: {trade.summary.uniqueManufacturers}
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="h-auto min-h-11 min-w-0 flex-1 justify-between whitespace-normal px-2 text-left"
+                          onClick={() => onSelectTrade(expanded ? null : group.key, expanded ? null : trade.key)}
+                          aria-expanded={expanded}
+                        >
+                          <span className="min-w-0">
+                            <span className="block font-medium break-words">{trade.tradeName}</span>
+                            <span className="block text-xs font-normal text-muted-foreground">
+                              {numberFormatter.format(trade.summary.totalRegistryPositions)} позицій; форм: {trade.summary.uniqueDosageForms}; дозувань: {trade.summary.uniqueStrengths}; виробників: {trade.summary.uniqueManufacturers}
+                            </span>
                           </span>
-                        </span>
-                        {expanded ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
-                      </Button>
+                          {expanded ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
+                        </Button>
+                        <InstructionAvailabilityBadge
+                          productId={`trade-${trade.key}`}
+                          available={instructionAvailable}
+                        />
+                      </div>
 
                       {trade.variants ? (
                         <div className="mt-3 space-y-3" data-testid={`trade-variants-${trade.key}`}>
