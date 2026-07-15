@@ -2,6 +2,7 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../app";
+import { loadInstructionSources } from "../knowledge/instructions/catalog";
 
 const originalEnv = { ...process.env };
 
@@ -41,6 +42,49 @@ describe("drug instruction API", () => {
     });
   });
 
+  it("serves representative expanded instructions by exact registry product", async () => {
+    process.env.AUTH_REQUIRED = "false";
+    const representativeInns = [
+      "Ceftriaxone",
+      "Amoxicillin and beta-lactamase inhibitor",
+      "Ibuprofen",
+      "Diclofenac",
+      "Metformin",
+      "Omeprazole",
+      "Amlodipine",
+      "Warfarin",
+      "Apixaban",
+      "Rivaroxaban",
+      "Dexamethasone",
+      "Ondansetron",
+    ];
+    const sources = loadInstructionSources();
+    const products = representativeInns.map((inn) =>
+      sources.products.find((product) => product.inn === inn)
+    );
+    expect(products.every((product) => product !== undefined)).toBe(true);
+
+    const app = createApp({ nodeEnv: "test" });
+    await withServer(createServer(app), async (baseUrl) => {
+      for (const product of products) {
+        if (!product) throw new Error("representative_instruction_missing");
+        const response = await fetch(
+          `${baseUrl}/api/catalog/products/${product.registryProductId}/instruction`,
+        );
+        expect(response.status).toBe(200);
+        const body = await response.json() as {
+          registryProductId: string;
+          registrationNumber: string;
+          sections: Record<string, string | null>;
+          source: { url: string };
+        };
+        expect(body.registryProductId).toBe(product.registryProductId);
+        expect(body.registrationNumber).toBe(product.registrationNumber);
+        expect(Object.values(body.sections).filter(Boolean).length).toBeGreaterThanOrEqual(8);
+        expect(body.source.url).toMatch(/^http:\/\/www\.drlz\.com\.ua\//u);
+      }
+    });
+  });
   it("returns sanitized 400 and 404 responses", async () => {
     process.env.AUTH_REQUIRED = "false";
     const app = createApp({ nodeEnv: "test" });

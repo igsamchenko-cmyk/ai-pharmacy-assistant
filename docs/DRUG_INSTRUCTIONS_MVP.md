@@ -2,10 +2,13 @@
 
 ## Scope
 
-The MVP exposes structured official Ukrainian drug instructions for 10 exact
+The MVP exposes structured official Ukrainian drug instructions for 50 exact
 State Registry product records. It does not generalize one leaflet to another
 brand, registration, dosage form, strength or manufacturer. It does not use an
 LLM to generate, summarize or complete medical text.
+
+The table below records the original 10-product MVP cohort. The full current
+50-product coverage is pinned in `data/drug-instructions/manifest.json`.
 
 | Product | INN | Registration |
 | --- | --- | --- |
@@ -20,9 +23,10 @@ LLM to generate, summarize or complete medical text.
 | ДЕКСАМЕТАЗОН-4-ДАРНИЦЯ | Dexamethasone | `UA/20423/01/01` |
 | ОНДАНСЕТРОН | Ondansetron | `UA/10250/01/01` |
 
-The committed checkpoint contains 10 full instructions, 0 partial, 0
-unavailable and 0 `needs_review` records. All nine supported sections are
-present for every product and registration provenance coverage is 100%.
+The committed checkpoint contains 50 instructions: 46 full, 4 explicitly partial,
+0 unavailable and 0 `needs_review` records. At least eight supported sections are
+present for every product, 46 records contain all nine sections, and exact
+registration provenance coverage is 100%.
 
 ## Official Source And Reuse Basis
 
