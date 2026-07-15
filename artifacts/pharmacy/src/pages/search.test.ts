@@ -1,13 +1,24 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
-import type { CatalogSearchResponse, RegistryProductResult } from "@workspace/api-client-react";
+import { describe, expect, it, vi } from "vitest";
+import {
+  getSearchCatalogQueryOptions,
+  type CatalogSearchResponse,
+  type RegistryProductResult,
+} from "@workspace/api-client-react";
+import { QueryClient } from "@tanstack/react-query";
 import {
   GroupedRegistryResults,
   RegistryProductCard,
+  applyPastedQuery,
+  catalogQueryDebounceMs,
+  CATALOG_QUERY_DEBOUNCE_MS,
+  EXACT_REGISTRATION_DEBOUNCE_MS,
+  isCatalogQueryEnabled,
   mergeCatalogVariantPage,
   REGISTRY_CATALOG_SAFETY_COPY,
   resolveCatalogViewState,
+  shouldDisplayCatalogResponse,
   shouldRetryCatalogRequest,
 } from "./search";
 import { REGISTRY_CATALOG_HREF } from "./home";
@@ -68,6 +79,70 @@ const product: RegistryProductResult = {
 };
 
 describe("registry catalog UI", () => {
+  it("uses adaptive search timing without querying one or two characters", () => {
+    expect(catalogQueryDebounceMs("Метформін")).toBe(CATALOG_QUERY_DEBOUNCE_MS);
+    expect(catalogQueryDebounceMs("UA/1234/01/01")).toBe(
+      EXACT_REGISTRATION_DEBOUNCE_MS,
+    );
+    expect(isCatalogQueryEnabled("")).toBe(true);
+    expect(isCatalogQueryEnabled("Іб")).toBe(false);
+    expect(isCatalogQueryEnabled("Ібу")).toBe(true);
+  });
+
+  it("builds the pasted query synchronously for an immediate request", () => {
+    expect(applyPastedQuery("UA//01", 3, 3, "1234/01")).toBe(
+      "UA/1234/01/01",
+    );
+    expect(applyPastedQuery("Метформін", 0, 9, "Омепразол")).toBe("Омепразол");
+  });
+
+  it("hides placeholder and stale responses while the query changes", () => {
+    expect(shouldDisplayCatalogResponse("Метформін", "Метформін", false)).toBe(true);
+    expect(shouldDisplayCatalogResponse("Омепразол", "Метформін", false)).toBe(false);
+    expect(shouldDisplayCatalogResponse("Метформін", "Метформін", true)).toBe(false);
+    expect(shouldDisplayCatalogResponse("Іб", "Іб", false)).toBe(false);
+  });
+
+  it("forwards cancellation and deduplicates identical in-flight requests", async () => {
+    const response = {
+      query: "Метформін",
+      type: "registry_products",
+      view: "grouped",
+      runtimeMode: "db",
+      catalogTotal: 16_533,
+      ingredients: [],
+      registryProducts: {
+        items: [], total: 0, page: 1, pageSize: 25, totalPages: 0, hasNext: false,
+      },
+      registryGroups: null,
+      warnings: [],
+    };
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify(response), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const params = {
+      q: "Метформін",
+      type: "registry_products" as const,
+      view: "grouped" as const,
+    };
+    const options = getSearchCatalogQueryOptions(params);
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: 120_000 } },
+    });
+
+    await Promise.all([client.fetchQuery(options), client.fetchQuery(options)]);
+
+    expect(fetchSpy).toHaveBeenCalledOnce();
+    expect(fetchSpy.mock.calls[0]?.[1]).toMatchObject({
+      signal: expect.any(AbortSignal),
+    });
+    fetchSpy.mockRestore();
+    client.clear();
+  });
+
   it("renders a mobile-safe registry card with production fields", () => {
     const html = renderToStaticMarkup(
       createElement(RegistryProductCard, { product, query: "Нурофен", showReportIssue: false }),

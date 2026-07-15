@@ -5,6 +5,8 @@ import {
   createPostgresRegistryCatalogStore,
   assembleRegistryProducts,
   extractRegistryStrength,
+  isExactFastPathEligible,
+  registrySearchCacheKey,
   resetRegistrySearchCachesForTests,
   searchCatalog,
   type RegistryCatalogStore,
@@ -289,6 +291,95 @@ describe("catalog search service", () => {
     expect(SearchCatalogResponse.safeParse(result).success).toBe(true);
   });
 
+  it("returns one compact exact product without the grouped pipeline", async () => {
+    const item = assembleRegistryProducts(
+      [productRow],
+      [manufacturer],
+      [approvedMapping],
+    )[0];
+    const exact = vi.fn(async () => ({
+      catalogTotal: 16_533,
+      filteredTotal: 1,
+      items: [item],
+    }));
+    const grouped = vi.fn();
+    const flat = vi.fn();
+    const testStore = store({
+      findUniqueExactProduct: exact,
+      searchProductsForGrouping: grouped,
+      searchProducts: flat,
+    });
+
+    const result = await searchCatalog(
+      input({
+        q: "UA/1234/01/01",
+        type: "registry_products",
+        view: "grouped",
+      }),
+      testStore,
+    );
+
+    expect(result.view).toBe("flat");
+    expect(result.registryProducts).toMatchObject({ total: 1, hasNext: false });
+    expect(result.registryProducts.items[0]?.id).toBe("registry-1");
+    expect(exact).toHaveBeenCalledOnce();
+    expect(grouped).not.toHaveBeenCalled();
+    expect(flat).not.toHaveBeenCalled();
+  });
+
+  it("falls back unchanged when an exact match is ambiguous", async () => {
+    const testStore = store({
+      findUniqueExactProduct: vi.fn(async () => null),
+      searchProductsForGrouping: vi.fn(async () => ({
+        catalogTotal: 16_533,
+        filteredTotal: 1,
+        items: assembleRegistryProducts(
+          [productRow],
+          [manufacturer],
+          [approvedMapping],
+        ),
+        bounded: true,
+      })),
+    });
+    const result = await searchCatalog(
+      input({ q: "Ibuprofen", type: "registry_products", view: "grouped" }),
+      testStore,
+    );
+    expect(result.view).toBe("grouped");
+    expect(result.registryGroups?.summary.totalRegistryPositions).toBe(1);
+    expect(testStore.searchProductsForGrouping).toHaveBeenCalledOnce();
+  });
+
+  it("bypasses the exact path when result filters are active", async () => {
+    const exact = vi.fn();
+    const testStore = store({ findUniqueExactProduct: exact });
+    await searchCatalog(
+      input({
+        q: "Nurofen",
+        type: "registry_products",
+        manufacturer: "Example Pharma",
+      }),
+      testStore,
+    );
+    expect(exact).not.toHaveBeenCalled();
+    expect(isExactFastPathEligible(input({ q: "Nurofen" }))).toBe(true);
+    expect(isExactFastPathEligible(input({ q: "Nurofen", mappingStatus: "approved" }))).toBe(false);
+  });
+
+  it("invalidates registry caches when the snapshot version changes", () => {
+    const params = input({ q: "  NUROFEN ", view: "grouped" });
+    expect(registrySearchCacheKey("grouped", params, "batch-a")).not.toBe(
+      registrySearchCacheKey("grouped", params, "batch-b"),
+    );
+    expect(registrySearchCacheKey("grouped", params, "batch-a")).toBe(
+      registrySearchCacheKey(
+        "grouped",
+        input({ q: "nurofen", view: "grouped" }),
+        "batch-a",
+      ),
+    );
+  });
+
   it("does not fabricate a registry product for an ingredient-only alias", async () => {
     const result = await searchCatalog(
       input({ q: "Nurofen", type: "all" }),
@@ -354,12 +445,82 @@ describe("catalog search service", () => {
       "Production registry is unavailable; static reference fallback is active.",
     ]);
   });
+
+  it("deduplicates and caches an exact PostgreSQL lookup without N+1 queries", async () => {
+    resetRegistrySearchCachesForTests();
+    const labels: string[] = [];
+    const query = vi.fn(async (sql: string) => {
+      if (sql.includes("SELECT COUNT(*)::int AS count")) {
+        return { rows: [{ count: 16_533, snapshot_version: "batch-exact" }] };
+      }
+      if (sql.includes("WITH exact_candidates")) return { rows: [productRow] };
+      if (sql.includes("SELECT product_registry_id, name, country")) {
+        return { rows: [manufacturer] };
+      }
+      if (sql.includes("n.normalized") && sql.includes("ingredient_id")) {
+        return { rows: [approvedMapping] };
+      }
+      throw new Error("Unexpected exact-path test query");
+    });
+    const dbStore = await createPostgresRegistryCatalogStore({
+      executor: { query },
+      onQuery: ({ label }) => labels.push(label),
+    });
+    const exactInput = input({
+      q: "UA/1234/01/01",
+      type: "registry_products",
+      view: "grouped",
+    });
+
+    const [first, concurrent] = await Promise.all([
+      dbStore.findUniqueExactProduct!(exactInput),
+      dbStore.findUniqueExactProduct!(exactInput),
+    ]);
+    const warm = await dbStore.findUniqueExactProduct!(exactInput);
+
+    expect(first?.items[0]?.id).toBe("registry-1");
+    expect(concurrent).toEqual(first);
+    expect(warm).toEqual(first);
+    expect(query).toHaveBeenCalledTimes(4);
+    expect(labels).toEqual(expect.arrayContaining([
+      "catalog-snapshot",
+      "registry-exact-product",
+      "registry-manufacturers",
+      "approved-mappings",
+    ]));
+    const exactSql = query.mock.calls
+      .map(([sql]) => sql)
+      .find((sql) => sql.includes("WITH exact_candidates"));
+    expect(exactSql).toContain("p.registration_number = $1");
+    expect(exactSql).toContain("p.normalized_trade_name = $2");
+    expect(exactSql).toContain("query_alias.review_status = 'approved'");
+    expect(exactSql).toContain("LOWER(p.inn) = $3");
+    resetRegistrySearchCachesForTests();
+  });
+
+  it("caches an ambiguous exact result as a bounded negative lookup", async () => {
+    resetRegistrySearchCachesForTests();
+    const query = vi.fn(async (sql: string) => {
+      if (sql.includes("SELECT COUNT(*)::int AS count")) {
+        return { rows: [{ count: 16_533, snapshot_version: "batch-negative" }] };
+      }
+      if (sql.includes("WITH exact_candidates")) return { rows: [] };
+      throw new Error("Unexpected negative-path test query");
+    });
+    const dbStore = await createPostgresRegistryCatalogStore({ executor: { query } });
+    const exactInput = input({ q: "ambiguous", view: "grouped" });
+    expect(await dbStore.findUniqueExactProduct!(exactInput)).toBeNull();
+    expect(await dbStore.findUniqueExactProduct!(exactInput)).toBeNull();
+    expect(query).toHaveBeenCalledTimes(2);
+    resetRegistrySearchCachesForTests();
+  });
+
   it("reuses one bounded grouped snapshot without N+1 queries", async () => {
     resetRegistrySearchCachesForTests();
     const labels: string[] = [];
     const query = vi.fn(async (sql: string, _values: unknown[] = []) => {
       if (sql.includes("SELECT COUNT(*)::int AS count")) {
-        return { rows: [{ count: 16_533 }] };
+        return { rows: [{ count: 16_533, snapshot_version: "batch-test" }] };
       }
       if (sql.includes("SELECT product_registry_id, name, country")) {
         return { rows: [manufacturer] };
@@ -384,7 +545,7 @@ describe("catalog search service", () => {
     expect(query).toHaveBeenCalledTimes(4);
     expect(labels).toHaveLength(4);
     expect(labels).toEqual(expect.arrayContaining([
-      "catalog-total",
+      "catalog-snapshot",
       "registry-grouped-page",
       "registry-manufacturers",
       "approved-mappings",

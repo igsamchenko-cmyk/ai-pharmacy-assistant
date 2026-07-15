@@ -81,7 +81,7 @@ export class TtlCache<V> {
   async getOrSet(
     key: string,
     loader: () => Promise<V>,
-    ttlMs?: number,
+    ttlMs?: number | ((value: V) => number),
   ): Promise<V> {
     const cached = this.get(key);
     if (cached !== undefined) return cached;
@@ -92,7 +92,11 @@ export class TtlCache<V> {
     const promise = (async () => {
       try {
         const value = await loader();
-        this.set(key, value, ttlMs);
+        this.set(
+          key,
+          value,
+          typeof ttlMs === "function" ? ttlMs(value) : ttlMs,
+        );
         return value;
       } finally {
         this.inflight.delete(key);
