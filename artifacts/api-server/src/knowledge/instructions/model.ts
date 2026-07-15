@@ -51,7 +51,7 @@ export const InstructionSourcesSchema = z.object({
     registrySha256: z.string().regex(/^[a-f0-9]{64}$/u),
     registryCheckedAt: z.string().datetime(),
   }),
-  products: z.array(InstructionSourceProductSchema).min(5).max(30),
+  products: z.array(InstructionSourceProductSchema).min(5).max(120),
 });
 
 export type InstructionSources = z.infer<typeof InstructionSourcesSchema>;
@@ -126,7 +126,7 @@ export const InstructionManifestSchema = z.object({
     documentDate: z.string().datetime().nullable(),
     snapshotFile: z.string().regex(/^snapshots\/[a-z0-9-]+\.json$/u),
     availableSections: z.array(z.enum(INSTRUCTION_SECTION_KEYS)).max(9),
-  })).min(5).max(30),
+  })).min(5).max(120),
 });
 
 export type InstructionManifest = z.infer<typeof InstructionManifestSchema>;

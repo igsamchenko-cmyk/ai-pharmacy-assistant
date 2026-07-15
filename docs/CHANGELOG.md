@@ -7,6 +7,9 @@
 
 ### Added
 
+- Expanded official instruction coverage from 10 to 50 exact registry products
+  across 50 INNs: 46 full and 4 explicitly partial snapshots, with 100%
+  registration provenance, unique document bindings and zero blockers.
 - Added the Drug Instructions MVP for 10 exact Ukrainian registry products,
   including structured indications, contraindications, adverse reactions,
   interactions, warnings, pregnancy/lactation, administration, overdose and

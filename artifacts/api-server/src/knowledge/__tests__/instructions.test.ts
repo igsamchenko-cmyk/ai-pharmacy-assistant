@@ -149,6 +149,10 @@ describe("official drug instruction parser", () => {
     expect(changed.source.documentHash).not.toBe(original.source.documentHash);
   });
 
+  it("rejects an unsupported document format without producing a snapshot", () => {
+    expect(() => parse(Buffer.from("<html>not an MHT document</html>", "utf8")))
+      .toThrowError("unsupported_mht_boundary");
+  });
   it("blocks an unapproved source with a sanitized error", () => {
     expect(isAllowedInstructionSource("https://example.com/instruction.mht")).toBe(false);
     expect(() => parse(syntheticMht(), {
@@ -162,8 +166,27 @@ describe("committed instruction catalog", () => {
   it("binds every snapshot to one exact product and registration", () => {
     const sources = loadInstructionSources();
     const manifest = loadInstructionManifest();
-    expect(sources.products).toHaveLength(10);
-    expect(manifest.products).toHaveLength(10);
+    expect(sources.products).toHaveLength(50);
+    expect(manifest.products).toHaveLength(50);
+    expect(new Set(sources.products.map((product) => product.registryProductId)).size).toBe(50);
+    expect(new Set(sources.products.map((product) => product.registrationNumber)).size).toBe(50);
+    expect(new Set(sources.products.map((product) => product.inn)).size).toBe(50);
+
+    const snapshots = sources.products.map((product) =>
+      getInstructionForProduct(product.registryProductId)
+    );
+    expect(snapshots.every((snapshot) => snapshot !== null)).toBe(true);
+    expect(snapshots.filter((snapshot) => snapshot?.status === "available")).toHaveLength(46);
+    expect(snapshots.filter((snapshot) => snapshot?.status === "partial")).toHaveLength(4);
+    expect(snapshots.every((snapshot) =>
+      snapshot !== null &&
+      snapshot.provenance.sourceAllowed &&
+      snapshot.provenance.registrationMatched &&
+      snapshot.provenance.contentLocationMatched &&
+      Object.values(snapshot.sections).filter(Boolean).length >= 8
+    )).toBe(true);
+    expect(new Set(snapshots.map((snapshot) => snapshot?.source.documentId)).size).toBe(50);
+    expect(new Set(snapshots.map((snapshot) => snapshot?.source.documentHash)).size).toBe(50);
 
     for (const product of sources.products) {
       expect(hasInstructionForProduct(
