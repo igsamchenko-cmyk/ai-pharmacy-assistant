@@ -7,6 +7,16 @@
 
 ### Added
 
+- Added the Drug Instructions MVP for 10 exact Ukrainian registry products,
+  including structured indications, contraindications, adverse reactions,
+  interactions, warnings, pregnancy/lactation, administration, overdose and
+  storage sections parsed from official registry documents.
+- Added a lazy authenticated instruction API and a mobile-first instruction
+  page with source attribution, document date, registration number, in-page
+  search and a link to the original official document.
+- Added reproducible document hashes, exact registration/content-location
+  binding, fail-closed partial/unavailable statuses and
+  `pnpm knowledge:instructions:report`; no production DB write is introduced.
 - Added a versioned National Medicines List pipeline from the official
   consolidated Resolution No. 333 revision dated 10 October 2025: 678 valid
   structured positions with 100% provenance and no parser loss.

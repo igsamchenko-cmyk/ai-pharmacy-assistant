@@ -7,6 +7,7 @@ import { normalize } from "../lib/text";
 import { TtlCache } from "../lib/cache";
 import { logger } from "../lib/logger";
 import { isDbRuntimeEnabled } from "../knowledge/runtime";
+import { hasInstructionForProduct } from "../knowledge/instructions/catalog";
 import { searchDrugs } from "./drugService";
 import {
   GROUPED_CATALOG_ROW_LIMIT,
@@ -453,6 +454,10 @@ export function assembleRegistryProducts(
             strengthMatch: row.national_list_strength_match ?? "unknown",
           }
         : null,
+      instructionAvailable: hasInstructionForProduct(
+        row.registry_id,
+        row.registration_number,
+      ),
     };
   });
 }

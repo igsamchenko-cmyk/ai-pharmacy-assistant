@@ -11,6 +11,7 @@ pnpm knowledge:backfill
 pnpm knowledge:runtime:verify
 pnpm knowledge:quality:report
 pnpm knowledge:search:report
+pnpm knowledge:instructions:report
 pnpm beta:scenarios
 pnpm beta:readiness
 pnpm run typecheck

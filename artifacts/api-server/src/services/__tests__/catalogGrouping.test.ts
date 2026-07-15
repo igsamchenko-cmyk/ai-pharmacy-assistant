@@ -44,6 +44,7 @@ function product(
     nationalListSource: null,
     nationalListCheckedAt: null,
     nationalListMatchDetails: null,
+    instructionAvailable: false,
     ...overrides,
   };
 }

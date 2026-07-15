@@ -43,4 +43,6 @@ export interface RegistryProductResult {
   /** @nullable */
   nationalListCheckedAt: string | null;
   nationalListMatchDetails: NationalListMatchDetails | null;
+  /** Whether an exact-registration official instruction snapshot is available */
+  instructionAvailable: boolean;
 }

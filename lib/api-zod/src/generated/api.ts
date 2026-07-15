@@ -554,7 +554,8 @@ export const SearchCatalogResponse = zod.object({
   "formMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
   "routeMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
   "strengthMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable'])
-}),zod.null()])
+}),zod.null()]),
+  "instructionAvailable": zod.boolean().describe('Whether an exact-registration official instruction snapshot is available')
 })),
   "total": zod.number().min(searchCatalogResponseRegistryProductsTotalMin),
   "page": zod.number().min(1),
@@ -674,7 +675,8 @@ export const SearchCatalogResponse = zod.object({
   "formMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
   "routeMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
   "strengthMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable'])
-}),zod.null()])
+}),zod.null()]),
+  "instructionAvailable": zod.boolean().describe('Whether an exact-registration official instruction snapshot is available')
 })).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsMax),
   "total": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalMin),
   "totalRegistryPositions": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalRegistryPositionsMin),
@@ -711,6 +713,122 @@ export const SearchCatalogResponse = zod.object({
   "bounded": zod.boolean()
 }),zod.null()]),
   "warnings": zod.array(zod.string())
+})
+
+
+/**
+ * Lazily returns a bounded structured snapshot parsed from the official Ukrainian registry document for this exact registry product. Missing sections remain null. The response contains no generated clinical text, secrets, raw environment values or server filesystem paths.
+ * @summary Get a structured official instruction for one registry product
+ */
+export const getDrugInstructionPathProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+
+
+export const GetDrugInstructionParams = zod.object({
+  "productId": zod.coerce.string().regex(getDrugInstructionPathProductIdRegExp)
+})
+
+export const getDrugInstructionResponseRegistryProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getDrugInstructionResponseRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getDrugInstructionResponseTradeNameMax = 300;
+
+export const getDrugInstructionResponseInnMax = 300;
+
+export const getDrugInstructionResponseActiveIngredientMax = 2000;
+
+export const getDrugInstructionResponseDosageFormMax = 2000;
+
+export const getDrugInstructionResponseStrengthMax = 120;
+
+export const getDrugInstructionResponseManufacturerMax = 1000;
+
+export const getDrugInstructionResponseManufacturerCountryMax = 120;
+
+export const getDrugInstructionResponseRegistrationStartDateMax = 40;
+
+export const getDrugInstructionResponseRegistrationEndDateMax = 40;
+
+export const getDrugInstructionResponseSectionsIndicationsMax = 60000;
+
+export const getDrugInstructionResponseSectionsContraindicationsMax = 60000;
+
+export const getDrugInstructionResponseSectionsAdverseReactionsMax = 60000;
+
+export const getDrugInstructionResponseSectionsInteractionsMax = 60000;
+
+export const getDrugInstructionResponseSectionsSpecialWarningsMax = 60000;
+
+export const getDrugInstructionResponseSectionsPregnancyAndLactationMax = 60000;
+
+export const getDrugInstructionResponseSectionsAdministrationMax = 60000;
+
+export const getDrugInstructionResponseSectionsOverdoseMax = 60000;
+
+export const getDrugInstructionResponseSectionsStorageMax = 60000;
+
+export const getDrugInstructionResponseSourceUrlMax = 1000;
+
+export const getDrugInstructionResponseSourceDocumentIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getDrugInstructionResponseSourceDocumentHashRegExp = new RegExp('^[a-f0-9]{64}$');
+export const getDrugInstructionResponseSourceContentLengthMax = 3000000;
+
+
+
+export const getDrugInstructionResponseProvenanceAvailableSectionCountMin = 0;
+export const getDrugInstructionResponseProvenanceAvailableSectionCountMax = 9;
+
+export const getDrugInstructionResponseProvenanceCoveragePctMin = 0;
+export const getDrugInstructionResponseProvenanceCoveragePctMax = 100;
+
+export const getDrugInstructionResponseWarningsItemRegExp = new RegExp('^[a-z0-9:_-]{1,80}$');
+export const getDrugInstructionResponseWarningsMax = 20;
+
+
+
+export const GetDrugInstructionResponse = zod.object({
+  "version": zod.enum(['1.0']),
+  "registryProductId": zod.string().regex(getDrugInstructionResponseRegistryProductIdRegExp),
+  "registrationNumber": zod.string().regex(getDrugInstructionResponseRegistrationNumberRegExp),
+  "tradeName": zod.string().min(1).max(getDrugInstructionResponseTradeNameMax),
+  "inn": zod.string().min(1).max(getDrugInstructionResponseInnMax),
+  "activeIngredient": zod.string().min(1).max(getDrugInstructionResponseActiveIngredientMax),
+  "dosageForm": zod.string().min(1).max(getDrugInstructionResponseDosageFormMax),
+  "strength": zod.string().min(1).max(getDrugInstructionResponseStrengthMax),
+  "manufacturer": zod.string().min(1).max(getDrugInstructionResponseManufacturerMax),
+  "manufacturerCountry": zod.string().min(1).max(getDrugInstructionResponseManufacturerCountryMax),
+  "registrationStartDate": zod.string().min(1).max(getDrugInstructionResponseRegistrationStartDateMax),
+  "registrationEndDate": zod.string().min(1).max(getDrugInstructionResponseRegistrationEndDateMax),
+  "status": zod.enum(['available', 'partial', 'unavailable', 'needs_review']),
+  "sections": zod.object({
+  "indications": zod.string().max(getDrugInstructionResponseSectionsIndicationsMax).nullable(),
+  "contraindications": zod.string().max(getDrugInstructionResponseSectionsContraindicationsMax).nullable(),
+  "adverseReactions": zod.string().max(getDrugInstructionResponseSectionsAdverseReactionsMax).nullable(),
+  "interactions": zod.string().max(getDrugInstructionResponseSectionsInteractionsMax).nullable(),
+  "specialWarnings": zod.string().max(getDrugInstructionResponseSectionsSpecialWarningsMax).nullable(),
+  "pregnancyAndLactation": zod.string().max(getDrugInstructionResponseSectionsPregnancyAndLactationMax).nullable(),
+  "administration": zod.string().max(getDrugInstructionResponseSectionsAdministrationMax).nullable(),
+  "overdose": zod.string().max(getDrugInstructionResponseSectionsOverdoseMax).nullable(),
+  "storage": zod.string().max(getDrugInstructionResponseSectionsStorageMax).nullable()
+}),
+  "source": zod.object({
+  "url": zod.string().url().max(getDrugInstructionResponseSourceUrlMax),
+  "documentId": zod.string().regex(getDrugInstructionResponseSourceDocumentIdRegExp),
+  "documentDate": zod.coerce.date().nullable(),
+  "checkedAt": zod.coerce.date(),
+  "documentHash": zod.string().regex(getDrugInstructionResponseSourceDocumentHashRegExp),
+  "contentLength": zod.number().min(1).max(getDrugInstructionResponseSourceContentLengthMax),
+  "parserVersion": zod.enum(['ua-drlz-mht-v1']),
+  "datasetTitle": zod.string().min(1),
+  "datasetUrl": zod.string().url(),
+  "license": zod.string().min(1)
+}),
+  "provenance": zod.object({
+  "sourceAllowed": zod.boolean(),
+  "registrationMatched": zod.boolean(),
+  "contentLocationMatched": zod.boolean(),
+  "availableSectionCount": zod.number().min(getDrugInstructionResponseProvenanceAvailableSectionCountMin).max(getDrugInstructionResponseProvenanceAvailableSectionCountMax),
+  "coveragePct": zod.number().min(getDrugInstructionResponseProvenanceCoveragePctMin).max(getDrugInstructionResponseProvenanceCoveragePctMax)
+}),
+  "warnings": zod.array(zod.string().regex(getDrugInstructionResponseWarningsItemRegExp)).max(getDrugInstructionResponseWarningsMax)
 })
 
 

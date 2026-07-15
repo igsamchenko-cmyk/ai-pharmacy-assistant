@@ -48,7 +48,8 @@
     "knowledge:national-list:dry-run": "pnpm --filter @workspace/api-server run knowledge:national-list",
     "knowledge:national-list:match-report": "pnpm --filter @workspace/api-server run knowledge:national-list -- --match-report",
     "knowledge:national-list:import": "pnpm --filter @workspace/api-server run knowledge:national-list --",
-    "knowledge:national-list:db-smoke": "pnpm --filter @workspace/api-server run knowledge:national-list:db-smoke"
+    "knowledge:national-list:db-smoke": "pnpm --filter @workspace/api-server run knowledge:national-list:db-smoke",
+    "knowledge:instructions:report": "pnpm --filter @workspace/api-server run knowledge:instructions:report"
   },
   "private": true,
   "devDependencies": {

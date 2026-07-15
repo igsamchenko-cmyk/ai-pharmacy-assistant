@@ -571,6 +571,181 @@ export interface RegistryProductResult {
   /** @nullable */
   nationalListCheckedAt: string | null;
   nationalListMatchDetails: NationalListMatchDetails | null;
+  /** Whether an exact-registration official instruction snapshot is available */
+  instructionAvailable: boolean;
+}
+
+export interface DrugInstructionSections {
+  /**
+     * @maxLength 60000
+     * @nullable
+     */
+  indications: string | null;
+  /**
+     * @maxLength 60000
+     * @nullable
+     */
+  contraindications: string | null;
+  /**
+     * @maxLength 60000
+     * @nullable
+     */
+  adverseReactions: string | null;
+  /**
+     * @maxLength 60000
+     * @nullable
+     */
+  interactions: string | null;
+  /**
+     * @maxLength 60000
+     * @nullable
+     */
+  specialWarnings: string | null;
+  /**
+     * @maxLength 60000
+     * @nullable
+     */
+  pregnancyAndLactation: string | null;
+  /**
+     * @maxLength 60000
+     * @nullable
+     */
+  administration: string | null;
+  /**
+     * @maxLength 60000
+     * @nullable
+     */
+  overdose: string | null;
+  /**
+     * @maxLength 60000
+     * @nullable
+     */
+  storage: string | null;
+}
+
+export type DrugInstructionSourceParserVersion = typeof DrugInstructionSourceParserVersion[keyof typeof DrugInstructionSourceParserVersion];
+
+
+export const DrugInstructionSourceParserVersion = {
+  'ua-drlz-mht-v1': 'ua-drlz-mht-v1',
+} as const;
+
+export interface DrugInstructionSource {
+  /** @maxLength 1000 */
+  url: string;
+  /** @pattern ^[A-F0-9]{32}$ */
+  documentId: string;
+  /** @nullable */
+  documentDate: string | null;
+  checkedAt: string;
+  /** @pattern ^[a-f0-9]{64}$ */
+  documentHash: string;
+  /**
+     * @minimum 1
+     * @maximum 3000000
+     */
+  contentLength: number;
+  parserVersion: DrugInstructionSourceParserVersion;
+  /** @minLength 1 */
+  datasetTitle: string;
+  datasetUrl: string;
+  /** @minLength 1 */
+  license: string;
+}
+
+export interface DrugInstructionProvenance {
+  sourceAllowed: boolean;
+  registrationMatched: boolean;
+  contentLocationMatched: boolean;
+  /**
+     * @minimum 0
+     * @maximum 9
+     */
+  availableSectionCount: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  coveragePct: number;
+}
+
+export type DrugInstructionVersion = typeof DrugInstructionVersion[keyof typeof DrugInstructionVersion];
+
+
+export const DrugInstructionVersion = {
+  '10': '1.0',
+} as const;
+
+export type DrugInstructionStatus = typeof DrugInstructionStatus[keyof typeof DrugInstructionStatus];
+
+
+export const DrugInstructionStatus = {
+  available: 'available',
+  partial: 'partial',
+  unavailable: 'unavailable',
+  needs_review: 'needs_review',
+} as const;
+
+export interface DrugInstruction {
+  version: DrugInstructionVersion;
+  /** @pattern ^[A-F0-9]{32}$ */
+  registryProductId: string;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  tradeName: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  inn: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  activeIngredient: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  dosageForm: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  strength: string;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  manufacturer: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  manufacturerCountry: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  registrationStartDate: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  registrationEndDate: string;
+  status: DrugInstructionStatus;
+  sections: DrugInstructionSections;
+  source: DrugInstructionSource;
+  provenance: DrugInstructionProvenance;
+  /**
+     * @maxItems 20
+     * @items.pattern ^[a-z0-9:_-]{1,80}$
+     */
+  warnings: string[];
 }
 
 export interface CatalogGroupingSummary {
