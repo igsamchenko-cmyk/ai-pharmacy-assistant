@@ -650,19 +650,20 @@ describe("catalog search service", () => {
     expect(groupedSql).toContain("query_alias.normalized LIKE $4");
     expect(groupedSql).not.toContain("query_alias.normalized = 2");
     expect(groupedSql).toContain(
-      "ON exact_approved_alias.normalized = catalog_keys.trade_key",
+      "ON exact_approved_alias.normalized = p.normalized_trade_name",
     );
     expect(groupedSql).toContain(
-      "ON prefix_approved_alias.normalized = catalog_keys.trade_key",
+      "ON prefix_approved_alias.normalized = p.normalized_trade_name",
     );
     expect(groupedSql).not.toContain("AND product_alias.normalized IN");
-    expect(groupedSql).toContain("catalog_keys.inn_key");
-    expect(groupedSql).toContain("TRANSLATE(");
+    expect(groupedSql).not.toContain("catalog_keys.");
+    expect(groupedSql).not.toContain("TRANSLATE(");
     expect(groupedSql).not.toContain("REGEXP_REPLACE(");
-    expect(groupedSql).toContain("catalog_keys.inn_key = ANY($7::text[])");
+    expect(groupedSql).toContain("p.normalized_trade_name = ANY($7::text[])");
+    expect(groupedSql).toContain("LOWER(p.inn) = ANY($8::text[])");
     expect(groupedSql).toContain("p.normalized_trade_name = $2");
     expect(groupedSql).toContain("p.normalized_trade_name LIKE $4");
-    expect(groupedSql).toContain("TRANSLATE");
+    expect(groupedSql).toContain("LOWER(p.trade_name) LIKE ANY($9::text[])");
     expect(groupedSql).toContain("normalized_name");
     expect(groupedSql).toContain("LEFT JOIN LATERAL");
     expect(groupedSql).toContain("national_list_match_results");
@@ -683,10 +684,10 @@ describe("catalog search service", () => {
     expect(query).toHaveBeenCalledTimes(7);
     const tradeFilteredCall = query.mock.calls.find(
       ([sql, values]) =>
-        sql.includes("catalog_keys.trade_key LIKE") &&
+        sql.includes("p.normalized_trade_name LIKE") &&
         values?.filter((value) => value === "%nurofen%").length === 3,
     );
-    expect(tradeFilteredCall?.[0]).toContain("catalog_keys.trade_key LIKE");
+    expect(tradeFilteredCall?.[0]).toContain("p.normalized_trade_name LIKE");
 
     await dbStore.searchProductsForGrouping!(
       input({ q: "Ibuprofen", view: "grouped", nationalListStatus: "exact" }),
@@ -715,6 +716,8 @@ describe("catalog search service", () => {
         values?.includes("%amlodipine%"),
     );
     expect(preLimitFilterCall?.[0]).toContain("catalog_keys.active_key");
+    expect(preLimitFilterCall?.[0]).toContain("TRANSLATE(");
+    expect(preLimitFilterCall?.[0]).not.toContain("REGEXP_REPLACE(");
     expect(preLimitFilterCall?.[0]).toContain("~*");
     expect(preLimitFilterCall?.[0]).toContain(
       "/[[:space:]]*([^[:space:]0-9]|$)",

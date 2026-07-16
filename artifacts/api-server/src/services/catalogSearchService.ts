@@ -592,25 +592,58 @@ function buildProductFilter(input: CatalogSearchInput) {
   };
 
   const query = input.q.trim();
-  let joinSql = CATALOG_KEYS_JOIN_SQL;
+  let joinSql = "";
+  let hasCatalogKeysJoin = false;
   let rankSql = CATALOG_BROWSE_RANK_SQL;
   if (query) {
     const lower = query.toLocaleLowerCase("uk-UA");
     const normalized = normalize(query) || lower;
-    const lowerExact = add(lower);
-    const normalizedExact = add(normalized);
-    const lowerPrefix = add(`${escapeLike(lower)}%`);
-    const normalizedPrefix = add(`${escapeLike(normalized)}%`);
-    const contains = add(`%${escapeLike(lower)}%`);
-    const normalizedContains = add(`%${escapeLike(normalized)}%`);
-    const aliasKeys = catalogAliasQueryKeys(query);
-    const aliasKeysRef = add(aliasKeys.length ? aliasKeys : [normalized]);
     const combinationTerms = catalogCompositionSearchTerms(query);
-    let exactApproved = "FALSE";
-    let prefixApproved = "FALSE";
-    if (!combinationTerms.length) {
-      exactApproved = "exact_approved_alias.normalized IS NOT NULL";
-      prefixApproved = "prefix_approved_alias.normalized IS NOT NULL";
+
+    if (combinationTerms.length) {
+      joinSql += CATALOG_KEYS_JOIN_SQL;
+      hasCatalogKeysJoin = true;
+      const combinationMatch = `(${CATALOG_COMPOSITION_SOURCE_SQL} ~* ${CATALOG_COMBINATION_PATTERN_SQL} AND (${combinationTerms
+        .map((term) => {
+          const ref = add(`%${escapeLike(term)}%`);
+          return `(
+            catalog_keys.inn_key LIKE ${ref} ESCAPE '\\'
+            OR catalog_keys.active_key LIKE ${ref} ESCAPE '\\'
+          )`;
+        })
+        .join(" AND ")}))`;
+      clauses.push(combinationMatch);
+      rankSql = `CASE WHEN ${combinationMatch} THEN 1 ELSE 2 END`;
+    } else {
+      const lowerExact = add(lower);
+      const normalizedExact = add(normalized);
+      const lowerPrefix = add(`${escapeLike(lower)}%`);
+      const normalizedPrefix = add(`${escapeLike(normalized)}%`);
+      const contains = add(`%${escapeLike(lower)}%`);
+      const normalizedContains = add(`%${escapeLike(normalized)}%`);
+      const aliasKeys = catalogAliasQueryKeys(query);
+      const aliasKeysRef = add(aliasKeys.length ? aliasKeys : [normalized]);
+      const resolved = resolveSourceBackedDictionaryQuery(query);
+      const aliasLowerTerms = [
+        ...new Set(
+          [
+            query,
+            resolved?.name,
+            resolved?.ingredient.inn,
+            resolved?.ingredient.latin,
+            resolved?.ingredient.english,
+          ]
+            .map((value) => value?.trim().toLocaleLowerCase("uk-UA") ?? "")
+            .filter(Boolean),
+        ),
+      ];
+      const aliasLowerRef = add(aliasLowerTerms);
+      const aliasLowerPrefixesRef = add(
+        aliasLowerTerms.map((value) => `${escapeLike(value)}%`),
+      );
+      const exactApproved = "exact_approved_alias.normalized IS NOT NULL";
+      const prefixApproved = "prefix_approved_alias.normalized IS NOT NULL";
+
       joinSql += `
         LEFT JOIN (
           SELECT DISTINCT product_alias.normalized
@@ -621,7 +654,7 @@ function buildProductFilter(input: CatalogSearchInput) {
           WHERE query_alias.review_status = 'approved'
             AND query_alias.normalized = ANY(${aliasKeysRef}::text[])
         ) exact_approved_alias
-          ON exact_approved_alias.normalized = catalog_keys.trade_key
+          ON exact_approved_alias.normalized = p.normalized_trade_name
         LEFT JOIN (
           SELECT DISTINCT product_alias.normalized
           FROM knowledge_ingredient_names query_alias
@@ -631,53 +664,36 @@ function buildProductFilter(input: CatalogSearchInput) {
           WHERE query_alias.review_status = 'approved'
             AND query_alias.normalized LIKE ${normalizedPrefix} ESCAPE '\\'
         ) prefix_approved_alias
-          ON prefix_approved_alias.normalized = catalog_keys.trade_key`;
-    }
-    const combinationMatch = combinationTerms.length
-      ? `(${CATALOG_COMPOSITION_SOURCE_SQL} ~* ${CATALOG_COMBINATION_PATTERN_SQL} AND (${combinationTerms
-          .map((term) => {
-            const ref = add(`%${escapeLike(term)}%`);
-            return `(
-            catalog_keys.inn_key LIKE ${ref} ESCAPE '\\'
-            OR catalog_keys.active_key LIKE ${ref} ESCAPE '\\'
-          )`;
-          })
-          .join(" AND ")}))`
-      : "FALSE";
+          ON prefix_approved_alias.normalized = p.normalized_trade_name`;
 
-    const directContains = `(
-      catalog_keys.trade_key LIKE ${normalizedContains} ESCAPE '\\'
-      OR catalog_keys.inn_key LIKE ${normalizedContains} ESCAPE '\\'
-      OR catalog_keys.active_key LIKE ${normalizedContains} ESCAPE '\\'
-      OR LOWER(p.applicant_name) LIKE ${contains} ESCAPE '\\'
-      OR LOWER(p.registration_number) LIKE ${contains} ESCAPE '\\'
-      OR LOWER(p.form) LIKE ${contains} ESCAPE '\\'
-      OR LOWER(COALESCE(p.atc_code, '')) LIKE ${contains} ESCAPE '\\'
-      OR EXISTS (
-        SELECT 1 FROM knowledge_registry_manufacturers search_manufacturer
-        WHERE search_manufacturer.product_registry_id = p.registry_id
-          AND search_manufacturer.normalized_name
-            LIKE ${normalizedContains} ESCAPE '\\'
-      )
-    )`;
+      const directContains = `(
+        LOWER(p.trade_name) LIKE ${contains} ESCAPE '\\'
+        OR LOWER(p.inn) LIKE ${contains} ESCAPE '\\'
+        OR LOWER(p.active_ingredient) LIKE ${contains} ESCAPE '\\'
+        OR LOWER(p.applicant_name) LIKE ${contains} ESCAPE '\\'
+        OR LOWER(p.registration_number) LIKE ${contains} ESCAPE '\\'
+        OR LOWER(p.form) LIKE ${contains} ESCAPE '\\'
+        OR LOWER(COALESCE(p.atc_code, '')) LIKE ${contains} ESCAPE '\\'
+        OR EXISTS (
+          SELECT 1 FROM knowledge_registry_manufacturers search_manufacturer
+          WHERE search_manufacturer.product_registry_id = p.registry_id
+            AND search_manufacturer.normalized_name
+              LIKE ${normalizedContains} ESCAPE '\\'
+        )
+      )`;
 
-    if (combinationTerms.length) {
-      clauses.push(combinationMatch);
-      rankSql = `CASE WHEN ${combinationMatch} THEN 1 ELSE 2 END`;
-    } else {
       clauses.push(`(
         p.normalized_trade_name = ${normalizedExact}
-        OR catalog_keys.trade_key = ${normalizedExact}
-        OR catalog_keys.inn_key = ${normalizedExact}
-        OR catalog_keys.active_key = ${normalizedExact}
-        OR catalog_keys.trade_key = ANY(${aliasKeysRef}::text[])
-        OR catalog_keys.inn_key = ANY(${aliasKeysRef}::text[])
-        OR catalog_keys.active_key = ANY(${aliasKeysRef}::text[])
+        OR p.normalized_trade_name = ANY(${aliasKeysRef}::text[])
+        OR LOWER(p.trade_name) = ANY(${aliasLowerRef}::text[])
+        OR LOWER(p.inn) = ANY(${aliasLowerRef}::text[])
+        OR LOWER(p.active_ingredient) = ANY(${aliasLowerRef}::text[])
         OR LOWER(p.registration_number) = ${lowerExact}
         OR p.normalized_trade_name LIKE ${normalizedPrefix} ESCAPE '\\'
-        OR catalog_keys.trade_key LIKE ${normalizedPrefix} ESCAPE '\\'
-        OR catalog_keys.inn_key LIKE ${normalizedPrefix} ESCAPE '\\'
-        OR catalog_keys.active_key LIKE ${normalizedPrefix} ESCAPE '\\'
+        OR p.normalized_trade_name LIKE ANY(${aliasLowerPrefixesRef}::text[])
+        OR LOWER(p.trade_name) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+        OR LOWER(p.inn) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+        OR LOWER(p.active_ingredient) LIKE ANY(${aliasLowerPrefixesRef}::text[])
         OR LOWER(p.registration_number) LIKE ${lowerPrefix} ESCAPE '\\'
         OR ${exactApproved}
         OR ${prefixApproved}
@@ -686,18 +702,16 @@ function buildProductFilter(input: CatalogSearchInput) {
       rankSql = `CASE
         WHEN LOWER(p.registration_number) = ${lowerExact} THEN 1
         WHEN p.normalized_trade_name = ${normalizedExact}
-          OR catalog_keys.trade_key = ${normalizedExact} THEN 2
-        WHEN catalog_keys.inn_key = ${normalizedExact}
-          OR catalog_keys.active_key = ${normalizedExact} THEN 3
+          OR p.normalized_trade_name = ANY(${aliasKeysRef}::text[])
+          OR LOWER(p.trade_name) = ANY(${aliasLowerRef}::text[]) THEN 2
+        WHEN LOWER(p.inn) = ANY(${aliasLowerRef}::text[])
+          OR LOWER(p.active_ingredient) = ANY(${aliasLowerRef}::text[]) THEN 3
         WHEN ${exactApproved} THEN 4
-        WHEN catalog_keys.trade_key = ANY(${aliasKeysRef}::text[])
-          OR catalog_keys.inn_key = ANY(${aliasKeysRef}::text[])
-          OR catalog_keys.active_key = ANY(${aliasKeysRef}::text[])
-          THEN 4
         WHEN p.normalized_trade_name LIKE ${normalizedPrefix} ESCAPE '\\'
-          OR catalog_keys.trade_key LIKE ${normalizedPrefix} ESCAPE '\\' THEN 5
-        WHEN catalog_keys.inn_key LIKE ${normalizedPrefix} ESCAPE '\\'
-          OR catalog_keys.active_key LIKE ${normalizedPrefix} ESCAPE '\\'
+          OR p.normalized_trade_name LIKE ANY(${aliasLowerPrefixesRef}::text[])
+          OR LOWER(p.trade_name) LIKE ANY(${aliasLowerPrefixesRef}::text[]) THEN 5
+        WHEN LOWER(p.inn) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+          OR LOWER(p.active_ingredient) LIKE ANY(${aliasLowerPrefixesRef}::text[])
           OR LOWER(p.registration_number) LIKE ${lowerPrefix} ESCAPE '\\' THEN 6
         WHEN ${prefixApproved} THEN 7
         ELSE 8
@@ -725,7 +739,7 @@ function buildProductFilter(input: CatalogSearchInput) {
   const tradeName = input.tradeName?.trim();
   if (tradeName) {
     const ref = add(`%${escapeLike(normalize(tradeName))}%`);
-    clauses.push(`catalog_keys.trade_key LIKE ${ref} ESCAPE '\\'`);
+    clauses.push(`p.normalized_trade_name LIKE ${ref} ESCAPE '\\'`);
   }
 
   const strength = input.strength?.trim();
@@ -762,6 +776,10 @@ function buildProductFilter(input: CatalogSearchInput) {
   }
 
   if (input.mappingStatus !== "all") {
+    if (!hasCatalogKeysJoin) {
+      joinSql += CATALOG_KEYS_JOIN_SQL;
+      hasCatalogKeysJoin = true;
+    }
     const approvedMappingCountSql = `(
       SELECT COUNT(DISTINCT mapping_name.ingredient_inn_key)::int
       FROM knowledge_ingredient_names mapping_name
@@ -789,12 +807,12 @@ function buildProductFilter(input: CatalogSearchInput) {
 
   return {
     values,
-    joinSql: `${joinSql}\n${NATIONAL_LIST_MATCH_JOIN_SQL}`,
+    joinSql: `${joinSql}
+${NATIONAL_LIST_MATCH_JOIN_SQL}`,
     whereSql: clauses.length ? `WHERE ${clauses.join("\n AND ")}` : "",
     rankSql,
   };
 }
-
 export async function createPostgresRegistryCatalogStore(
   options: RegistryCatalogStoreOptions = {},
 ): Promise<RegistryCatalogStore> {
