@@ -649,7 +649,13 @@ describe("catalog search service", () => {
     expect(groupedSql).toContain("query_alias.normalized = ANY($7::text[])");
     expect(groupedSql).toContain("query_alias.normalized LIKE $4");
     expect(groupedSql).not.toContain("query_alias.normalized = 2");
-    expect(groupedSql).toContain("product_alias.normalized IN");
+    expect(groupedSql).toContain(
+      "ON exact_approved_alias.normalized = catalog_keys.trade_key",
+    );
+    expect(groupedSql).toContain(
+      "ON prefix_approved_alias.normalized = catalog_keys.trade_key",
+    );
+    expect(groupedSql).not.toContain("AND product_alias.normalized IN");
     expect(groupedSql).toContain("catalog_keys.inn_key");
     expect(groupedSql).toContain("catalog_keys.inn_key = ANY($7::text[])");
     expect(groupedSql).toContain("p.normalized_trade_name = $2");

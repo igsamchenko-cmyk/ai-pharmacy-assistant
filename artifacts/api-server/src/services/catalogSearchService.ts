@@ -597,7 +597,7 @@ function buildProductFilter(input: CatalogSearchInput) {
   };
 
   const query = input.q.trim();
-  const joinSql = CATALOG_KEYS_JOIN_SQL;
+  let joinSql = CATALOG_KEYS_JOIN_SQL;
   let rankSql = CATALOG_BROWSE_RANK_SQL;
   if (query) {
     const lower = query.toLocaleLowerCase("uk-UA");
@@ -610,37 +610,34 @@ function buildProductFilter(input: CatalogSearchInput) {
     const normalizedContains = add(`%${escapeLike(normalized)}%`);
     const aliasKeys = catalogAliasQueryKeys(query);
     const aliasKeysRef = add(aliasKeys.length ? aliasKeys : [normalized]);
-    const exactApproved = `EXISTS (
-      SELECT 1
-      FROM knowledge_ingredient_names query_alias
-      JOIN knowledge_ingredient_names product_alias
-        ON product_alias.ingredient_inn_key = query_alias.ingredient_inn_key
-       AND product_alias.review_status = 'approved'
-      WHERE query_alias.review_status = 'approved'
-        AND query_alias.normalized = ANY(${aliasKeysRef}::text[])
-        AND product_alias.normalized IN (
-          catalog_keys.trade_key,
-          catalog_keys.inn_key,
-          catalog_keys.active_key,
-          p.normalized_trade_name
-        )
-    )`;
-    const prefixApproved = `EXISTS (
-      SELECT 1
-      FROM knowledge_ingredient_names query_alias
-      JOIN knowledge_ingredient_names product_alias
-        ON product_alias.ingredient_inn_key = query_alias.ingredient_inn_key
-       AND product_alias.review_status = 'approved'
-      WHERE query_alias.review_status = 'approved'
-        AND query_alias.normalized LIKE ${normalizedPrefix} ESCAPE '\\'
-        AND product_alias.normalized IN (
-          catalog_keys.trade_key,
-          catalog_keys.inn_key,
-          catalog_keys.active_key,
-          p.normalized_trade_name
-        )
-    )`;
     const combinationTerms = catalogCompositionSearchTerms(query);
+    let exactApproved = "FALSE";
+    let prefixApproved = "FALSE";
+    if (!combinationTerms.length) {
+      exactApproved = "exact_approved_alias.normalized IS NOT NULL";
+      prefixApproved = "prefix_approved_alias.normalized IS NOT NULL";
+      joinSql += `
+        LEFT JOIN (
+          SELECT DISTINCT product_alias.normalized
+          FROM knowledge_ingredient_names query_alias
+          JOIN knowledge_ingredient_names product_alias
+            ON product_alias.ingredient_inn_key = query_alias.ingredient_inn_key
+           AND product_alias.review_status = 'approved'
+          WHERE query_alias.review_status = 'approved'
+            AND query_alias.normalized = ANY(${aliasKeysRef}::text[])
+        ) exact_approved_alias
+          ON exact_approved_alias.normalized = catalog_keys.trade_key
+        LEFT JOIN (
+          SELECT DISTINCT product_alias.normalized
+          FROM knowledge_ingredient_names query_alias
+          JOIN knowledge_ingredient_names product_alias
+            ON product_alias.ingredient_inn_key = query_alias.ingredient_inn_key
+           AND product_alias.review_status = 'approved'
+          WHERE query_alias.review_status = 'approved'
+            AND query_alias.normalized LIKE ${normalizedPrefix} ESCAPE '\\'
+        ) prefix_approved_alias
+          ON prefix_approved_alias.normalized = catalog_keys.trade_key`;
+    }
     const combinationMatch = combinationTerms.length
       ? `(${CATALOG_COMPOSITION_SOURCE_SQL} ~* ${CATALOG_COMBINATION_PATTERN_SQL} AND (${combinationTerms
           .map((term) => {
