@@ -6,6 +6,7 @@ import {
 import { normalize } from "../lib/text";
 import { TtlCache } from "../lib/cache";
 import { logger } from "../lib/logger";
+import { resolveSourceBackedDictionaryQuery } from "../knowledge/dictionary";
 import { isDbRuntimeEnabled } from "../knowledge/runtime";
 import { hasInstructionForProduct } from "../knowledge/instructions/catalog";
 import { searchDrugs } from "./drugService";
@@ -30,10 +31,7 @@ interface ProductSearchResult {
 }
 
 export interface CatalogQueryExecutor {
-  query(
-    text: string,
-    values?: unknown[],
-  ): PromiseLike<{ rows: unknown[] }>;
+  query(text: string, values?: unknown[]): PromiseLike<{ rows: unknown[] }>;
 }
 
 export interface CatalogQueryMetric {
@@ -75,7 +73,13 @@ interface ProductRow {
   registration_end_date: string;
   source_key: string;
   registration_status: RegistrationStatus;
-  national_list_status?: "exact" | "ingredient_only" | "uncertain" | "not_listed" | "not_applicable" | null;
+  national_list_status?:
+    | "exact"
+    | "ingredient_only"
+    | "uncertain"
+    | "not_listed"
+    | "not_applicable"
+    | null;
   national_list_reason?: string | null;
   national_list_checked_at?: string | null;
   national_list_release_id?: string | null;
@@ -91,10 +95,30 @@ interface ProductRow {
   national_list_dosage_forms_json?: string | null;
   national_list_routes_json?: string | null;
   national_list_strengths_json?: string | null;
-  national_list_ingredient_match?: "match" | "mismatch" | "unknown" | "not_applicable" | null;
-  national_list_form_match?: "match" | "mismatch" | "unknown" | "not_applicable" | null;
-  national_list_route_match?: "match" | "mismatch" | "unknown" | "not_applicable" | null;
-  national_list_strength_match?: "match" | "mismatch" | "unknown" | "not_applicable" | null;
+  national_list_ingredient_match?:
+    | "match"
+    | "mismatch"
+    | "unknown"
+    | "not_applicable"
+    | null;
+  national_list_form_match?:
+    | "match"
+    | "mismatch"
+    | "unknown"
+    | "not_applicable"
+    | null;
+  national_list_route_match?:
+    | "match"
+    | "mismatch"
+    | "unknown"
+    | "not_applicable"
+    | null;
+  national_list_strength_match?:
+    | "match"
+    | "mismatch"
+    | "unknown"
+    | "not_applicable"
+    | null;
 }
 
 interface ManufacturerRow {
@@ -128,7 +152,7 @@ interface CatalogSnapshot {
   version: string;
 }
 
-const REGISTRY_SEARCH_CACHE_VERSION = "registry-search-v3";
+const REGISTRY_SEARCH_CACHE_VERSION = "registry-search-v4";
 const REGISTRY_CACHE_TTL_MS = 120_000;
 const REGISTRY_NEGATIVE_CACHE_TTL_MS = 30_000;
 const NATIONAL_LIST_MATCH_JOIN_SQL = `
@@ -199,9 +223,12 @@ export function registrySearchCacheKey(
     scope,
     input.view ?? "auto",
     cacheValue(input.q),
+    cacheValue(input.tradeName),
     cacheValue(input.manufacturer),
     cacheValue(input.form),
     cacheValue(input.strength),
+    input.compositionType,
+    input.mappingStatus,
     input.nationalListStatus ?? "all",
     input.registrationStatus ?? "",
   ]);
@@ -240,6 +267,61 @@ function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, "\\$&");
 }
 
+function catalogSearchKeySql(valueSql: string): string {
+  return `REGEXP_REPLACE(
+    TRANSLATE(
+      LOWER(COALESCE(${valueSql}, '')),
+      $$®™’ʼ‘´ʹ′' -_‐‑‒–—―./\\()+$$,
+      ''
+    ),
+    $$[[:space:]]+$$,
+    '',
+    'g'
+  )`;
+}
+
+const CATALOG_KEYS_JOIN_SQL = `
+  CROSS JOIN LATERAL (
+    SELECT
+      ${catalogSearchKeySql("p.trade_name")} AS trade_key,
+      ${catalogSearchKeySql("p.inn")} AS inn_key,
+      ${catalogSearchKeySql("p.active_ingredient")} AS active_key
+  ) catalog_keys`;
+
+const CATALOG_COMPOSITION_SOURCE_SQL =
+  "COALESCE(NULLIF(TRIM(p.inn), ''), NULLIF(TRIM(p.active_ingredient), ''))";
+const CATALOG_COMBINATION_PATTERN_SQL =
+  "$$(\\+|;|(^|[^0-9]),([^0-9]|$)|/[[:space:]]*([^[:space:]0-9]|$)|(^|[[:space:]])(and|with|та|і)([[:space:]]|$))$$";
+
+export function catalogAliasQueryKeys(query: string): string[] {
+  const resolved = resolveSourceBackedDictionaryQuery(query);
+  return [
+    ...new Set(
+      [
+        normalize(query),
+        resolved?.name,
+        resolved?.ingredient.inn,
+        resolved?.ingredient.latin,
+        resolved?.ingredient.english,
+      ]
+        .map((value) => normalize(value ?? ""))
+        .filter(Boolean),
+    ),
+  ];
+}
+
+export function catalogCompositionSearchTerms(query: string): string[] {
+  if (/^UA\//iu.test(query.trim())) return [];
+  const parts = query
+    .split(
+      /\s*(?:\+|;|(?<!\d),(?!\s*\d)|\/(?!\s*\d)|\b(?:and|with)\b|(?<!\p{L})(?:та|і)(?!\p{L}))\s*/iu,
+    )
+    .map(normalize)
+    .filter((part) => Array.from(part).length >= 3);
+  const unique = [...new Set(parts)];
+  return unique.length >= 2 ? unique : [];
+}
+
 function cleanNullable(value: string | null | undefined): string | null {
   const cleaned = value?.trim() ?? "";
   return cleaned || null;
@@ -258,7 +340,10 @@ function safeNationalListText(
     : null;
 }
 
-function safeJsonArray(value: string | null | undefined, limit: number): string[] {
+function safeJsonArray(
+  value: string | null | undefined,
+  limit: number,
+): string[] {
   if (!value) return [];
   try {
     const parsed = JSON.parse(value) as unknown;
@@ -275,18 +360,24 @@ function safeJsonArray(value: string | null | undefined, limit: number): string[
 }
 
 function sanitizedNationalListReason(value: string | null | undefined): string {
-  return safeNationalListText(value) ??
-    "National-list status is unavailable for this product.";
+  return (
+    safeNationalListText(value) ??
+    "National-list status is unavailable for this product."
+  );
 }
 
-function officialNationalListUrl(value: string | null | undefined): string | null {
+function officialNationalListUrl(
+  value: string | null | undefined,
+): string | null {
   if (!value) return null;
   try {
     const url = new URL(value);
     return url.protocol === "https:" &&
-        url.hostname === "zakon.rada.gov.ua" &&
-        url.pathname.startsWith("/laws/show/") &&
-        !url.username && !url.password && !url.search
+      url.hostname === "zakon.rada.gov.ua" &&
+      url.pathname.startsWith("/laws/show/") &&
+      !url.username &&
+      !url.password &&
+      !url.search
       ? url.toString()
       : null;
   } catch {
@@ -294,12 +385,16 @@ function officialNationalListUrl(value: string | null | undefined): string | nul
   }
 }
 
-function safeNationalListRelease(value: string | null | undefined): string | null {
+function safeNationalListRelease(
+  value: string | null | undefined,
+): string | null {
   const release = value?.trim() ?? "";
   return /^[a-z\d][a-z\d._-]{0,99}$/iu.test(release) ? release : null;
 }
 
-function safeNationalListDateTime(value: string | null | undefined): string | null {
+function safeNationalListDateTime(
+  value: string | null | undefined,
+): string | null {
   const timestamp = value?.trim() ?? "";
   return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/u.test(timestamp)
     ? timestamp
@@ -328,6 +423,7 @@ function aliasesForProduct(row: ProductRow): string[] {
   return [
     ...new Set(
       [
+        normalize(row.trade_name),
         row.normalized_trade_name,
         normalize(row.inn),
         normalize(row.active_ingredient),
@@ -344,7 +440,11 @@ export function assembleRegistryProducts(
   const manufacturers = new Map<string, ManufacturerRow[]>();
   for (const row of manufacturerRows) {
     const current = manufacturers.get(row.product_registry_id) ?? [];
-    if (!current.some((item) => item.name === row.name && item.country === row.country)) {
+    if (
+      !current.some(
+        (item) => item.name === row.name && item.country === row.country,
+      )
+    ) {
       current.push(row);
     }
     manufacturers.set(row.product_registry_id, current);
@@ -365,21 +465,42 @@ export function assembleRegistryProducts(
       (alias) => mappings.get(alias) ?? [],
     );
     const unique = [
-      ...new Map(matched.map((mapping) => [mapping.ingredient_id, mapping])).values(),
+      ...new Map(
+        matched.map((mapping) => [mapping.ingredient_id, mapping]),
+      ).values(),
     ];
     const selected = unique.length === 1 ? unique[0] : null;
     const mappingStatus = selected
-      ? "approved" as const
+      ? ("approved" as const)
       : unique.length > 1
-        ? "ambiguous" as const
-        : "unmapped" as const;
-    const nationalListRelease = safeNationalListRelease(row.national_list_release_id);
-    const nationalListTitle = safeNationalListText(row.national_list_title, 300);
-    const nationalListActNumber = safeNationalListText(row.national_list_act_number, 40);
-    const nationalListActDate = safeNationalListText(row.national_list_act_date, 20);
-    const nationalListRevisionDate = safeNationalListText(row.national_list_revision_date, 20);
-    const nationalListEffectiveDate = safeNationalListText(row.national_list_effective_date, 20);
-    const nationalListSourceUrl = officialNationalListUrl(row.national_list_source_url);
+        ? ("ambiguous" as const)
+        : ("unmapped" as const);
+    const nationalListRelease = safeNationalListRelease(
+      row.national_list_release_id,
+    );
+    const nationalListTitle = safeNationalListText(
+      row.national_list_title,
+      300,
+    );
+    const nationalListActNumber = safeNationalListText(
+      row.national_list_act_number,
+      40,
+    );
+    const nationalListActDate = safeNationalListText(
+      row.national_list_act_date,
+      20,
+    );
+    const nationalListRevisionDate = safeNationalListText(
+      row.national_list_revision_date,
+      20,
+    );
+    const nationalListEffectiveDate = safeNationalListText(
+      row.national_list_effective_date,
+      20,
+    );
+    const nationalListSourceUrl = officialNationalListUrl(
+      row.national_list_source_url,
+    );
     const nationalListOfficialName = safeNationalListText(
       row.national_list_official_name,
       300,
@@ -421,26 +542,31 @@ export function assembleRegistryProducts(
       sourceRecordCount: 1,
       nationalListStatus: row.national_list_status ?? "not_applicable",
       nationalListRelease,
-      nationalListMatchReason: sanitizedNationalListReason(row.national_list_reason ??
-        "No active National Medicines List release is configured."),
+      nationalListMatchReason: sanitizedNationalListReason(
+        row.national_list_reason ??
+          "No active National Medicines List release is configured.",
+      ),
       nationalListSection: safeNationalListText(row.national_list_section, 300),
-      nationalListSource: nationalListRelease &&
-          nationalListTitle &&
-          nationalListActNumber &&
-          nationalListActDate &&
-          nationalListRevisionDate &&
-          nationalListEffectiveDate &&
-          nationalListSourceUrl
-        ? {
-            title: nationalListTitle,
-            actNumber: nationalListActNumber,
-            actDate: nationalListActDate,
-            revisionDate: nationalListRevisionDate,
-            effectiveDate: nationalListEffectiveDate,
-            url: nationalListSourceUrl,
-          }
-        : null,
-      nationalListCheckedAt: safeNationalListDateTime(row.national_list_checked_at),
+      nationalListSource:
+        nationalListRelease &&
+        nationalListTitle &&
+        nationalListActNumber &&
+        nationalListActDate &&
+        nationalListRevisionDate &&
+        nationalListEffectiveDate &&
+        nationalListSourceUrl
+          ? {
+              title: nationalListTitle,
+              actNumber: nationalListActNumber,
+              actDate: nationalListActDate,
+              revisionDate: nationalListRevisionDate,
+              effectiveDate: nationalListEffectiveDate,
+              url: nationalListSourceUrl,
+            }
+          : null,
+      nationalListCheckedAt: safeNationalListDateTime(
+        row.national_list_checked_at,
+      ),
       nationalListMatchDetails: nationalListOfficialName
         ? {
             officialName: nationalListOfficialName,
@@ -471,7 +597,7 @@ function buildProductFilter(input: CatalogSearchInput) {
   };
 
   const query = input.q.trim();
-  let joinSql = "";
+  const joinSql = CATALOG_KEYS_JOIN_SQL;
   let rankSql = CATALOG_BROWSE_RANK_SQL;
   if (query) {
     const lower = query.toLocaleLowerCase("uk-UA");
@@ -482,35 +608,55 @@ function buildProductFilter(input: CatalogSearchInput) {
     const normalizedPrefix = add(`${escapeLike(normalized)}%`);
     const contains = add(`%${escapeLike(lower)}%`);
     const normalizedContains = add(`%${escapeLike(normalized)}%`);
-    const exactApproved = "exact_approved_alias.normalized IS NOT NULL";
-    const prefixApproved = "prefix_approved_alias.normalized IS NOT NULL";
-
-    joinSql = `
-      LEFT JOIN (
-        SELECT DISTINCT product_alias.normalized
-        FROM knowledge_ingredient_names product_alias
-        JOIN knowledge_ingredient_names query_alias
-          ON query_alias.ingredient_inn_key = product_alias.ingredient_inn_key
-        WHERE product_alias.review_status = 'approved'
-          AND query_alias.review_status = 'approved'
-          AND query_alias.normalized = ${normalizedExact}
-      ) exact_approved_alias
-        ON exact_approved_alias.normalized = p.normalized_trade_name
-      LEFT JOIN (
-        SELECT DISTINCT product_alias.normalized
-        FROM knowledge_ingredient_names product_alias
-        JOIN knowledge_ingredient_names query_alias
-          ON query_alias.ingredient_inn_key = product_alias.ingredient_inn_key
-        WHERE product_alias.review_status = 'approved'
-          AND query_alias.review_status = 'approved'
-          AND query_alias.normalized LIKE ${normalizedPrefix} ESCAPE '\\'
-      ) prefix_approved_alias
-        ON prefix_approved_alias.normalized = p.normalized_trade_name`;
+    const aliasKeys = catalogAliasQueryKeys(query);
+    const aliasKeysRef = add(aliasKeys.length ? aliasKeys : [normalized]);
+    const exactApproved = `EXISTS (
+      SELECT 1
+      FROM knowledge_ingredient_names query_alias
+      JOIN knowledge_ingredient_names product_alias
+        ON product_alias.ingredient_inn_key = query_alias.ingredient_inn_key
+       AND product_alias.review_status = 'approved'
+      WHERE query_alias.review_status = 'approved'
+        AND query_alias.normalized = ANY(${aliasKeysRef}::text[])
+        AND product_alias.normalized IN (
+          catalog_keys.trade_key,
+          catalog_keys.inn_key,
+          catalog_keys.active_key,
+          p.normalized_trade_name
+        )
+    )`;
+    const prefixApproved = `EXISTS (
+      SELECT 1
+      FROM knowledge_ingredient_names query_alias
+      JOIN knowledge_ingredient_names product_alias
+        ON product_alias.ingredient_inn_key = query_alias.ingredient_inn_key
+       AND product_alias.review_status = 'approved'
+      WHERE query_alias.review_status = 'approved'
+        AND query_alias.normalized LIKE ${normalizedPrefix} ESCAPE '\\'
+        AND product_alias.normalized IN (
+          catalog_keys.trade_key,
+          catalog_keys.inn_key,
+          catalog_keys.active_key,
+          p.normalized_trade_name
+        )
+    )`;
+    const combinationTerms = catalogCompositionSearchTerms(query);
+    const combinationMatch = combinationTerms.length
+      ? `(${CATALOG_COMPOSITION_SOURCE_SQL} ~* ${CATALOG_COMBINATION_PATTERN_SQL} AND (${combinationTerms
+          .map((term) => {
+            const ref = add(`%${escapeLike(term)}%`);
+            return `(
+            catalog_keys.inn_key LIKE ${ref} ESCAPE '\\'
+            OR catalog_keys.active_key LIKE ${ref} ESCAPE '\\'
+          )`;
+          })
+          .join(" AND ")}))`
+      : "FALSE";
 
     const directContains = `(
-      LOWER(p.trade_name) LIKE ${contains} ESCAPE '\\'
-      OR LOWER(p.inn) LIKE ${contains} ESCAPE '\\'
-      OR LOWER(p.active_ingredient) LIKE ${contains} ESCAPE '\\'
+      catalog_keys.trade_key LIKE ${normalizedContains} ESCAPE '\\'
+      OR catalog_keys.inn_key LIKE ${normalizedContains} ESCAPE '\\'
+      OR catalog_keys.active_key LIKE ${normalizedContains} ESCAPE '\\'
       OR LOWER(p.applicant_name) LIKE ${contains} ESCAPE '\\'
       OR LOWER(p.registration_number) LIKE ${contains} ESCAPE '\\'
       OR LOWER(p.form) LIKE ${contains} ESCAPE '\\'
@@ -523,32 +669,48 @@ function buildProductFilter(input: CatalogSearchInput) {
       )
     )`;
 
-    clauses.push(`(
-      p.normalized_trade_name = ${normalizedExact}
-      OR LOWER(p.inn) = ${lowerExact}
-      OR LOWER(p.active_ingredient) = ${lowerExact}
-      OR LOWER(p.registration_number) = ${lowerExact}
-      OR p.normalized_trade_name LIKE ${normalizedPrefix} ESCAPE '\\'
-      OR LOWER(p.inn) LIKE ${lowerPrefix} ESCAPE '\\'
-      OR LOWER(p.active_ingredient) LIKE ${lowerPrefix} ESCAPE '\\'
-      OR LOWER(p.registration_number) LIKE ${lowerPrefix} ESCAPE '\\'
-      OR ${exactApproved}
-      OR ${prefixApproved}
-      OR ${directContains}
-    )`);
-    rankSql = `CASE
-      WHEN ${exactApproved} THEN 1
-      WHEN p.normalized_trade_name = ${normalizedExact} THEN 2
-      WHEN LOWER(p.inn) = ${lowerExact}
-        OR LOWER(p.active_ingredient) = ${lowerExact} THEN 3
-      WHEN LOWER(p.registration_number) = ${lowerExact} THEN 4
-      WHEN p.normalized_trade_name LIKE ${normalizedPrefix} ESCAPE '\\'
-        OR LOWER(p.inn) LIKE ${lowerPrefix} ESCAPE '\\'
-        OR LOWER(p.active_ingredient) LIKE ${lowerPrefix} ESCAPE '\\'
-        OR LOWER(p.registration_number) LIKE ${lowerPrefix} ESCAPE '\\' THEN 5
-      WHEN ${prefixApproved} THEN 6
-      ELSE 7
-    END`;
+    if (combinationTerms.length) {
+      clauses.push(combinationMatch);
+      rankSql = `CASE WHEN ${combinationMatch} THEN 1 ELSE 2 END`;
+    } else {
+      clauses.push(`(
+        p.normalized_trade_name = ${normalizedExact}
+        OR catalog_keys.trade_key = ${normalizedExact}
+        OR catalog_keys.inn_key = ${normalizedExact}
+        OR catalog_keys.active_key = ${normalizedExact}
+        OR catalog_keys.trade_key = ANY(${aliasKeysRef}::text[])
+        OR catalog_keys.inn_key = ANY(${aliasKeysRef}::text[])
+        OR catalog_keys.active_key = ANY(${aliasKeysRef}::text[])
+        OR LOWER(p.registration_number) = ${lowerExact}
+        OR p.normalized_trade_name LIKE ${normalizedPrefix} ESCAPE '\\'
+        OR catalog_keys.trade_key LIKE ${normalizedPrefix} ESCAPE '\\'
+        OR catalog_keys.inn_key LIKE ${normalizedPrefix} ESCAPE '\\'
+        OR catalog_keys.active_key LIKE ${normalizedPrefix} ESCAPE '\\'
+        OR LOWER(p.registration_number) LIKE ${lowerPrefix} ESCAPE '\\'
+        OR ${exactApproved}
+        OR ${prefixApproved}
+        OR ${directContains}
+      )`);
+      rankSql = `CASE
+        WHEN LOWER(p.registration_number) = ${lowerExact} THEN 1
+        WHEN p.normalized_trade_name = ${normalizedExact}
+          OR catalog_keys.trade_key = ${normalizedExact} THEN 2
+        WHEN catalog_keys.inn_key = ${normalizedExact}
+          OR catalog_keys.active_key = ${normalizedExact} THEN 3
+        WHEN ${exactApproved} THEN 4
+        WHEN catalog_keys.trade_key = ANY(${aliasKeysRef}::text[])
+          OR catalog_keys.inn_key = ANY(${aliasKeysRef}::text[])
+          OR catalog_keys.active_key = ANY(${aliasKeysRef}::text[])
+          THEN 4
+        WHEN p.normalized_trade_name LIKE ${normalizedPrefix} ESCAPE '\\'
+          OR catalog_keys.trade_key LIKE ${normalizedPrefix} ESCAPE '\\' THEN 5
+        WHEN catalog_keys.inn_key LIKE ${normalizedPrefix} ESCAPE '\\'
+          OR catalog_keys.active_key LIKE ${normalizedPrefix} ESCAPE '\\'
+          OR LOWER(p.registration_number) LIKE ${lowerPrefix} ESCAPE '\\' THEN 6
+        WHEN ${prefixApproved} THEN 7
+        ELSE 8
+      END`;
+    }
   }
 
   const manufacturer = input.manufacturer?.trim();
@@ -571,7 +733,7 @@ function buildProductFilter(input: CatalogSearchInput) {
   const tradeName = input.tradeName?.trim();
   if (tradeName) {
     const ref = add(`%${escapeLike(normalize(tradeName))}%`);
-    clauses.push(`p.normalized_trade_name LIKE ${ref} ESCAPE '\\'`);
+    clauses.push(`catalog_keys.trade_key LIKE ${ref} ESCAPE '\\'`);
   }
 
   const strength = input.strength?.trim();
@@ -594,9 +756,43 @@ function buildProductFilter(input: CatalogSearchInput) {
     clauses.push(`(${REGISTRATION_STATUS_SQL}) = ${ref}`);
   }
 
+  if (input.compositionType !== "all") {
+    if (input.compositionType === "unknown") {
+      clauses.push(`${CATALOG_COMPOSITION_SOURCE_SQL} IS NULL`);
+    } else {
+      const combinationSql = `${CATALOG_COMPOSITION_SOURCE_SQL} ~* ${CATALOG_COMBINATION_PATTERN_SQL}`;
+      clauses.push(
+        input.compositionType === "combination"
+          ? `(${CATALOG_COMPOSITION_SOURCE_SQL} IS NOT NULL AND ${combinationSql})`
+          : `(${CATALOG_COMPOSITION_SOURCE_SQL} IS NOT NULL AND NOT (${combinationSql}))`,
+      );
+    }
+  }
+
+  if (input.mappingStatus !== "all") {
+    const approvedMappingCountSql = `(
+      SELECT COUNT(DISTINCT mapping_name.ingredient_inn_key)::int
+      FROM knowledge_ingredient_names mapping_name
+      WHERE mapping_name.review_status = 'approved'
+        AND mapping_name.normalized IN (
+          catalog_keys.trade_key,
+          catalog_keys.inn_key,
+          catalog_keys.active_key,
+          p.normalized_trade_name
+        )
+    )`;
+    clauses.push(
+      input.mappingStatus === "approved"
+        ? `${approvedMappingCountSql} = 1`
+        : `${approvedMappingCountSql} <> 1`,
+    );
+  }
+
   if (input.nationalListStatus && input.nationalListStatus !== "all") {
     const ref = add(input.nationalListStatus);
-    clauses.push(`COALESCE(nlm.status, CASE WHEN nlr.id IS NULL THEN 'not_applicable' ELSE 'uncertain' END) = ${ref}`);
+    clauses.push(
+      `COALESCE(nlm.status, CASE WHEN nlr.id IS NULL THEN 'not_applicable' ELSE 'uncertain' END) = ${ref}`,
+    );
   }
 
   return {
@@ -610,8 +806,9 @@ function buildProductFilter(input: CatalogSearchInput) {
 export async function createPostgresRegistryCatalogStore(
   options: RegistryCatalogStoreOptions = {},
 ): Promise<RegistryCatalogStore> {
-  const executor = options.executor ??
-    (await import("@workspace/db")).pool as CatalogQueryExecutor;
+  const executor =
+    options.executor ??
+    ((await import("@workspace/db")).pool as CatalogQueryExecutor);
   const runQuery = async <T>(
     label: string,
     text: string,
@@ -636,7 +833,10 @@ export async function createPostgresRegistryCatalogStore(
 
   const getCatalogSnapshot = (): Promise<CatalogSnapshot> =>
     catalogSnapshotCache.getOrSet(REGISTRY_SEARCH_CACHE_VERSION, async () => {
-      const result = await runQuery<{ count: number; snapshot_version: string | null }>(
+      const result = await runQuery<{
+        count: number;
+        snapshot_version: string | null;
+      }>(
         "catalog-snapshot",
         `SELECT COUNT(*)::int AS count,
                 CONCAT(
@@ -655,7 +855,9 @@ export async function createPostgresRegistryCatalogStore(
   const getCatalogTotal = async (): Promise<number> =>
     (await getCatalogSnapshot()).catalogTotal;
 
-  const hydrateProducts = async (rows: ProductRow[]): Promise<ProductResult[]> => {
+  const hydrateProducts = async (
+    rows: ProductRow[],
+  ): Promise<ProductResult[]> => {
     if (!rows.length) return [];
     const productIds = rows.map((row) => row.registry_id);
     const aliases = [...new Set(rows.flatMap(aliasesForProduct))];
@@ -702,7 +904,9 @@ export async function createPostgresRegistryCatalogStore(
     },
 
     async findUniqueExactProduct(input): Promise<ProductSearchResult | null> {
-      const cachedSnapshot = catalogSnapshotCache.get(REGISTRY_SEARCH_CACHE_VERSION);
+      const cachedSnapshot = catalogSnapshotCache.get(
+        REGISTRY_SEARCH_CACHE_VERSION,
+      );
       const cacheKey = registrySearchCacheKey(
         "exact",
         input,
@@ -712,7 +916,8 @@ export async function createPostgresRegistryCatalogStore(
         cacheKey,
         async () => {
           const query = input.q.trim();
-          const normalized = normalize(query) || query.toLocaleLowerCase("uk-UA");
+          const normalized =
+            normalize(query) || query.toLocaleLowerCase("uk-UA");
           const [snapshot, exactResult] = await Promise.all([
             getCatalogSnapshot(),
             runQuery<ProductRow>(
@@ -725,20 +930,7 @@ export async function createPostgresRegistryCatalogStore(
                  SELECT p.registry_id, 2 AS priority
                  FROM knowledge_registry_products p
                  WHERE p.normalized_trade_name = $2
-                 UNION ALL
-                 SELECT DISTINCT p.registry_id, 3 AS priority
-                 FROM knowledge_ingredient_names query_alias
-                 JOIN knowledge_ingredient_names product_alias
-                   ON product_alias.ingredient_inn_key = query_alias.ingredient_inn_key
-                  AND product_alias.review_status = 'approved'
-                 JOIN knowledge_registry_products p
-                   ON p.normalized_trade_name = product_alias.normalized
-                 WHERE query_alias.review_status = 'approved'
-                   AND query_alias.normalized = $2
-                 UNION ALL
-                 SELECT p.registry_id, 4 AS priority
-                 FROM knowledge_registry_products p
-                 WHERE LOWER(p.inn) = $3 OR LOWER(p.active_ingredient) = $3
+                    OR ${catalogSearchKeySql("p.trade_name")} = $2
                ), winning_priority AS (
                  SELECT MIN(priority) AS priority FROM exact_candidates
                ), unique_candidates AS (
@@ -766,20 +958,17 @@ export async function createPostgresRegistryCatalogStore(
                JOIN unique_candidates candidate ON candidate.registry_id = p.registry_id
                ${NATIONAL_LIST_MATCH_JOIN_SQL}
                ORDER BY p.registry_id`,
-              [
-                query.toUpperCase(),
-                normalized,
-                query.toLocaleLowerCase("uk-UA"),
-              ],
+              [query.toUpperCase(), normalized],
             ),
           ]);
-          const result = exactResult.rows.length === 1
-            ? {
-                catalogTotal: snapshot.catalogTotal,
-                filteredTotal: 1,
-                items: await hydrateProducts(exactResult.rows),
-              }
-            : null;
+          const result =
+            exactResult.rows.length === 1
+              ? {
+                  catalogTotal: snapshot.catalogTotal,
+                  filteredTotal: 1,
+                  items: await hydrateProducts(exactResult.rows),
+                }
+              : null;
           const versionedKey = registrySearchCacheKey(
             "exact",
             input,
@@ -794,9 +983,8 @@ export async function createPostgresRegistryCatalogStore(
           }
           return result;
         },
-        (result) => result
-          ? REGISTRY_CACHE_TTL_MS
-          : REGISTRY_NEGATIVE_CACHE_TTL_MS,
+        (result) =>
+          result ? REGISTRY_CACHE_TTL_MS : REGISTRY_NEGATIVE_CACHE_TTL_MS,
       );
     },
 
@@ -859,7 +1047,9 @@ export async function createPostgresRegistryCatalogStore(
     },
 
     async searchProductsForGrouping(input): Promise<ProductSearchResult> {
-      const cachedSnapshot = catalogSnapshotCache.get(REGISTRY_SEARCH_CACHE_VERSION);
+      const cachedSnapshot = catalogSnapshotCache.get(
+        REGISTRY_SEARCH_CACHE_VERSION,
+      );
       const cacheKey = registrySearchCacheKey(
         "grouped",
         input,
@@ -867,8 +1057,7 @@ export async function createPostgresRegistryCatalogStore(
       );
       return groupedProductCache.getOrSet(cacheKey, async () => {
         // Group/trade/variant pagination is derived from the same bounded raw snapshot.
-        const rawInput = { ...input, tradeName: undefined };
-        const filter = buildProductFilter(rawInput);
+        const filter = buildProductFilter(input);
         const rowLimit = GROUPED_CATALOG_ROW_LIMIT + 1;
         const pageValues = [...filter.values, rowLimit];
         const limitRef = `$${filter.values.length + 1}`;
@@ -913,7 +1102,8 @@ export async function createPostgresRegistryCatalogStore(
           input,
           snapshot.version,
         );
-        if (versionedKey !== cacheKey) groupedProductCache.set(versionedKey, result);
+        if (versionedKey !== cacheKey)
+          groupedProductCache.set(versionedKey, result);
         return result;
       });
     },
@@ -992,12 +1182,19 @@ export async function createPostgresRegistryCatalogStore(
 }
 
 function resolveCatalogView(input: CatalogSearchInput): "flat" | "grouped" {
-  return input.view ??
-    (input.q.trim() && input.type !== "ingredients" ? "grouped" : "flat");
+  return (
+    input.view ??
+    (input.q.trim() && input.type !== "ingredients" ? "grouped" : "flat")
+  );
 }
 
 export function isExactFastPathEligible(input: CatalogSearchInput): boolean {
-  return Boolean(input.q.trim()) &&
+  const resolved = resolveSourceBackedDictionaryQuery(input.q);
+  const ingredientLevelQuery =
+    resolved?.kind !== undefined && resolved.kind !== "brand";
+  return (
+    Boolean(input.q.trim()) &&
+    !ingredientLevelQuery &&
     input.type !== "ingredients" &&
     resolveCatalogView(input) === "grouped" &&
     input.page === 1 &&
@@ -1013,7 +1210,8 @@ export function isExactFastPathEligible(input: CatalogSearchInput): boolean {
     !input.registrationStatus &&
     input.compositionType === "all" &&
     input.mappingStatus === "all" &&
-    input.nationalListStatus === "all";
+    input.nationalListStatus === "all"
+  );
 }
 
 function responsePageSize(input: CatalogSearchInput): 25 | 50 {
@@ -1031,24 +1229,33 @@ function emptyRegistryPage(input: CatalogSearchInput) {
   };
 }
 
-function staticFallback(input: CatalogSearchInput, warning: string): CatalogSearchResult {
-  const ingredients = input.type === "registry_products"
-    ? []
-    : [...new Map(
-        searchDrugs(input.q, "all").map((drug) => [normalize(drug.inn), drug]),
-      ).values()]
-        .slice(0, 25)
-        .map((drug) => ({
-          resultType: "ingredient" as const,
-          ingredientId: `static:${drug.id}`,
-          inn: drug.inn,
-          latin: "",
-          english: "",
-          atcCode: drug.atcCode ?? null,
-          group: drug.pharmacologicalGroup,
-          matchedName: drug.brandName,
-          mappingStatus: "approved" as const,
-        }));
+function staticFallback(
+  input: CatalogSearchInput,
+  warning: string,
+): CatalogSearchResult {
+  const ingredients =
+    input.type === "registry_products"
+      ? []
+      : [
+          ...new Map(
+            searchDrugs(input.q, "all").map((drug) => [
+              normalize(drug.inn),
+              drug,
+            ]),
+          ).values(),
+        ]
+          .slice(0, 25)
+          .map((drug) => ({
+            resultType: "ingredient" as const,
+            ingredientId: `static:${drug.id}`,
+            inn: drug.inn,
+            latin: "",
+            english: "",
+            atcCode: drug.atcCode ?? null,
+            group: drug.pharmacologicalGroup,
+            matchedName: drug.brandName,
+            mappingStatus: "approved" as const,
+          }));
 
   return {
     query: input.q,
@@ -1081,12 +1288,12 @@ export async function searchCatalog(
       input.type === "ingredients" ||
       (input.type === "all" && Boolean(input.q.trim()));
     const ingredientSearch = includeIngredients
-      ? activeStore.searchIngredients(input.q, input.type === "ingredients" ? 25 : 8)
+      ? activeStore.searchIngredients(
+          input.q,
+          input.type === "ingredients" ? 25 : 8,
+        )
       : Promise.resolve([]);
-    if (
-      activeStore.findUniqueExactProduct &&
-      isExactFastPathEligible(input)
-    ) {
+    if (activeStore.findUniqueExactProduct && isExactFastPathEligible(input)) {
       const [exact, exactIngredients] = await Promise.all([
         activeStore.findUniqueExactProduct(input),
         ingredientSearch,
@@ -1126,12 +1333,17 @@ export async function searchCatalog(
       view === "grouped" && products
         ? groupRegistryProducts(products.items, input, products.bounded ?? true)
         : null;
-    const total = registryGroups?.summary.totalRegistryPositions ??
-      products?.filteredTotal ?? 0;
+    const total =
+      registryGroups?.summary.totalRegistryPositions ??
+      products?.filteredTotal ??
+      0;
     const totalPages = total ? Math.ceil(total / input.pageSize) : 0;
-    const warnings = products?.bounded === false
-      ? ["Grouped catalog results exceeded the safety bound; refine the filters for a complete grouping."]
-      : [];
+    const warnings =
+      products?.bounded === false
+        ? [
+            "Grouped catalog results exceeded the safety bound; refine the filters for a complete grouping.",
+          ]
+        : [];
 
     return {
       query: input.q,

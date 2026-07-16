@@ -83,11 +83,20 @@ jobs:
           KNOWLEDGE_DB_RUNTIME: "true"
 
       - name: Registry catalog DB search smoke
-        run: pnpm knowledge:registry:catalog-db-smoke -- --expect-min-products=16533 --max-warm-ms=2000 --max-grouped-p95-ms=600 --max-exact-p50-ms=150 --max-prefix-p50-ms=250 --max-navigation-p95-ms=400
+        run: pnpm knowledge:registry:catalog-db-smoke -- --expect-min-products=16533 --expect-products=16533 --max-warm-ms=2000 --max-grouped-p95-ms=600 --max-exact-p50-ms=150 --max-prefix-p50-ms=250 --max-navigation-p95-ms=400
         env:
           DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/farmassist_test"
           DATABASE_SSL: "false"
           KNOWLEDGE_DB_RUNTIME: "true"
+
+      - name: Upload catalog DB coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-search-db-coverage-report
+          path: artifacts/reports/catalog-search-db-coverage-report.json
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Registry production dry-runs
         run: |

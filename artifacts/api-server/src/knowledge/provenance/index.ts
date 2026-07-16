@@ -105,6 +105,23 @@ const SOURCE_LIST: Source[] = [
     note: "Official Ukrainian registry export candidates; trade-name rows require admin review before runtime use.",
   },
   {
+    key: "ua-state-expert-centre",
+    label: "Державний експертний центр МОЗ України",
+    type: "official",
+    reliability: "high",
+    url: "https://www.dec.gov.ua/materials/nurof-n-ibuprofen/",
+    note: "Офіційне повідомлення ДЕЦ/МОЗ про НУРОФЄН® (ібупрофен), використане лише для provenance торгової назви.",
+  },
+  {
+    key: "ua-national-list-2025-10-10",
+    label:
+      "Національний перелік основних лікарських засобів — редакція 10.10.2025",
+    type: "official",
+    reliability: "high",
+    url: "https://zakon.rada.gov.ua/laws/show/333-2009-%D0%BF#Text",
+    note: "Активна перевірена редакція Національного переліку; джерело офіційних українських назв.",
+  },
+  {
     key: "rxnorm_reference",
     label: "RxNorm reference mapping candidate",
     type: "external",

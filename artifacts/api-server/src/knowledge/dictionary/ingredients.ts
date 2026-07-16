@@ -10,6 +10,8 @@
  * This is reference data for pharmacists — always verify against the official
  * instruction. Nothing here constitutes a prescription or treatment advice.
  */
+import type { Provenance } from "../provenance";
+
 export interface IngredientSeed {
   /** Canonical Ukrainian INN, used for display and catalog matching. */
   inn: string;
@@ -25,12 +27,28 @@ export interface IngredientSeed {
   brands: string[];
   /** Extra synonyms not covered above (e.g. US generic name). */
   synonyms?: string[];
+  /** Per-name source override for official registry/list names. */
+  nameProvenance?: Record<string, Provenance>;
 }
 
 export const ingredientSeeds: IngredientSeed[] = [
   // ── Analgesics / antipyretics / NSAIDs ──────────────────────────────────
   { inn: "Парацетамол", latin: "Paracetamolum", english: "Paracetamol", atc: "N02BE01", group: "Анальгетики-антипіретики", brands: ["Панадол", "Panadol", "Ефералган", "Efferalgan", "Рапідол", "Цефекон"], synonyms: ["acetaminophen", "ацетамінофен"] },
-  { inn: "Ібупрофен", latin: "Ibuprofenum", english: "Ibuprofen", atc: "M01AE01", group: "Нестероїдні протизапальні засоби (НПЗЗ)", brands: ["Нурофен", "Nurofen", "Ібупром", "Ібуфен", " Imet", "Імет"] },
+  {
+    inn: "Ібупрофен",
+    latin: "Ibuprofenum",
+    english: "Ibuprofen",
+    atc: "M01AE01",
+    group: "Нестероїдні протизапальні засоби (НПЗЗ)",
+    brands: ["НУРОФЄН", "Nurofen", "Ібупром", "Ібуфен", " Imet", "Імет"],
+    nameProvenance: {
+      "НУРОФЄН": {
+        sourceKey: "ua-state-expert-centre",
+        evidenceLevel: "established",
+        lastReviewed: "2019-10-22",
+      },
+    },
+  },
   { inn: "Ацетилсаліцилова кислота", latin: "Acidum acetylsalicylicum", english: "Acetylsalicylic acid", atc: "N02BA01", group: "НПЗЗ / антиагреганти", brands: ["Аспірин", "Aspirin", "Аспірин Кардіо", "Кардіомагніл", "Магнікор"], synonyms: ["aspirin", "аспірин"] },
   { inn: "Диклофенак", latin: "Diclofenacum", english: "Diclofenac", atc: "M01AB05", group: "НПЗЗ", brands: ["Вольтарен", "Voltaren", "Диклоберл", "Диклак", "Олфен", "Наклофен"] },
   { inn: "Німесулід", latin: "Nimesulidum", english: "Nimesulide", atc: "M01AX17", group: "НПЗЗ", brands: ["Німесил", "Nimesil", "Німід", "Найз", "Месулід"] },
@@ -126,7 +144,21 @@ export const ingredientSeeds: IngredientSeed[] = [
   // ── Anticoagulants / antiplatelets ──────────────────────────────────────
   { inn: "Варфарин", latin: "Warfarinum", english: "Warfarin", atc: "B01AA03", group: "Антикоагулянти (антагоністи вітаміну K)", brands: ["Варфарин", "Warfarin", "Мареван"] },
   { inn: "Ривароксабан", latin: "Rivaroxabanum", english: "Rivaroxaban", atc: "B01AF01", group: "Прямі оральні антикоагулянти", brands: ["Ксарелто", "Xarelto"], synonyms: ["ksarelto"] },
-  { inn: "Апіксабан", latin: "Apixabanum", english: "Apixaban", atc: "B01AF02", group: "Прямі оральні антикоагулянти", brands: ["Еліквіс", "Eliquis"], synonyms: ["elikvis"] },
+  {
+    inn: "Апіксабан",
+    latin: "Apixabanum",
+    english: "Apixaban",
+    atc: "B01AF02",
+    group: "Прямі оральні антикоагулянти",
+    brands: ["Еліквіс", "Eliquis"],
+    synonyms: ["elikvis"],
+    nameProvenance: {
+      "Еліквіс": {
+        sourceKey: "ukraine_state_drug_registry",
+        evidenceLevel: "reference",
+      },
+    },
+  },
   { inn: "Дабігатран", latin: "Dabigatranum", english: "Dabigatran", atc: "B01AE07", group: "Прямі оральні антикоагулянти", brands: ["Прадакса", "Pradaxa"] },
   { inn: "Еноксапарин", latin: "Enoxaparinum", english: "Enoxaparin", atc: "B01AB05", group: "Низькомолекулярні гепарини", brands: ["Клексан", "Clexane", "Фленокс"] },
   { inn: "Клопідогрель", latin: "Clopidogrelum", english: "Clopidogrel", atc: "B01AC04", group: "Антиагреганти", brands: ["Плавікс", "Plavix", "Клопідогрель"] },
@@ -135,6 +167,28 @@ export const ingredientSeeds: IngredientSeed[] = [
   { inn: "Метформін", latin: "Metforminum", english: "Metformin", atc: "A10BA02", group: "Бігуаніди", brands: ["Сіофор", "Siofor", "Глюкофаж", "Метфогама"], synonyms: ["metformyn"] },
   { inn: "Гліклазид", latin: "Gliclazidum", english: "Gliclazide", atc: "A10BB09", group: "Похідні сульфонілсечовини", brands: ["Діабетон", "Diabeton", "Глідіаб"] },
   { inn: "Глімепірид", latin: "Glimepiridum", english: "Glimepiride", atc: "A10BB12", group: "Похідні сульфонілсечовини", brands: ["Амарил", "Amaryl", "Глемаз"] },
+  {
+    inn: "Дапагліфлозин",
+    latin: "Dapagliflozin",
+    english: "Dapagliflozin",
+    atc: "A10BK01",
+    group: "Інгібітори SGLT2",
+    brands: ["ФОРКСІГА"],
+    nameProvenance: {
+      "Дапагліфлозин": {
+        sourceKey: "ua-national-list-2025-10-10",
+        evidenceLevel: "reference",
+      },
+      Dapagliflozin: {
+        sourceKey: "ukraine_state_drug_registry",
+        evidenceLevel: "reference",
+      },
+      "ФОРКСІГА": {
+        sourceKey: "ukraine_state_drug_registry",
+        evidenceLevel: "reference",
+      },
+    },
+  },
   { inn: "Емпагліфлозин", latin: "Empagliflozinum", english: "Empagliflozin", atc: "A10BK03", group: "Інгібітори SGLT2", brands: ["Джардінс", "Jardiance"] },
   { inn: "Левотироксин натрію", latin: "Levothyroxinum natricum", english: "Levothyroxine", atc: "H03AA01", group: "Гормони щитоподібної залози", brands: ["Еутирокс", "Euthyrox", "L-Тироксин"] },
 

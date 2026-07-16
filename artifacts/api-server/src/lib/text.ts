@@ -6,7 +6,7 @@
  * separators collapse so hyphenated and spaced variants share one key.
  */
 export function normalize(value: string): string {
-  return value
+  return value.replace(/[®™]/g, "")
     .normalize("NFKC")
     .trim()
     .toLowerCase()

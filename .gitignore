@@ -32,6 +32,8 @@ node_modules
 /connect.lock
 /coverage
 /artifacts/reports/*.json
+!/artifacts/reports/catalog-completeness-report.json
+!/artifacts/reports/catalog-search-coverage-report.json
 /libpeerconnection.log
 npm-debug.log
 yarn-error.log
