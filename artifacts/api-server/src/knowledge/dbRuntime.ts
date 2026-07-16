@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, ne, sql } from "drizzle-orm";
 import { normalize } from "../lib/text";
 import { logger } from "../lib/logger";
 import { isDbRuntimeEnabled } from "./runtime";
@@ -272,14 +272,30 @@ async function createRegistryCountsStore(): Promise<RegistryCountsStore> {
 
   return {
     async getRegistryCounts(): Promise<RegistryRuntimeCounts> {
-      const [[productRow], [manufacturerRow], [registrationRow], [approvedRow]] = await Promise.all([
-        db.select({ count: sql<number>`count(*)::int` }).from(products),
-        db.select({ count: sql<number>`count(*)::int` }).from(manufacturers),
+      const [
+        [productRow],
+        [manufacturerRow],
+        [registrationRow],
+        [approvedRow],
+      ] = await Promise.all([
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(products)
+          .where(ne(products.reviewStatus, "stale")),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(manufacturers)
+          .innerJoin(
+            products,
+            eq(manufacturers.productRegistryId, products.registryId),
+          )
+          .where(ne(products.reviewStatus, "stale")),
         db
           .select({
             count: sql<number>`count(distinct nullif(${products.registrationNumber}, ''))::int`,
           })
-          .from(products),
+          .from(products)
+          .where(ne(products.reviewStatus, "stale")),
         db
           .select({
             count: sql<number>`count(*) filter (where ${names.reviewStatus} = 'approved')::int`,

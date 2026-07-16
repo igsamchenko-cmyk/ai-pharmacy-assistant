@@ -594,6 +594,7 @@ describe("catalog search service", () => {
       .find((sql) => sql.includes("WITH exact_candidates"));
     expect(exactSql).toContain("p.registration_number = $1");
     expect(exactSql).toContain("p.normalized_trade_name = $2");
+    expect(exactSql).toContain("p.review_status <> 'stale'");
     expect(exactSql).toContain("TRANSLATE");
     expect(exactSql).not.toContain("query_alias");
     expect(exactSql).not.toContain("LOWER(p.inn)");
@@ -661,6 +662,7 @@ describe("catalog search service", () => {
     const groupedSql = query.mock.calls
       .map(([sql]) => sql)
       .find((sql) => sql.includes("knowledge_registry_products p"));
+    expect(groupedSql).toContain("p.review_status <> 'stale'");
     expect(groupedSql).toContain("query_alias.normalized = ANY($7::text[])");
     expect(groupedSql).toContain("query_alias.normalized LIKE $4");
     expect(groupedSql).not.toContain("query_alias.normalized = 2");

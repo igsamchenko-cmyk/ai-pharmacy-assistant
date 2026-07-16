@@ -11,6 +11,7 @@ import type { BetaDashboardStatusDiagnostics } from './betaDashboardStatusDiagno
 import type { BetaDashboardStatusIngestion } from './betaDashboardStatusIngestion';
 import type { BetaDashboardStatusReadiness } from './betaDashboardStatusReadiness';
 import type { BetaDashboardStatusRealWorld } from './betaDashboardStatusRealWorld';
+import type { BetaDashboardStatusRegistrySync } from './betaDashboardStatusRegistrySync';
 import type { BetaDashboardStatusReviewQueue } from './betaDashboardStatusReviewQueue';
 import type { BetaDashboardStatusRuntime } from './betaDashboardStatusRuntime';
 import type { BetaDashboardStatusScenarios } from './betaDashboardStatusScenarios';
@@ -24,6 +25,7 @@ export interface BetaDashboardStatus {
   searchQuality: BetaDashboardStatusSearchQuality;
   realWorld: BetaDashboardStatusRealWorld;
   ingestion: BetaDashboardStatusIngestion;
+  registrySync: BetaDashboardStatusRegistrySync;
   runtime: BetaDashboardStatusRuntime;
   dataQuality: BetaDashboardStatusDataQuality;
   reviewQueue: BetaDashboardStatusReviewQueue;

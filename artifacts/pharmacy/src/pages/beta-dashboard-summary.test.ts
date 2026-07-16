@@ -36,6 +36,17 @@ const productionStatus: BetaDashboardStatus = {
     ok: true,
     warnings: [],
   },
+  registrySync: {
+    lastSyncedAt: "2026-07-16T00:00:00.000Z",
+    sourceHash:
+      "228b8a201491de53d85788d398143586cd20fcd461731892d5db4ab2d8f4dd96",
+    officialRows: 16533,
+    farmAssistRows: 16533,
+    parityStatus: "exact",
+    missingCount: 0,
+    extraCount: 0,
+    changedCount: 0,
+  },
   runtime: { mode: "db", dbConfigured: true, dbAvailable: true, staticFallbackEnabled: true, warnings: [] },
   dataQuality: { mappingsCount: 756, sourceCoveragePct: 100, atcCoveragePct: 100, conflicts: 47, ok: true, warnings: [] },
   reviewQueue: { pending: 0, needsReview: 0, approved: 1939, rejected: 0, warnings: [] },

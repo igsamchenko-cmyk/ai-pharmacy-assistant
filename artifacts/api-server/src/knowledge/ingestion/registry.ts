@@ -5,10 +5,7 @@ import { normalize } from "../../lib/text";
 import { resolveDataFilePath } from "../../lib/dataPath";
 import { parseCsv } from "../import/csv";
 import type { ImportRow, ReviewStatus } from "../import/format";
-import {
-  hasCyrillic,
-  ingredientIdForInn,
-} from "./transliteration";
+import { hasCyrillic, ingredientIdForInn } from "./transliteration";
 
 export const UKRAINE_REGISTRY_SOURCE_ID = "ukraine_state_drug_registry";
 export const OFFICIAL_UKRAINE_REGISTRY_CSV_URL =
@@ -210,7 +207,12 @@ const FIELD_ALIASES = {
     "\u041b\u0456\u043a\u0430\u0440\u0441\u044c\u043a\u0430 \u0444\u043e\u0440\u043c\u0430",
     "\u0424\u043e\u0440\u043c\u0430",
   ],
-  strength: ["strength", "dosage", "dose", "\u0414\u043e\u0437\u0443\u0432\u0430\u043d\u043d\u044f"],
+  strength: [
+    "strength",
+    "dosage",
+    "dose",
+    "\u0414\u043e\u0437\u0443\u0432\u0430\u043d\u043d\u044f",
+  ],
   applicantName: [
     "applicant",
     "applicant_name",
@@ -247,7 +249,11 @@ const FIELD_ALIASES = {
     "registration_end_date",
     "\u0414\u0430\u0442\u0430 \u0437\u0430\u043a\u0456\u043d\u0447\u0435\u043d\u043d\u044f",
   ],
-  status: ["status", "\u0421\u0442\u0430\u043d", "\u0421\u0442\u0430\u0442\u0443\u0441"],
+  status: [
+    "status",
+    "\u0421\u0442\u0430\u043d",
+    "\u0421\u0442\u0430\u0442\u0443\u0441",
+  ],
   earlyTermination: [
     "early_termination",
     "\u0414\u043e\u0441\u0442\u0440\u043e\u043a\u043e\u0432\u0435 \u043f\u0440\u0438\u043f\u0438\u043d\u0435\u043d\u043d\u044f",
@@ -273,7 +279,9 @@ function sha256(bytes: Buffer): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
-function formatFromFileName(fileName: string | null | undefined): RegistrySnapshotFormat {
+function formatFromFileName(
+  fileName: string | null | undefined,
+): RegistrySnapshotFormat {
   const ext = fileName ? extname(fileName).toLowerCase() : "";
   if (ext === ".csv") return "csv";
   if (ext === ".tsv") return "tsv";
@@ -310,14 +318,18 @@ export function decodeRegistryBuffer(
   }
 }
 
-export async function downloadOfficialRegistrySnapshot(options: {
-  url?: string;
-  now?: Date;
-} = {}): Promise<{ text: string; metadata: RegistrySnapshotMetadata }> {
+export async function downloadOfficialRegistrySnapshot(
+  options: {
+    url?: string;
+    now?: Date;
+  } = {},
+): Promise<{ text: string; metadata: RegistrySnapshotMetadata }> {
   const url = options.url ?? OFFICIAL_UKRAINE_REGISTRY_CSV_URL;
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Official registry download failed with HTTP ${response.status}.`);
+    throw new Error(
+      `Official registry download failed with HTTP ${response.status}.`,
+    );
   }
 
   const bytes = Buffer.from(await response.arrayBuffer());
@@ -338,15 +350,15 @@ export async function downloadOfficialRegistrySnapshot(options: {
 
 function objectRowsFromJson(text: string): Record<string, string>[] {
   const parsed: unknown = JSON.parse(text);
-  const list =
-    Array.isArray(parsed)
-      ? parsed
-      : parsed &&
-          typeof parsed === "object" &&
-          Array.isArray((parsed as { rows?: unknown }).rows)
-        ? (parsed as { rows: unknown[] }).rows
-        : null;
-  if (!list) throw new Error("Registry JSON must be an array or { rows: [...] }.");
+  const list = Array.isArray(parsed)
+    ? parsed
+    : parsed &&
+        typeof parsed === "object" &&
+        Array.isArray((parsed as { rows?: unknown }).rows)
+      ? (parsed as { rows: unknown[] }).rows
+      : null;
+  if (!list)
+    throw new Error("Registry JSON must be an array or { rows: [...] }.");
   return list.map((item) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) {
       throw new Error("Registry JSON rows must be objects.");
@@ -399,7 +411,10 @@ function pick(row: Record<string, string>, field: FieldName): string {
   return "";
 }
 
-function pickByAliases(row: Record<string, string>, aliases: readonly string[]): string {
+function pickByAliases(
+  row: Record<string, string>,
+  aliases: readonly string[],
+): string {
   const normalizedAliases = new Set(aliases.map(normalizeHeader));
   for (const [key, value] of Object.entries(row)) {
     if (normalizedAliases.has(normalizeHeader(key))) return value.trim();
@@ -488,10 +503,14 @@ function cleanIngredientToken(value: string): string {
 }
 
 function baseIngredientCandidate(value: string): string {
-  return cleanText(cleanIngredientToken(value).replace(SALT_OR_DERIVATIVE_PATTERN, " "));
+  return cleanText(
+    cleanIngredientToken(value).replace(SALT_OR_DERIVATIVE_PATTERN, " "),
+  );
 }
 
-export function parseIngredientExpression(value: string): RegistryIngredientParse {
+export function parseIngredientExpression(
+  value: string,
+): RegistryIngredientParse {
   const rawIngredientExpression = cleanText(value);
   const parseWarnings: string[] = [];
   const saltFlags = saltOrDerivativeFlags(rawIngredientExpression);
@@ -510,23 +529,30 @@ export function parseIngredientExpression(value: string): RegistryIngredientPars
   }
 
   const hasExplicitSeparator = /[+;/,]/.test(rawIngredientExpression);
-  const hasCombinationMarker = COMBINATION_WORD_PATTERN.test(rawIngredientExpression);
+  const hasCombinationMarker = COMBINATION_WORD_PATTERN.test(
+    rawIngredientExpression,
+  );
   const splitTokens = rawIngredientExpression
     .split(INGREDIENT_SPLIT_PATTERN)
     .map(cleanIngredientToken)
     .filter(Boolean);
   const parsedIngredients =
-    splitTokens.length > 0 ? [...new Set(splitTokens)] : [cleanIngredientToken(rawIngredientExpression)].filter(Boolean);
+    splitTokens.length > 0
+      ? [...new Set(splitTokens)]
+      : [cleanIngredientToken(rawIngredientExpression)].filter(Boolean);
 
   if (hasCombinationMarker) parseWarnings.push("combination_marker");
   if (hasExplicitSeparator && parsedIngredients.length <= 1) {
     parseWarnings.push("unparsed_combination_expression");
   }
   if (saltFlags.length > 0) parseWarnings.push("salt_or_derivative_ambiguity");
-  if (/\d|%/.test(rawIngredientExpression)) parseWarnings.push("quantity_or_strength_in_expression");
+  if (/\d|%/.test(rawIngredientExpression))
+    parseWarnings.push("quantity_or_strength_in_expression");
 
   const combinationProduct =
-    parsedIngredients.length > 1 || hasExplicitSeparator || hasCombinationMarker;
+    parsedIngredients.length > 1 ||
+    hasExplicitSeparator ||
+    hasCombinationMarker;
   const ingredientCount = combinationProduct
     ? Math.max(2, parsedIngredients.length)
     : parsedIngredients.length;
@@ -534,7 +560,11 @@ export function parseIngredientExpression(value: string): RegistryIngredientPars
     ...new Set(
       parsedIngredients
         .map(baseIngredientCandidate)
-        .filter((candidate) => candidate && normalize(candidate) !== normalize(rawIngredientExpression)),
+        .filter(
+          (candidate) =>
+            candidate &&
+            normalize(candidate) !== normalize(rawIngredientExpression),
+        ),
     ),
   ];
 
@@ -583,21 +613,31 @@ function isInactiveStatus(status: string): boolean {
   );
 }
 
-function manufacturerAliases(index: number, suffix: "name" | "country"): string[] {
-  const label = suffix === "name"
-    ? "\u043d\u0430\u0437\u0432\u0430 \u0443\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u043e\u044e"
-    : "\u043a\u0440\u0430\u0457\u043d\u0430";
+function manufacturerAliases(
+  index: number,
+  suffix: "name" | "country",
+): string[] {
+  const label =
+    suffix === "name"
+      ? "\u043d\u0430\u0437\u0432\u0430 \u0443\u043a\u0440\u0430\u0457\u043d\u0441\u044c\u043a\u043e\u044e"
+      : "\u043a\u0440\u0430\u0457\u043d\u0430";
   return [
     `manufacturer_${index}_${suffix}`,
     `\u0412\u0438\u0440\u043e\u0431\u043d\u0438\u043a ${index}: ${label}`,
   ];
 }
 
-function extractManufacturers(row: Record<string, string>): RegistryManufacturer[] {
+function extractManufacturers(
+  row: Record<string, string>,
+): RegistryManufacturer[] {
   const manufacturers: RegistryManufacturer[] = [];
   for (let index = 1; index <= 5; index += 1) {
-    const name = cleanText(pickByAliases(row, manufacturerAliases(index, "name")));
-    const country = cleanText(pickByAliases(row, manufacturerAliases(index, "country")));
+    const name = cleanText(
+      pickByAliases(row, manufacturerAliases(index, "name")),
+    );
+    const country = cleanText(
+      pickByAliases(row, manufacturerAliases(index, "country")),
+    );
     if (name || country) manufacturers.push({ name, country });
   }
   return manufacturers;
@@ -629,7 +669,8 @@ function rowToRegistryRawRow(
   ) {
     warnings.push("ingredient_parse_review_required");
   }
-  if (!inn && activeIngredient) warnings.push("composition_not_imported_as_inn");
+  if (!inn && activeIngredient)
+    warnings.push("composition_not_imported_as_inn");
 
   const status = cleanText(pick(row, "status"));
   const earlyTermination = cleanText(pick(row, "earlyTermination"));
@@ -641,7 +682,10 @@ function rowToRegistryRawRow(
   }
 
   const manufacturers = extractManufacturers(row);
-  const firstManufacturer = manufacturers[0] ?? { name: pick(row, "manufacturer"), country: pick(row, "country") };
+  const firstManufacturer = manufacturers[0] ?? {
+    name: pick(row, "manufacturer"),
+    country: pick(row, "country"),
+  };
 
   return {
     registryId: cleanText(pick(row, "registryId")),
@@ -768,7 +812,9 @@ export function parseRegistryText(
     row.warnings.includes("missing_importable_inn"),
   ).length;
   if (missingCanonical > 0) {
-    warnings.push(`${missingCanonical} registry rows lacked an importable single INN.`);
+    warnings.push(
+      `${missingCanonical} registry rows lacked an importable single INN.`,
+    );
   }
 
   return {
@@ -817,7 +863,9 @@ export function parseRegistryFile(
   filePath: string,
   options: Omit<RegistryParseOptions, "fileName" | "snapshot"> = {},
 ): RegistryParseResult {
-  const resolvedPath = resolveDataFilePath(filePath, { moduleUrl: import.meta.url });
+  const resolvedPath = resolveDataFilePath(filePath, {
+    moduleUrl: import.meta.url,
+  });
   const bytes = readFileSync(resolvedPath);
   return parseRegistryBuffer(bytes, {
     ...options,
@@ -826,16 +874,35 @@ export function parseRegistryFile(
 }
 
 export function registryRowHash(row: RegistryRawRow): string {
+  const manufacturers = row.manufacturers
+    .map(
+      (manufacturer) =>
+        `${manufacturer.name.trim()}\u001f${manufacturer.country.trim()}`,
+    )
+    .sort((a, b) => a.localeCompare(b))
+    .join("\u001e");
   return createHash("sha256")
-    .update([
-      row.registryId,
-      row.tradeName,
-      row.inn,
-      row.atcCode,
-      row.registrationNumber,
-      row.registrationStartDate,
-      row.registrationEndDate,
-    ].join("\u001f"))
+    .update(
+      [
+        row.registryId,
+        row.tradeName,
+        normalize(row.tradeName),
+        row.inn,
+        row.activeIngredient,
+        row.atcCode,
+        row.form,
+        row.strength,
+        row.applicantName,
+        row.applicantCountry,
+        manufacturers,
+        row.registrationNumber,
+        row.registrationStartDate,
+        row.registrationEndDate,
+        row.status,
+        row.earlyTermination,
+        row.instructionUrl,
+      ].join("\u001f"),
+    )
     .digest("hex");
 }
 
@@ -844,7 +911,9 @@ export function buildRegistryProductionSummary(
   stats: RegistryMappingStats = {},
 ): RegistryProductionSummary {
   const rows = registry.rows;
-  const validProducts = rows.filter((row) => row.tradeName || row.registrationNumber).length;
+  const validProducts = rows.filter(
+    (row) => row.tradeName || row.registrationNumber,
+  ).length;
   const importableInnRows = rows.filter((row) => isImportableInn(row.inn));
   const reviewDistribution = stats.reviewDistribution ?? {};
   const registrationNumbers = rows
@@ -874,12 +943,15 @@ export function buildRegistryProductionSummary(
     },
     products: {
       total: rows.length,
-      uniqueTradeNames: new Set(rows.map((row) => normalize(row.tradeName)).filter(Boolean)).size,
+      uniqueTradeNames: new Set(
+        rows.map((row) => normalize(row.tradeName)).filter(Boolean),
+      ).size,
       uniqueRegistrationNumbers: uniqueRegistrationNumbers.size,
     },
     ingredients: {
       withImportableInn: importableInnRows.length,
-      uniqueInn: new Set(importableInnRows.map((row) => normalize(row.inn))).size,
+      uniqueInn: new Set(importableInnRows.map((row) => normalize(row.inn)))
+        .size,
       multiIngredientOrCombination: rows.filter((row) =>
         row.warnings.includes("combination_or_multi_ingredient"),
       ).length,
@@ -889,9 +961,14 @@ export function buildRegistryProductionSummary(
     },
     mappings: {
       generatedCandidates: registry.generatedCandidates,
-      genericCandidates: registry.candidates.filter((row) => row.nameType !== "brand").length,
-      brandCandidates: registry.candidates.filter((row) => row.nameType === "brand").length,
-      autoApprovedSafe: stats.autoApprovedSafe ?? reviewDistribution.approved ?? 0,
+      genericCandidates: registry.candidates.filter(
+        (row) => row.nameType !== "brand",
+      ).length,
+      brandCandidates: registry.candidates.filter(
+        (row) => row.nameType === "brand",
+      ).length,
+      autoApprovedSafe:
+        stats.autoApprovedSafe ?? reviewDistribution.approved ?? 0,
       pending: reviewDistribution.pending ?? 0,
       needsReview: reviewDistribution.needs_review ?? 0,
       rejected: reviewDistribution.rejected ?? 0,
@@ -907,12 +984,15 @@ export function buildRegistryProductionSummary(
     },
     registrations: {
       uniqueNumbers: uniqueRegistrationNumbers.size,
-      duplicateNumbers: registrationNumbers.length - uniqueRegistrationNumbers.size,
+      duplicateNumbers:
+        registrationNumbers.length - uniqueRegistrationNumbers.size,
       earlyTerminated: rows.filter((row) =>
         row.warnings.includes("inactive_registration"),
       ).length,
       unlimited: rows.filter((row) =>
-        normalize(row.registrationEndDate).includes("\u043d\u0435\u043e\u0431\u043c\u0435\u0436"),
+        normalize(row.registrationEndDate).includes(
+          "\u043d\u0435\u043e\u0431\u043c\u0435\u0436",
+        ),
       ).length,
     },
     review: {
@@ -930,10 +1010,12 @@ export function buildRegistryProductionSummary(
           validProducts === registry.parsedRows),
       approvedMappingsReady:
         stats.approvedMappingsReady ?? (stats.hardApprovedConflicts ?? 0) === 0,
-      reviewQueueReady: stats.reviewQueueReady ?? registry.parseErrors.length === 0,
+      reviewQueueReady:
+        stats.reviewQueueReady ?? registry.parseErrors.length === 0,
       DBCommitReady:
         stats.DBCommitReady ??
-        (registry.parseErrors.length === 0 && (stats.hardApprovedConflicts ?? 0) === 0),
+        (registry.parseErrors.length === 0 &&
+          (stats.hardApprovedConflicts ?? 0) === 0),
     },
     warnings,
   };

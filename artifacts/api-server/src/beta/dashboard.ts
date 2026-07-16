@@ -14,6 +14,10 @@ import {
 } from "./scenarios";
 import { buildRealWorldPharmacyReport } from "./realWorldReport";
 import { buildSearchQualityReport } from "./searchQualityReport";
+import {
+  getRegistrySyncDashboardStatus,
+  type RegistrySyncDashboardStatus,
+} from "./registrySyncStatus";
 
 export const BETA_DASHBOARD_CHECK_TYPES = [
   "readiness",
@@ -91,6 +95,7 @@ export interface BetaDashboardStatus {
     ok: boolean;
     warnings: string[];
   };
+  registrySync: RegistrySyncDashboardStatus;
   runtime: {
     mode: "static" | "db";
     dbConfigured: boolean;
@@ -423,6 +428,9 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
     runtime.runtimeMode === "db" && runtime.dbAvailable
       ? await getRuntimeRegistryCounts()
       : null;
+  const registryProducts =
+    registryCounts?.products ?? ingestion.registry.validProducts;
+  const registrySync = await getRegistrySyncDashboardStatus(registryProducts);
   const registryCountWarnings =
     runtime.runtimeMode === "db" && runtime.dbAvailable && !registryCounts
       ? ["Production registry count read unavailable; static snapshot counts shown."]
@@ -475,7 +483,7 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
     ingestion: {
       sourcesApproved: ingestion.sourceDiscovery.approvedSources,
       registryRawRows: ingestion.registry.rawRows,
-      registryProducts: registryCounts?.products ?? ingestion.registry.validProducts,
+      registryProducts,
       registryIngredients: ingestion.registry.uniqueIngredients,
       registryManufacturers: registryCounts?.manufacturers ?? ingestion.registry.uniqueManufacturers,
       registryRegistrations: registryCounts?.registrations ?? ingestion.registry.uniqueRegistrations,
@@ -489,6 +497,7 @@ export async function buildBetaDashboardStatus(): Promise<BetaDashboardStatus> {
       ok: ingestion.candidates.wouldSucceed,
       warnings: uniqueWarnings([...ingestion.warnings, ...registryCountWarnings]),
     },
+    registrySync,
     runtime: {
       mode: runtime.runtimeMode,
       dbConfigured: runtime.databaseUrlConfigured,

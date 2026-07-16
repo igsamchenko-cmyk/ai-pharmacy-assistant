@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "official-registry-parity-v1",
+  "generatedAt": "2026-07-16T20:28:34.397Z",
+  "mode": "dry-run",
+  "official": {
+    "source": {
+      "sourceUrl": "http://www.drlz.com.ua/ibp/zvity.nsf/all/zvit/$file/reestr.csv",
+      "downloadedAt": "2026-07-16T20:28:15.827Z",
+      "contentLength": 12372098,
+      "sha256": "228b8a201491de53d85788d398143586cd20fcd461731892d5db4ab2d8f4dd96",
+      "encoding": "windows-1251",
+      "format": "csv",
+      "fileName": "reestr.csv"
+    },
+    "asOf": "2026-07-16T20:28:33.359Z",
+    "rows": {
+      "raw": 16533,
+      "parsed": 16533,
+      "valid": 16533,
+      "invalid": 0,
+      "withoutTradeName": 0
+    },
+    "names": {
+      "uniqueRawTradeNames": 8833,
+      "uniqueNormalizedTradeNames": 8725
+    },
+    "registrations": {
+      "uniqueNumbers": 14769,
+      "duplicateRows": 1764,
+      "duplicateGroups": 1658
+    },
+    "productIds": {
+      "unique": 16533,
+      "duplicateRows": 0,
+      "duplicateGroups": 0
+    },
+    "statuses": {
+      "active": 15070,
+      "expired": 1463,
+      "other": 0,
+      "sourceFieldAvailable": false,
+      "derivation": "The official export has no populated status column; active/expired/other is derived from early termination and registration end date."
+    },
+    "identitySha256": "a95bc46dc2cf2d569ece1f00ed6617121ad4ac2cd3a97cee5d59cdd5407e240f",
+    "failures": []
+  },
+  "baseline": {
+    "report": "../../artifacts/reports/catalog-completeness-report.json",
+    "sha256": "228b8a201491de53d85788d398143586cd20fcd461731892d5db4ab2d8f4dd96",
+    "rows": 16533,
+    "sourceIdentityMatchesFreshExport": true,
+    "note": "The fresh live export is always downloaded first; the checked-in report is comparison metadata, not the source of truth."
+  },
+  "productionBefore": {
+    "databaseCompared": false,
+    "farmAssistRows": null,
+    "farmAssistCurrentRows": null,
+    "farmAssistStaleRows": null,
+    "missingOfficialRows": null,
+    "missingOfficialActiveRows": null,
+    "missingOfficialTradeNames": null,
+    "extraFarmAssistRows": null,
+    "unintendedStaleRowsShownCurrent": null,
+    "officialRowsIncorrectlyMarkedStale": null,
+    "silentlyExcludedUnmappedRows": 0,
+    "changed": null,
+    "samples": {
+      "missingRegistryIds": [],
+      "extraRegistryIds": [],
+      "changedRegistryIds": [],
+      "hiddenRegistryIds": []
+    },
+    "exactParity": null,
+    "limitations": [
+      "DATABASE_URL is not configured; production row-level parity was not queried."
+    ]
+  },
+  "plannedAfter": {
+    "farmAssistCurrentRows": 16533,
+    "missingOfficialRows": 0,
+    "missingOfficialActiveRows": 0,
+    "missingOfficialTradeNames": 0,
+    "unintendedStaleRowsShownCurrent": 0,
+    "officialRowsIncorrectlyMarkedStale": 0,
+    "silentlyExcludedUnmappedRows": 0,
+    "changedRows": 0,
+    "exactParity": true
+  },
+  "fullExportPlan": {
+    "officialRows": 16533,
+    "plannedProductRows": 16533,
+    "uniquePlannedRegistryIds": 16533,
+    "silentlyExcludedByMappingStatus": 0,
+    "approvedMappingRows": 7902,
+    "reviewOnlyMappingRows": 13116,
+    "quarantinedMappingRows": 5723,
+    "productPlanComplete": true
+  },
+  "anomalyGate": {
+    "ok": true,
+    "failures": [],
+    "policy": {
+      "minimumOfficialRows": 15000,
+      "maximumRowDropPct": 5,
+      "maximumMissingPct": 2,
+      "maximumChangedPct": 20
+    }
+  },
+  "apply": null,
+  "productionWritePerformed": false
+}

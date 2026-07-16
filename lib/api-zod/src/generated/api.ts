@@ -146,6 +146,16 @@ export const GetBetaDashboardStatusResponse = zod.object({
   "ok": zod.boolean(),
   "warnings": zod.array(zod.string())
 }),
+  "registrySync": zod.object({
+  "lastSyncedAt": zod.coerce.date().nullable(),
+  "sourceHash": zod.string().nullable(),
+  "officialRows": zod.number(),
+  "farmAssistRows": zod.number(),
+  "parityStatus": zod.enum(['exact', 'mismatch', 'pending_database_audit']),
+  "missingCount": zod.number().nullable(),
+  "extraCount": zod.number().nullable(),
+  "changedCount": zod.number().nullable()
+}),
   "runtime": zod.object({
   "mode": zod.enum(['static', 'db']),
   "dbConfigured": zod.boolean(),

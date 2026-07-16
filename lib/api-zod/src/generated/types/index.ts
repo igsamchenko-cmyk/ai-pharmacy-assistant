@@ -30,6 +30,8 @@ export * from './betaDashboardStatusDiagnostics';
 export * from './betaDashboardStatusIngestion';
 export * from './betaDashboardStatusReadiness';
 export * from './betaDashboardStatusRealWorld';
+export * from './betaDashboardStatusRegistrySync';
+export * from './betaDashboardStatusRegistrySyncParityStatus';
 export * from './betaDashboardStatusReviewQueue';
 export * from './betaDashboardStatusRuntime';
 export * from './betaDashboardStatusRuntimeMode';

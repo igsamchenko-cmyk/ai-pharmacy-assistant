@@ -174,6 +174,26 @@ export type BetaDashboardStatusIngestion = {
   warnings: string[];
 };
 
+export type BetaDashboardStatusRegistrySyncParityStatus = typeof BetaDashboardStatusRegistrySyncParityStatus[keyof typeof BetaDashboardStatusRegistrySyncParityStatus];
+
+
+export const BetaDashboardStatusRegistrySyncParityStatus = {
+  exact: 'exact',
+  mismatch: 'mismatch',
+  pending_database_audit: 'pending_database_audit',
+} as const;
+
+export type BetaDashboardStatusRegistrySync = {
+  lastSyncedAt: string | null;
+  sourceHash: string | null;
+  officialRows: number;
+  farmAssistRows: number;
+  parityStatus: BetaDashboardStatusRegistrySyncParityStatus;
+  missingCount: number | null;
+  extraCount: number | null;
+  changedCount: number | null;
+};
+
 export type BetaDashboardStatusRuntimeMode = typeof BetaDashboardStatusRuntimeMode[keyof typeof BetaDashboardStatusRuntimeMode];
 
 
@@ -221,6 +241,7 @@ export interface BetaDashboardStatus {
   searchQuality: BetaDashboardStatusSearchQuality;
   realWorld: BetaDashboardStatusRealWorld;
   ingestion: BetaDashboardStatusIngestion;
+  registrySync: BetaDashboardStatusRegistrySync;
   runtime: BetaDashboardStatusRuntime;
   dataQuality: BetaDashboardStatusDataQuality;
   reviewQueue: BetaDashboardStatusReviewQueue;

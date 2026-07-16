@@ -130,7 +130,14 @@ function registryIdFor(row: RegistryRawRow): string {
   );
 }
 
+function sourceSnapshotHashFromBatchId(batchId: string): string | null {
+  return (
+    batchId.match(/^registry-sync-([a-f0-9]{64})-/i)?.[1]?.toLowerCase() ?? null
+  );
+}
+
 function registryProductValue(row: RegistryRawRow, batchId: string) {
+  const sourceSnapshotHash = sourceSnapshotHashFromBatchId(batchId);
   return {
     registryId: registryIdFor(row),
     tradeName: row.tradeName,
@@ -139,6 +146,7 @@ function registryProductValue(row: RegistryRawRow, batchId: string) {
     activeIngredient: row.activeIngredient,
     atcCode: row.atcCode || null,
     form: row.form,
+    strength: row.strength,
     applicantName: row.applicantName,
     applicantCountry: row.applicantCountry,
     registrationNumber: row.registrationNumber,
@@ -148,6 +156,9 @@ function registryProductValue(row: RegistryRawRow, batchId: string) {
     instructionUrl: row.instructionUrl || null,
     sourceKey: row.sourceId,
     reviewStatus: "pending",
+    currentStatus: "current",
+    sourceSnapshotHash,
+    lastSeenAt: new Date(),
     importBatchId: batchId,
     rawHash: registryRowHash(row),
   };
@@ -614,6 +625,7 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
       let unchangedProducts = 0;
       let skippedProducts = 0;
       let insertedManufacturers = 0;
+      let updatedManufacturers = 0;
 
       for (const chunk of chunks) {
         await db.transaction(async (tx) => {
@@ -656,6 +668,20 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
             productValues.length -
             newProductValues.length -
             changedProductValues.length;
+          const changedRegistryIds = changedProductValues.map(
+            (value) => value.registryId,
+          );
+
+          if (changedRegistryIds.length > 0) {
+            await tx
+              .delete(knowledgeRegistryManufacturersTable)
+              .where(
+                inArray(
+                  knowledgeRegistryManufacturersTable.productRegistryId,
+                  changedRegistryIds,
+                ),
+              );
+          }
 
           if (newProductValues.length > 0) {
             const inserted = await tx
@@ -684,6 +710,7 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
                   activeIngredient: sql`excluded.active_ingredient`,
                   atcCode: sql`excluded.atc_code`,
                   form: sql`excluded.form`,
+                  strength: sql`excluded.strength`,
                   applicantName: sql`excluded.applicant_name`,
                   applicantCountry: sql`excluded.applicant_country`,
                   registrationNumber: sql`excluded.registration_number`,
@@ -692,6 +719,10 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
                   earlyTermination: sql`excluded.early_termination`,
                   instructionUrl: sql`excluded.instruction_url`,
                   sourceKey: sql`excluded.source_key`,
+                  reviewStatus: sql`excluded.review_status`,
+                  currentStatus: sql`excluded.current_status`,
+                  sourceSnapshotHash: sql`excluded.source_snapshot_hash`,
+                  lastSeenAt: sql`excluded.last_seen_at`,
                   importBatchId: sql`excluded.import_batch_id`,
                   rawHash: sql`excluded.raw_hash`,
                   updatedAt: sql`now()`,
@@ -701,6 +732,25 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
                 registryId: knowledgeRegistryProductsTable.registryId,
               });
             updatedProducts += updated.length;
+          }
+
+          if (productValues.length > 0) {
+            const sourceSnapshotHash = sourceSnapshotHashFromBatchId(batchId);
+            await tx
+              .update(knowledgeRegistryProductsTable)
+              .set({
+                reviewStatus: "pending",
+                currentStatus: "current",
+                lastSeenAt: new Date(),
+                importBatchId: batchId,
+                ...(sourceSnapshotHash ? { sourceSnapshotHash } : {}),
+              })
+              .where(
+                inArray(
+                  knowledgeRegistryProductsTable.registryId,
+                  productValues.map((value) => value.registryId),
+                ),
+              );
           }
 
           const manufacturerValues = uniqueRegistryManufacturerValues(
@@ -720,6 +770,14 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
               .returning({ id: knowledgeRegistryManufacturersTable.id });
             insertedManufacturers += inserted.length;
           }
+          const changedRegistryIdSet = new Set(changedRegistryIds);
+          updatedManufacturers += chunk.reduce(
+            (count, row) =>
+              changedRegistryIdSet.has(registryIdFor(row))
+                ? count + row.manufacturers.filter((item) => item.name).length
+                : count,
+            0,
+          );
         });
       }
 
@@ -748,7 +806,7 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
         insertedProducts,
         insertedManufacturers,
         updatedProducts,
-        updatedManufacturers: 0,
+        updatedManufacturers,
         unchangedProducts,
         unchangedManufacturers,
         skippedProducts,

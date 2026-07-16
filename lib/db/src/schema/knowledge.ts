@@ -175,15 +175,21 @@ export const knowledgeRegistryProductsTable = pgTable(
     activeIngredient: text("active_ingredient").notNull().default(""),
     atcCode: text("atc_code"),
     form: text("form").notNull().default(""),
+    strength: text("strength").notNull().default(""),
     applicantName: text("applicant_name").notNull().default(""),
     applicantCountry: text("applicant_country").notNull().default(""),
     registrationNumber: text("registration_number").notNull().default(""),
-    registrationStartDate: text("registration_start_date").notNull().default(""),
+    registrationStartDate: text("registration_start_date")
+      .notNull()
+      .default(""),
     registrationEndDate: text("registration_end_date").notNull().default(""),
     earlyTermination: text("early_termination").notNull().default(""),
     instructionUrl: text("instruction_url"),
     sourceKey: text("source_key").notNull(),
     reviewStatus: text("review_status").notNull().default("pending"),
+    currentStatus: text("current_status").notNull().default("current"),
+    sourceSnapshotHash: text("source_snapshot_hash"),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     importBatchId: text("import_batch_id"),
     rawHash: text("raw_hash").notNull(),
     importedAt: timestamp("imported_at", { withTimezone: true })
@@ -197,7 +203,44 @@ export const knowledgeRegistryProductsTable = pgTable(
     index("knowledge_registry_products_name_idx").on(t.normalizedTradeName),
     index("knowledge_registry_products_reg_idx").on(t.registrationNumber),
     index("knowledge_registry_products_review_idx").on(t.reviewStatus),
+    index("knowledge_registry_products_current_idx").on(t.currentStatus),
+    index("knowledge_registry_products_snapshot_idx").on(t.sourceSnapshotHash),
     index("knowledge_registry_products_batch_idx").on(t.importBatchId),
+  ],
+);
+
+/** Append-only official registry synchronization audit and rollback pointer. */
+export const knowledgeRegistrySyncRunsTable = pgTable(
+  "knowledge_registry_sync_runs",
+  {
+    id: text("id").primaryKey(),
+    mode: text("mode").notNull(),
+    status: text("status").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    sourceHash: text("source_hash").notNull(),
+    sourceTimestamp: timestamp("source_timestamp", {
+      withTimezone: true,
+    }).notNull(),
+    officialRows: integer("official_rows").notNull(),
+    farmAssistRowsBefore: integer("farmassist_rows_before").notNull(),
+    farmAssistRowsAfter: integer("farmassist_rows_after"),
+    missingCount: integer("missing_count").notNull(),
+    extraCount: integer("extra_count").notNull(),
+    changedCount: integer("changed_count").notNull(),
+    staleMarkedCount: integer("stale_marked_count").notNull().default(0),
+    parityStatus: text("parity_status").notNull(),
+    anomalyFailures: text("anomaly_failures").notNull().default("[]"),
+    checkpointSourceHash: text("checkpoint_source_hash"),
+    checkpointArtifact: text("checkpoint_artifact"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("knowledge_registry_sync_created_idx").on(t.createdAt),
+    index("knowledge_registry_sync_hash_idx").on(t.sourceHash),
+    index("knowledge_registry_sync_status_idx").on(t.status),
   ],
 );
 
@@ -222,7 +265,9 @@ export const knowledgeRegistryManufacturersTable = pgTable(
       t.normalizedName,
       t.country,
     ),
-    index("knowledge_registry_manufacturer_product_idx").on(t.productRegistryId),
+    index("knowledge_registry_manufacturer_product_idx").on(
+      t.productRegistryId,
+    ),
     index("knowledge_registry_manufacturer_name_idx").on(t.normalizedName),
   ],
 );
@@ -306,8 +351,14 @@ export const nationalListEntriesTable = pgTable(
       .defaultNow(),
   },
   (t) => [
-    uniqueIndex("national_list_entry_release_key_idx").on(t.releaseId, t.stableKey),
-    index("national_list_entry_signature_idx").on(t.releaseId, t.compositionSignature),
+    uniqueIndex("national_list_entry_release_key_idx").on(
+      t.releaseId,
+      t.stableKey,
+    ),
+    index("national_list_entry_signature_idx").on(
+      t.releaseId,
+      t.compositionSignature,
+    ),
     index("national_list_entry_review_idx").on(t.releaseId, t.reviewStatus),
   ],
 );
@@ -407,8 +458,7 @@ export const insertKnowledgeIngredientSchema = createInsertSchema(
 export type InsertKnowledgeIngredient = z.infer<
   typeof insertKnowledgeIngredientSchema
 >;
-export type KnowledgeIngredient =
-  typeof knowledgeIngredientsTable.$inferSelect;
+export type KnowledgeIngredient = typeof knowledgeIngredientsTable.$inferSelect;
 
 export const insertKnowledgeIngredientNameSchema = createInsertSchema(
   knowledgeIngredientNamesTable,
