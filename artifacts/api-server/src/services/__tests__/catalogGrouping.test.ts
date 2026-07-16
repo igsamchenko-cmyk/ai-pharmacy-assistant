@@ -158,4 +158,36 @@ describe("registry catalog grouping", () => {
     expect(combinations.groups.items[0].mappingStatus).toBe("unmapped");
     expect(approved.summary.totalRegistryPositions).toBe(1);
     expect(approved.summary.unmappedCount).toBe(0);
-  });});
+  });
+
+  it("uses the official active ingredient when the INN field is blank", () => {
+    const products = [
+      product("active-only", "5 mg", "UA/active", {
+        inn: "",
+        activeIngredient: "Amlodipine",
+      }),
+      product("unknown", "", "UA/unknown", {
+        inn: "",
+        activeIngredient: "",
+        mappingStatus: "unmapped",
+        approvedMapping: null,
+      }),
+      product("dosage-ratio", "5 mg/5 ml", "UA/ratio", {
+        inn: "",
+        activeIngredient: "Amlodipine 5 mg/5 ml",
+      }),
+      product("decimal-dose", "2,5 mg", "UA/decimal", {
+        inn: "",
+        activeIngredient: "Amlodipine 2,5 mg",
+      }),
+    ];
+
+    const result = groupRegistryProducts(products, groupingInput());
+    expect(result.summary.monotherapyCount).toBe(3);
+    expect(result.summary.unknownCompositionCount).toBe(1);
+    expect(
+      result.groups.items.find((group) => group.compositionType === "monotherapy")
+        ?.officialCompositions,
+    ).toContain("Amlodipine");
+  });
+});

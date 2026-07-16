@@ -27,6 +27,8 @@
     "knowledge:registry:product-db-smoke": "pnpm --filter @workspace/api-server run knowledge:registry:product-db-smoke",
     "knowledge:registry:mapping-db-smoke": "pnpm --filter @workspace/api-server run knowledge:registry:mapping-db-smoke",
     "knowledge:registry:production-report": "pnpm --filter @workspace/api-server run knowledge:registry:production-report",
+    "knowledge:catalog:completeness-report": "pnpm --filter @workspace/api-server run knowledge:catalog:completeness-report",
+    "knowledge:catalog:search-coverage-report": "pnpm --filter @workspace/api-server run knowledge:catalog:search-coverage-report",
     "knowledge:candidates:generate": "pnpm --filter @workspace/api-server run knowledge:candidates:generate",
     "knowledge:candidates:preview": "pnpm --filter @workspace/api-server run knowledge:candidates:preview",
     "knowledge:candidates:commit": "pnpm --filter @workspace/api-server run knowledge:candidates:commit",

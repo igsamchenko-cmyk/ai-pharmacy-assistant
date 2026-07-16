@@ -39,4 +39,11 @@ describe("normalize", () => {
       normalize("iron iii hydroxide"),
     );
   });
+
+  it("normalizes official trade names with trademark marks", () => {
+    expect(normalize("АМОКСИКЛАВ® 2Х")).toBe(normalize("Амоксиклав 2Х"));
+    expect(normalize("СИМБІКОРТ® ТУРБУХАЛЕР™")).toBe(
+      normalize("Симбікорт Турбухалер"),
+    );
+  });
 });

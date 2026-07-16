@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "catalog-completeness-v1",
+  "source": {
+    "sourceId": "ukraine_state_drug_registry",
+    "fileName": "reestr.csv",
+    "sourceUrl": "http://www.drlz.com.ua/ibp/zvity.nsf/all/zvit/$file/reestr.csv",
+    "contentLength": 12372098,
+    "sha256": "228b8a201491de53d85788d398143586cd20fcd461731892d5db4ab2d8f4dd96",
+    "encoding": "windows-1251",
+    "format": "csv"
+  },
+  "definitions": {
+    "searchableKey": "A normalized value from trade name, INN, active ingredient, applicant, registration number, form, ATC code or manufacturer; registry ID alone is not searchable.",
+    "rawTradeName": "Distinct non-empty official trade-name expressions after trim only; comparison remains case-sensitive and punctuation-preserving.",
+    "normalizedTradeName": "Distinct non-empty official trade-name keys after the shared normalize() function.",
+    "uniqueTradeName": "Backward-compatible alias for uniqueNormalizedTradeNames; it is canonical, not a raw expression count.",
+    "trademarkNormalization": "Rows containing ® or ™ are counted directly. Collapsed legacy keys are the difference between distinct keys from the pre-trademark-removal normalizer and current shared-normalized keys.",
+    "rawInnExpression": "Distinct non-empty official INN expressions after trim only; comparison remains case-sensitive and punctuation-preserving.",
+    "normalizedInnExpression": "Distinct non-empty official INN expression keys after the shared normalize() function.",
+    "importableInn": "An official INN row that the registry parser did not mark missing_importable_inn; raw-expression and shared-normalized distinct counts are reported separately.",
+    "combinationSignature": "Sorted distinct shared-normalized parsed ingredient components joined with '+'.",
+    "actualProductDuplicate": "A repeated official registry_id; this is the product-table primary key.",
+    "repeatedMedicineFingerprint": "A repeated normalized trade-name + INN + active-ingredient + form + registration-number fingerprint; this is diagnostic and is not treated as a duplicate primary-key row.",
+    "mappingCandidateDuplicate": "A duplicate generated name-to-ingredient mapping candidate; it is not a duplicate registry product.",
+    "mappingCandidateQuarantine": "A generated mapping candidate withheld from automatic mapping approval; it does not remove the registry product from catalog search."
+  },
+  "counts": {
+    "rawRows": 16533,
+    "parsedRows": 16533,
+    "registryRows": 16533,
+    "parseErrors": 0,
+    "uniqueRawTradeNames": 8833,
+    "uniqueNormalizedTradeNames": 8725,
+    "uniqueTradeNames": 8725,
+    "tradeNameRowsWithTrademark": 4208,
+    "uniqueRawTradeNamesWithTrademark": 2223,
+    "legacyKeysCollapsedByTrademarkNormalization": 55,
+    "uniqueRawInnExpressions": 1639,
+    "uniqueNormalizedInnExpressions": 1638,
+    "importableInnRows": 13373,
+    "uniqueRawImportableInnExpressions": 1372,
+    "uniqueNormalizedImportableInnExpressions": 1372,
+    "combinationRows": 2917,
+    "uniqueCombinationSignatures": 259,
+    "combinationRowsWithoutSignature": 0,
+    "missing": {
+      "tradeName": 0,
+      "rawInn": 0,
+      "activeIngredient": 0,
+      "normalizedTradeName": 0,
+      "normalizedNameKey": 0,
+      "searchableKey": 0
+    }
+  },
+  "coverage": {
+    "directOwnTradeNameSearchableRows": 16533,
+    "searchableRows": 16533,
+    "explicitlyQuarantinedUnsearchableRows": 0,
+    "unexplainedUnsearchableRows": 0,
+    "allRegistryProductsAccountedFor": true,
+    "explicitlyQuarantined": [],
+    "unexplainedRegistryIds": []
+  },
+  "duplicates": {
+    "productRows": {
+      "registryId": {
+        "records": 16533,
+        "uniqueValues": 16533,
+        "repeatedRows": 0,
+        "repeatedGroups": 0,
+        "maxMultiplicity": 1
+      },
+      "normalizedTradeName": {
+        "records": 16533,
+        "uniqueValues": 8725,
+        "repeatedRows": 7808,
+        "repeatedGroups": 3668,
+        "maxMultiplicity": 30
+      },
+      "registrationNumber": {
+        "records": 16533,
+        "uniqueValues": 14769,
+        "repeatedRows": 1764,
+        "repeatedGroups": 1658,
+        "maxMultiplicity": 5
+      },
+      "normalizedMedicineFingerprint": {
+        "records": 16533,
+        "uniqueValues": 15191,
+        "repeatedRows": 1342,
+        "repeatedGroups": 1300,
+        "maxMultiplicity": 4
+      },
+      "actualDuplicateRegistryIdRows": 0,
+      "note": "Only repeated registry IDs are actual product-row duplicates. Repeated names, registrations and medicine fingerprints are reported separately and can represent legitimate registry positions."
+    },
+    "mappingCandidates": {
+      "generatedRows": 26741,
+      "duplicateRows": 13444,
+      "quarantinedRows": 5723,
+      "conflictGroups": 398,
+      "note": "Mapping candidate duplicates and quarantines are review-workflow counts; neither count removes products from the registry catalog."
+    }
+  },
+  "integrity": {
+    "ok": true,
+    "failures": []
+  }
+}

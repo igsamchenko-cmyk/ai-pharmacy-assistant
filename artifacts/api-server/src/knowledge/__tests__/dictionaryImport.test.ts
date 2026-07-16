@@ -436,6 +436,7 @@ describe("dictionary provider bridge", () => {
     expect(provider.normalizeQuery("TestDrug")).toBe(sampleEntry);
     expect(provider.normalizeQuery("")).toBeNull();
     expect(provider.normalizeQuery("zz")).toBeNull();
+    expect(provider.normalizeQuery("otherdrugname")).toBeNull();
   });
 
   it("selects static by default even when flag is on but no entries", () => {

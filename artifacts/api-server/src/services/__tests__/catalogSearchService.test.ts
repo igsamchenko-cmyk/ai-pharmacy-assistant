@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { SearchCatalogQueryParams, SearchCatalogResponse } from "@workspace/api-zod";
+import {
+  SearchCatalogQueryParams,
+  SearchCatalogResponse,
+} from "@workspace/api-zod";
 import {
   CATALOG_BROWSE_RANK_SQL,
+  catalogAliasQueryKeys,
+  catalogCompositionSearchTerms,
   createPostgresRegistryCatalogStore,
   assembleRegistryProducts,
   extractRegistryStrength,
@@ -85,8 +90,56 @@ describe("catalog search service", () => {
     expect(CATALOG_BROWSE_RANK_SQL).not.toMatch(/^\d+$/);
   });
 
+  it("derives canonical dictionary keys for unique one-edit queries", () => {
+    expect(catalogAliasQueryKeys("парацитамол")).toEqual(
+      expect.arrayContaining(["парацитамол", "парацетамол", "paracetamol"]),
+    );
+    expect(catalogAliasQueryKeys("еліківс")).toEqual(
+      expect.arrayContaining(["еліківс", "еліквіс", "апіксабан", "apixaban"]),
+    );
+    expect(catalogAliasQueryKeys("форксига")).toEqual(
+      expect.arrayContaining(["форксига", "форксіга", "дапагліфлозин"]),
+    );
+    expect(catalogAliasQueryKeys("нурофен")).toEqual(
+      expect.arrayContaining(["нурофен", "нурофєн", "ібупрофен", "ibuprofen"]),
+    );
+    expect(catalogAliasQueryKeys("vaccin")).toEqual(["vaccin"]);
+    expect(catalogAliasQueryKeys("accident")).toEqual(["accident"]);
+    expect(catalogAliasQueryKeys("ACC")).toEqual(["acc"]);
+  });
+
+  it("builds order-independent terms only for explicit combinations", () => {
+    expect(
+      catalogCompositionSearchTerms("Амоксицилін + клавуланова кислота"),
+    ).toEqual(["амоксицилін", "клавулановакислота"]);
+    expect(
+      catalogCompositionSearchTerms("клавуланова кислота / амоксицилін"),
+    ).toEqual(["клавулановакислота", "амоксицилін"]);
+    expect(
+      catalogCompositionSearchTerms(
+        "ОКСАЛІПЛАТИНУМ АККОРД/OXALIPLATINUM ACCORD",
+      ),
+    ).toEqual([]);
+    expect(catalogCompositionSearchTerms("ОНКОНАЗЕ 10 /ONCONASE 10")).toEqual(
+      [],
+    );
+    expect(
+      catalogCompositionSearchTerms("КАПЕЦИТАБІН АККОРД/CAPECITABINE ACCORD"),
+    ).toEqual([]);
+    expect(catalogCompositionSearchTerms("Амлодипін / Valsartan")).toEqual([
+      "амлодипін",
+      "valsartan",
+    ]);
+    expect(catalogCompositionSearchTerms("Метформін")).toEqual([]);
+    expect(catalogCompositionSearchTerms("Amlodipine 5 mg / 5 ml")).toEqual([]);
+    expect(catalogCompositionSearchTerms("Amlodipine 2,5 mg")).toEqual([]);
+    expect(catalogCompositionSearchTerms("UA/1234/01/01")).toEqual([]);
+  });
+
   it("extracts strength without inventing missing values", () => {
-    expect(extractRegistryStrength("Ibuprofen 200 mg", "tablets")).toBe("200 mg");
+    expect(extractRegistryStrength("Ibuprofen 200 mg", "tablets")).toBe(
+      "200 mg",
+    );
     expect(extractRegistryStrength("solution", "ampoule")).toBeNull();
   });
 
@@ -103,31 +156,61 @@ describe("catalog search service", () => {
     ]);
   });
 
+  it("hydrates approved mappings across legacy trademark keys", () => {
+    const [result] = assembleRegistryProducts(
+      [
+        {
+          ...productRow,
+          registry_id: "registry-trademark",
+          trade_name: "АМОКСИКЛАВ®",
+          normalized_trade_name: "амоксиклав®",
+          inn: "Amoxicillin + clavulanic acid",
+          active_ingredient: "Amoxicillin + clavulanic acid",
+        },
+      ],
+      [],
+      [
+        {
+          ...approvedMapping,
+          normalized: "амоксиклав",
+          inn: "Amoxicillin + clavulanic acid",
+        },
+      ],
+    );
+
+    expect(result.mappingStatus).toBe("approved");
+    expect(result.approvedMapping?.inn).toBe("Amoxicillin + clavulanic acid");
+  });
+
   it("attaches one bounded exact National List result from the batch query", () => {
     const [result] = assembleRegistryProducts(
-      [{
-        ...productRow,
-        national_list_status: "exact" as const,
-        national_list_reason: "INN, form, route and strength match.",
-        national_list_checked_at: "2026-07-13T00:00:00.000Z",
-        national_list_release_id: "ua-national-list-2025-10-10",
-        national_list_title: "Національний перелік основних лікарських засобів",
-        national_list_act_number: "333",
-        national_list_act_date: "2009-03-25",
-        national_list_revision_date: "2025-10-10",
-        national_list_effective_date: "2025-10-10",
-        national_list_source_url: "https://zakon.rada.gov.ua/laws/show/333-2009-%D0%BF#Text",
-        national_list_section: "II. Знеболення",
-        national_list_official_name: "Ібупрофен",
-        national_list_ingredients_json: JSON.stringify(["Ibuprofen"]),
-        national_list_dosage_forms_json: JSON.stringify(["таблетки"]),
-        national_list_routes_json: JSON.stringify(["oral"]),
-        national_list_strengths_json: JSON.stringify(["200 мг"]),
-        national_list_ingredient_match: "match" as const,
-        national_list_form_match: "match" as const,
-        national_list_route_match: "match" as const,
-        national_list_strength_match: "match" as const,
-      }],
+      [
+        {
+          ...productRow,
+          national_list_status: "exact" as const,
+          national_list_reason: "INN, form, route and strength match.",
+          national_list_checked_at: "2026-07-13T00:00:00.000Z",
+          national_list_release_id: "ua-national-list-2025-10-10",
+          national_list_title:
+            "Національний перелік основних лікарських засобів",
+          national_list_act_number: "333",
+          national_list_act_date: "2009-03-25",
+          national_list_revision_date: "2025-10-10",
+          national_list_effective_date: "2025-10-10",
+          national_list_source_url:
+            "https://zakon.rada.gov.ua/laws/show/333-2009-%D0%BF#Text",
+          national_list_section: "II. Знеболення",
+          national_list_official_name: "Ібупрофен",
+          national_list_ingredients_json: JSON.stringify(["Ibuprofen"]),
+          national_list_dosage_forms_json: JSON.stringify(["таблетки"]),
+          national_list_routes_json: JSON.stringify(["oral"]),
+          national_list_strengths_json: JSON.stringify(["200 мг"]),
+          national_list_ingredient_match: "match" as const,
+          national_list_form_match: "match" as const,
+          national_list_route_match: "match" as const,
+          national_list_strength_match: "match" as const,
+        },
+      ],
       [],
       [],
     );
@@ -144,33 +227,47 @@ describe("catalog search service", () => {
 
   it("sanitizes National List metadata before returning it to the API", () => {
     const [result] = assembleRegistryProducts(
-      [{
-        ...productRow,
-        national_list_status: "exact" as const,
-        national_list_reason: "DATABASE_URL=postgresql://secret@host/db",
-        national_list_release_id: "C:/private/release",
-        national_list_title: "api_key=secret",
-        national_list_act_number: "333",
-        national_list_act_date: "2009-03-25",
-        national_list_revision_date: "2025-10-10",
-        national_list_effective_date: "2025-10-10",
-        national_list_source_url: "https://zakon.rada.gov.ua/laws/show/333?token=secret",
-        national_list_section: "/opt/render/project/src/data",
-        national_list_official_name: "C:/private/list",
-        national_list_ingredients_json: JSON.stringify(["Ibuprofen", "Bearer secret-token"]),
-      }],
+      [
+        {
+          ...productRow,
+          national_list_status: "exact" as const,
+          national_list_reason: "DATABASE_URL=postgresql://secret@host/db",
+          national_list_release_id: "C:/private/release",
+          national_list_title: "api_key=secret",
+          national_list_act_number: "333",
+          national_list_act_date: "2009-03-25",
+          national_list_revision_date: "2025-10-10",
+          national_list_effective_date: "2025-10-10",
+          national_list_source_url:
+            "https://zakon.rada.gov.ua/laws/show/333?token=secret",
+          national_list_section: "/opt/render/project/src/data",
+          national_list_official_name: "C:/private/list",
+          national_list_ingredients_json: JSON.stringify([
+            "Ibuprofen",
+            "Bearer secret-token",
+          ]),
+        },
+      ],
       [],
       [],
     );
     expect(result).toMatchObject({
       nationalListRelease: null,
-      nationalListMatchReason: "National-list status is unavailable for this product.",
+      nationalListMatchReason:
+        "National-list status is unavailable for this product.",
       nationalListSection: null,
       nationalListSource: null,
       nationalListMatchDetails: null,
     });
     const serialized = JSON.stringify(result);
-    for (const unsafe of ["DATABASE_URL", "postgresql://", "api_key", "Bearer", "C:/", "/opt/"]) {
+    for (const unsafe of [
+      "DATABASE_URL",
+      "postgresql://",
+      "api_key",
+      "Bearer",
+      "C:/",
+      "/opt/",
+    ]) {
       expect(serialized).not.toContain(unsafe);
     }
   });
@@ -209,11 +306,7 @@ describe("catalog search service", () => {
       mappingStatus: "ambiguous",
       approvedMapping: null,
     });
-    for (const review_status of [
-      "pending",
-      "needs_review",
-      "quarantined",
-    ]) {
+    for (const review_status of ["pending", "needs_review", "quarantined"]) {
       const [unapproved] = assembleRegistryProducts(
         [productRow],
         [],
@@ -363,7 +456,13 @@ describe("catalog search service", () => {
     );
     expect(exact).not.toHaveBeenCalled();
     expect(isExactFastPathEligible(input({ q: "Nurofen" }))).toBe(true);
-    expect(isExactFastPathEligible(input({ q: "Nurofen", mappingStatus: "approved" }))).toBe(false);
+    expect(isExactFastPathEligible(input({ q: "Metformin" }))).toBe(false);
+    expect(isExactFastPathEligible(input({ q: "парацитамол" }))).toBe(false);
+    expect(
+      isExactFastPathEligible(
+        input({ q: "Nurofen", mappingStatus: "approved" }),
+      ),
+    ).toBe(false);
   });
 
   it("invalidates registry caches when the snapshot version changes", () => {
@@ -415,15 +514,15 @@ describe("catalog search service", () => {
     expect(
       SearchCatalogQueryParams.safeParse({ pageSize: "100" }).success,
     ).toBe(false);
-    expect(
-      SearchCatalogQueryParams.safeParse({ pageSize: "50" }).success,
-    ).toBe(true);
-    expect(
-      SearchCatalogQueryParams.safeParse({ page: "1.5" }).success,
-    ).toBe(false);
-    expect(
-      SearchCatalogQueryParams.safeParse({ page: "10001" }).success,
-    ).toBe(false);
+    expect(SearchCatalogQueryParams.safeParse({ pageSize: "50" }).success).toBe(
+      true,
+    );
+    expect(SearchCatalogQueryParams.safeParse({ page: "1.5" }).success).toBe(
+      false,
+    );
+    expect(SearchCatalogQueryParams.safeParse({ page: "10001" }).success).toBe(
+      false,
+    );
   });
 
   it("sanitizes database failures and never leaks environment or paths", async () => {
@@ -482,19 +581,22 @@ describe("catalog search service", () => {
     expect(concurrent).toEqual(first);
     expect(warm).toEqual(first);
     expect(query).toHaveBeenCalledTimes(4);
-    expect(labels).toEqual(expect.arrayContaining([
-      "catalog-snapshot",
-      "registry-exact-product",
-      "registry-manufacturers",
-      "approved-mappings",
-    ]));
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        "catalog-snapshot",
+        "registry-exact-product",
+        "registry-manufacturers",
+        "approved-mappings",
+      ]),
+    );
     const exactSql = query.mock.calls
       .map(([sql]) => sql)
       .find((sql) => sql.includes("WITH exact_candidates"));
     expect(exactSql).toContain("p.registration_number = $1");
     expect(exactSql).toContain("p.normalized_trade_name = $2");
-    expect(exactSql).toContain("query_alias.review_status = 'approved'");
-    expect(exactSql).toContain("LOWER(p.inn) = $3");
+    expect(exactSql).toContain("TRANSLATE");
+    expect(exactSql).not.toContain("query_alias");
+    expect(exactSql).not.toContain("LOWER(p.inn)");
     resetRegistrySearchCachesForTests();
   });
 
@@ -502,12 +604,16 @@ describe("catalog search service", () => {
     resetRegistrySearchCachesForTests();
     const query = vi.fn(async (sql: string) => {
       if (sql.includes("SELECT COUNT(*)::int AS count")) {
-        return { rows: [{ count: 16_533, snapshot_version: "batch-negative" }] };
+        return {
+          rows: [{ count: 16_533, snapshot_version: "batch-negative" }],
+        };
       }
       if (sql.includes("WITH exact_candidates")) return { rows: [] };
       throw new Error("Unexpected negative-path test query");
     });
-    const dbStore = await createPostgresRegistryCatalogStore({ executor: { query } });
+    const dbStore = await createPostgresRegistryCatalogStore({
+      executor: { query },
+    });
     const exactInput = input({ q: "ambiguous", view: "grouped" });
     expect(await dbStore.findUniqueExactProduct!(exactInput)).toBeNull();
     expect(await dbStore.findUniqueExactProduct!(exactInput)).toBeNull();
@@ -544,19 +650,41 @@ describe("catalog search service", () => {
     expect(first.items).toHaveLength(1);
     expect(query).toHaveBeenCalledTimes(4);
     expect(labels).toHaveLength(4);
-    expect(labels).toEqual(expect.arrayContaining([
-      "catalog-snapshot",
-      "registry-grouped-page",
-      "registry-manufacturers",
-      "approved-mappings",
-    ]));
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        "catalog-snapshot",
+        "registry-grouped-page",
+        "registry-manufacturers",
+        "approved-mappings",
+      ]),
+    );
     const groupedSql = query.mock.calls
       .map(([sql]) => sql)
       .find((sql) => sql.includes("knowledge_registry_products p"));
-    expect(groupedSql).toContain("query_alias.normalized = $2");
+    expect(groupedSql).toContain("query_alias.normalized = ANY($7::text[])");
     expect(groupedSql).toContain("query_alias.normalized LIKE $4");
     expect(groupedSql).not.toContain("query_alias.normalized = 2");
-    expect(groupedSql).toContain("exact_approved_alias");
+    expect(groupedSql).toContain(
+      "ON exact_approved_alias.normalized = p.normalized_trade_name",
+    );
+    expect(groupedSql).toContain(
+      "ON prefix_approved_alias.normalized = p.normalized_trade_name",
+    );
+    expect(groupedSql).not.toContain("AND product_alias.normalized IN");
+    expect(groupedSql).not.toContain("catalog_keys.");
+    expect(groupedSql).not.toContain("TRANSLATE(");
+    expect(groupedSql).not.toContain("REGEXP_REPLACE(");
+    expect(groupedSql).toContain("p.normalized_trade_name = ANY($7::text[])");
+    expect(groupedSql).toContain("LOWER(p.inn) = ANY($8::text[])");
+    expect(groupedSql).toContain("p.normalized_trade_name = $2");
+    expect(groupedSql).toContain(
+      "FROM knowledge_registry_products exact_trade",
+    );
+    expect(groupedSql).toContain(
+      "WHERE exact_trade.normalized_trade_name = $2",
+    );
+    expect(groupedSql).toContain("p.normalized_trade_name LIKE $4");
+    expect(groupedSql).toContain("LOWER(p.trade_name) LIKE ANY($9::text[])");
     expect(groupedSql).toContain("normalized_name");
     expect(groupedSql).toContain("LEFT JOIN LATERAL");
     expect(groupedSql).toContain("national_list_match_results");
@@ -574,16 +702,59 @@ describe("catalog search service", () => {
         variantPage: 2,
       }),
     );
-    expect(query).toHaveBeenCalledTimes(4);
+    expect(query).toHaveBeenCalledTimes(7);
+    const tradeFilteredCall = query.mock.calls.find(
+      ([sql, values]) =>
+        sql.includes("p.normalized_trade_name LIKE") &&
+        values?.filter((value) => value === "%nurofen%").length === 3,
+    );
+    expect(tradeFilteredCall?.[0]).toContain("p.normalized_trade_name LIKE");
 
     await dbStore.searchProductsForGrouping!(
       input({ q: "Ibuprofen", view: "grouped", nationalListStatus: "exact" }),
     );
-    expect(query).toHaveBeenCalledTimes(7);
-    const filteredCall = query.mock.calls.find(([sql, values]) =>
-      sql.includes("national_list_match_results") && values?.includes("exact"));
+    expect(query).toHaveBeenCalledTimes(10);
+    const filteredCall = query.mock.calls.find(
+      ([sql, values]) =>
+        sql.includes("national_list_match_results") &&
+        values?.includes("exact"),
+    );
     expect(filteredCall?.[0]).toContain("COALESCE(nlm.status");
     expect(filteredCall?.[1]).toContain("exact");
+    expect(filteredCall?.[0]).not.toContain(
+      "FROM knowledge_registry_products exact_trade",
+    );
+
+    await dbStore.searchProductsForGrouping!(
+      input({
+        q: "Amlodipine + Valsartan",
+        view: "grouped",
+        compositionType: "combination",
+        mappingStatus: "unmapped",
+      }),
+    );
+    expect(query).toHaveBeenCalledTimes(13);
+    const preLimitFilterCall = query.mock.calls.find(
+      ([sql, values]) =>
+        sql.includes("COUNT(DISTINCT mapping_name.ingredient_inn_key)") &&
+        values?.includes("%amlodipine%"),
+    );
+    expect(preLimitFilterCall?.[0]).toContain("catalog_keys.active_key");
+    expect(preLimitFilterCall?.[0]).toContain("TRANSLATE(");
+    expect(preLimitFilterCall?.[0]).not.toContain("REGEXP_REPLACE(");
+    expect(preLimitFilterCall?.[0]).toContain("~*");
+    expect(preLimitFilterCall?.[0]).toContain(
+      "/[[:space:]]*([^[:space:]0-9]|$)",
+    );
+    expect(preLimitFilterCall?.[0]).not.toContain(
+      "query_alias.normalized = ANY",
+    );
+    expect(preLimitFilterCall?.[0]).not.toContain(
+      "catalog_keys.trade_key = ANY",
+    );
+    expect(preLimitFilterCall?.[0]).not.toContain(
+      "LOWER(p.applicant_name) LIKE",
+    );
     resetRegistrySearchCachesForTests();
   });
 });

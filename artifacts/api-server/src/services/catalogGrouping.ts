@@ -48,7 +48,7 @@ function normalizedText(value: string | null | undefined): string {
 }
 
 function compositionDescriptor(product: RegistryProductResult): CompositionDescriptor {
-  const official = product.inn.trim();
+  const official = product.inn.trim() || product.activeIngredient.trim();
   if (!official) {
     return {
       key: stableKey("composition_unknown", [product.id]),
@@ -59,7 +59,7 @@ function compositionDescriptor(product: RegistryProductResult): CompositionDescr
   }
 
   const components = official
-    .split(/\s*(?:\+|;|,|\/(?!\d)|\b(?:and|with)\b|(?<!\p{L})(?:\u0442\u0430|\u0456)(?!\p{L}))\s*/iu)
+    .split(/\s*(?:\+|;|(?<!\d),(?!\s*\d)|\/(?!\s*\d)|\b(?:and|with)\b|(?<!\p{L})(?:\u0442\u0430|\u0456)(?!\p{L}))\s*/iu)
     .filter(Boolean);
   const canonical = [...new Map(
     components.map((component) => [normalizedText(component), component] as const),
