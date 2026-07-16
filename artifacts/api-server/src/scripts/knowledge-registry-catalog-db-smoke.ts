@@ -1591,6 +1591,19 @@ async function main(): Promise<void> {
     );
     mkdirSync(dirname(coverageReportPath), { recursive: true });
     writeFileSync(coverageReportPath, coverageReportJson, "utf8");
+    if (coverageMisses.length > 0) {
+      console.error(
+        JSON.stringify(
+          {
+            coverageMisses: coverageReportCases
+              .filter((item) => !item.passed)
+              .slice(0, 10),
+          },
+          null,
+          2,
+        ),
+      );
+    }
     assert(
       coverageMisses.length === 0,
       `Catalog DB coverage reported ${coverageMisses.length} misses.`,
