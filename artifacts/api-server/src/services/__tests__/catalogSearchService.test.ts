@@ -657,6 +657,8 @@ describe("catalog search service", () => {
     );
     expect(groupedSql).not.toContain("AND product_alias.normalized IN");
     expect(groupedSql).toContain("catalog_keys.inn_key");
+    expect(groupedSql).toContain("TRANSLATE(");
+    expect(groupedSql).not.toContain("REGEXP_REPLACE(");
     expect(groupedSql).toContain("catalog_keys.inn_key = ANY($7::text[])");
     expect(groupedSql).toContain("p.normalized_trade_name = $2");
     expect(groupedSql).toContain("p.normalized_trade_name LIKE $4");

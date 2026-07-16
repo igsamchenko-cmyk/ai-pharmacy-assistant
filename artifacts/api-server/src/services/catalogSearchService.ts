@@ -268,18 +268,13 @@ function escapeLike(value: string): string {
 }
 
 function catalogSearchKeySql(valueSql: string): string {
-  return `REGEXP_REPLACE(
-    TRANSLATE(
-      LOWER(COALESCE(${valueSql}, '')),
-      $$®™’ʼ‘´ʹ′' -_‐‑‒–—―./\\()+$$,
-      ''
-    ),
-    $$[[:space:]]+$$,
-    '',
-    'g'
+  return `TRANSLATE(
+    LOWER(COALESCE(${valueSql}, '')),
+    $$®™’ʼ‘´ʹ′' -_‐‑‒–—―./\\()+$$
+      || CHR(9) || CHR(10) || CHR(13) || CHR(160),
+    ''
   )`;
 }
-
 const CATALOG_KEYS_JOIN_SQL = `
   CROSS JOIN LATERAL (
     SELECT
