@@ -67,7 +67,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 25.8.2
-          cache: pnpm
 
       - name: Enable repository pnpm
         run: corepack enable
@@ -143,7 +142,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 25.8.2
-          cache: pnpm
 
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
