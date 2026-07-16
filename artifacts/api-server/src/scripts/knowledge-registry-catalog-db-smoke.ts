@@ -118,6 +118,12 @@ interface CoverageEvaluation {
     inn: string;
   } | null;
   unrelatedResultCount: number;
+  unrelatedSample: {
+    registryId: string;
+    registrationNumber: string;
+    tradeName: string;
+    inn: string;
+  } | null;
   responseBytes: number;
   durationMs: number;
   reusedResult: boolean;
@@ -941,6 +947,14 @@ async function evaluateCoverage(
           }
         : null,
       unrelatedResultCount: unrelated.length,
+      unrelatedSample: unrelated[0]
+        ? {
+            registryId: unrelated[0].id,
+            registrationNumber: unrelated[0].registration.number,
+            tradeName: unrelated[0].tradeName.slice(0, 160),
+            inn: unrelated[0].inn.slice(0, 160),
+          }
+        : null,
       responseBytes: cached.responseBytes,
       durationMs: Number(cached.durationMs.toFixed(1)),
       reusedResult,
@@ -1533,6 +1547,7 @@ async function main(): Promise<void> {
           }
         : null,
       unrelatedResultCount: item.unrelatedResultCount,
+      unrelatedSample: item.unrelatedSample,
       responseBytes: item.responseBytes,
       durationMs: item.durationMs,
       passed: item.passed,

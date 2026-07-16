@@ -115,6 +115,21 @@ describe("catalog search service", () => {
     expect(
       catalogCompositionSearchTerms("клавуланова кислота / амоксицилін"),
     ).toEqual(["клавулановакислота", "амоксицилін"]);
+    expect(
+      catalogCompositionSearchTerms(
+        "ОКСАЛІПЛАТИНУМ АККОРД/OXALIPLATINUM ACCORD",
+      ),
+    ).toEqual([]);
+    expect(catalogCompositionSearchTerms("ОНКОНАЗЕ 10 /ONCONASE 10")).toEqual(
+      [],
+    );
+    expect(
+      catalogCompositionSearchTerms("КАПЕЦИТАБІН АККОРД/CAPECITABINE ACCORD"),
+    ).toEqual([]);
+    expect(catalogCompositionSearchTerms("Амлодипін / Valsartan")).toEqual([
+      "амлодипін",
+      "valsartan",
+    ]);
     expect(catalogCompositionSearchTerms("Метформін")).toEqual([]);
     expect(catalogCompositionSearchTerms("Amlodipine 5 mg / 5 ml")).toEqual([]);
     expect(catalogCompositionSearchTerms("Amlodipine 2,5 mg")).toEqual([]);
@@ -662,6 +677,12 @@ describe("catalog search service", () => {
     expect(groupedSql).toContain("p.normalized_trade_name = ANY($7::text[])");
     expect(groupedSql).toContain("LOWER(p.inn) = ANY($8::text[])");
     expect(groupedSql).toContain("p.normalized_trade_name = $2");
+    expect(groupedSql).toContain(
+      "FROM knowledge_registry_products exact_trade",
+    );
+    expect(groupedSql).toContain(
+      "WHERE exact_trade.normalized_trade_name = $2",
+    );
     expect(groupedSql).toContain("p.normalized_trade_name LIKE $4");
     expect(groupedSql).toContain("LOWER(p.trade_name) LIKE ANY($9::text[])");
     expect(groupedSql).toContain("normalized_name");
@@ -700,6 +721,9 @@ describe("catalog search service", () => {
     );
     expect(filteredCall?.[0]).toContain("COALESCE(nlm.status");
     expect(filteredCall?.[1]).toContain("exact");
+    expect(filteredCall?.[0]).not.toContain(
+      "FROM knowledge_registry_products exact_trade",
+    );
 
     await dbStore.searchProductsForGrouping!(
       input({

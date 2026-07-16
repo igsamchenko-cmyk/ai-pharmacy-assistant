@@ -307,6 +307,16 @@ export function catalogAliasQueryKeys(query: string): string[] {
 
 export function catalogCompositionSearchTerms(query: string): string[] {
   if (/^UA\//iu.test(query.trim())) return [];
+  const slashParts = query.split(/\s*\/\s*/u);
+  if (
+    slashParts.length === 2 &&
+    /\p{Script=Cyrillic}/u.test(slashParts[0] ?? "") &&
+    /[A-Za-z]/u.test(slashParts[1] ?? "") &&
+    /\s/u.test((slashParts[0] ?? "").trim()) &&
+    /\s/u.test((slashParts[1] ?? "").trim())
+  ) {
+    return [];
+  }
   const parts = query
     .split(
       /\s*(?:\+|;|(?<!\d),(?!\s*\d)|\/(?!\s*\d)|\b(?:and|with)\b|(?<!\p{L})(?:та|і)(?!\p{L}))\s*/iu,
@@ -643,6 +653,18 @@ function buildProductFilter(input: CatalogSearchInput) {
       );
       const exactApproved = "exact_approved_alias.normalized IS NOT NULL";
       const prefixApproved = "prefix_approved_alias.normalized IS NOT NULL";
+      const ingredientLevelQuery =
+        resolved?.kind !== undefined && resolved.kind !== "brand";
+      const exactTradeScope = ingredientLevelQuery
+        ? "TRUE"
+        : `(
+          NOT EXISTS (
+            SELECT 1
+            FROM knowledge_registry_products exact_trade
+            WHERE exact_trade.normalized_trade_name = ${normalizedExact}
+          )
+          OR p.normalized_trade_name = ${normalizedExact}
+        )`;
 
       joinSql += `
         LEFT JOIN (
@@ -683,21 +705,24 @@ function buildProductFilter(input: CatalogSearchInput) {
       )`;
 
       clauses.push(`(
-        p.normalized_trade_name = ${normalizedExact}
-        OR p.normalized_trade_name = ANY(${aliasKeysRef}::text[])
-        OR LOWER(p.trade_name) = ANY(${aliasLowerRef}::text[])
-        OR LOWER(p.inn) = ANY(${aliasLowerRef}::text[])
-        OR LOWER(p.active_ingredient) = ANY(${aliasLowerRef}::text[])
-        OR LOWER(p.registration_number) = ${lowerExact}
-        OR p.normalized_trade_name LIKE ${normalizedPrefix} ESCAPE '\\'
-        OR p.normalized_trade_name LIKE ANY(${aliasLowerPrefixesRef}::text[])
-        OR LOWER(p.trade_name) LIKE ANY(${aliasLowerPrefixesRef}::text[])
-        OR LOWER(p.inn) LIKE ANY(${aliasLowerPrefixesRef}::text[])
-        OR LOWER(p.active_ingredient) LIKE ANY(${aliasLowerPrefixesRef}::text[])
-        OR LOWER(p.registration_number) LIKE ${lowerPrefix} ESCAPE '\\'
-        OR ${exactApproved}
-        OR ${prefixApproved}
-        OR ${directContains}
+        ${exactTradeScope}
+        AND (
+          p.normalized_trade_name = ${normalizedExact}
+          OR p.normalized_trade_name = ANY(${aliasKeysRef}::text[])
+          OR LOWER(p.trade_name) = ANY(${aliasLowerRef}::text[])
+          OR LOWER(p.inn) = ANY(${aliasLowerRef}::text[])
+          OR LOWER(p.active_ingredient) = ANY(${aliasLowerRef}::text[])
+          OR LOWER(p.registration_number) = ${lowerExact}
+          OR p.normalized_trade_name LIKE ${normalizedPrefix} ESCAPE '\\'
+          OR p.normalized_trade_name LIKE ANY(${aliasLowerPrefixesRef}::text[])
+          OR LOWER(p.trade_name) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+          OR LOWER(p.inn) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+          OR LOWER(p.active_ingredient) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+          OR LOWER(p.registration_number) LIKE ${lowerPrefix} ESCAPE '\\'
+          OR ${exactApproved}
+          OR ${prefixApproved}
+          OR ${directContains}
+        )
       )`);
       rankSql = `CASE
         WHEN LOWER(p.registration_number) = ${lowerExact} THEN 1
