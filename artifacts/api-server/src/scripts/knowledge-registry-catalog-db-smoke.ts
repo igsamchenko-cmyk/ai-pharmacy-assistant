@@ -811,6 +811,13 @@ function productRelatedToFixture(
   expectedIds: ReadonlySet<string>,
 ): boolean {
   if (expectedIds.has(product.id)) return true;
+  const normalizedTradeName = normalize(product.tradeName);
+  if (
+    normalizedTradeName &&
+    fixture.ingredientKeys.includes(normalizedTradeName)
+  ) {
+    return true;
+  }
   const ingredientFields = [
     normalize(product.inn),
     normalize(product.activeIngredient),
