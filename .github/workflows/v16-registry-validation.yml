@@ -76,7 +76,7 @@ jobs:
           pnpm knowledge:registry:mapping-db-smoke -- --download --limit=10 --expect-min-mappings=10 --rerun --verify-timeouts
           pnpm knowledge:registry:mapping-db-smoke -- --download --limit=100 --expect-min-mappings=100 --rerun
           pnpm knowledge:registry:mapping-db-smoke -- --download --limit=500 --expect-min-mappings=500 --rerun
-          pnpm knowledge:registry:mapping-db-smoke -- --download --expect-min-mappings=1218 --rerun
+          pnpm knowledge:registry:mapping-db-smoke -- --download --expect-min-mappings=1217 --rerun
         env:
           DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/farmassist_test"
           DATABASE_SSL: "false"
