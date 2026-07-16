@@ -308,14 +308,18 @@ export function catalogAliasQueryKeys(query: string): string[] {
 export function catalogCompositionSearchTerms(query: string): string[] {
   if (/^UA\//iu.test(query.trim())) return [];
   const slashParts = query.split(/\s*\/\s*/u);
-  if (
+  const isMixedScriptSlash =
     slashParts.length === 2 &&
     /\p{Script=Cyrillic}/u.test(slashParts[0] ?? "") &&
-    /[A-Za-z]/u.test(slashParts[1] ?? "") &&
-    /\s/u.test((slashParts[0] ?? "").trim()) &&
-    /\s/u.test((slashParts[1] ?? "").trim())
-  ) {
-    return [];
+    /[A-Za-z]/u.test(slashParts[1] ?? "");
+  if (isMixedScriptSlash) {
+    const resolvedIngredientKeys = new Set(
+      slashParts
+        .map((part) => resolveSourceBackedDictionaryQuery(part)?.ingredient.inn ?? "")
+        .map(normalize)
+        .filter(Boolean),
+    );
+    if (resolvedIngredientKeys.size < 2) return [];
   }
   const parts = query
     .split(

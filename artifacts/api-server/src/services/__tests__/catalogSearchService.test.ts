@@ -123,6 +123,7 @@ describe("catalog search service", () => {
     expect(catalogCompositionSearchTerms("ОНКОНАЗЕ 10 /ONCONASE 10")).toEqual(
       [],
     );
+    expect(catalogCompositionSearchTerms("ОНКАСПАР/ONCASPAR")).toEqual([]);
     expect(
       catalogCompositionSearchTerms("КАПЕЦИТАБІН АККОРД/CAPECITABINE ACCORD"),
     ).toEqual([]);

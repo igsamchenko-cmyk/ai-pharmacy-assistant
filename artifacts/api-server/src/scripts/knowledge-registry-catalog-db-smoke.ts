@@ -600,11 +600,19 @@ function buildCoverageFixtures(
       ) {
         return null;
       }
+      const ingredientKeys = targetRows.flatMap((row) => {
+        const ingredient = row.inn.trim() || row.active_ingredient.trim();
+        if (!ingredient) return [];
+        const resolved = normalizeQuery(ingredient);
+        return resolved
+          ? dictionaryKeysForIngredient(resolved.ingredient.inn, dictionaryEntries)
+          : [normalize(ingredient)];
+      });
       return makeFixture({
         category: "punctuation_case",
         query,
         expectedRows: targetRows,
-        ingredientKeys: [],
+        ingredientKeys,
         combinationTerms: [],
         derivation:
           "case and separator/trademark variant derived from an official trade name",
@@ -814,7 +822,12 @@ function productRelatedToFixture(
   const normalizedTradeName = normalize(product.tradeName);
   if (
     normalizedTradeName &&
-    fixture.ingredientKeys.includes(normalizedTradeName)
+    fixture.ingredientKeys.some(
+      (key) =>
+        normalizedTradeName === key ||
+        normalizedTradeName.startsWith(key) ||
+        normalizedTradeName.endsWith(key),
+    )
   ) {
     return true;
   }
