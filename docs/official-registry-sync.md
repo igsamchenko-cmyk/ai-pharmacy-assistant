@@ -22,10 +22,19 @@ authority remains separate from code review.
 ## Apply gate
 
 Production apply is available only through `workflow_dispatch` with `mode=apply`,
-the exact audit SHA-256 in `confirm_sha256`, the protected
-`production-registry-sync` environment, and its `PRODUCTION_DATABASE_URL` secret.
-The apply job cannot download a different file: it consumes the immutable artifact
-created by its own audit job.
+the exact audit SHA-256 in `confirm_sha256`, and an independent
+`confirm_production_apply` value that exactly matches the environment-scoped
+`CONFIRM_PRODUCTION_REGISTRY_APPLY` secret. Both confirmations and the secret must
+equal the SHA-256 emitted by the current audit job. The
+`production-registry-sync` environment also holds `PRODUCTION_DATABASE_URL`, but
+the confirmation contract does not depend on plan-specific environment protection
+rules. The apply job cannot download a different file: it consumes the immutable
+artifact created by its own audit job.
+
+The workflow does not expose `PRODUCTION_DATABASE_URL` to audit mode or to steps
+before the confirmation gate. A failed gate writes an explicit `false` result to
+the job summary and stops before schema or registry writes. The confirmation secret
+is never printed.
 
 The product update runs in one database transaction and is additive/upsert-first. PostgreSQL MVCC keeps the previous complete active snapshot visible to search until the new snapshot passes its pre-commit exact-parity gate. Every official row is marked `current`
 and linked to the source hash. Rows absent from the new export are retained and
@@ -47,9 +56,11 @@ run. Threshold changes require code review.
 ## Production update order
 
 1. Review the audit artifact and source SHA-256.
-2. Add/protect the `production-registry-sync` GitHub environment and its read/write
-   registry DB secret.
-3. Run `mode=apply` with the exact SHA-256 and approve the environment gate.
+2. Add the `production-registry-sync` GitHub environment with
+   `PRODUCTION_DATABASE_URL` and `CONFIRM_PRODUCTION_REGISTRY_APPLY`; set the latter
+   to the audited SHA-256 approved for this run.
+3. Run `mode=apply` with that SHA-256 in both `confirm_sha256` and
+   `confirm_production_apply`.
 4. The workflow applies additive schema changes, performs the upsert/mark-stale
    transaction sequence, then requires exact post-apply parity and the full DB
    search performance gate.
@@ -64,4 +75,4 @@ Use the prior successful sync run's `checkpoint_artifact`, verify its SHA-256, a
 run the same gated apply path with that CSV and hash. Because products are retained
 rather than deleted, reapplying the prior artifact restores prior fields,
 manufacturer sets, and `current`/`stale` membership. A rollback still requires the
-protected production environment approval.
+same fail-closed production confirmation contract.

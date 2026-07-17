@@ -28,6 +28,7 @@
     "knowledge:registry:mapping-db-smoke": "pnpm --filter @workspace/api-server run knowledge:registry:mapping-db-smoke",
     "knowledge:registry:production-report": "pnpm --filter @workspace/api-server run knowledge:registry:production-report",
     "knowledge:registry:parity": "pnpm --filter @workspace/api-server run knowledge:registry:parity",
+    "knowledge:registry:confirm-production-apply": "pnpm --filter @workspace/api-server run knowledge:registry:confirm-production-apply",
     "knowledge:registry:sync-summary": "pnpm --filter @workspace/api-server run knowledge:registry:sync-summary",
     "knowledge:catalog:completeness-report": "pnpm --filter @workspace/api-server run knowledge:catalog:completeness-report",
     "knowledge:catalog:search-coverage-report": "pnpm --filter @workspace/api-server run knowledge:catalog:search-coverage-report",

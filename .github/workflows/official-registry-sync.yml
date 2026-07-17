@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Audit only, or apply after production environment approval"
+        description: "Audit only, or apply after the fail-closed production confirmation gate"
         required: true
         default: audit
         type: choice
@@ -17,12 +17,18 @@ on:
         description: "Required for apply; exact SHA-256 printed by the audit job"
         required: false
         type: string
+      confirm_production_apply:
+        description: "Required for apply; must exactly match the environment confirmation secret"
+        required: false
+        type: string
   pull_request:
     paths:
       - ".github/workflows/official-registry-sync.yml"
       - "artifacts/api-server/src/knowledge/ingestion/registry*.ts"
       - "artifacts/api-server/src/knowledge/registryProductionSearchSmoke.ts"
+      - "artifacts/api-server/src/knowledge/registryApplyConfirmation.ts"
       - "artifacts/api-server/src/knowledge/registrySyncWorkflowState.ts"
+      - "artifacts/api-server/src/scripts/knowledge-registry-confirm-production-apply.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-catalog-db-smoke.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-sync-summary.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-parity.ts"
@@ -130,16 +136,12 @@ jobs:
             artifacts/reports/official-registry-parity-report.json
 
   apply:
-    name: Approved additive/upsert and mark-stale update
+    name: Confirmed additive/upsert and mark-stale update
     needs: audit
     if: github.event_name == 'workflow_dispatch' && inputs.mode == 'apply'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: production-registry-sync
-    env:
-      DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
-      DATABASE_SSL: "true"
-      KNOWLEDGE_DB_RUNTIME: "true"
     steps:
       - uses: actions/checkout@v4
 
@@ -150,25 +152,45 @@ jobs:
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
 
+      - name: Require fail-closed production confirmation
+        id: production_confirmation
+        continue-on-error: true
+        env:
+          REGISTRY_SYNC_MODE: ${{ inputs.mode }}
+          CONFIRM_REGISTRY_SNAPSHOT_SHA: ${{ inputs.confirm_sha256 }}
+          AUDITED_REGISTRY_SNAPSHOT_SHA: ${{ needs.audit.outputs.source_sha256 }}
+          CONFIRM_PRODUCTION_APPLY_INPUT: ${{ inputs.confirm_production_apply }}
+          CONFIRM_PRODUCTION_REGISTRY_APPLY: ${{ secrets.CONFIRM_PRODUCTION_REGISTRY_APPLY }}
+        run: pnpm knowledge:registry:confirm-production-apply
+
+      - name: Fail before production access when confirmation is invalid
+        if: >-
+          steps.production_confirmation.outcome != 'success' ||
+          steps.production_confirmation.outputs.confirmation_passed != 'true'
+        run: |
+          echo "Production registry confirmation gate failed. No production database step was started."
+          exit 1
+
       - name: Download the audited immutable checkpoint
         uses: actions/download-artifact@v4
         with:
           name: official-registry-${{ github.run_id }}-${{ needs.audit.outputs.source_sha256 }}
           path: ${{ runner.temp }}/registry-audit
 
-      - name: Require explicit source confirmation
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "${{ inputs.confirm_sha256 }}"
-          test "${{ inputs.confirm_sha256 }}" = "${{ needs.audit.outputs.source_sha256 }}"
-
       - name: Apply additive schema changes
         run: pnpm db:push
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_SSL: "true"
+          KNOWLEDGE_DB_RUNTIME: "true"
 
       - name: Apply exact product upsert and mark absent rows stale
         id: apply_registry
         continue-on-error: true
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_SSL: "true"
+          KNOWLEDGE_DB_RUNTIME: "true"
         run: >-
           pnpm knowledge:registry:parity --
           --file="$RUNNER_TEMP/registry-audit/reestr.csv"
@@ -199,6 +221,9 @@ jobs:
           REGISTRY_PRODUCTION_SEARCH_SMOKE: "true"
           CONFIRM_REGISTRY_SNAPSHOT_SHA: ${{ inputs.confirm_sha256 }}
           AUDITED_REGISTRY_SNAPSHOT_SHA: ${{ needs.audit.outputs.source_sha256 }}
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_SSL: "true"
+          KNOWLEDGE_DB_RUNTIME: "true"
           REGISTRY_SYNC_MODE: apply
           REGISTRY_SYNC_PURPOSE: post-apply-registry-search-smoke
           REGISTRY_SYNC_ENVIRONMENT: production-registry-sync
