@@ -21,6 +21,14 @@ import {
   type CatalogQueryMetric,
   type CatalogSearchInput,
 } from "../services/catalogSearchService";
+import {
+  assertCatalogSmokeHasNoIdleTransactions,
+  authorizeCatalogSmokeDatabase,
+  closeCatalogSmokePool,
+  configureCatalogSmokeReadOnlySession,
+  createReadOnlyCatalogExecutor,
+  verifyCatalogSmokeReadOnlySession,
+} from "../knowledge/registryProductionSearchSmoke";
 
 const GROUPED_QUERIES = [
   "Метформін",
@@ -162,24 +170,6 @@ function positiveIntArg(prefix: string, fallback: number): number {
     throw new Error("Catalog DB smoke received an invalid positive integer.");
   }
   return value;
-}
-
-function assertNonProductionDatabase(): void {
-  const raw = process.env.DATABASE_URL;
-  if (!raw)
-    throw new Error("A local test database is required for catalog DB smoke.");
-  const parsed = new URL(raw);
-  const host = parsed.hostname.toLowerCase();
-  const local = new Set(["localhost", "127.0.0.1", "::1"]);
-  if (host.includes("render.com") || host.includes("render-postgres")) {
-    throw new Error("Catalog DB smoke refuses production database hosts.");
-  }
-  if (
-    !local.has(host) &&
-    process.env.ALLOW_REGISTRY_CATALOG_DB_SMOKE_NONLOCAL !== "true"
-  ) {
-    throw new Error("Catalog DB smoke requires an isolated test database.");
-  }
 }
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -605,7 +595,10 @@ function buildCoverageFixtures(
         if (!ingredient) return [];
         const resolved = normalizeQuery(ingredient);
         return resolved
-          ? dictionaryKeysForIngredient(resolved.ingredient.inn, dictionaryEntries)
+          ? dictionaryKeysForIngredient(
+              resolved.ingredient.inn,
+              dictionaryEntries,
+            )
           : [normalize(ingredient)];
       });
       return makeFixture({
@@ -990,7 +983,11 @@ async function evaluateCoverage(
   };
 }
 async function main(): Promise<void> {
-  assertNonProductionDatabase();
+  const authorization = authorizeCatalogSmokeDatabase(
+    process.env.DATABASE_URL,
+    process.env,
+  );
+  configureCatalogSmokeReadOnlySession(process.env);
   const expectedProducts = positiveIntArg("--expect-min-products=", 16_000);
   const expectedExactProducts = optionalPositiveIntArg("--expect-products=");
   const coverageReportPath =
@@ -1001,12 +998,25 @@ async function main(): Promise<void> {
   const maxPrefixP50Ms = positiveIntArg("--max-prefix-p50-ms=", 250);
   const maxNavigationP95Ms = positiveIntArg("--max-navigation-p95-ms=", 400);
   const queryMetrics: CatalogQueryMetric[] = [];
+  const { pool } = await import("@workspace/db");
+  const readOnlyExecutor = createReadOnlyCatalogExecutor({
+    query: async (text, values) => {
+      const result = await pool.query(text, values);
+      return { rows: result.rows as Array<Record<string, unknown>> };
+    },
+  });
+  const readOnlyQuery = async <T>(
+    text: string,
+    values: unknown[] = [],
+  ): Promise<{ rows: T[] }> =>
+    (await readOnlyExecutor.query(text, values)) as { rows: T[] };
   const store = await createPostgresRegistryCatalogStore({
+    executor: readOnlyExecutor,
     onQuery: (metric) => queryMetrics.push(metric),
   });
-  const { pool } = await import("@workspace/db");
 
   try {
+    await verifyCatalogSmokeReadOnlySession(readOnlyExecutor);
     const first = await store.searchProducts(input());
     assert(
       first.catalogTotal >= expectedProducts,
@@ -1285,7 +1295,7 @@ async function main(): Promise<void> {
     );
     assert(sample, "Browse page has no complete registry sample.");
 
-    const uniqueRegistration = await pool.query<{
+    const uniqueRegistration = await readOnlyQuery<{
       registration_number: string;
       registry_id: string;
     }>(
@@ -1399,7 +1409,7 @@ async function main(): Promise<void> {
     const form = await store.searchProducts(input({ q: sample.dosageForm }));
     assert(form.filteredTotal > 0, "Dosage-form search returned zero rows.");
 
-    const mappedRow = await pool.query<{ trade_name: string }>(
+    const mappedRow = await readOnlyQuery<{ trade_name: string }>(
       `SELECT p.trade_name
        FROM knowledge_registry_products p
        JOIN knowledge_ingredient_names n
@@ -1424,17 +1434,11 @@ async function main(): Promise<void> {
       (metric) => metric.label === "registry-grouped-page",
     );
     assert(groupedStatement, "Grouped SQL statement was not observed.");
-    await pool.query("BEGIN TRANSACTION READ ONLY");
-    let planResult: { rows: Array<{ "QUERY PLAN": unknown }> };
-    try {
-      planResult = await pool.query<{ "QUERY PLAN": unknown }>(
-        "EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON, TIMING OFF) " +
-          groupedStatement.statement,
-        [...groupedStatement.values],
-      );
-    } finally {
-      await pool.query("ROLLBACK");
-    }
+    const planResult = await readOnlyQuery<{ "QUERY PLAN": unknown }>(
+      "EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON, TIMING OFF) " +
+        groupedStatement.statement,
+      [...groupedStatement.values],
+    );
     const queryPlan = summarizeQueryPlan(
       planResult.rows[0]?.["QUERY PLAN"] ?? null,
     );
@@ -1442,17 +1446,11 @@ async function main(): Promise<void> {
       (metric) => metric.label === "registry-exact-product",
     );
     assert(exactStatement, "Exact SQL statement was not observed.");
-    await pool.query("BEGIN TRANSACTION READ ONLY");
-    let exactPlanResult: { rows: Array<{ "QUERY PLAN": unknown }> };
-    try {
-      exactPlanResult = await pool.query<{ "QUERY PLAN": unknown }>(
-        "EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON, TIMING OFF) " +
-          exactStatement.statement,
-        [...exactStatement.values],
-      );
-    } finally {
-      await pool.query("ROLLBACK");
-    }
+    const exactPlanResult = await readOnlyQuery<{ "QUERY PLAN": unknown }>(
+      "EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON, TIMING OFF) " +
+        exactStatement.statement,
+      [...exactStatement.values],
+    );
     const exactQueryPlan = summarizeQueryPlan(
       exactPlanResult.rows[0]?.["QUERY PLAN"] ?? null,
     );
@@ -1467,7 +1465,7 @@ async function main(): Promise<void> {
       responseBytes: browseResponseBytes,
     };
     const [coverageRowsResult, approvedMappingsResult] = await Promise.all([
-      pool.query<CoverageRegistryRow>(
+      readOnlyQuery<CoverageRegistryRow>(
         `SELECT registry_id,
                 trade_name,
                 inn,
@@ -1479,7 +1477,7 @@ async function main(): Promise<void> {
          FROM knowledge_registry_products
          ORDER BY registry_id`,
       ),
-      pool.query<{
+      readOnlyQuery<{
         normalized: string;
         ingredient_inn_key: string;
       }>(
@@ -1575,7 +1573,7 @@ async function main(): Promise<void> {
     }));
     const coverageReport = {
       version: "1.0-db-catalog-search-coverage",
-      database: "isolated-non-production",
+      database: authorization.databaseLabel,
       catalogTotal: first.catalogTotal,
       catalogFingerprintSha256,
       policy: {
@@ -1643,11 +1641,14 @@ async function main(): Promise<void> {
       "Catalog smoke output leaks sensitive diagnostics.",
     );
 
+    const idleTransactions =
+      await assertCatalogSmokeHasNoIdleTransactions(readOnlyExecutor);
     console.log(
       JSON.stringify(
         {
           ok: true,
-          database: "isolated-non-production",
+          database: authorization.databaseLabel,
+          idleTransactions,
           catalogTotal: first.catalogTotal,
           page25: first.items.length,
           page50: page50.items.length,
@@ -1668,7 +1669,7 @@ async function main(): Promise<void> {
       ),
     );
   } finally {
-    await pool.end();
+    await closeCatalogSmokePool(pool);
   }
 }
 

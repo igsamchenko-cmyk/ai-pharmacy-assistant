@@ -21,6 +21,10 @@ on:
     paths:
       - ".github/workflows/official-registry-sync.yml"
       - "artifacts/api-server/src/knowledge/ingestion/registry*.ts"
+      - "artifacts/api-server/src/knowledge/registryProductionSearchSmoke.ts"
+      - "artifacts/api-server/src/knowledge/registrySyncWorkflowState.ts"
+      - "artifacts/api-server/src/scripts/knowledge-registry-catalog-db-smoke.ts"
+      - "artifacts/api-server/src/scripts/knowledge-registry-sync-summary.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-parity.ts"
       - "artifacts/api-server/src/services/catalogSearchService.ts"
       - "lib/db/src/schema/knowledge.ts"
@@ -163,6 +167,8 @@ jobs:
         run: pnpm db:push
 
       - name: Apply exact product upsert and mark absent rows stale
+        id: apply_registry
+        continue-on-error: true
         run: >-
           pnpm knowledge:registry:parity --
           --file="$RUNNER_TEMP/registry-audit/reestr.csv"
@@ -172,9 +178,32 @@ jobs:
           --apply
           --confirm-apply="${{ inputs.confirm_sha256 }}"
           --checkpoint-artifact="official-registry-${{ github.run_id }}-${{ needs.audit.outputs.source_sha256 }}"
+          --commit-state-output="$RUNNER_TEMP/registry-commit-state.json"
           --no-write-report
 
+      - name: Capture post-commit marker
+        id: commit_state
+        if: always()
+        run: >-
+          pnpm knowledge:registry:sync-summary --
+          --state-file="$RUNNER_TEMP/registry-commit-state.json"
+          --apply-outcome="${{ steps.apply_registry.outcome }}"
+          --smoke-outcome=skipped
+          --outputs-only
+
       - name: Post-apply full DB search gate
+        id: search_smoke
+        if: steps.apply_registry.outcome == 'success' && steps.commit_state.outputs.commit_completed == 'true'
+        continue-on-error: true
+        env:
+          REGISTRY_PRODUCTION_SEARCH_SMOKE: "true"
+          CONFIRM_REGISTRY_SNAPSHOT_SHA: ${{ inputs.confirm_sha256 }}
+          AUDITED_REGISTRY_SNAPSHOT_SHA: ${{ needs.audit.outputs.source_sha256 }}
+          REGISTRY_SYNC_MODE: apply
+          REGISTRY_SYNC_PURPOSE: post-apply-registry-search-smoke
+          REGISTRY_SYNC_ENVIRONMENT: production-registry-sync
+          REGISTRY_COMMIT_COMPLETED: ${{ steps.commit_state.outputs.commit_completed }}
+          REGISTRY_COMMIT_SNAPSHOT_SHA: ${{ steps.commit_state.outputs.registry_snapshot_hash }}
         run: >-
           pnpm knowledge:registry:catalog-db-smoke --
           --expect-min-products=15000
@@ -183,3 +212,24 @@ jobs:
           --max-exact-p50-ms=150
           --max-prefix-p50-ms=250
           --max-navigation-p95-ms=400
+
+      - name: Post-commit state summary
+        id: post_commit_summary
+        if: always()
+        run: >-
+          pnpm knowledge:registry:sync-summary --
+          --state-file="$RUNNER_TEMP/registry-commit-state.json"
+          --apply-outcome="${{ steps.apply_registry.outcome }}"
+          --smoke-outcome="${{ steps.search_smoke.outcome }}"
+
+      - name: Fail closed on apply or post-commit smoke failure
+        if: >-
+          always() &&
+          (steps.apply_registry.outcome != 'success' ||
+           steps.commit_state.outputs.commit_completed != 'true' ||
+           steps.search_smoke.outcome != 'success' ||
+           steps.post_commit_summary.outputs.production_parity != 'exact' ||
+           steps.post_commit_summary.outputs.registry_snapshot_hash != needs.audit.outputs.source_sha256)
+        run: |
+          echo "Registry apply or protected post-commit verification failed. Review the job summary."
+          exit 1

@@ -13,6 +13,11 @@ import {
   type RegistryComparableProduct,
   type RegistryParseResult,
 } from "../knowledge/ingestion";
+import {
+  initialRegistryCommitState,
+  writeRegistryCommitState,
+  type RegistryCommitState,
+} from "../knowledge/registrySyncWorkflowState";
 
 const DEFAULT_REPORT =
   "../../artifacts/reports/official-registry-parity-report.json";
@@ -193,6 +198,10 @@ async function applySync(options: {
   downloadedAt: string;
   anomalyFailures: string[];
 }) {
+  const commitStateOutput = argValue("--commit-state-output=");
+  let commitState: RegistryCommitState = initialRegistryCommitState();
+  writeRegistryCommitState(commitStateOutput, commitState);
+
   const confirmation = argValue("--confirm-apply=")?.toLowerCase() ?? null;
   if (confirmation !== options.sourceHash) {
     throw new Error(
@@ -245,8 +254,28 @@ async function applySync(options: {
       batchId: syncId,
     });
     const staleMarked = products.staleMarkedProducts ?? 0;
+    commitState = {
+      ...commitState,
+      commitCompleted: true,
+      registrySnapshotHash: options.sourceHash,
+    };
+    writeRegistryCommitState(commitStateOutput, commitState);
     const afterRows = (await loadDatabaseRows()) ?? [];
     const after = compareRegistryParity(options.registry, afterRows);
+    const currentHashes = new Set(
+      afterRows
+        .filter((row) => row.currentStatus === "current")
+        .map((row) => row.sourceSnapshotHash)
+        .filter((hash): hash is string => Boolean(hash)),
+    );
+    commitState = {
+      ...commitState,
+      productionParity: after.exactParity ? "exact" : "mismatch",
+      currentRowCount: after.farmAssistCurrentRows ?? 0,
+      registrySnapshotHash:
+        currentHashes.size === 1 ? [...currentHashes][0] : null,
+    };
+    writeRegistryCommitState(commitStateOutput, commitState);
     await pool.query(
       `UPDATE knowledge_registry_sync_runs
           SET status = $2, farmassist_rows_after = $3,
