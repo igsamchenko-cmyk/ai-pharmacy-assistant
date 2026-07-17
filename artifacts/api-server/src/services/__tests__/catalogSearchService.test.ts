@@ -123,6 +123,7 @@ describe("catalog search service", () => {
     expect(catalogCompositionSearchTerms("ОНКОНАЗЕ 10 /ONCONASE 10")).toEqual(
       [],
     );
+    expect(catalogCompositionSearchTerms("ОНКАСПАР/ONCASPAR")).toEqual([]);
     expect(
       catalogCompositionSearchTerms("КАПЕЦИТАБІН АККОРД/CAPECITABINE ACCORD"),
     ).toEqual([]);
@@ -594,9 +595,15 @@ describe("catalog search service", () => {
       .find((sql) => sql.includes("WITH exact_candidates"));
     expect(exactSql).toContain("p.registration_number = $1");
     expect(exactSql).toContain("p.normalized_trade_name = $2");
+    expect(exactSql).toContain("p.review_status <> 'stale'");
     expect(exactSql).toContain("TRANSLATE");
     expect(exactSql).not.toContain("query_alias");
     expect(exactSql).not.toContain("LOWER(p.inn)");
+    const exactManufacturerSql = query.mock.calls
+      .map(([sql]) => sql)
+      .find((sql) => sql.includes("SELECT product_registry_id, name, country"));
+    expect(exactManufacturerSql).toContain("to_jsonb(registry_manufacturer)");
+    expect(exactManufacturerSql).toContain("current_status");
     resetRegistrySearchCachesForTests();
   });
 
@@ -661,6 +668,8 @@ describe("catalog search service", () => {
     const groupedSql = query.mock.calls
       .map(([sql]) => sql)
       .find((sql) => sql.includes("knowledge_registry_products p"));
+    expect(groupedSql).toContain("p.review_status <> 'stale'");
+    expect(groupedSql).toContain("to_jsonb(search_manufacturer)");
     expect(groupedSql).toContain("query_alias.normalized = ANY($7::text[])");
     expect(groupedSql).toContain("query_alias.normalized LIKE $4");
     expect(groupedSql).not.toContain("query_alias.normalized = 2");
@@ -755,6 +764,22 @@ describe("catalog search service", () => {
     expect(preLimitFilterCall?.[0]).not.toContain(
       "LOWER(p.applicant_name) LIKE",
     );
+
+    await dbStore.searchProductsForGrouping!(
+      input({
+        q: "Nurofen",
+        view: "grouped",
+        manufacturer: "Example Pharma",
+      }),
+    );
+    expect(query).toHaveBeenCalledTimes(16);
+    const manufacturerFilteredCall = query.mock.calls.find(([sql]) =>
+      sql.includes("knowledge_registry_manufacturers filter_manufacturer"),
+    );
+    expect(manufacturerFilteredCall?.[0]).toContain(
+      "to_jsonb(filter_manufacturer)",
+    );
+    expect(manufacturerFilteredCall?.[0]).toContain("current_status");
     resetRegistrySearchCachesForTests();
   });
 });

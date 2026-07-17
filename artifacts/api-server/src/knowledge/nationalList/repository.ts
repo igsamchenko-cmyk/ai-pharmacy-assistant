@@ -36,7 +36,10 @@ async function getPool(): Promise<Pool> {
   return module.pool as Pool;
 }
 
-async function transaction<T>(pool: Pool, run: (client: PoolClient) => Promise<T>): Promise<T> {
+async function transaction<T>(
+  pool: Pool,
+  run: (client: PoolClient) => Promise<T>,
+): Promise<T> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -67,15 +70,19 @@ export async function commitNationalListSnapshot(
   if (!gate.ready) {
     throw new Error(`National-list commit blocked: ${gate.blockers.join(" ")}`);
   }
-  const activePool = pool ?? await getPool();
+  const activePool = pool ?? (await getPool());
   return transaction(activePool, async (client) => {
     const existing = await client.query<{ document_hash: string }>(
       "SELECT document_hash FROM national_list_releases WHERE id = $1",
       [snapshot.releaseId],
     );
-    if (existing.rows[0] &&
-      existing.rows[0].document_hash !== snapshot.source.documentHash) {
-      throw new Error("Release identifier already exists with a different source hash.");
+    if (
+      existing.rows[0] &&
+      existing.rows[0].document_hash !== snapshot.source.documentHash
+    ) {
+      throw new Error(
+        "Release identifier already exists with a different source hash.",
+      );
     }
     const release = await client.query(
       `INSERT INTO national_list_releases (
@@ -153,7 +160,9 @@ export async function commitNationalListSnapshot(
     );
     const persistedEntries = Number(count.rows[0]?.count ?? 0);
     if (persistedEntries !== snapshot.counts.valid) {
-      throw new Error("National-list entry count does not match the validated snapshot.");
+      throw new Error(
+        "National-list entry count does not match the validated snapshot.",
+      );
     }
     return {
       releaseId: snapshot.releaseId,
@@ -178,19 +187,29 @@ export async function activateNationalListRelease(
   pool?: Pool,
 ) {
   const gate = evaluateNationalListActivation(snapshot);
-  if (!gate.ready) throw new Error(`National-list activation blocked: ${gate.blockers.join(" ")}`);
-  const activePool = pool ?? await getPool();
+  if (!gate.ready)
+    throw new Error(
+      `National-list activation blocked: ${gate.blockers.join(" ")}`,
+    );
+  const activePool = pool ?? (await getPool());
   return transaction(activePool, async (client) => {
-    const release = await client.query<{ status: string; document_hash: string }>(
+    const release = await client.query<{
+      status: string;
+      document_hash: string;
+    }>(
       "SELECT status, document_hash FROM national_list_releases WHERE id = $1 FOR UPDATE",
       [snapshot.releaseId],
     );
-    if (!release.rows[0] || release.rows[0].document_hash !== snapshot.source.documentHash) {
+    if (
+      !release.rows[0] ||
+      release.rows[0].document_hash !== snapshot.source.documentHash
+    ) {
       throw new Error("Validated release must be committed before activation.");
     }
     const products = await client.query<RegistryProductRow>(
       `SELECT registry_id, inn, active_ingredient, form
        FROM knowledge_registry_products
+       WHERE review_status <> 'stale'
        ORDER BY registry_id`,
     );
     let cached = 0;
@@ -248,7 +267,11 @@ export async function activateNationalListRelease(
       "UPDATE national_list_releases SET status = 'active', activated_at = NOW() WHERE id = $1",
       [snapshot.releaseId],
     );
-    return { releaseId: snapshot.releaseId, products: products.rows.length, cached };
+    return {
+      releaseId: snapshot.releaseId,
+      products: products.rows.length,
+      cached,
+    };
   });
 }
 
@@ -256,7 +279,7 @@ export async function rollbackNationalListRelease(
   releaseId: string,
   pool?: Pool,
 ) {
-  const activePool = pool ?? await getPool();
+  const activePool = pool ?? (await getPool());
   return transaction(activePool, async (client) => {
     const target = await client.query<{ id: string }>(
       `SELECT id FROM national_list_releases
@@ -264,16 +287,27 @@ export async function rollbackNationalListRelease(
        FOR UPDATE`,
       [releaseId],
     );
-    if (!target.rows[0]) throw new Error("Rollback target release is unavailable.");
+    if (!target.rows[0])
+      throw new Error("Rollback target release is unavailable.");
     const cache = await client.query<{ cached: number; products: number }>(
       `SELECT
-         (SELECT COUNT(*)::int FROM national_list_match_results
-          WHERE release_id = $1) AS cached,
-         (SELECT COUNT(*)::int FROM knowledge_registry_products) AS products`,
+         (SELECT COUNT(*)::int
+            FROM national_list_match_results match
+            JOIN knowledge_registry_products product
+              ON product.registry_id = match.product_registry_id
+           WHERE match.release_id = $1
+             AND product.review_status <> 'stale') AS cached,
+         (SELECT COUNT(*)::int FROM knowledge_registry_products
+           WHERE review_status <> 'stale') AS products`,
       [releaseId],
     );
-    if (Number(cache.rows[0]?.cached ?? -1) !== Number(cache.rows[0]?.products ?? 0)) {
-      throw new Error("Rollback target does not have a complete resolver cache.");
+    if (
+      Number(cache.rows[0]?.cached ?? -1) !==
+      Number(cache.rows[0]?.products ?? 0)
+    ) {
+      throw new Error(
+        "Rollback target does not have a complete resolver cache.",
+      );
     }
     await client.query(
       "UPDATE national_list_releases SET status = 'superseded' WHERE status = 'active' AND id <> $1",

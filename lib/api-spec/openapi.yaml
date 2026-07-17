@@ -1159,6 +1159,7 @@ components:
         - searchQuality
         - realWorld
         - ingestion
+        - registrySync
         - runtime
         - dataQuality
         - reviewQueue
@@ -1282,6 +1283,43 @@ components:
               type: array
               items:
                 type: string
+        registrySync:
+          type: object
+          required:
+            [
+              lastSyncedAt,
+              sourceHash,
+              officialRows,
+              farmAssistRows,
+              parityStatus,
+              missingCount,
+              extraCount,
+              changedCount,
+            ]
+          properties:
+            lastSyncedAt:
+              type: string
+              format: date-time
+              nullable: true
+            sourceHash:
+              type: string
+              nullable: true
+            officialRows:
+              type: integer
+            farmAssistRows:
+              type: integer
+            parityStatus:
+              type: string
+              enum: [exact, mismatch, pending_database_audit]
+            missingCount:
+              type: integer
+              nullable: true
+            extraCount:
+              type: integer
+              nullable: true
+            changedCount:
+              type: integer
+              nullable: true
         runtime:
           type: object
           required: [mode, dbConfigured, dbAvailable, staticFallbackEnabled, warnings]

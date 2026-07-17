@@ -29,6 +29,7 @@ import type {
   BetaDashboardStatus,
 } from "@workspace/api-client-react";
 import { buildDashboardProductionSummary } from "./beta-dashboard-summary";
+import { RegistrySyncCard } from "./registry-sync-card";
 
 type RunnableCheck = Exclude<BetaDashboardCheckType, "full_safe_check">;
 type RunMap = Partial<Record<BetaDashboardCheckType, BetaDashboardRunResponse>>;
@@ -655,6 +656,7 @@ export default function BetaDashboard() {
       {statusQuery.data && (
         <>
           <ProductionSummary status={statusQuery.data} />
+          <RegistrySyncCard status={statusQuery.data} />
           <DashboardContent
             status={statusQuery.data}
             lastRuns={lastRuns}

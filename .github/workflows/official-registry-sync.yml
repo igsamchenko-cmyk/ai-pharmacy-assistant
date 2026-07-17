@@ -1,0 +1,185 @@
+name: Official registry parity and gated sync
+
+on:
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Audit only, or apply after production environment approval"
+        required: true
+        default: audit
+        type: choice
+        options:
+          - audit
+          - apply
+      confirm_sha256:
+        description: "Required for apply; exact SHA-256 printed by the audit job"
+        required: false
+        type: string
+  pull_request:
+    paths:
+      - ".github/workflows/official-registry-sync.yml"
+      - "artifacts/api-server/src/knowledge/ingestion/registry*.ts"
+      - "artifacts/api-server/src/scripts/knowledge-registry-parity.ts"
+      - "artifacts/api-server/src/services/catalogSearchService.ts"
+      - "lib/db/src/schema/knowledge.ts"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: official-registry-sync
+  cancel-in-progress: false
+
+env:
+  OFFICIAL_REGISTRY_URL: http://www.drlz.com.ua/ibp/zvity.nsf/all/zvit/$file/reestr.csv
+
+jobs:
+  audit:
+    name: Fresh export, full parity plan and anomaly gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/farmassist_registry_sync_ci
+      DATABASE_SSL: "false"
+      KNOWLEDGE_DB_RUNTIME: "true"
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: farmassist_registry_sync_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d farmassist_registry_sync_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    outputs:
+      source_sha256: ${{ steps.source.outputs.sha256 }}
+      downloaded_at: ${{ steps.source.outputs.downloaded_at }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25.8.2
+
+      - name: Enable repository pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download fresh official DRLZ export once
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --connect-timeout 20 \
+            "$OFFICIAL_REGISTRY_URL" --output "$RUNNER_TEMP/reestr.csv"
+          sha256="$(sha256sum "$RUNNER_TEMP/reestr.csv" | cut -d' ' -f1)"
+          downloaded_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+          echo "downloaded_at=$downloaded_at" >> "$GITHUB_OUTPUT"
+          echo "Official source SHA-256: $sha256"
+
+      - name: Product-only import dry-run
+        run: >-
+          pnpm knowledge:registry:import --
+          --file="$RUNNER_TEMP/reestr.csv"
+          --products-only
+
+      - name: Initialize ephemeral CI schema
+        run: pnpm db:push
+
+      - name: Import every fresh official row into ephemeral CI DB
+        run: >-
+          pnpm knowledge:registry:product-db-smoke --
+          --file="$RUNNER_TEMP/reestr.csv"
+          --expect-min-products=16533
+          --rerun
+
+      - name: Full fresh-export to catalog parity regression
+        run: >-
+          pnpm knowledge:registry:parity --
+          --file="$RUNNER_TEMP/reestr.csv"
+          --source-url="$OFFICIAL_REGISTRY_URL"
+          --downloaded-at="${{ steps.source.outputs.downloaded_at }}"
+          --baseline-report=../../artifacts/reports/catalog-completeness-report.json
+          --output=../../artifacts/reports/official-registry-parity-report.json
+          --require-db
+      - name: Diff safety
+        run: git diff --check
+
+      - name: Upload audit and rollback checkpoint
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-registry-${{ github.run_id }}-${{ steps.source.outputs.sha256 }}
+          retention-days: 90
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/reestr.csv
+            artifacts/reports/official-registry-parity-report.json
+
+  apply:
+    name: Approved additive/upsert and mark-stale update
+    needs: audit
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'apply'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production-registry-sync
+    env:
+      DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+      DATABASE_SSL: "true"
+      KNOWLEDGE_DB_RUNTIME: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25.8.2
+
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+
+      - name: Download the audited immutable checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: official-registry-${{ github.run_id }}-${{ needs.audit.outputs.source_sha256 }}
+          path: ${{ runner.temp }}/registry-audit
+
+      - name: Require explicit source confirmation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${{ inputs.confirm_sha256 }}"
+          test "${{ inputs.confirm_sha256 }}" = "${{ needs.audit.outputs.source_sha256 }}"
+
+      - name: Apply additive schema changes
+        run: pnpm db:push
+
+      - name: Apply exact product upsert and mark absent rows stale
+        run: >-
+          pnpm knowledge:registry:parity --
+          --file="$RUNNER_TEMP/registry-audit/reestr.csv"
+          --source-url="$OFFICIAL_REGISTRY_URL"
+          --downloaded-at="${{ needs.audit.outputs.downloaded_at }}"
+          --require-db
+          --apply
+          --confirm-apply="${{ inputs.confirm_sha256 }}"
+          --checkpoint-artifact="official-registry-${{ github.run_id }}-${{ needs.audit.outputs.source_sha256 }}"
+          --no-write-report
+
+      - name: Post-apply full DB search gate
+        run: >-
+          pnpm knowledge:registry:catalog-db-smoke --
+          --expect-min-products=15000
+          --max-warm-ms=2000
+          --max-grouped-p95-ms=600
+          --max-exact-p50-ms=150
+          --max-prefix-p50-ms=250
+          --max-navigation-p95-ms=400

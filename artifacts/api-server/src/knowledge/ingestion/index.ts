@@ -1,6 +1,7 @@
 export * from "./sources";
 export * from "./transliteration";
 export * from "./registry";
+export * from "./registryParity";
 export * from "./registryPlan";
 export * from "./catalogCompletenessReport";
 export * from "./registryImportOptions";

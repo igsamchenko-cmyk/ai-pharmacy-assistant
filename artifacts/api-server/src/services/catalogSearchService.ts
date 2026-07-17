@@ -308,14 +308,21 @@ export function catalogAliasQueryKeys(query: string): string[] {
 export function catalogCompositionSearchTerms(query: string): string[] {
   if (/^UA\//iu.test(query.trim())) return [];
   const slashParts = query.split(/\s*\/\s*/u);
-  if (
+  const isMixedScriptSlash =
     slashParts.length === 2 &&
     /\p{Script=Cyrillic}/u.test(slashParts[0] ?? "") &&
-    /[A-Za-z]/u.test(slashParts[1] ?? "") &&
-    /\s/u.test((slashParts[0] ?? "").trim()) &&
-    /\s/u.test((slashParts[1] ?? "").trim())
-  ) {
-    return [];
+    /[A-Za-z]/u.test(slashParts[1] ?? "");
+  if (isMixedScriptSlash) {
+    const resolvedIngredientKeys = new Set(
+      slashParts
+        .map(
+          (part) =>
+            resolveSourceBackedDictionaryQuery(part)?.ingredient.inn ?? "",
+        )
+        .map(normalize)
+        .filter(Boolean),
+    );
+    if (resolvedIngredientKeys.size < 2) return [];
   }
   const parts = query
     .split(
@@ -595,7 +602,7 @@ export function assembleRegistryProducts(
 
 function buildProductFilter(input: CatalogSearchInput) {
   const values: unknown[] = [];
-  const clauses: string[] = [];
+  const clauses: string[] = ["p.review_status <> 'stale'"];
   const add = (value: unknown): string => {
     values.push(value);
     return `$${values.length}`;
@@ -662,6 +669,7 @@ function buildProductFilter(input: CatalogSearchInput) {
             SELECT 1
             FROM knowledge_registry_products exact_trade
             WHERE exact_trade.normalized_trade_name = ${normalizedExact}
+              AND exact_trade.review_status <> 'stale'
           )
           OR p.normalized_trade_name = ${normalizedExact}
         )`;
@@ -695,10 +703,13 @@ function buildProductFilter(input: CatalogSearchInput) {
         OR LOWER(p.applicant_name) LIKE ${contains} ESCAPE '\\'
         OR LOWER(p.registration_number) LIKE ${contains} ESCAPE '\\'
         OR LOWER(p.form) LIKE ${contains} ESCAPE '\\'
+        OR LOWER(p.strength) LIKE ${contains} ESCAPE '\\'
         OR LOWER(COALESCE(p.atc_code, '')) LIKE ${contains} ESCAPE '\\'
         OR EXISTS (
           SELECT 1 FROM knowledge_registry_manufacturers search_manufacturer
           WHERE search_manufacturer.product_registry_id = p.registry_id
+            AND COALESCE(to_jsonb(search_manufacturer)->>'current_status', 'current')
+              <> 'stale'
             AND search_manufacturer.normalized_name
               LIKE ${normalizedContains} ESCAPE '\\'
         )
@@ -755,6 +766,8 @@ function buildProductFilter(input: CatalogSearchInput) {
       OR EXISTS (
         SELECT 1 FROM knowledge_registry_manufacturers filter_manufacturer
         WHERE filter_manufacturer.product_registry_id = p.registry_id
+          AND COALESCE(to_jsonb(filter_manufacturer)->>'current_status', 'current')
+            <> 'stale'
           AND filter_manufacturer.normalized_name
             LIKE ${normalizedRef} ESCAPE '\\'
       )
@@ -773,6 +786,7 @@ function buildProductFilter(input: CatalogSearchInput) {
     clauses.push(`(
       LOWER(p.active_ingredient) LIKE ${ref} ESCAPE '\\'
       OR LOWER(p.form) LIKE ${ref} ESCAPE '\\'
+      OR LOWER(p.strength) LIKE ${ref} ESCAPE '\\'
     )`);
   }
 
@@ -879,7 +893,8 @@ export async function createPostgresRegistryCatalogStore(
                   COALESCE(MAX(updated_at)::text, ''), ':',
                   COALESCE(MAX(import_batch_id), 'unversioned')
                 ) AS snapshot_version
-         FROM knowledge_registry_products`,
+         FROM knowledge_registry_products
+         WHERE review_status <> 'stale'`,
       );
       return {
         catalogTotal: Number(result.rows[0]?.count ?? 0),
@@ -900,8 +915,10 @@ export async function createPostgresRegistryCatalogStore(
       runQuery<ManufacturerRow>(
         "registry-manufacturers",
         `SELECT product_registry_id, name, country
-         FROM knowledge_registry_manufacturers
+         FROM knowledge_registry_manufacturers registry_manufacturer
          WHERE product_registry_id = ANY($1::text[])
+           AND COALESCE(to_jsonb(registry_manufacturer)->>'current_status', 'current')
+             <> 'stale'
          ORDER BY product_registry_id, LOWER(name), LOWER(country)`,
         [productIds],
       ),
@@ -960,12 +977,14 @@ export async function createPostgresRegistryCatalogStore(
               `WITH exact_candidates AS (
                  SELECT p.registry_id, 1 AS priority
                  FROM knowledge_registry_products p
-                 WHERE p.registration_number = $1
+                 WHERE p.review_status <> 'stale'
+                   AND p.registration_number = $1
                  UNION ALL
                  SELECT p.registry_id, 2 AS priority
                  FROM knowledge_registry_products p
-                 WHERE p.normalized_trade_name = $2
-                    OR ${catalogSearchKeySql("p.trade_name")} = $2
+                 WHERE p.review_status <> 'stale'
+                   AND (p.normalized_trade_name = $2
+                     OR ${catalogSearchKeySql("p.trade_name")} = $2)
                ), winning_priority AS (
                  SELECT MIN(priority) AS priority FROM exact_candidates
                ), unique_candidates AS (

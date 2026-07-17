@@ -600,11 +600,19 @@ function buildCoverageFixtures(
       ) {
         return null;
       }
+      const ingredientKeys = targetRows.flatMap((row) => {
+        const ingredient = row.inn.trim() || row.active_ingredient.trim();
+        if (!ingredient) return [];
+        const resolved = normalizeQuery(ingredient);
+        return resolved
+          ? dictionaryKeysForIngredient(resolved.ingredient.inn, dictionaryEntries)
+          : [normalize(ingredient)];
+      });
       return makeFixture({
         category: "punctuation_case",
         query,
         expectedRows: targetRows,
-        ingredientKeys: [],
+        ingredientKeys,
         combinationTerms: [],
         derivation:
           "case and separator/trademark variant derived from an official trade name",
@@ -814,7 +822,12 @@ function productRelatedToFixture(
   const normalizedTradeName = normalize(product.tradeName);
   if (
     normalizedTradeName &&
-    fixture.ingredientKeys.includes(normalizedTradeName)
+    fixture.ingredientKeys.some(
+      (key) =>
+        normalizedTradeName === key ||
+        normalizedTradeName.startsWith(key) ||
+        normalizedTradeName.endsWith(key),
+    )
   ) {
     return true;
   }
@@ -1591,6 +1604,19 @@ async function main(): Promise<void> {
     );
     mkdirSync(dirname(coverageReportPath), { recursive: true });
     writeFileSync(coverageReportPath, coverageReportJson, "utf8");
+    if (coverageMisses.length > 0) {
+      console.error(
+        JSON.stringify(
+          {
+            coverageMisses: coverageReportCases
+              .filter((item) => !item.passed)
+              .slice(0, 10),
+          },
+          null,
+          2,
+        ),
+      );
+    }
     assert(
       coverageMisses.length === 0,
       `Catalog DB coverage reported ${coverageMisses.length} misses.`,
