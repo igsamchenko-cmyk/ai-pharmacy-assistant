@@ -315,7 +315,10 @@ export function catalogCompositionSearchTerms(query: string): string[] {
   if (isMixedScriptSlash) {
     const resolvedIngredientKeys = new Set(
       slashParts
-        .map((part) => resolveSourceBackedDictionaryQuery(part)?.ingredient.inn ?? "")
+        .map(
+          (part) =>
+            resolveSourceBackedDictionaryQuery(part)?.ingredient.inn ?? "",
+        )
         .map(normalize)
         .filter(Boolean),
     );
@@ -705,6 +708,8 @@ function buildProductFilter(input: CatalogSearchInput) {
         OR EXISTS (
           SELECT 1 FROM knowledge_registry_manufacturers search_manufacturer
           WHERE search_manufacturer.product_registry_id = p.registry_id
+            AND COALESCE(to_jsonb(search_manufacturer)->>'current_status', 'current')
+              <> 'stale'
             AND search_manufacturer.normalized_name
               LIKE ${normalizedContains} ESCAPE '\\'
         )
@@ -761,6 +766,8 @@ function buildProductFilter(input: CatalogSearchInput) {
       OR EXISTS (
         SELECT 1 FROM knowledge_registry_manufacturers filter_manufacturer
         WHERE filter_manufacturer.product_registry_id = p.registry_id
+          AND COALESCE(to_jsonb(filter_manufacturer)->>'current_status', 'current')
+            <> 'stale'
           AND filter_manufacturer.normalized_name
             LIKE ${normalizedRef} ESCAPE '\\'
       )
@@ -908,8 +915,10 @@ export async function createPostgresRegistryCatalogStore(
       runQuery<ManufacturerRow>(
         "registry-manufacturers",
         `SELECT product_registry_id, name, country
-         FROM knowledge_registry_manufacturers
+         FROM knowledge_registry_manufacturers registry_manufacturer
          WHERE product_registry_id = ANY($1::text[])
+           AND COALESCE(to_jsonb(registry_manufacturer)->>'current_status', 'current')
+             <> 'stale'
          ORDER BY product_registry_id, LOWER(name), LOWER(country)`,
         [productIds],
       ),

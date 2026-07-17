@@ -254,6 +254,11 @@ export const knowledgeRegistryManufacturersTable = pgTable(
     normalizedName: text("normalized_name").notNull(),
     country: text("country").notNull().default(""),
     sourceKey: text("source_key").notNull(),
+    currentStatus: text("current_status").notNull().default("current"),
+    sourceSnapshotHash: text("source_snapshot_hash"),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     importBatchId: text("import_batch_id"),
     importedAt: timestamp("imported_at", { withTimezone: true })
       .notNull()
@@ -269,6 +274,10 @@ export const knowledgeRegistryManufacturersTable = pgTable(
       t.productRegistryId,
     ),
     index("knowledge_registry_manufacturer_name_idx").on(t.normalizedName),
+    index("knowledge_registry_manufacturer_current_idx").on(t.currentStatus),
+    index("knowledge_registry_manufacturer_snapshot_idx").on(
+      t.sourceSnapshotHash,
+    ),
   ],
 );
 

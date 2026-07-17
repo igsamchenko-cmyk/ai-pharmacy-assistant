@@ -1,5 +1,5 @@
 import { normalize } from "../../lib/text";
-import { inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import {
   analyzeImport,
   liveKnowledgeView,
@@ -88,6 +88,8 @@ export interface RegistryProductCommitStats {
   insertedManufacturers: number;
   updatedProducts: number;
   updatedManufacturers: number;
+  staleMarkedProducts?: number;
+  staleMarkedManufacturers?: number;
   unchangedProducts: number;
   unchangedManufacturers: number;
   skippedProducts: number;
@@ -166,6 +168,7 @@ function registryProductValue(row: RegistryRawRow, batchId: string) {
 
 function registryManufacturerValues(row: RegistryRawRow, batchId: string) {
   const productRegistryId = registryIdFor(row);
+  const sourceSnapshotHash = sourceSnapshotHashFromBatchId(batchId);
   return row.manufacturers
     .filter((manufacturer) => Boolean(manufacturer.name))
     .map((manufacturer) => ({
@@ -174,6 +177,9 @@ function registryManufacturerValues(row: RegistryRawRow, batchId: string) {
       normalizedName: normalize(manufacturer.name),
       country: manufacturer.country,
       sourceKey: row.sourceId,
+      currentStatus: "current",
+      sourceSnapshotHash,
+      lastSeenAt: new Date(),
       importBatchId: batchId,
     }));
 }
@@ -627,8 +633,10 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
       let insertedManufacturers = 0;
       let updatedManufacturers = 0;
 
-      for (const chunk of chunks) {
-        await db.transaction(async (tx) => {
+      let staleMarkedProducts = 0;
+      let staleMarkedManufacturers = 0;
+      await db.transaction(async (tx) => {
+        for (const chunk of chunks) {
           await tx.execute(
             sql`select set_config('statement_timeout', ${`${registryProductStatementTimeoutMs()}ms`}, true)`,
           );
@@ -673,14 +681,23 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
           );
 
           if (changedRegistryIds.length > 0) {
-            await tx
-              .delete(knowledgeRegistryManufacturersTable)
+            const staleManufacturers = await tx
+              .update(knowledgeRegistryManufacturersTable)
+              .set({ currentStatus: "stale" })
               .where(
-                inArray(
-                  knowledgeRegistryManufacturersTable.productRegistryId,
-                  changedRegistryIds,
+                and(
+                  inArray(
+                    knowledgeRegistryManufacturersTable.productRegistryId,
+                    changedRegistryIds,
+                  ),
+                  ne(
+                    knowledgeRegistryManufacturersTable.currentStatus,
+                    "stale",
+                  ),
                 ),
-              );
+              )
+              .returning({ id: knowledgeRegistryManufacturersTable.id });
+            staleMarkedManufacturers += staleManufacturers.length;
           }
 
           if (newProductValues.length > 0) {
@@ -756,10 +773,17 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
           const manufacturerValues = uniqueRegistryManufacturerValues(
             chunk.flatMap((row) => registryManufacturerValues(row, batchId)),
           );
-          if (manufacturerValues.length > 0) {
+          const changedRegistryIdSet = new Set(changedRegistryIds);
+          const stableManufacturerValues = manufacturerValues.filter(
+            (value) => !changedRegistryIdSet.has(value.productRegistryId),
+          );
+          const changedManufacturerValues = manufacturerValues.filter((value) =>
+            changedRegistryIdSet.has(value.productRegistryId),
+          );
+          if (stableManufacturerValues.length > 0) {
             const inserted = await tx
               .insert(knowledgeRegistryManufacturersTable)
-              .values(manufacturerValues)
+              .values(stableManufacturerValues)
               .onConflictDoNothing({
                 target: [
                   knowledgeRegistryManufacturersTable.productRegistryId,
@@ -770,30 +794,163 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
               .returning({ id: knowledgeRegistryManufacturersTable.id });
             insertedManufacturers += inserted.length;
           }
-          const changedRegistryIdSet = new Set(changedRegistryIds);
-          updatedManufacturers += chunk.reduce(
-            (count, row) =>
-              changedRegistryIdSet.has(registryIdFor(row))
-                ? count + row.manufacturers.filter((item) => item.name).length
-                : count,
-            0,
+          if (changedManufacturerValues.length > 0) {
+            const updated = await tx
+              .insert(knowledgeRegistryManufacturersTable)
+              .values(changedManufacturerValues)
+              .onConflictDoUpdate({
+                target: [
+                  knowledgeRegistryManufacturersTable.productRegistryId,
+                  knowledgeRegistryManufacturersTable.normalizedName,
+                  knowledgeRegistryManufacturersTable.country,
+                ],
+                set: {
+                  name: sql`excluded.name`,
+                  sourceKey: sql`excluded.source_key`,
+                  currentStatus: sql`excluded.current_status`,
+                  sourceSnapshotHash: sql`excluded.source_snapshot_hash`,
+                  lastSeenAt: sql`excluded.last_seen_at`,
+                  importBatchId: sql`excluded.import_batch_id`,
+                },
+              })
+              .returning({ id: knowledgeRegistryManufacturersTable.id });
+            updatedManufacturers += updated.length;
+          }
+        }
+        const sourceSnapshotHash = sourceSnapshotHashFromBatchId(batchId);
+        if (sourceSnapshotHash) {
+          const sourceIds = new Set(rows.map((row) => row.sourceId));
+          const sourceId = rows[0]?.sourceId;
+          if (!sourceId || sourceIds.size !== 1) {
+            throw new Error(
+              "Atomic registry sync requires exactly one source.",
+            );
+          }
+
+          const staleProducts = await tx
+            .update(knowledgeRegistryProductsTable)
+            .set({
+              currentStatus: "stale",
+              reviewStatus: "stale",
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(knowledgeRegistryProductsTable.sourceKey, sourceId),
+                ne(knowledgeRegistryProductsTable.reviewStatus, "stale"),
+                sql`${knowledgeRegistryProductsTable.importBatchId} IS DISTINCT FROM ${batchId}`,
+              ),
+            )
+            .returning({
+              registryId: knowledgeRegistryProductsTable.registryId,
+            });
+          staleMarkedProducts += staleProducts.length;
+
+          const expectedValues = uniqueRegistryProductValues(
+            rows.map((row) => registryProductValue(row, batchId)),
           );
-        });
-      }
+          const expectedById = new Map(
+            expectedValues.map((value) => [value.registryId, value] as const),
+          );
+          const currentRows = await tx
+            .select({
+              registryId: knowledgeRegistryProductsTable.registryId,
+              rawHash: knowledgeRegistryProductsTable.rawHash,
+              sourceSnapshotHash:
+                knowledgeRegistryProductsTable.sourceSnapshotHash,
+              importBatchId: knowledgeRegistryProductsTable.importBatchId,
+            })
+            .from(knowledgeRegistryProductsTable)
+            .where(
+              and(
+                eq(knowledgeRegistryProductsTable.sourceKey, sourceId),
+                ne(knowledgeRegistryProductsTable.reviewStatus, "stale"),
+              ),
+            );
+          const expectedManufacturerValues = uniqueRegistryManufacturerValues(
+            rows.flatMap((row) => registryManufacturerValues(row, batchId)),
+          );
+          const expectedManufacturerKeys = new Set(
+            expectedManufacturerValues.map((value) =>
+              JSON.stringify([
+                value.productRegistryId,
+                value.name,
+                value.normalizedName,
+                value.country,
+              ]),
+            ),
+          );
+          const currentManufacturerRows = await tx
+            .select({
+              productRegistryId:
+                knowledgeRegistryManufacturersTable.productRegistryId,
+              name: knowledgeRegistryManufacturersTable.name,
+              normalizedName:
+                knowledgeRegistryManufacturersTable.normalizedName,
+              country: knowledgeRegistryManufacturersTable.country,
+            })
+            .from(knowledgeRegistryManufacturersTable)
+            .innerJoin(
+              knowledgeRegistryProductsTable,
+              eq(
+                knowledgeRegistryManufacturersTable.productRegistryId,
+                knowledgeRegistryProductsTable.registryId,
+              ),
+            )
+            .where(
+              and(
+                eq(knowledgeRegistryProductsTable.sourceKey, sourceId),
+                ne(knowledgeRegistryProductsTable.reviewStatus, "stale"),
+                ne(knowledgeRegistryManufacturersTable.currentStatus, "stale"),
+              ),
+            );
+          const exactManufacturerSnapshot =
+            currentManufacturerRows.length === expectedManufacturerKeys.size &&
+            currentManufacturerRows.every((row) =>
+              expectedManufacturerKeys.has(
+                JSON.stringify([
+                  row.productRegistryId,
+                  row.name,
+                  row.normalizedName,
+                  row.country,
+                ]),
+              ),
+            );
+
+          const exactSnapshot =
+            currentRows.length === expectedById.size &&
+            currentRows.every((row) => {
+              const expected = expectedById.get(row.registryId);
+              return (
+                expected?.rawHash === row.rawHash &&
+                row.sourceSnapshotHash === sourceSnapshotHash &&
+                row.importBatchId === batchId
+              );
+            });
+          if (!exactSnapshot || !exactManufacturerSnapshot) {
+            throw new Error(
+              "Registry snapshot parity gate failed before transaction commit.",
+            );
+          }
+        }
+      });
 
       const [productCount] = await db
         .select({ count: sql<number>`count(*)::int` })
-        .from(knowledgeRegistryProductsTable);
+        .from(knowledgeRegistryProductsTable)
+        .where(ne(knowledgeRegistryProductsTable.reviewStatus, "stale"));
       const [manufacturerCount] = await db
         .select({ count: sql<number>`count(*)::int` })
-        .from(knowledgeRegistryManufacturersTable);
+        .from(knowledgeRegistryManufacturersTable)
+        .where(ne(knowledgeRegistryManufacturersTable.currentStatus, "stale"));
       const [registrationCount] = await db
         .select({
           count: sql<number>`count(distinct nullif(${knowledgeRegistryProductsTable.registrationNumber}, ''))::int`,
         })
-        .from(knowledgeRegistryProductsTable);
+        .from(knowledgeRegistryProductsTable)
+        .where(ne(knowledgeRegistryProductsTable.reviewStatus, "stale"));
       const unchangedManufacturers = Math.max(
-        plannedManufacturers - insertedManufacturers,
+        plannedManufacturers - insertedManufacturers - updatedManufacturers,
         0,
       );
 
@@ -807,6 +964,8 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
         insertedManufacturers,
         updatedProducts,
         updatedManufacturers,
+        staleMarkedProducts,
+        staleMarkedManufacturers,
         unchangedProducts,
         unchangedManufacturers,
         skippedProducts,
@@ -821,7 +980,7 @@ export async function createDbCommitStore(): Promise<KnowledgeImportCommitStore>
         elapsedMs: Date.now() - startedAt,
         importBatchStatus: "completed",
         committedProducts: insertedProducts + updatedProducts,
-        committedManufacturers: insertedManufacturers,
+        committedManufacturers: insertedManufacturers + updatedManufacturers,
       };
     },
     async close() {

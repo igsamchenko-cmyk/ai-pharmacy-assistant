@@ -1,4 +1,4 @@
-import { eq, ne, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { normalize } from "../lib/text";
 import { logger } from "../lib/logger";
 import { isDbRuntimeEnabled } from "./runtime";
@@ -289,7 +289,12 @@ async function createRegistryCountsStore(): Promise<RegistryCountsStore> {
             products,
             eq(manufacturers.productRegistryId, products.registryId),
           )
-          .where(ne(products.reviewStatus, "stale")),
+          .where(
+            and(
+              ne(products.reviewStatus, "stale"),
+              sql`COALESCE(to_jsonb(${manufacturers})->>'current_status', 'current') <> 'stale'`,
+            ),
+          ),
         db
           .select({
             count: sql<number>`count(distinct nullif(${products.registrationNumber}, ''))::int`,

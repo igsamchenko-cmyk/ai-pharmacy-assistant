@@ -27,7 +27,7 @@ the exact audit SHA-256 in `confirm_sha256`, the protected
 The apply job cannot download a different file: it consumes the immutable artifact
 created by its own audit job.
 
-The product update is additive/upsert-first. Every official row is marked `current`
+The product update runs in one database transaction and is additive/upsert-first. PostgreSQL MVCC keeps the previous complete active snapshot visible to search until the new snapshot passes its pre-commit exact-parity gate. Every official row is marked `current`
 and linked to the source hash. Rows absent from the new export are retained and
 marked `stale`; they are not deleted. Catalog search and grouping filter only the
 explicit `current_status`, never ingredient mapping/review status. Registry-only
@@ -35,7 +35,7 @@ products therefore remain searchable.
 
 Each approved apply creates an append-only `knowledge_registry_sync_runs` record
 with source identity, before/after counts, anomaly result, parity status, and the
-rollback artifact name. Manufacturer sets are replaced only for changed products.
+rollback artifact name. Manufacturer rows removed from a changed product are soft-marked `stale`; current manufacturer rows are upserted, never deleted.
 
 ## Anomaly policy
 

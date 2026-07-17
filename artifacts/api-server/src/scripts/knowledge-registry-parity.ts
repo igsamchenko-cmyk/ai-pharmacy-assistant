@@ -138,6 +138,7 @@ async function loadDatabaseRows(): Promise<RegistryComparableProduct[] | null> {
       FROM knowledge_registry_products p
       LEFT JOIN knowledge_registry_manufacturers m
         ON m.product_registry_id = p.registry_id
+       AND m.current_status <> 'stale'
      GROUP BY p.registry_id
      ORDER BY p.registry_id`;
   try {
@@ -243,14 +244,7 @@ async function applySync(options: {
       store,
       batchId: syncId,
     });
-    const stale = await pool.query(
-      `UPDATE knowledge_registry_products
-          SET current_status = 'stale', review_status = 'stale', updated_at = NOW()
-        WHERE source_key = $1
-          AND current_status <> 'stale'
-          AND (source_snapshot_hash IS DISTINCT FROM $2 OR import_batch_id <> $3)`,
-      [options.registry.sourceId, options.sourceHash, syncId],
-    );
+    const staleMarked = products.staleMarkedProducts ?? 0;
     const afterRows = (await loadDatabaseRows()) ?? [];
     const after = compareRegistryParity(options.registry, afterRows);
     await pool.query(
@@ -264,7 +258,7 @@ async function applySync(options: {
         syncId,
         after.exactParity ? "completed" : "failed",
         after.farmAssistCurrentRows ?? 0,
-        stale.rowCount ?? 0,
+        staleMarked,
         after.exactParity ? "exact" : "mismatch",
         after.missingOfficialRows ?? 0,
         after.extraFarmAssistRows ?? 0,
@@ -274,7 +268,7 @@ async function applySync(options: {
     if (!after.exactParity) {
       throw new Error("Post-apply exact parity verification failed.");
     }
-    return { syncId, products, staleMarked: stale.rowCount ?? 0, after };
+    return { syncId, products, staleMarked, after };
   } catch (error) {
     await pool.query(
       `UPDATE knowledge_registry_sync_runs
