@@ -56,6 +56,30 @@ const SEARCH_TYPES: Array<{ value: SearchType; label: string }> = [
 
 const numberFormatter = new Intl.NumberFormat("uk-UA");
 
+const PACKAGING_QUANTITY_PATTERN =
+  /(?:,\s*|\s+)по\s+\d+(?:[\s.,]\d+)?\s*(?:таблет\p{L}*|капсул\p{L}*|ампул\p{L}*|флакон\p{L}*|блістер\p{L}*|пакет\p{L}*|пач\p{L}*|контейнер\p{L}*|туб\p{L}*|доз\p{L}*)(?!\p{L})/iu;
+
+export function conciseDosageForm(value: string): string {
+  const normalized = value.trim().replace(/\s+/gu, " ");
+  if (!normalized) return "";
+  const cutPoints = [
+    normalized.search(/\s+in\s+bulk\b/iu),
+    normalized.indexOf(";"),
+    normalized.search(PACKAGING_QUANTITY_PATTERN),
+  ].filter((index) => index >= 0);
+  const end = cutPoints.length ? Math.min(...cutPoints) : normalized.length;
+  return normalized.slice(0, end).trim().replace(/[,:;\-\s]+$/gu, "");
+}
+
+export function conciseDosageForms(values: readonly string[]): string[] {
+  return [...new Map(
+    values
+      .map(conciseDosageForm)
+      .filter(Boolean)
+      .map((value) => [value.toLocaleLowerCase("uk-UA"), value] as const),
+  ).values()];
+}
+
 export const REGISTRY_CATALOG_SAFETY_COPY =
   "Наявність препарату в реєстрі не підтверджує взаємозамінність, відсутність взаємодій або доцільність застосування.";
 export const CATALOG_QUERY_DEBOUNCE_MS = 175;
@@ -280,7 +304,7 @@ export function RegistryProductCard({
               Форма та дозування
             </dt>
             <dd className="mt-1 break-words">
-              {[product.dosageForm, product.strength].filter(Boolean).join(", ") ||
+              {[conciseDosageForm(product.dosageForm), product.strength].filter(Boolean).join(", ") ||
                 "не зазначено"}
             </dd>
           </div>
@@ -541,6 +565,7 @@ function ExactBrandCard({
   const instructionAvailable = trade.variants?.items.some(
     (product) => product.instructionAvailable,
   ) ?? false;
+  const displayForms = conciseDosageForms(trade.forms);
   return (
     <Card className="max-w-full overflow-hidden border-primary/40 bg-primary/[0.03]" data-testid={"exact-brand-card-" + trade.key}>
       <CardContent className="space-y-4 p-4 sm:p-5">
@@ -559,7 +584,7 @@ function ExactBrandCard({
         </div>
         <dl className="grid gap-3 text-sm sm:grid-cols-3">
           <div className="min-w-0"><dt className="text-xs text-muted-foreground">Дозування</dt><dd className="break-words">{trade.strengths.length ? trade.strengths.join(", ") : "Не зазначено"}</dd></div>
-          <div className="min-w-0"><dt className="text-xs text-muted-foreground">Форми</dt><dd className="break-words">{trade.forms.length ? trade.forms.join(", ") : "Не зазначено"}</dd></div>
+          <div className="min-w-0"><dt className="text-xs text-muted-foreground">Форми</dt><dd className="break-words">{displayForms.length ? displayForms.join(", ") : "Не зазначено"}</dd></div>
           <div className="min-w-0"><dt className="text-xs text-muted-foreground">Виробники</dt><dd className="break-words">{trade.manufacturers.length ? trade.manufacturers.join(", ") : "Не зазначено"}</dd></div>
         </dl>
         {trade.variants ? (

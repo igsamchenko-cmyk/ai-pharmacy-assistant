@@ -9,6 +9,8 @@ import {
 import { QueryClient } from "@tanstack/react-query";
 import {
   GroupedRegistryResults,
+  conciseDosageForm,
+  conciseDosageForms,
   RegistryProductCard,
   findExactTradeNameMatches,
   isExactTradeNameQuery,
@@ -153,6 +155,37 @@ describe("registry catalog UI", () => {
     client.clear();
   });
 
+  it("removes packaging and bulk details from displayed dosage forms", () => {
+    expect(
+      conciseDosageForm("таблетки in bulk; по 5000 таблеток у пакетах"),
+    ).toBe("таблетки");
+    expect(
+      conciseDosageForm(
+        "таблетки, вкриті плівковою оболонкою, по 8 таблеток у блістері",
+      ),
+    ).toBe("таблетки, вкриті плівковою оболонкою");
+    expect(
+      conciseDosageForm("капсули тверді; по 10 капсул у блістері"),
+    ).toBe("капсули тверді");
+    expect(
+      conciseDosageForms([
+        "таблетки in bulk; по 5000 таблеток у пакетах",
+        "таблетки, по 8 таблеток у блістері",
+      ]),
+    ).toEqual(["таблетки"]);
+
+    const html = renderToStaticMarkup(createElement(RegistryProductCard, {
+      product: {
+        ...product,
+        dosageForm: "таблетки in bulk; по 5000 таблеток у пакетах",
+      },
+      query: "Нурофен",
+      showReportIssue: false,
+    }));
+    expect(html).toContain("таблетки, 200 мг");
+    expect(html).not.toContain("in bulk");
+    expect(html).not.toContain("5000");
+  });
   it("renders a mobile-safe registry card with production fields", () => {
     const html = renderToStaticMarkup(
       createElement(RegistryProductCard, { product, query: "Нурофен", showReportIssue: false }),
@@ -340,7 +373,10 @@ describe("registry catalog UI", () => {
               tradeName: registryTradeName,
               normalizedTradeName: normalizeExactTradeName(registryTradeName),
               summary: { ...summary, totalRegistryPositions: 2, uniqueTradeNames: 1 },
-              forms: ["таблетки", "таблетки пролонгованої дії"],
+              forms: [
+                "таблетки in bulk; по 5000 таблеток у пакетах",
+                "таблетки пролонгованої дії, по 8 таблеток у блістері",
+              ],
               strengths: ["5 мг", "10 мг"],
               manufacturers: ["KRKA"],
               variants: {
@@ -392,6 +428,9 @@ describe("registry catalog UI", () => {
     expect(html).toContain(inn);
     expect(html).toContain("5 мг, 10 мг");
     expect(html).toContain("таблетки пролонгованої дії");
+    expect(html).not.toContain("in bulk");
+    expect(html).not.toContain("по 5000");
+    expect(html).not.toContain("по 8 таблеток");
     expect(html).toContain("KRKA");
     expect(html).toContain("Конкретні реєстрові позиції");
     expect(html).toContain('data-testid="brand-alternatives"');
