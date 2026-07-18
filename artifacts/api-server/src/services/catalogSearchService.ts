@@ -600,7 +600,7 @@ export function assembleRegistryProducts(
   });
 }
 
-function buildProductFilter(input: CatalogSearchInput) {
+function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
   const values: unknown[] = [];
   const clauses: string[] = ["p.review_status <> 'stale'"];
   const add = (value: unknown): string => {
@@ -617,7 +617,10 @@ function buildProductFilter(input: CatalogSearchInput) {
     const normalized = normalize(query) || lower;
     const combinationTerms = catalogCompositionSearchTerms(query);
 
-    if (combinationTerms.length) {
+    if (exactTradeOnly) {
+      clauses.push(`p.normalized_trade_name = ${add(normalized)}`);
+      rankSql = "1";
+    } else if (combinationTerms.length) {
       joinSql += CATALOG_KEYS_JOIN_SQL;
       hasCatalogKeysJoin = true;
       const combinationMatch = `(${CATALOG_COMPOSITION_SOURCE_SQL} ~* ${CATALOG_COMBINATION_PATTERN_SQL} AND (${combinationTerms
@@ -956,6 +959,24 @@ export async function createPostgresRegistryCatalogStore(
 
   const getCatalogTotal = async (): Promise<number> =>
     (await getCatalogSnapshot()).catalogTotal;
+  const hasExactTradeName = async (
+    input: CatalogSearchInput,
+  ): Promise<boolean> => {
+    if (!isExactTradePageEligible(input)) return false;
+    const normalized =
+      normalize(input.q.trim()) || input.q.trim().toLocaleLowerCase("uk-UA");
+    const result = await runQuery<{ exists: boolean }>(
+      "registry-exact-trade-exists",
+      `SELECT EXISTS (
+         SELECT 1
+         FROM knowledge_registry_products exact_trade
+         WHERE exact_trade.review_status <> 'stale'
+           AND exact_trade.normalized_trade_name = $1
+       ) AS exists`,
+      [normalized],
+    );
+    return result.rows[0]?.exists === true;
+  };
 
   const hydrateProducts = async (
     rows: ProductRow[],
@@ -1095,7 +1116,8 @@ export async function createPostgresRegistryCatalogStore(
     },
 
     async searchProducts(input): Promise<ProductSearchResult> {
-      const filter = buildProductFilter(input);
+      const exactTradeOnly = await hasExactTradeName(input);
+      const filter = buildProductFilter(input, exactTradeOnly);
       const offset = (input.page - 1) * input.pageSize;
       const pageValues = [...filter.values, input.pageSize, offset];
       const limitRef = `$${filter.values.length + 1}`;
@@ -1294,6 +1316,25 @@ function resolveCatalogView(input: CatalogSearchInput): "flat" | "grouped" {
   );
 }
 
+export function isExactTradePageEligible(input: CatalogSearchInput): boolean {
+  const resolved = resolveSourceBackedDictionaryQuery(input.q);
+  const ingredientLevelQuery =
+    resolved?.kind !== undefined && resolved.kind !== "brand";
+  return (
+    Boolean(input.q.trim()) &&
+    !ingredientLevelQuery &&
+    input.type !== "ingredients" &&
+    resolveCatalogView(input) === "flat" &&
+    !input.tradeName?.trim() &&
+    !input.manufacturer?.trim() &&
+    !input.form?.trim() &&
+    !input.strength?.trim() &&
+    !input.registrationStatus &&
+    input.compositionType === "all" &&
+    input.mappingStatus === "all" &&
+    input.nationalListStatus === "all"
+  );
+}
 export function isExactFastPathEligible(input: CatalogSearchInput): boolean {
   const resolved = resolveSourceBackedDictionaryQuery(input.q);
   const ingredientLevelQuery =
