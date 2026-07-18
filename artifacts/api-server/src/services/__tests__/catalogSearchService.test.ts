@@ -11,6 +11,7 @@ import {
   assembleRegistryProducts,
   extractRegistryStrength,
   isExactFastPathEligible,
+  isExactTradePageEligible,
   registrySearchCacheKey,
   resetRegistrySearchCachesForTests,
   searchCatalog,
@@ -628,6 +629,59 @@ describe("catalog search service", () => {
     resetRegistrySearchCachesForTests();
   });
 
+  it("uses an indexed exact-trade filter for ambiguous brand variants", async () => {
+    resetRegistrySearchCachesForTests();
+    const statements = new Map<string, string>();
+    const query = vi.fn(async (sql: string) => {
+      if (sql.includes("AS snapshot_version")) {
+        return { rows: [{ count: 16_533, snapshot_version: "batch-enap" }] };
+      }
+      if (sql.includes("SELECT EXISTS")) return { rows: [{ exists: true }] };
+      if (sql.includes("SELECT COUNT(*)::int AS count")) {
+        return { rows: [{ count: 1 }] };
+      }
+      if (sql.includes("SELECT product_registry_id, name, country")) {
+        return { rows: [manufacturer] };
+      }
+      if (sql.includes("n.normalized") && sql.includes("ingredient_id")) {
+        return { rows: [approvedMapping] };
+      }
+      if (sql.includes("p.registry_id")) return { rows: [productRow] };
+      throw new Error("Unexpected exact-trade page test query");
+    });
+    const dbStore = await createPostgresRegistryCatalogStore({
+      executor: { query },
+      onQuery: (metric) => statements.set(metric.label, metric.statement),
+    });
+
+    const result = await dbStore.searchProducts(
+      input({ q: "Nurofen", type: "registry_products", view: "flat" }),
+    );
+
+    expect(result.filteredTotal).toBe(1);
+    expect(result.items[0]?.tradeName).toBe("Nurofen");
+    expect(statements.get("registry-exact-trade-exists")).toContain(
+      "exact_trade.normalized_trade_name = $1",
+    );
+    for (const label of ["registry-flat-count", "registry-flat-page"]) {
+      const sql = statements.get(label) ?? "";
+      expect(sql).toContain("p.normalized_trade_name = $1");
+      expect(sql).not.toContain("exact_approved_alias");
+      expect(sql).not.toContain("LOWER(p.trade_name) LIKE");
+      expect(sql).not.toContain("search_manufacturer");
+    }
+    expect(
+      isExactTradePageEligible(
+        input({ q: "Nurofen", type: "registry_products", view: "flat" }),
+      ),
+    ).toBe(true);
+    expect(
+      isExactTradePageEligible(
+        input({ q: "Metformin", type: "registry_products", view: "flat" }),
+      ),
+    ).toBe(false);
+    resetRegistrySearchCachesForTests();
+  });
   it("uses the complete registry candidate path for source-backed ingredient queries", async () => {
     resetRegistrySearchCachesForTests();
     const query = vi.fn(async (sql: string, _values: unknown[] = []) => {

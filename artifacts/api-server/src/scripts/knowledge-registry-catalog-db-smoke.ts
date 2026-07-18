@@ -152,6 +152,7 @@ const REPRESENTATIVE_QUERIES = [
   "Ондансетрон",
   "Варфарин",
   "Амлодипін",
+  "Енап",
 ] as const;
 
 function input(overrides: Record<string, unknown> = {}): CatalogSearchInput {
