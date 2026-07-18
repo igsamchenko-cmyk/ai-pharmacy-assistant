@@ -675,6 +675,16 @@ function buildProductFilter(input: CatalogSearchInput) {
           )
           OR p.normalized_trade_name = ${normalizedExact}
         )`;
+      const ingredientParameterTypeAnchor = `(
+        ${lowerExact}::text IS NOT NULL
+        AND ${normalizedExact}::text IS NOT NULL
+        AND ${lowerPrefix}::text IS NOT NULL
+        AND ${normalizedPrefix}::text IS NOT NULL
+        AND ${contains}::text IS NOT NULL
+        AND ${normalizedContains}::text IS NOT NULL
+        AND cardinality(${aliasLowerRef}::text[]) >= 0
+        AND cardinality(${aliasLowerPrefixesRef}::text[]) >= 0
+      )`;
 
       joinSql += `
         ${ingredientLevelQuery ? "JOIN" : "LEFT JOIN"} (
@@ -723,7 +733,7 @@ function buildProductFilter(input: CatalogSearchInput) {
 
       clauses.push(
         ingredientLevelQuery
-          ? `(${exactTradeScope} AND ${exactApproved})`
+          ? `(${exactTradeScope} AND ${exactApproved} AND ${ingredientParameterTypeAnchor})`
           : `(
         ${exactTradeScope}
         AND (

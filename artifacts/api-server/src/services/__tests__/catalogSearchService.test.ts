@@ -663,6 +663,8 @@ describe("catalog search service", () => {
         "JOIN (\n          SELECT DISTINCT product_alias.normalized",
       );
       expect(sql).toContain("exact_approved_alias.normalized IS NOT NULL");
+      expect(sql).toContain("$1::text IS NOT NULL");
+      expect(sql).toContain("cardinality($9::text[]) >= 0");
       expect(sql).not.toContain("prefix_approved_alias");
       expect(sql).not.toContain("search_manufacturer");
       expect(sql.split("ORDER BY")[0]).not.toContain(
