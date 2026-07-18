@@ -122,6 +122,17 @@ export function shouldDisplayCatalogResponse(
     !isPlaceholder;
 }
 
+export function shouldPreserveCatalogResults(
+  draft: string,
+  hasData: boolean,
+  isUpdating: boolean,
+  isPlaceholder: boolean,
+): boolean {
+  return hasData &&
+    isCatalogQueryEnabled(draft) &&
+    (isUpdating || isPlaceholder);
+}
+
 export function applyPastedQuery(
   current: string,
   selectionStart: number | null,
@@ -238,20 +249,20 @@ export function SearchLoadingSkeletons() {
           <CardContent className="space-y-4 p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1 space-y-2">
-                <div className="h-6 w-2/3 animate-pulse rounded-md bg-primary/10" />
-                <div className="h-4 w-1/2 animate-pulse rounded-md bg-primary/10" />
+                <div className="h-6 w-2/3 animate-pulse motion-reduce:animate-none rounded-md bg-primary/10" />
+                <div className="h-4 w-1/2 animate-pulse motion-reduce:animate-none rounded-md bg-primary/10" />
               </div>
-              <div className="h-6 w-16 animate-pulse rounded-full bg-primary/10" />
+              <div className="h-6 w-16 animate-pulse motion-reduce:animate-none rounded-full bg-primary/10" />
             </div>
             <div className="flex flex-wrap gap-2">
-              <div className="h-6 w-20 animate-pulse rounded-full bg-primary/10" />
-              <div className="h-6 w-28 animate-pulse rounded-full bg-primary/10" />
-              <div className="h-6 w-24 animate-pulse rounded-full bg-primary/10" />
+              <div className="h-6 w-20 animate-pulse motion-reduce:animate-none rounded-full bg-primary/10" />
+              <div className="h-6 w-28 animate-pulse motion-reduce:animate-none rounded-full bg-primary/10" />
+              <div className="h-6 w-24 animate-pulse motion-reduce:animate-none rounded-full bg-primary/10" />
             </div>
             <div className="grid grid-cols-2 gap-2 sm:flex">
-              <div className="col-span-2 h-10 w-full animate-pulse rounded-md bg-primary/10 sm:col-auto sm:w-28" />
-              <div className="h-10 w-full animate-pulse rounded-md bg-primary/10 sm:w-28" />
-              <div className="h-10 w-full animate-pulse rounded-md bg-primary/10 sm:w-28" />
+              <div className="col-span-2 h-10 w-full animate-pulse motion-reduce:animate-none rounded-md bg-primary/10 sm:col-auto sm:w-28" />
+              <div className="h-10 w-full animate-pulse motion-reduce:animate-none rounded-md bg-primary/10 sm:w-28" />
+              <div className="h-10 w-full animate-pulse motion-reduce:animate-none rounded-md bg-primary/10 sm:w-28" />
             </div>
           </CardContent>
         </Card>
@@ -361,9 +372,9 @@ export function RegistryProductCard({
         >
           <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-medium">
             <span>Реєстрові деталі</span>
-            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform motion-reduce:transition-none duration-200 group-open:rotate-180" />
           </summary>
-          <div className="min-w-0 space-y-4 border-t p-3 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="min-w-0 space-y-4 border-t p-3 animate-in motion-reduce:animate-none fade-in slide-in-from-top-1 duration-200">
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="gap-1 whitespace-normal">
                 <Database className="h-3 w-3" />
@@ -674,7 +685,7 @@ function ExactBrandCard({
 
         {trade.variants ? (
           <div
-            className="grid min-w-0 gap-3 overflow-hidden border-t pt-4 animate-in fade-in slide-in-from-top-2 duration-300"
+            className="grid min-w-0 gap-3 overflow-hidden border-t pt-4 animate-in motion-reduce:animate-none fade-in slide-in-from-top-2 duration-300"
             data-testid={`exact-brand-variants-${trade.key}`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -697,12 +708,12 @@ function ExactBrandCard({
             ) : null}
           </div>
         ) : isSelected && isVariantFetching ? (
-          <div className="grid gap-3 border-t pt-4 animate-in fade-in duration-200" aria-label="Завантаження реєстрових позицій бренду" data-testid="exact-brand-loading">
+          <div className="grid gap-3 border-t pt-4 animate-in motion-reduce:animate-none fade-in duration-200" aria-label="Завантаження реєстрових позицій бренду" data-testid="exact-brand-loading">
             {[0, 1].map((item) => (
               <div key={item} className="space-y-3 rounded-xl border p-4">
-                <div className="h-5 w-2/3 animate-pulse rounded-md bg-primary/10" />
-                <div className="flex gap-2"><div className="h-6 w-20 animate-pulse rounded-full bg-primary/10" /><div className="h-6 w-28 animate-pulse rounded-full bg-primary/10" /></div>
-                <div className="h-10 w-full animate-pulse rounded-md bg-primary/10" />
+                <div className="h-5 w-2/3 animate-pulse motion-reduce:animate-none rounded-md bg-primary/10" />
+                <div className="flex gap-2"><div className="h-6 w-20 animate-pulse motion-reduce:animate-none rounded-full bg-primary/10" /><div className="h-6 w-28 animate-pulse motion-reduce:animate-none rounded-full bg-primary/10" /></div>
+                <div className="h-10 w-full animate-pulse motion-reduce:animate-none rounded-md bg-primary/10" />
               </div>
             ))}
           </div>
@@ -729,9 +740,9 @@ function BrandAlternatives({ enabled, ingredient, children }: { enabled: boolean
     <details className="group max-w-full overflow-hidden rounded-2xl border bg-card/80 shadow-sm" data-testid="brand-alternatives">
       <summary className="flex min-h-12 cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium sm:px-5">
         <span className="break-words">Інші препарати з {ingredient}</span>
-        <span className="flex items-center gap-2 text-xs text-muted-foreground">Розгорнути<ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" /></span>
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">Розгорнути<ChevronDown className="h-4 w-4 transition-transform motion-reduce:transition-none group-open:rotate-180" /></span>
       </summary>
-      <div className="space-y-5 border-t p-4 animate-in fade-in slide-in-from-top-2 duration-300 sm:p-5">{children}</div>
+      <div className="space-y-5 border-t p-4 animate-in motion-reduce:animate-none fade-in slide-in-from-top-2 duration-300 sm:p-5">{children}</div>
     </details>
   );
 }
@@ -817,9 +828,9 @@ export function GroupedRegistryResults({
       >
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-medium">
           <span>Деталі результатів</span>
-          <ChevronDown className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
+          <ChevronDown className="h-4 w-4 transition-transform motion-reduce:transition-none duration-200 group-open:rotate-180" />
         </summary>
-        <div className="space-y-3 border-t p-3 text-sm animate-in fade-in duration-200">
+        <div className="space-y-3 border-t p-3 text-sm animate-in motion-reduce:animate-none fade-in duration-200">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <span>Торгові назви: {numberFormatter.format(summary.uniqueTradeNames)}</span>
             <span>Форми: {numberFormatter.format(summary.uniqueDosageForms)}</span>
@@ -930,7 +941,7 @@ export function GroupedRegistryResults({
                       </div>
 
                       {trade.variants ? (
-                        <div className="mt-3 grid min-w-0 gap-3 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300" data-testid={`trade-variants-${trade.key}`}>
+                        <div className="mt-3 grid min-w-0 gap-3 overflow-hidden animate-in motion-reduce:animate-none fade-in slide-in-from-top-2 duration-300" data-testid={`trade-variants-${trade.key}`}>
                           {trade.variants.items.map((product) => (
                             <RegistryProductCard key={product.id} product={product} query={query} />
                           ))}
@@ -948,12 +959,12 @@ export function GroupedRegistryResults({
                         </div>
                       ) : trade.key === selectedTradeNameKey && isVariantFetching ? (
                         <div
-                          className="mt-3 grid gap-3 animate-in fade-in duration-200"
+                          className="mt-3 grid gap-3 animate-in motion-reduce:animate-none fade-in duration-200"
                           aria-label="Завантаження варіантів препарату"
                           data-testid="variant-loading"
                         >
-                          <div className="h-32 w-full animate-pulse rounded-xl bg-primary/10" />
-                          <div className="h-32 w-full animate-pulse rounded-xl bg-primary/10" />
+                          <div className="h-32 w-full animate-pulse motion-reduce:animate-none rounded-xl bg-primary/10" />
+                          <div className="h-32 w-full animate-pulse motion-reduce:animate-none rounded-xl bg-primary/10" />
                         </div>
                       ) : trade.key === selectedTradeNameKey && isVariantError ? (
                         <div
@@ -1278,11 +1289,17 @@ export default function SearchPage() {
     strength.trim() !== debouncedStrength.trim();
   const queryIsCurrent = q.trim() === effectiveQ;
   const shortQuery = q.trim().length > 0 && !isCatalogQueryEnabled(q);
+  const preservePreviousResults = shouldPreserveCatalogResults(
+    q,
+    Boolean(data),
+    isUpdating,
+    isPlaceholderData,
+  );
   const visibleData = shouldDisplayCatalogResponse(
     q,
     effectiveQ,
     isPlaceholderData,
-  ) ? data : undefined;
+  ) || preservePreviousResults ? data : undefined;
   const registry = visibleData?.registryProducts;
   const registryGroups = mergeCatalogVariantPage(
     visibleData?.registryGroups,
@@ -1297,13 +1314,13 @@ export default function SearchPage() {
   const hasResults =
     Boolean(visibleData?.ingredients.length) || Boolean(registry?.items.length) || Boolean(registryGroups?.groups.items.length);
   const viewState = resolveCatalogViewState(
-    isCatalogQueryEnabled(effectiveQ) && (isLoading || isUpdating),
+    isCatalogQueryEnabled(effectiveQ) && (isLoading || isUpdating) && !hasResults,
     queryIsCurrent && isError,
     hasResults,
   );
 
   return (
-    <div className="max-w-full space-y-5 overflow-x-hidden pb-8 animate-in fade-in duration-300">
+    <div className="max-w-full space-y-5 overflow-x-hidden pb-8 animate-in motion-reduce:animate-none fade-in duration-300">
       <header className="space-y-2">
         <h1 className="text-2xl font-bold text-primary">Пошук препаратів</h1>
         <p className="text-sm text-muted-foreground">

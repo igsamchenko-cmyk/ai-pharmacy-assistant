@@ -28,6 +28,7 @@ import {
   REGISTRY_CATALOG_SAFETY_COPY,
   resolveCatalogViewState,
   shouldDisplayCatalogResponse,
+  shouldPreserveCatalogResults,
   shouldRetryCatalogRequest,
 } from "./search";
 import { REGISTRY_CATALOG_HREF } from "./home";
@@ -115,6 +116,12 @@ describe("registry catalog UI", () => {
     expect(shouldDisplayCatalogResponse("Омепразол", "Метформін", false)).toBe(false);
     expect(shouldDisplayCatalogResponse("Метформін", "Метформін", true)).toBe(false);
     expect(shouldDisplayCatalogResponse("Іб", "Іб", false)).toBe(false);
+  });
+  it("keeps rendered results visible while a valid query updates", () => {
+    expect(shouldPreserveCatalogResults("Омепразол", true, true, false)).toBe(true);
+    expect(shouldPreserveCatalogResults("Омепразол", true, false, true)).toBe(true);
+    expect(shouldPreserveCatalogResults("Омепразол", false, true, false)).toBe(false);
+    expect(shouldPreserveCatalogResults("Іб", true, true, false)).toBe(false);
   });
 
   it("forwards cancellation and deduplicates identical in-flight requests", async () => {
@@ -229,6 +236,7 @@ describe("registry catalog UI", () => {
     expect((html.match(/data-testid="search-skeleton-card"/g) ?? [])).toHaveLength(3);
     expect(html).toContain("grid-cols-2");
     expect(html).toContain("max-w-full");
+    expect(html).toContain("motion-reduce:animate-none");
     expect(html).not.toContain("overflow-x-auto");
   });
   it("renders a mobile-safe registry card with production fields", () => {
