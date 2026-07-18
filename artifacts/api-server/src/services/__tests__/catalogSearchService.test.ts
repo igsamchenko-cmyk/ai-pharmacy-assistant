@@ -628,7 +628,7 @@ describe("catalog search service", () => {
     resetRegistrySearchCachesForTests();
   });
 
-  it("uses the approved-alias index path for source-backed ingredient queries", async () => {
+  it("uses the complete registry candidate path for source-backed ingredient queries", async () => {
     resetRegistrySearchCachesForTests();
     const query = vi.fn(async (sql: string, _values: unknown[] = []) => {
       if (sql.includes("SELECT COUNT(*)::int AS count")) {
@@ -660,9 +660,15 @@ describe("catalog search service", () => {
     expect(searchSqls).toHaveLength(2);
     for (const sql of searchSqls) {
       expect(sql).toContain(
-        "JOIN (\n          SELECT DISTINCT product_alias.normalized",
+        "JOIN (\n          SELECT ingredient_product.registry_id",
       );
-      expect(sql).toContain("exact_approved_alias.normalized IS NOT NULL");
+      expect(sql).toContain(
+        "LEFT JOIN (\n          SELECT DISTINCT product_alias.normalized",
+      );
+      expect(sql).toContain("LOWER(ingredient_product.inn) LIKE $5");
+      expect(sql).toContain(
+        "LOWER(ingredient_product.active_ingredient) LIKE $5",
+      );
       expect(sql).toContain("$1::text IS NOT NULL");
       expect(sql).toContain("cardinality($9::text[]) >= 0");
       expect(sql).not.toContain("prefix_approved_alias");

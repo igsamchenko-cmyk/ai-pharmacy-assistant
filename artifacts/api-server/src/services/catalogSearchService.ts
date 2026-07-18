@@ -686,8 +686,22 @@ function buildProductFilter(input: CatalogSearchInput) {
         AND cardinality(${aliasLowerPrefixesRef}::text[]) >= 0
       )`;
 
+      if (ingredientLevelQuery) {
+        joinSql += `
+        JOIN (
+          SELECT ingredient_product.registry_id
+          FROM knowledge_registry_products ingredient_product
+          WHERE ingredient_product.review_status <> 'stale'
+            AND (
+              LOWER(ingredient_product.inn) LIKE ${contains} ESCAPE '\\'
+              OR LOWER(ingredient_product.active_ingredient) LIKE ${contains} ESCAPE '\\'
+            )
+        ) ingredient_candidates
+          ON ingredient_candidates.registry_id = p.registry_id`;
+      }
+
       joinSql += `
-        ${ingredientLevelQuery ? "JOIN" : "LEFT JOIN"} (
+        LEFT JOIN (
           SELECT DISTINCT product_alias.normalized
           FROM knowledge_ingredient_names query_alias
           JOIN knowledge_ingredient_names product_alias
@@ -733,7 +747,7 @@ function buildProductFilter(input: CatalogSearchInput) {
 
       clauses.push(
         ingredientLevelQuery
-          ? `(${exactTradeScope} AND ${exactApproved} AND ${ingredientParameterTypeAnchor})`
+          ? `(${exactTradeScope} AND ingredient_candidates.registry_id IS NOT NULL AND ${ingredientParameterTypeAnchor})`
           : `(
         ${exactTradeScope}
         AND (

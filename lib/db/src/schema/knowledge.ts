@@ -27,6 +27,7 @@ import {
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -201,6 +202,14 @@ export const knowledgeRegistryProductsTable = pgTable(
   },
   (t) => [
     index("knowledge_registry_products_name_idx").on(t.normalizedTradeName),
+    index("knowledge_registry_products_inn_trgm_idx").using(
+      "gin",
+      sql`lower(${t.inn}) gin_trgm_ops`,
+    ),
+    index("knowledge_registry_products_active_trgm_idx").using(
+      "gin",
+      sql`lower(${t.activeIngredient}) gin_trgm_ops`,
+    ),
     index("knowledge_registry_products_reg_idx").on(t.registrationNumber),
     index("knowledge_registry_products_review_idx").on(t.reviewStatus),
     index("knowledge_registry_products_current_idx").on(t.currentStatus),

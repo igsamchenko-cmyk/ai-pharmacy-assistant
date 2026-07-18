@@ -108,6 +108,8 @@ jobs:
           --file="$RUNNER_TEMP/reestr.csv"
           --products-only
 
+      - name: Enable additive trigram search indexes in CI
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
       - name: Initialize ephemeral CI schema
         run: pnpm db:push
 
@@ -261,6 +263,10 @@ jobs:
         env:
           REGISTRY_ARTIFACT_DIRECTORY: ${{ runner.temp }}/registry-audit
         run: pnpm knowledge:registry:artifact-preflight
+      - name: Enable additive production trigram extension
+        run: psql "$PRODUCTION_DATABASE_URL" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
       - name: Apply additive schema changes
         run: pnpm db:push
         env:

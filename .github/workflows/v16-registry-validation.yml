@@ -55,6 +55,10 @@ jobs:
       - name: Codegen
         run: pnpm --filter @workspace/api-spec run codegen
 
+      - name: Enable additive trigram search indexes in CI
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/farmassist_test"
       - name: Schema push
         run: pnpm db:push
         env:
