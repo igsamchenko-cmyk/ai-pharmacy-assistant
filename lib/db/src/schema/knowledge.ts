@@ -202,6 +202,10 @@ export const knowledgeRegistryProductsTable = pgTable(
   },
   (t) => [
     index("knowledge_registry_products_name_idx").on(t.normalizedTradeName),
+    index("knowledge_registry_products_trade_trgm_idx").using(
+      "gin",
+      sql`lower(${t.tradeName}) gin_trgm_ops`,
+    ),
     index("knowledge_registry_products_inn_trgm_idx").using(
       "gin",
       sql`lower(${t.inn}) gin_trgm_ops`,

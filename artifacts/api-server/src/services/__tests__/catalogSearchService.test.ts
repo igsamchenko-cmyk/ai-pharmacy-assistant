@@ -665,7 +665,12 @@ describe("catalog search service", () => {
       expect(sql).toContain(
         "LEFT JOIN (\n          SELECT DISTINCT product_alias.normalized",
       );
+      expect(sql).toContain("LOWER(ingredient_product.trade_name) LIKE $5");
       expect(sql).toContain("LOWER(ingredient_product.inn) LIKE $5");
+      expect(sql).toContain("UNION");
+      expect(sql).toContain(
+        "candidate_alias.normalized = alias_product.normalized_trade_name",
+      );
       expect(sql).toContain(
         "LOWER(ingredient_product.active_ingredient) LIKE $5",
       );

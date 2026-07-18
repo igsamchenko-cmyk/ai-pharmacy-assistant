@@ -693,9 +693,24 @@ function buildProductFilter(input: CatalogSearchInput) {
           FROM knowledge_registry_products ingredient_product
           WHERE ingredient_product.review_status <> 'stale'
             AND (
-              LOWER(ingredient_product.inn) LIKE ${contains} ESCAPE '\\'
+              LOWER(ingredient_product.trade_name) LIKE ${contains} ESCAPE '\\'
+              OR LOWER(ingredient_product.inn) LIKE ${contains} ESCAPE '\\'
               OR LOWER(ingredient_product.active_ingredient) LIKE ${contains} ESCAPE '\\'
             )
+          UNION
+          SELECT alias_product.registry_id
+          FROM knowledge_registry_products alias_product
+          JOIN (
+            SELECT DISTINCT product_alias.normalized
+            FROM knowledge_ingredient_names query_alias
+            JOIN knowledge_ingredient_names product_alias
+              ON product_alias.ingredient_inn_key = query_alias.ingredient_inn_key
+             AND product_alias.review_status = 'approved'
+            WHERE query_alias.review_status = 'approved'
+              AND query_alias.normalized = ANY(${aliasKeysRef}::text[])
+          ) candidate_alias
+            ON candidate_alias.normalized = alias_product.normalized_trade_name
+          WHERE alias_product.review_status <> 'stale'
         ) ingredient_candidates
           ON ingredient_candidates.registry_id = p.registry_id`;
       }
