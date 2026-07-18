@@ -1,0 +1,155 @@
+﻿name: Official registry parity and gated sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_sha256:
+        description: "Exact audited registry SHA-256"
+        required: true
+        type: string
+      confirm_production_apply:
+        description: "Must match the environment confirmation secret"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-search-indexes
+  cancel-in-progress: false
+
+env:
+  OFFICIAL_REGISTRY_URL: http://www.drlz.com.ua/ibp/zvity.nsf/all/zvit/$file/reestr.csv
+
+jobs:
+  backup_index_and_profile:
+    name: Verified backup, additive indexes, and read-only profile
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production-registry-sync
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25.8.2
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+
+      - name: Require fail-closed confirmation before production access
+        id: confirmation
+        shell: bash
+        env:
+          CONFIRM_SHA: ${{ inputs.confirm_sha256 }}
+          CONFIRM_INPUT: ${{ inputs.confirm_production_apply }}
+          CONFIRM_SECRET: ${{ secrets.CONFIRM_PRODUCTION_REGISTRY_APPLY }}
+          BACKUP_KEY: ${{ secrets.PRODUCTION_BACKUP_ENCRYPTION_KEY }}
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --connect-timeout 20 "$OFFICIAL_REGISTRY_URL" --output "$RUNNER_TEMP/reestr.csv"
+          fresh_sha="$(sha256sum "$RUNNER_TEMP/reestr.csv" | cut -d' ' -f1)"
+          test "$CONFIRM_SHA" = "$fresh_sha"
+          test "$CONFIRM_INPUT" = "$fresh_sha"
+          test "$CONFIRM_SECRET" = "$fresh_sha"
+          test -n "$BACKUP_KEY"
+          echo "audited_sha=$fresh_sha" >> "$GITHUB_OUTPUT"
+          echo "Confirmation gate: passed" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create, verify, and encrypt fresh pre-schema backup
+        id: backup
+        shell: bash
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          BACKUP_KEY: ${{ secrets.PRODUCTION_BACKUP_ENCRYPTION_KEY }}
+        run: |
+          set -euo pipefail
+          backup_id="farmassist-pre-search-indexes-$(date -u +%Y%m%dT%H%M%SZ)"
+          dump="$RUNNER_TEMP/$backup_id.dump"
+          encrypted="$dump.enc"
+          list="$RUNNER_TEMP/$backup_id.pg_restore.list"
+          pg_dump "$PRODUCTION_DATABASE_URL" --format=custom --no-owner --no-acl --file="$dump"
+          pg_restore --list "$dump" > "$list"
+          test -s "$dump"
+          test -s "$list"
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000 -in "$dump" -out "$encrypted" -pass env:BACKUP_KEY
+          test -s "$encrypted"
+          dump_sha="$(sha256sum "$dump" | cut -d' ' -f1)"
+          size="$(stat --format=%s "$dump")"
+          printf '{"backup_id":"%s","created_at":"%s","size":%s,"sha256":"%s","pg_restore_list_verified":true}\n' "$backup_id" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$size" "$dump_sha" > "$RUNNER_TEMP/backup.json"
+          echo "encrypted=$encrypted" >> "$GITHUB_OUTPUT"
+          echo "list=$list" >> "$GITHUB_OUTPUT"
+          echo "Backup ID: $backup_id" >> "$GITHUB_STEP_SUMMARY"
+          echo "Backup size: $size bytes" >> "$GITHUB_STEP_SUMMARY"
+          echo "Backup SHA-256: $dump_sha" >> "$GITHUB_STEP_SUMMARY"
+          echo "pg_restore --list verified: true" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload encrypted verified backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-search-index-backup-${{ github.run_id }}
+          retention-days: 1
+          if-no-files-found: error
+          path: |
+            ${{ steps.backup.outputs.encrypted }}
+            ${{ steps.backup.outputs.list }}
+            ${{ runner.temp }}/backup.json
+
+      - name: Validate exact additive schema diff
+        id: schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          sql="$RUNNER_TEMP/search-indexes.sql"
+          printf '%s\n' \
+            'CREATE EXTENSION IF NOT EXISTS pg_trgm;' \
+            'CREATE INDEX CONCURRENTLY IF NOT EXISTS knowledge_registry_products_trade_trgm_idx ON knowledge_registry_products USING gin (lower(trade_name) gin_trgm_ops);' \
+            'CREATE INDEX CONCURRENTLY IF NOT EXISTS knowledge_registry_products_inn_trgm_idx ON knowledge_registry_products USING gin (lower(inn) gin_trgm_ops);' \
+            'CREATE INDEX CONCURRENTLY IF NOT EXISTS knowledge_registry_products_active_trgm_idx ON knowledge_registry_products USING gin (lower(active_ingredient) gin_trgm_ops);' > "$sql"
+          test "$(grep -c '^CREATE ' "$sql")" -eq 4
+          ! grep -Eiq '(^|[^[:alpha:]])(DROP|DELETE|TRUNCATE|INSERT|UPDATE|ALTER)([^[:alpha:]]|$)' "$sql"
+          echo "path=$sql" >> "$GITHUB_OUTPUT"
+          echo "Schema diff: pg_trgm and exactly three additive concurrent GIN indexes" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Apply exact additive search schema
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -v ON_ERROR_STOP=1 --file="${{ steps.schema.outputs.path }}"
+
+      - name: Verify extension and index set
+        shell: bash
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          test "$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc "SELECT count(*) FROM pg_extension WHERE extname='pg_trgm'")" = "1"
+          test "$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc "SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND indexname IN ('knowledge_registry_products_trade_trgm_idx','knowledge_registry_products_inn_trgm_idx','knowledge_registry_products_active_trgm_idx') AND indexdef ILIKE '%USING gin%gin_trgm_ops%'")" = "3"
+          echo "Verified additive GIN indexes: 3/3" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Read-only production profile after indexes
+        env:
+          REGISTRY_PRODUCTION_SEARCH_PROFILE: "true"
+          CONFIRM_REGISTRY_SNAPSHOT_SHA: ${{ inputs.confirm_sha256 }}
+          AUDITED_REGISTRY_SNAPSHOT_SHA: ${{ steps.confirmation.outputs.audited_sha }}
+          CONFIRM_PRODUCTION_APPLY_INPUT: ${{ inputs.confirm_production_apply }}
+          CONFIRM_PRODUCTION_REGISTRY_APPLY: ${{ secrets.CONFIRM_PRODUCTION_REGISTRY_APPLY }}
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_SSL: "true"
+          KNOWLEDGE_DB_RUNTIME: "true"
+          REGISTRY_SYNC_MODE: profile
+          REGISTRY_SYNC_PURPOSE: production-registry-search-profile
+          REGISTRY_SYNC_ENVIRONMENT: production-registry-sync
+        run: pnpm knowledge:registry:search-profile -- --output="$RUNNER_TEMP/profile.json"
+
+      - name: Upload sanitized profile
+        uses: actions/upload-artifact@v4
+        with:
+          name: registry-production-search-profile-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: ${{ runner.temp }}/profile.json
+
+      - name: Record schema-only completion
+        run: |
+          echo "Registry apply repeated: false" >> "$GITHUB_STEP_SUMMARY"
+          echo "Registry data changed: false" >> "$GITHUB_STEP_SUMMARY"
+          echo "Schema update completed: true" >> "$GITHUB_STEP_SUMMARY"
