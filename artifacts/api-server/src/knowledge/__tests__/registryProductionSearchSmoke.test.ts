@@ -246,6 +246,27 @@ describe("post-commit workflow state", () => {
     ).toBeLessThan(
       applyJob.indexOf("DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}"),
     );
+    const stageArtifact = workflow.indexOf(
+      "Stage immutable registry checkpoint",
+    );
+    const uploadArtifact = workflow.indexOf(
+      "Upload audit and rollback checkpoint",
+    );
+    const downloadArtifact = applyJob.indexOf(
+      "Download the audited immutable checkpoint",
+    );
+    const verifyArtifact = applyJob.indexOf(
+      "Verify downloaded registry CSV before DB access",
+    );
+    const databaseAccess = applyJob.indexOf("Apply additive schema changes");
+    expect(stageArtifact).toBeGreaterThan(-1);
+    expect(stageArtifact).toBeLessThan(uploadArtifact);
+    expect(downloadArtifact).toBeLessThan(verifyArtifact);
+    expect(verifyArtifact).toBeLessThan(databaseAccess);
+    expect(workflow).toContain("registry-checkpoint/");
+    expect(workflow).toContain("REGISTRY_ARTIFACT_DIRECTORY:");
+    expect(workflow).toContain("steps.registry_artifact.outputs.csv_path");
+    expect(workflow).not.toContain("$RUNNER_TEMP/registry-audit/reestr.csv");
     expect(workflow).toContain('REGISTRY_PRODUCTION_SEARCH_SMOKE: "true"');
     expect(workflow).toContain("AUDITED_REGISTRY_SNAPSHOT_SHA:");
     expect(workflow).toContain("CONFIRM_REGISTRY_SNAPSHOT_SHA:");

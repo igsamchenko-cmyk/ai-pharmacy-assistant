@@ -27,8 +27,10 @@ on:
       - "artifacts/api-server/src/knowledge/ingestion/registry*.ts"
       - "artifacts/api-server/src/knowledge/registryProductionSearchSmoke.ts"
       - "artifacts/api-server/src/knowledge/registryApplyConfirmation.ts"
+      - "artifacts/api-server/src/knowledge/registryArtifactPath.ts"
       - "artifacts/api-server/src/knowledge/registrySyncWorkflowState.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-confirm-production-apply.ts"
+      - "artifacts/api-server/src/scripts/knowledge-registry-artifact-preflight.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-catalog-db-smoke.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-sync-summary.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-parity.ts"
@@ -122,6 +124,16 @@ jobs:
           --baseline-report=../../artifacts/reports/catalog-completeness-report.json
           --output=../../artifacts/reports/official-registry-parity-report.json
           --require-db
+
+      - name: Stage immutable registry checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          checkpoint_dir="$RUNNER_TEMP/registry-checkpoint"
+          mkdir -p "$checkpoint_dir"
+          install -m 0644 "$RUNNER_TEMP/reestr.csv" "$checkpoint_dir/reestr.csv"
+          install -m 0644 artifacts/reports/official-registry-parity-report.json \
+            "$checkpoint_dir/official-registry-parity-report.json"
       - name: Diff safety
         run: git diff --check
 
@@ -131,9 +143,7 @@ jobs:
           name: official-registry-${{ github.run_id }}-${{ steps.source.outputs.sha256 }}
           retention-days: 90
           if-no-files-found: error
-          path: |
-            ${{ runner.temp }}/reestr.csv
-            artifacts/reports/official-registry-parity-report.json
+          path: ${{ runner.temp }}/registry-checkpoint/
 
   apply:
     name: Confirmed additive/upsert and mark-stale update
@@ -177,6 +187,11 @@ jobs:
           name: official-registry-${{ github.run_id }}-${{ needs.audit.outputs.source_sha256 }}
           path: ${{ runner.temp }}/registry-audit
 
+      - name: Verify downloaded registry CSV before DB access
+        id: registry_artifact
+        env:
+          REGISTRY_ARTIFACT_DIRECTORY: ${{ runner.temp }}/registry-audit
+        run: pnpm knowledge:registry:artifact-preflight
       - name: Apply additive schema changes
         run: pnpm db:push
         env:
@@ -193,7 +208,7 @@ jobs:
           KNOWLEDGE_DB_RUNTIME: "true"
         run: >-
           pnpm knowledge:registry:parity --
-          --file="$RUNNER_TEMP/registry-audit/reestr.csv"
+          --file="${{ steps.registry_artifact.outputs.csv_path }}"
           --source-url="$OFFICIAL_REGISTRY_URL"
           --downloaded-at="${{ needs.audit.outputs.downloaded_at }}"
           --require-db
