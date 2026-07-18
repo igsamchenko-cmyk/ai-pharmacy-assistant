@@ -125,6 +125,10 @@ jobs:
           test "$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc "SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND indexname IN ('knowledge_registry_products_trade_trgm_idx','knowledge_registry_products_inn_trgm_idx','knowledge_registry_products_active_trgm_idx') AND indexdef ILIKE '%USING gin%gin_trgm_ops%'")" = "3"
           echo "Verified additive GIN indexes: 3/3" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Analyze registry product planner statistics
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -v ON_ERROR_STOP=1 -c "ANALYZE knowledge_registry_products"
       - name: Read-only production profile after indexes
         env:
           REGISTRY_PRODUCTION_SEARCH_PROFILE: "true"
