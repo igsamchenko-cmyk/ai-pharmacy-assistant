@@ -32,6 +32,7 @@ import {
   shouldRetryCatalogRequest,
 } from "./search";
 import { REGISTRY_CATALOG_HREF } from "./home";
+import { registryProductDetailHref } from "@/lib/registry-product-route";
 
 vi.mock("@/components/report-issue-button", () => ({
   ReportIssueButton: () => null,
@@ -263,6 +264,7 @@ describe("registry catalog UI", () => {
     expect(html).toContain(`data-testid="form-badge-${product.id}"`);
     expect(html).toContain(`data-testid="product-actions-${product.id}"`);
     expect(html).toContain(`data-testid="registry-technical-details-${product.id}"`);
+    expect(html).toContain(registryProductDetailHref(product));
     expect(html).toContain('href="/interactions"');
     expect(html).toContain('href="/compare"');
     expect(html).not.toContain("<details open=");

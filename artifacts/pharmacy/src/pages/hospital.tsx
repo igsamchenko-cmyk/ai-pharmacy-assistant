@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GroupBadge } from "@/components/drug-badges";
-import { useFavorites } from "@/hooks/use-favorites";
+import { drugRefHref, useFavorites } from "@/hooks/use-favorites";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Search, Stethoscope, Star, ChevronRight } from "lucide-react";
 
@@ -71,7 +71,7 @@ export default function Hospital() {
           </h2>
           <div className="space-y-2">
             {favorites.map((f) => (
-              <Link key={f.id} href={`/drug/${f.id}`}>
+              <Link key={f.id} href={drugRefHref(f)}>
                 <Card className="hover:border-primary/50 active:scale-[0.99] transition-all cursor-pointer">
                   <CardContent className="p-4 flex items-center justify-between gap-3">
                     <div className="min-w-0">

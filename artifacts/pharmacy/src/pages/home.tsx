@@ -30,7 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DEMO_LABEL } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useFavorites, useRecentlyViewed } from "@/hooks/use-favorites";
+import { drugRefHref, useFavorites, useRecentlyViewed } from "@/hooks/use-favorites";
 
 export const REGISTRY_CATALOG_HREF = "/search?type=registry_products";
 
@@ -169,7 +169,7 @@ export default function Home() {
           </h2>
           <div className="space-y-2">
             {favorites.slice(0, 5).map((f) => (
-              <Link key={f.id} href={`/drug/${f.id}`}>
+              <Link key={f.id} href={drugRefHref(f)}>
                 <Card className="hover:border-primary/50 active:scale-[0.99] transition-all cursor-pointer">
                   <CardContent className="p-3 flex items-center justify-between gap-3">
                     <div className="min-w-0">
@@ -197,7 +197,7 @@ export default function Home() {
           </h2>
           <div className="flex flex-wrap gap-2">
             {recentlyViewed.map((r) => (
-              <Link key={r.id} href={`/drug/${r.id}`}>
+              <Link key={r.id} href={drugRefHref(r)}>
                 <Badge
                   variant="secondary"
                   className="px-3 py-1.5 text-sm bg-secondary/60 text-secondary-foreground hover:bg-secondary transition-colors cursor-pointer"

@@ -26,6 +26,7 @@ import DataQuality from "@/pages/data-quality";
 import ReviewQueue from "@/pages/review";
 import BetaDashboard from "@/pages/beta-dashboard";
 import DrugInstruction from "@/pages/drug-instruction";
+import RegistryProductDetail from "@/pages/registry-product-detail";
 
 const queryClient = new QueryClient();
 const ProtectedSearch = () => <ProtectedRoute component={SearchPage} />;
@@ -45,6 +46,7 @@ const ProtectedReviewQueue = () => (
 );
 const ProtectedBetaDashboard = () => <ProtectedRoute component={BetaDashboard} />;
 const ProtectedDrugInstruction = () => <ProtectedRoute component={DrugInstruction} />;
+const ProtectedRegistryProductDetail = () => <ProtectedRoute component={RegistryProductDetail} />;
 const AccessDeniedRoute = () => <AccessDenied />;
 
 function Router() {
@@ -57,6 +59,7 @@ function Router() {
           <Route path="/access-denied" component={AccessDeniedRoute} />
           <Route path="/search" component={ProtectedSearch} />
           <Route path="/instructions/:productId" component={ProtectedDrugInstruction} />
+          <Route path="/products/:productId" component={ProtectedRegistryProductDetail} />
           <Route path="/drug/:id" component={ProtectedDrugDetail} />
           <Route path="/analogs/:id" component={ProtectedAnalogs} />
           <Route path="/interactions" component={ProtectedInteractions} />
