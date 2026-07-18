@@ -27,6 +27,7 @@ const BROAD_QUERIES = [
   "Метформін",
   "Омепразол",
   "Ібупрофен",
+  "Енап",
 ] as const;
 const EXACT_REGISTRATION = "UA/20900/01/01";
 const SAMPLE_COUNT = 10;
