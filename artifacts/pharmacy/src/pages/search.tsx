@@ -41,6 +41,7 @@ import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ReportIssueButton } from "@/components/report-issue-button";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
+import { registryProductDetailHref } from "@/lib/registry-product-route";
 
 type SearchType = "all" | "ingredients" | "registry_products";
 type RegistrationStatus = "active" | "terminated" | "unknown";
@@ -325,7 +326,13 @@ export function RegistryProductCard({
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="break-words text-base font-bold leading-snug">
-              {product.tradeName}
+              <a
+                href={registryProductDetailHref(product)}
+                className="rounded-sm underline-offset-4 hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                data-testid={`registry-product-detail-link-${product.id}`}
+              >
+                {product.tradeName}
+              </a>
             </h3>
             <p className="mt-0.5 break-words text-xs text-muted-foreground">
               {product.registration.number || "Реєстраційний номер не зазначено"}

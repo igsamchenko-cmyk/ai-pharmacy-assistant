@@ -12,6 +12,7 @@ export interface DrugRef {
   id: string;
   brandName: string;
   inn: string;
+  href?: string;
 }
 
 const FAVORITES_KEY = "farmassist:favorites";
@@ -45,7 +46,10 @@ function read(key: string): DrugRef[] {
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
       (x): x is DrugRef =>
-        x && typeof x.id === "string" && typeof x.brandName === "string",
+        x &&
+        typeof x.id === "string" &&
+        typeof x.brandName === "string" &&
+        (x.href === undefined || typeof x.href === "string"),
     );
   } catch {
     return [];
@@ -104,7 +108,15 @@ export function useFavorites() {
     const exists = current.some((d) => d.id === drug.id);
     const next = exists
       ? current.filter((d) => d.id !== drug.id)
-      : [{ id: drug.id, brandName: drug.brandName, inn: drug.inn }, ...current];
+      : [
+          {
+            id: drug.id,
+            brandName: drug.brandName,
+            inn: drug.inn,
+            ...(drug.href ? { href: drug.href } : {}),
+          },
+          ...current,
+        ];
     write(FAVORITES_KEY, next);
   }, []);
 
@@ -124,8 +136,17 @@ export function useRecentlyViewed() {
 export function recordRecentlyViewed(drug: DrugRef): void {
   const current = read(RECENT_KEY).filter((d) => d.id !== drug.id);
   const next = [
-    { id: drug.id, brandName: drug.brandName, inn: drug.inn },
+    {
+      id: drug.id,
+      brandName: drug.brandName,
+      inn: drug.inn,
+      ...(drug.href ? { href: drug.href } : {}),
+    },
     ...current,
   ].slice(0, RECENT_LIMIT);
   write(RECENT_KEY, next);
+}
+
+export function drugRefHref(drug: DrugRef): string {
+  return drug.href || `/drug/${encodeURIComponent(drug.id)}`;
 }
