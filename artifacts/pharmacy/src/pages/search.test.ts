@@ -9,6 +9,8 @@ import {
 import { QueryClient } from "@tanstack/react-query";
 import {
   GroupedRegistryResults,
+  SearchLoadingSkeletons,
+  SEARCH_STICKY_CLASS,
   conciseDosageForm,
   conciseDosageForms,
   RegistryProductCard,
@@ -217,6 +219,18 @@ describe("registry catalog UI", () => {
     expect(html).not.toContain("in bulk");
     expect(html).not.toContain("5000");
   });
+  it("uses a mobile sticky search and compact skeletons without horizontal overflow", () => {
+    expect(SEARCH_STICKY_CLASS).toContain("sticky");
+    expect(SEARCH_STICKY_CLASS).toContain("top-[65px]");
+    expect(SEARCH_STICKY_CLASS).toContain("md:top-0");
+
+    const html = renderToStaticMarkup(createElement(SearchLoadingSkeletons));
+    expect(html).toContain('data-testid="search-skeletons"');
+    expect((html.match(/data-testid="search-skeleton-card"/g) ?? [])).toHaveLength(3);
+    expect(html).toContain("grid-cols-2");
+    expect(html).toContain("max-w-full");
+    expect(html).not.toContain("overflow-x-auto");
+  });
   it("renders a mobile-safe registry card with production fields", () => {
     const html = renderToStaticMarkup(
       createElement(RegistryProductCard, { product, query: "Нурофен", showReportIssue: false }),
@@ -237,6 +251,13 @@ describe("registry catalog UI", () => {
     expect(html).toContain("Інструкція");
     expect(html).toContain("Є інструкція");
     expect(html).toContain(`data-testid="instruction-action-${product.id}"`);
+    expect(html).toContain(`data-testid="dosage-chip-${product.id}"`);
+    expect(html).toContain(`data-testid="form-badge-${product.id}"`);
+    expect(html).toContain(`data-testid="product-actions-${product.id}"`);
+    expect(html).toContain(`data-testid="registry-technical-details-${product.id}"`);
+    expect(html).toContain('href="/interactions"');
+    expect(html).toContain('href="/compare"');
+    expect(html).not.toContain("<details open=");
     expect(html).toContain("w-full");
     expect(html).toContain("max-w-full");
     expect(html).not.toContain("truncate");
@@ -457,7 +478,13 @@ describe("registry catalog UI", () => {
     expect(html).toContain("Точний збіг за торговою назвою");
     expect(html).toContain("Діюча речовина:");
     expect(html).toContain(inn);
-    expect(html).toContain("5 мг, 10 мг");
+    expect(html).toContain('data-testid="brand-strength-chips"');
+    expect(html).toContain("5 мг");
+    expect(html).toContain("10 мг");
+    expect(html).toContain('data-testid="brand-form-badges"');
+    expect(html).toContain('data-testid="product-actions-');
+    expect(html).toContain('href="/interactions"');
+    expect(html).toContain('href="/compare"');
     expect(html).toContain("таблетки пролонгованої дії");
     expect(html).not.toContain("in bulk");
     expect(html).not.toContain("по 5000");

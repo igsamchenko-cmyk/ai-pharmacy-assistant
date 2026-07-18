@@ -26,16 +26,17 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Columns3,
   Database,
   Filter,
   FlaskConical,
+  GitCompare,
   LoaderCircle,
   Pill,
   RefreshCw,
   Search as SearchIcon,
   ShieldAlert,
 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ReportIssueButton } from "@/components/report-issue-button";
@@ -55,6 +56,9 @@ const SEARCH_TYPES: Array<{ value: SearchType; label: string }> = [
 ];
 
 const numberFormatter = new Intl.NumberFormat("uk-UA");
+
+export const SEARCH_STICKY_CLASS =
+  "sticky top-[65px] z-30 -mx-4 border-y bg-background/95 px-4 py-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:rounded-xl sm:border md:top-0";
 
 const PACKAGING_QUANTITY_PATTERN = /(?:,\s*|\s+)по\s+\d/iu;
 const DOSAGE_SUFFIX_PATTERN =
@@ -200,6 +204,61 @@ export function InstructionAction({ product }: { product: RegistryProductResult 
   );
 }
 
+export function ProductActions({ product }: { product: RegistryProductResult }) {
+  return (
+    <div
+      className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap"
+      data-testid={`product-actions-${product.id}`}
+    >
+      {product.instructionAvailable ? (
+        <div className="col-span-2 min-w-0 sm:col-auto">
+          <InstructionAction product={product} />
+        </div>
+      ) : null}
+      <Button asChild size="sm" variant="outline" className="min-h-10 min-w-0 px-2 sm:px-3">
+        <a href="/interactions" data-testid={`interaction-action-${product.id}`}>
+          <GitCompare className="h-4 w-4" />
+          Взаємодії
+        </a>
+      </Button>
+      <Button asChild size="sm" variant="outline" className="min-h-10 min-w-0 px-2 sm:px-3">
+        <a href="/compare" data-testid={`compare-action-${product.id}`}>
+          <Columns3 className="h-4 w-4" />
+          Порівняти
+        </a>
+      </Button>
+    </div>
+  );
+}
+export function SearchLoadingSkeletons() {
+  return (
+    <div className="grid gap-3" aria-label="Завантаження каталогу" data-testid="search-skeletons">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <Card key={index} className="max-w-full overflow-hidden rounded-2xl" data-testid="search-skeleton-card">
+          <CardContent className="space-y-4 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-6 w-2/3 animate-pulse rounded-md bg-primary/10" />
+                <div className="h-4 w-1/2 animate-pulse rounded-md bg-primary/10" />
+              </div>
+              <div className="h-6 w-16 animate-pulse rounded-full bg-primary/10" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <div className="h-6 w-20 animate-pulse rounded-full bg-primary/10" />
+              <div className="h-6 w-28 animate-pulse rounded-full bg-primary/10" />
+              <div className="h-6 w-24 animate-pulse rounded-full bg-primary/10" />
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:flex">
+              <div className="col-span-2 h-10 w-full animate-pulse rounded-md bg-primary/10 sm:col-auto sm:w-28" />
+              <div className="h-10 w-full animate-pulse rounded-md bg-primary/10 sm:w-28" />
+              <div className="h-10 w-full animate-pulse rounded-md bg-primary/10 sm:w-28" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 function NationalListBadge({ product }: { product: RegistryProductResult }) {
   if (product.nationalListStatus === "not_applicable") return null;
   if (product.nationalListStatus === "exact") {
@@ -236,6 +295,7 @@ export function RegistryProductCard({
   showReportIssue?: boolean;
 }) {
   const approved = product.mappingStatus === "approved" && product.approvedMapping;
+  const displayForm = conciseDosageForm(product.dosageForm);
   const manufacturerText = product.manufacturers.length
     ? product.manufacturers
         .map((item) => [item.name, item.country].filter(Boolean).join(", "))
@@ -244,175 +304,163 @@ export function RegistryProductCard({
 
   return (
     <Card
-      className="overflow-hidden border-border"
+      className="max-w-full overflow-hidden rounded-xl border-border/80 bg-card/90 shadow-sm"
       data-testid={`registry-product-${product.id}`}
     >
-      <CardContent className="p-4 space-y-4">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className="shrink-0 rounded-md bg-primary/10 p-2.5">
+      <CardContent className="min-w-0 space-y-3 p-3 sm:p-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="shrink-0 rounded-lg bg-primary/10 p-2">
             <Pill className="h-5 w-5 text-primary" />
           </div>
-          <div className="min-w-0 flex-1 space-y-2">
-            <h3 className="font-bold text-base leading-snug break-words">
+          <div className="min-w-0 flex-1">
+            <h3 className="break-words text-base font-bold leading-snug">
               {product.tradeName}
             </h3>
+            <p className="mt-0.5 break-words text-xs text-muted-foreground">
+              {product.registration.number || "Реєстраційний номер не зазначено"}
+            </p>
+          </div>
+          <Badge variant="outline" className="shrink-0 text-[11px]">
+            {statusLabel(product.registration.status)}
+          </Badge>
+        </div>
+
+        <div className="flex min-w-0 flex-wrap gap-1.5" aria-label="Форма та дозування">
+          {product.strength ? (
+            <Badge className="max-w-full whitespace-normal" data-testid={`dosage-chip-${product.id}`}>
+              {product.strength}
+            </Badge>
+          ) : null}
+          {displayForm ? (
+            <Badge
+              variant="secondary"
+              className="max-w-full whitespace-normal"
+              data-testid={`form-badge-${product.id}`}
+            >
+              {displayForm}
+            </Badge>
+          ) : null}
+          <NationalListBadge product={product} />
+          <InstructionAvailabilityBadge
+            productId={product.id}
+            available={product.instructionAvailable}
+          />
+        </div>
+
+        <p className="break-words text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Виробник:</span> {manufacturerText}
+        </p>
+
+        <div data-testid={`instruction-discovery-${product.id}`}>
+          <ProductActions product={product} />
+        </div>
+
+        <details
+          className="group max-w-full overflow-hidden rounded-lg border border-border/70 bg-muted/20"
+          data-testid={`registry-technical-details-${product.id}`}
+        >
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-medium">
+            <span>Реєстрові деталі</span>
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
+          </summary>
+          <div className="min-w-0 space-y-4 border-t p-3 animate-in fade-in slide-in-from-top-1 duration-200">
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="gap-1 whitespace-normal">
                 <Database className="h-3 w-3" />
                 Державний реєстр
               </Badge>
-              <Badge
-                variant={approved ? "default" : "outline"}
-                className="gap-1 whitespace-normal text-left"
-              >
-                {approved ? (
-                  <CheckCircle2 className="h-3 w-3" />
-                ) : (
-                  <ShieldAlert className="h-3 w-3" />
-                )}
-                {approved
-                  ? "Підтверджено"
-                  : "Реєстровий запис - mapping не підтверджений"}
+              <Badge variant={approved ? "default" : "outline"} className="gap-1 whitespace-normal text-left">
+                {approved ? <CheckCircle2 className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
+                {approved ? "Підтверджено" : "Реєстровий запис — mapping не підтверджений"}
               </Badge>
-              <NationalListBadge product={product} />
-              <InstructionAvailabilityBadge
-                productId={product.id}
-                available={product.instructionAvailable}
-              />
               {product.sourceRecordCount > 1 ? (
-                <Badge variant="outline">
-                  Джерельних записів: {product.sourceRecordCount}
-                </Badge>
+                <Badge variant="outline">Джерельних записів: {product.sourceRecordCount}</Badge>
               ) : null}
             </div>
-          </div>
-        </div>
 
-        {product.instructionAvailable ? (
-          <div
-            className="flex min-w-0 flex-wrap items-center gap-2"
-            data-testid={`instruction-discovery-${product.id}`}
-          >
-            <InstructionAction product={product} />
-            <span className="text-xs text-muted-foreground">
-              Офіційна інструкція для цієї реєстрової позиції
-            </span>
-          </div>
-        ) : null}
+            <dl className="grid min-w-0 gap-3 text-sm sm:grid-cols-2">
+              <div className="min-w-0">
+                <dt className="text-xs font-medium text-muted-foreground">Реєстрове МНН / склад</dt>
+                <dd className="mt-1 break-words">{registryComposition(product)}</dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-xs font-medium text-muted-foreground">Форма та дозування</dt>
+                <dd className="mt-1 break-words">
+                  {[displayForm, product.strength].filter(Boolean).join(", ") || "не зазначено"}
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-xs font-medium text-muted-foreground">Реєстрація</dt>
+                <dd className="mt-1 break-words">
+                  {product.registration.number || "номер не зазначено"}
+                  <span className="block text-xs text-muted-foreground">
+                    {statusLabel(product.registration.status)}
+                    {product.registration.endDate ? ` до ${product.registration.endDate}` : ""}
+                  </span>
+                </dd>
+              </div>
+            </dl>
 
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div className="min-w-0">
-            <dt className="text-xs font-medium text-muted-foreground">
-              Реєстрове МНН / склад
-            </dt>
-            <dd className="mt-1 break-words">{registryComposition(product)}</dd>
-          </div>
-          <div className="min-w-0">
-            <dt className="text-xs font-medium text-muted-foreground">
-              Форма та дозування
-            </dt>
-            <dd className="mt-1 break-words">
-              {[conciseDosageForm(product.dosageForm), product.strength].filter(Boolean).join(", ") ||
-                "не зазначено"}
-            </dd>
-          </div>
-          <div className="min-w-0">
-            <dt className="text-xs font-medium text-muted-foreground">
-              Виробник
-            </dt>
-            <dd className="mt-1 break-words">{manufacturerText}</dd>
-          </div>
-          <div className="min-w-0">
-            <dt className="text-xs font-medium text-muted-foreground">
-              Реєстрація
-            </dt>
-            <dd className="mt-1 break-words">
-              {product.registration.number || "номер не зазначено"}
-              <span className="block text-xs text-muted-foreground">
-                {statusLabel(product.registration.status)}
-                {product.registration.endDate
-                  ? ` до ${product.registration.endDate}`
-                  : ""}
-              </span>
-            </dd>
-          </div>
-        </dl>
-
-        {product.nationalListStatus !== "not_applicable" ? (
-          <div className="border-y py-3 text-sm" data-testid="national-list-details">
-            <p className="font-medium">Національний перелік</p>
-            <p className="mt-1 text-muted-foreground">{product.nationalListMatchReason}</p>
-            {product.nationalListMatchDetails ? (
-              <dl className="mt-3 grid gap-2 sm:grid-cols-2">
-                <div><dt className="text-xs text-muted-foreground">МНН / комбінація</dt><dd>{product.nationalListMatchDetails.officialName}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Форма / route / strength</dt><dd>{product.nationalListMatchDetails.formMatch} / {product.nationalListMatchDetails.routeMatch} / {product.nationalListMatchDetails.strengthMatch}</dd></div>
-                {product.nationalListSection ? <div><dt className="text-xs text-muted-foreground">Розділ</dt><dd>{product.nationalListSection}</dd></div> : null}
-                {product.nationalListSource ? (
-                  <div>
-                    <dt className="text-xs text-muted-foreground">Нормативний акт</dt>
-                    <dd>
-                      <a className="underline underline-offset-2" href={product.nationalListSource.url} target="_blank" rel="noreferrer">
-                        Постанова №{product.nationalListSource.actNumber}, редакція {product.nationalListSource.revisionDate}
-                      </a>
-                    </dd>
-                  </div>
+            {product.nationalListStatus !== "not_applicable" ? (
+              <div className="border-y py-3 text-sm" data-testid="national-list-details">
+                <p className="font-medium">Національний перелік</p>
+                <p className="mt-1 text-muted-foreground">{product.nationalListMatchReason}</p>
+                {product.nationalListMatchDetails ? (
+                  <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div><dt className="text-xs text-muted-foreground">МНН / комбінація</dt><dd>{product.nationalListMatchDetails.officialName}</dd></div>
+                    <div><dt className="text-xs text-muted-foreground">Форма / route / strength</dt><dd>{product.nationalListMatchDetails.formMatch} / {product.nationalListMatchDetails.routeMatch} / {product.nationalListMatchDetails.strengthMatch}</dd></div>
+                    {product.nationalListSection ? <div><dt className="text-xs text-muted-foreground">Розділ</dt><dd>{product.nationalListSection}</dd></div> : null}
+                    {product.nationalListSource ? (
+                      <div>
+                        <dt className="text-xs text-muted-foreground">Нормативний акт</dt>
+                        <dd><a className="underline underline-offset-2" href={product.nationalListSource.url} target="_blank" rel="noreferrer">Постанова №{product.nationalListSource.actNumber}, редакція {product.nationalListSource.revisionDate}</a></dd>
+                      </div>
+                    ) : null}
+                  </dl>
                 ) : null}
-              </dl>
+              </div>
             ) : null}
-            <p className="mt-2 text-xs text-muted-foreground">
-              Статус у Нацпереліку не є клінічною рекомендацією та не підтверджує взаємозамінність.
-            </p>
+
+            {product.atcCode ? (
+              <p className="break-words text-xs text-muted-foreground">
+                ATC: <span className="font-mono text-foreground">{product.atcCode}</span>
+              </p>
+            ) : null}
+
+            <div className={approved ? "border-l-2 border-primary pl-3 text-sm" : "border-l-2 border-amber-500 pl-3 text-sm"}>
+              {approved ? (
+                <>
+                  <p className="font-medium">Внутрішній ingredient mapping</p>
+                  <p className="mt-1 break-words text-muted-foreground">
+                    {approved.inn}{approved.latin ? ` / ${approved.latin}` : ""}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-medium">Підтвердженого mapping немає</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Офіційне реєстрове МНН показано як дані реєстру. Воно не підміняє перевірений внутрішній ingredient mapping.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {showReportIssue ? (
+              <ReportIssueButton
+                type="wrong_mapping"
+                context={`registry-product:${product.id}:query:${query || "browse"}`}
+                sourceSnapshot={{
+                  id: product.id,
+                  tradeName: product.tradeName,
+                  registrationNumber: product.registration.number,
+                  mappingStatus: product.mappingStatus,
+                  sourceKey: product.source.key,
+                }}
+                compact
+              />
+            ) : null}
           </div>
-        ) : null}
-
-        {product.atcCode && (
-          <p className="text-xs text-muted-foreground break-words">
-            ATC: <span className="font-mono text-foreground">{product.atcCode}</span>
-          </p>
-        )}
-
-        <div
-          className={
-            approved
-              ? "border-l-2 border-primary pl-3 text-sm"
-              : "border-l-2 border-amber-500 pl-3 text-sm"
-          }
-        >
-          {approved ? (
-            <>
-              <p className="font-medium">Внутрішній ingredient mapping</p>
-              <p className="mt-1 break-words text-muted-foreground">
-                {approved.inn}
-                {approved.latin ? ` / ${approved.latin}` : ""}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="font-medium">Підтвердженого mapping немає</p>
-              <p className="mt-1 text-muted-foreground">
-                Офіційне реєстрове МНН показано як дані реєстру. Воно не
-                підміняє перевірений внутрішній ingredient mapping.
-              </p>
-            </>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {showReportIssue ? (
-            <ReportIssueButton
-              type="wrong_mapping"
-              context={`registry-product:${product.id}:query:${query || "browse"}`}
-              sourceSnapshot={{
-                id: product.id,
-                tradeName: product.tradeName,
-                registrationNumber: product.registration.number,
-                mappingStatus: product.mappingStatus,
-                sourceKey: product.source.key,
-              }}
-              compact
-            />
-          ) : null}
-        </div>
+        </details>
       </CardContent>
     </Card>
   );
@@ -570,51 +618,100 @@ function ExactBrandCard({
   onSelect: () => void;
   onVariantPage: (page: number) => void;
 }) {
-  const instructionAvailable = trade.variants?.items.some(
+  const instructionProduct = trade.variants?.items.find(
     (product) => product.instructionAvailable,
-  ) ?? false;
+  );
+  const primaryProduct = instructionProduct ?? trade.variants?.items[0] ?? null;
+  const instructionAvailable = Boolean(instructionProduct);
   const displayForms = conciseDosageForms(trade.forms);
   return (
-    <Card className="max-w-full overflow-hidden border-primary/40 bg-primary/[0.03]" data-testid={"exact-brand-card-" + trade.key}>
-      <CardContent className="space-y-4 p-4 sm:p-5">
+    <Card
+      className="max-w-full overflow-hidden rounded-2xl border-primary/30 bg-gradient-to-b from-primary/[0.06] to-card shadow-sm"
+      data-testid={`exact-brand-card-${trade.key}`}
+    >
+      <CardContent className="min-w-0 space-y-4 p-4 sm:p-5">
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-xl font-semibold break-words">{trade.tradeName}</h3>
-              <Badge>Точний збіг за торговою назвою</Badge>
-              <InstructionAvailabilityBadge productId={"trade-" + trade.key} available={instructionAvailable} />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <h3 className="break-words text-xl font-bold leading-tight sm:text-2xl">{trade.tradeName}</h3>
+              <Badge className="whitespace-normal text-left">Точний збіг за торговою назвою</Badge>
+              <InstructionAvailabilityBadge productId={`trade-${trade.key}`} available={instructionAvailable} />
             </div>
-            <p className="text-sm text-muted-foreground break-words">
+            <p className="break-words text-sm text-muted-foreground">
               Діюча речовина: <span className="font-medium text-foreground">{group.displayName}</span>
             </p>
           </div>
-          <Badge variant="secondary">{numberFormatter.format(trade.summary.totalRegistryPositions)} реєстрових позицій</Badge>
+          <Badge variant="secondary" className="shrink-0">
+            {numberFormatter.format(trade.summary.totalRegistryPositions)} позицій
+          </Badge>
         </div>
-        <dl className="grid gap-3 text-sm sm:grid-cols-3">
-          <div className="min-w-0"><dt className="text-xs text-muted-foreground">Дозування</dt><dd className="break-words">{trade.strengths.length ? trade.strengths.join(", ") : "Не зазначено"}</dd></div>
-          <div className="min-w-0"><dt className="text-xs text-muted-foreground">Форми</dt><dd className="break-words">{displayForms.length ? displayForms.join(", ") : "Не зазначено"}</dd></div>
-          <div className="min-w-0"><dt className="text-xs text-muted-foreground">Виробники</dt><dd className="break-words">{trade.manufacturers.length ? trade.manufacturers.join(", ") : "Не зазначено"}</dd></div>
-        </dl>
+
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+          <div className="min-w-0 space-y-1.5">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Дозування</p>
+            <div className="flex min-w-0 flex-wrap gap-1.5" data-testid="brand-strength-chips">
+              {trade.strengths.length ? trade.strengths.map((strength) => (
+                <Badge key={strength} className="max-w-full whitespace-normal">{strength}</Badge>
+              )) : <span className="text-sm text-muted-foreground">Не зазначено</span>}
+            </div>
+          </div>
+          <div className="min-w-0 space-y-1.5">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Лікарські форми</p>
+            <div className="flex min-w-0 flex-wrap gap-1.5" data-testid="brand-form-badges">
+              {displayForms.length ? displayForms.map((form) => (
+                <Badge key={form} variant="secondary" className="max-w-full whitespace-normal">{form}</Badge>
+              )) : <span className="text-sm text-muted-foreground">Не зазначено</span>}
+            </div>
+          </div>
+        </div>
+
+        <p className="break-words text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Виробник:</span>{" "}
+          {trade.manufacturers.length ? trade.manufacturers.join(", ") : "Не зазначено"}
+        </p>
+
+        {primaryProduct ? <ProductActions product={primaryProduct} /> : null}
+
         {trade.variants ? (
-          <div className="space-y-3" data-testid={"exact-brand-variants-" + trade.key}>
-            <h4 className="font-medium">Конкретні реєстрові позиції</h4>
-            {trade.variants.items.map((product) => <RegistryProductCard key={product.id} product={product} query={query} />)}
+          <div
+            className="grid min-w-0 gap-3 overflow-hidden border-t pt-4 animate-in fade-in slide-in-from-top-2 duration-300"
+            data-testid={`exact-brand-variants-${trade.key}`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h4 className="font-semibold">Конкретні реєстрові позиції</h4>
+              <span className="text-xs text-muted-foreground">Форма, дозування та виробник</span>
+            </div>
+            {trade.variants.items.map((product) => (
+              <RegistryProductCard key={product.id} product={product} query={query} />
+            ))}
             {trade.variants.totalPages > 1 ? (
               <nav className="flex items-center justify-between gap-2" aria-label="Сторінки реєстрових позицій бренду">
-                <Button type="button" variant="outline" disabled={trade.variants.page <= 1 || isFetching} onClick={() => onVariantPage(Math.max(1, trade.variants!.page - 1))}><ArrowLeft className="h-4 w-4" /><span className="sr-only sm:not-sr-only">Попередня</span></Button>
+                <Button type="button" variant="outline" disabled={trade.variants.page <= 1 || isFetching} onClick={() => onVariantPage(Math.max(1, trade.variants!.page - 1))}>
+                  <ArrowLeft className="h-4 w-4" /><span className="sr-only sm:not-sr-only">Попередня</span>
+                </Button>
                 <span className="text-xs text-muted-foreground">{trade.variants.page} / {trade.variants.totalPages}</span>
-                <Button type="button" variant="outline" disabled={!trade.variants.hasNext || isFetching} onClick={() => onVariantPage(trade.variants!.page + 1)}><span className="sr-only sm:not-sr-only">Наступна</span><ArrowRight className="h-4 w-4" /></Button>
+                <Button type="button" variant="outline" disabled={!trade.variants.hasNext || isFetching} onClick={() => onVariantPage(trade.variants!.page + 1)}>
+                  <span className="sr-only sm:not-sr-only">Наступна</span><ArrowRight className="h-4 w-4" />
+                </Button>
               </nav>
             ) : null}
           </div>
         ) : isSelected && isVariantFetching ? (
-          <div className="space-y-2" aria-label="Завантаження реєстрових позицій бренду" data-testid="exact-brand-loading">
-            <div className="h-36 w-full animate-pulse rounded-md bg-primary/10" /><div className="h-36 w-full animate-pulse rounded-md bg-primary/10" />
+          <div className="grid gap-3 border-t pt-4 animate-in fade-in duration-200" aria-label="Завантаження реєстрових позицій бренду" data-testid="exact-brand-loading">
+            {[0, 1].map((item) => (
+              <div key={item} className="space-y-3 rounded-xl border p-4">
+                <div className="h-5 w-2/3 animate-pulse rounded-md bg-primary/10" />
+                <div className="flex gap-2"><div className="h-6 w-20 animate-pulse rounded-full bg-primary/10" /><div className="h-6 w-28 animate-pulse rounded-full bg-primary/10" /></div>
+                <div className="h-10 w-full animate-pulse rounded-md bg-primary/10" />
+              </div>
+            ))}
           </div>
         ) : isSelected && isVariantError ? (
-          <div className="space-y-3 border-y py-4" role="alert" data-testid="exact-brand-error">
-            <p className="text-sm text-muted-foreground">Не вдалося завантажити реєстрові позиції. Сервіс може прокидатися після паузи.</p>
-            <Button type="button" variant="outline" className="min-h-11" onClick={onRetryVariants}><RefreshCw className="h-4 w-4" />Спробувати ще раз</Button>
+          <div className="space-y-3 border-t pt-4" role="alert" data-testid="exact-brand-error">
+            <p className="text-sm text-muted-foreground">Не вдалося завантажити реєстрові позиції. Спробуйте ще раз.</p>
+            <Button type="button" variant="outline" className="min-h-11" onClick={onRetryVariants}>
+              <RefreshCw className="h-4 w-4" />Спробувати ще раз
+            </Button>
           </div>
         ) : (
           <Button type="button" variant="outline" className="min-h-11 w-full sm:w-auto" onClick={onSelect}>
@@ -629,12 +726,12 @@ function ExactBrandCard({
 function BrandAlternatives({ enabled, ingredient, children }: { enabled: boolean; ingredient: string; children: React.ReactNode }) {
   if (!enabled) return <>{children}</>;
   return (
-    <details className="group max-w-full overflow-hidden rounded-lg border" data-testid="brand-alternatives">
-      <summary className="flex min-h-12 cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium">
+    <details className="group max-w-full overflow-hidden rounded-2xl border bg-card/80 shadow-sm" data-testid="brand-alternatives">
+      <summary className="flex min-h-12 cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium sm:px-5">
         <span className="break-words">Інші препарати з {ingredient}</span>
         <span className="flex items-center gap-2 text-xs text-muted-foreground">Розгорнути<ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" /></span>
       </summary>
-      <div className="space-y-5 border-t p-4">{children}</div>
+      <div className="space-y-5 border-t p-4 animate-in fade-in slide-in-from-top-2 duration-300 sm:p-5">{children}</div>
     </details>
   );
 }
@@ -708,32 +805,36 @@ export function GroupedRegistryResults({
 
   return (
     <section className="space-y-5" data-testid="grouped-registry-results">
-      <div className="space-y-2 border-y py-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">Згруповані результати реєстру</h2>
-          <Badge variant="secondary">
-            {numberFormatter.format(summary.totalRegistryPositions)} реєстрових позицій
-          </Badge>
-        </div>
-        <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-          <span>Торгові назви: {numberFormatter.format(summary.uniqueTradeNames)}</span>
-          <span>Форми: {numberFormatter.format(summary.uniqueDosageForms)}</span>
-          <span>Дозування: {numberFormatter.format(summary.uniqueStrengths)}</span>
-          <span>Виробники: {numberFormatter.format(summary.uniqueManufacturers)}</span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Монопрепарати: {numberFormatter.format(summary.monotherapyCount)}; комбінації: {numberFormatter.format(summary.combinationCount)}; підтверджені: {numberFormatter.format(summary.approvedMappedCount)}; registry-only: {numberFormatter.format(summary.unmappedCount)}; склад потребує уточнення: {numberFormatter.format(summary.unknownCompositionCount)}.
-        </p>
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold">Результати пошуку</h2>
+        <Badge variant="secondary">
+          {numberFormatter.format(summary.totalRegistryPositions)} реєстрових позицій
+        </Badge>
       </div>
+      <details
+        className="group max-w-full overflow-hidden rounded-xl border bg-muted/20"
+        data-testid="catalog-technical-summary"
+      >
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-medium">
+          <span>Деталі результатів</span>
+          <ChevronDown className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
+        </summary>
+        <div className="space-y-3 border-t p-3 text-sm animate-in fade-in duration-200">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <span>Торгові назви: {numberFormatter.format(summary.uniqueTradeNames)}</span>
+            <span>Форми: {numberFormatter.format(summary.uniqueDosageForms)}</span>
+            <span>Дозування: {numberFormatter.format(summary.uniqueStrengths)}</span>
+            <span>Виробники: {numberFormatter.format(summary.uniqueManufacturers)}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Монопрепарати: {numberFormatter.format(summary.monotherapyCount)}; комбінації: {numberFormatter.format(summary.combinationCount)}; підтверджені: {numberFormatter.format(summary.approvedMappedCount)}; registry-only: {numberFormatter.format(summary.unmappedCount)}.
+          </p>
+        </div>
+      </details>
 
       {exactTradeMatches.length ? (
         <section className="space-y-3" data-testid="exact-brand-results">
-          <div>
-            <h2 className="text-lg font-semibold">Точний збіг за торговою назвою</h2>
-            <p className="text-xs text-muted-foreground">
-              Бренд показано перед результатами за МНН, alias та нечіткими збігами.
-            </p>
-          </div>
+          <h2 className="sr-only">Точний збіг за торговою назвою</h2>
           {exactTradeMatches.map(({ group, trade }) => (
             <ExactBrandCard
               key={group.key + "::" + trade.key}
@@ -829,7 +930,7 @@ export function GroupedRegistryResults({
                       </div>
 
                       {trade.variants ? (
-                        <div className="mt-3 space-y-3" data-testid={`trade-variants-${trade.key}`}>
+                        <div className="mt-3 grid min-w-0 gap-3 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300" data-testid={`trade-variants-${trade.key}`}>
                           {trade.variants.items.map((product) => (
                             <RegistryProductCard key={product.id} product={product} query={query} />
                           ))}
@@ -847,12 +948,12 @@ export function GroupedRegistryResults({
                         </div>
                       ) : trade.key === selectedTradeNameKey && isVariantFetching ? (
                         <div
-                          className="mt-3 space-y-2"
+                          className="mt-3 grid gap-3 animate-in fade-in duration-200"
                           aria-label="Завантаження варіантів препарату"
                           data-testid="variant-loading"
                         >
-                          <div className="h-36 w-full animate-pulse rounded-md bg-primary/10" />
-                          <div className="h-36 w-full animate-pulse rounded-md bg-primary/10" />
+                          <div className="h-32 w-full animate-pulse rounded-xl bg-primary/10" />
+                          <div className="h-32 w-full animate-pulse rounded-xl bg-primary/10" />
                         </div>
                       ) : trade.key === selectedTradeNameKey && isVariantError ? (
                         <div
@@ -1202,7 +1303,7 @@ export default function SearchPage() {
   );
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-300">
+    <div className="max-w-full space-y-5 overflow-x-hidden pb-8 animate-in fade-in duration-300">
       <header className="space-y-2">
         <h1 className="text-2xl font-bold text-primary">Пошук препаратів</h1>
         <p className="text-sm text-muted-foreground">
@@ -1220,7 +1321,7 @@ export default function SearchPage() {
       </Alert>
 
       <section
-        className="flex items-center gap-3 border-y py-3"
+        className="flex max-w-full items-center gap-3 rounded-xl border bg-card/70 px-4 py-3 shadow-sm"
         aria-live="polite"
         data-testid="catalog-total"
       >
@@ -1231,15 +1332,14 @@ export default function SearchPage() {
               ? `Каталог: ${numberFormatter.format(data.catalogTotal)} зареєстровані препарати`
               : "Каталог завантажується..."}
           </p>
-          <p className="text-xs text-muted-foreground">
-            {data?.runtimeMode === "db"
-              ? "Джерело: production PostgreSQL"
-              : "Production-каталог очікує підключення; доступний static fallback"}
-          </p>
         </div>
       </section>
 
       <div className="space-y-3">
+        <div
+          className={SEARCH_STICKY_CLASS}
+          data-testid="sticky-search"
+        >
         <form
           className="relative block"
           onSubmit={(event) => {
@@ -1294,9 +1394,10 @@ export default function SearchPage() {
             <SearchIcon className="h-4 w-4" />
           </Button>
         </form>
+        </div>
 
         <div
-          className="grid grid-cols-3 gap-1 rounded-md border bg-muted/30 p-1"
+          className="grid grid-cols-3 gap-1 rounded-xl border bg-muted/30 p-1"
           role="tablist"
           aria-label="Тип результатів"
         >
@@ -1459,29 +1560,24 @@ export default function SearchPage() {
       </div>
 
       {data?.runtimeMode === "static" && (
-        <Alert>
+        <Alert className="rounded-xl">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Реєстровий каталог тимчасово недоступний</AlertTitle>
+          <AlertTitle>Показуємо доступну частину каталогу</AlertTitle>
           <AlertDescription>
-            Показано локальний довідник. Спробуйте ще раз після запуску
-            production DB або завершення Render cold start.
+            Повний перелік тимчасово недоступний. Спробуйте оновити пошук за кілька секунд.
           </AlertDescription>
         </Alert>
       )}
 
       {viewState === "loading" ? (
-        <div className="space-y-3" aria-label="Завантаження каталогу">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Skeleton key={index} className="h-52 w-full rounded-md" />
-          ))}
-        </div>
+        <SearchLoadingSkeletons />
       ) : viewState === "error" ? (
         <div className="space-y-4 border-y py-8 text-center">
           <AlertTriangle className="mx-auto h-8 w-8 text-destructive" />
           <div>
             <p className="font-semibold">Не вдалося завантажити каталог</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Render може запускатися після паузи. Повторіть запит за кілька секунд.
+              Сервіс пошуку тимчасово не відповідає. Спробуйте ще раз за кілька секунд.
             </p>
           </div>
           <Button
@@ -1501,7 +1597,7 @@ export default function SearchPage() {
               <div>
                 <h2 className="text-lg font-semibold">Діючі речовини</h2>
                 <p className="text-xs text-muted-foreground">
-                  Лише підтверджені внутрішні ingredient mappings.
+                  Перевірені дані про діючі речовини.
                 </p>
               </div>
               <div className="space-y-3">
