@@ -1,4 +1,4 @@
-﻿name: Official registry parity and gated sync
+name: Official registry parity and gated sync
 
 on:
   workflow_dispatch:
@@ -67,8 +67,8 @@ jobs:
           dump="$RUNNER_TEMP/$backup_id.dump"
           encrypted="$dump.enc"
           list="$RUNNER_TEMP/$backup_id.pg_restore.list"
-          pg_dump "$PRODUCTION_DATABASE_URL" --format=custom --no-owner --no-acl --file="$dump"
-          pg_restore --list "$dump" > "$list"
+          docker run --rm -e PRODUCTION_DATABASE_URL -v "$RUNNER_TEMP:/backup" postgres:18 pg_dump "$PRODUCTION_DATABASE_URL" --format=custom --no-owner --no-acl --file="/backup/$backup_id.dump"
+          docker run --rm -v "$RUNNER_TEMP:/backup" postgres:18 pg_restore --list "/backup/$backup_id.dump" > "$list"
           test -s "$dump"
           test -s "$list"
           openssl enc -aes-256-cbc -salt -pbkdf2 -iter 250000 -in "$dump" -out "$encrypted" -pass env:BACKUP_KEY
