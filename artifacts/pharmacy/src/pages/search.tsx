@@ -57,6 +57,12 @@ const SEARCH_TYPES: Array<{ value: SearchType; label: string }> = [
 const numberFormatter = new Intl.NumberFormat("uk-UA");
 
 const PACKAGING_QUANTITY_PATTERN = /(?:,\s*|\s+)по\s+\d/iu;
+const DOSAGE_SUFFIX_PATTERN =
+  /(?:,\s*|\s+)\d+(?:[.,]\d+)?\s*(?:%|мкг|мг|г|мл|МО|ОД)(?!\p{L})(?:\s*\/\s*(?:\d+(?:[.,]\d+)?\s*)?(?:мкг|мг|г|мл|доз\p{L}*))?/iu;
+const STARTER_KIT_PATTERN =
+  /,\s*(?:початковий|підтримуючий)\s+набір(?!\p{L})/iu;
+const PHARMACEUTICAL_BULK_DETAILS_PATTERN =
+  /\s+[ув]\s+[^;,:]*\s+для\s+фармацевтичного\s+застосування(?!\p{L})/iu;
 
 export function conciseDosageForm(value: string): string {
   const normalized = value.trim().replace(/\s+/gu, " ");
@@ -65,6 +71,9 @@ export function conciseDosageForm(value: string): string {
     normalized.search(/\s+in\s+bulk\b/iu),
     normalized.indexOf(";"),
     normalized.search(PACKAGING_QUANTITY_PATTERN),
+    normalized.search(DOSAGE_SUFFIX_PATTERN),
+    normalized.search(STARTER_KIT_PATTERN),
+    normalized.search(PHARMACEUTICAL_BULK_DETAILS_PATTERN),
   ].filter((index) => index >= 0);
   const end = cutPoints.length ? Math.min(...cutPoints) : normalized.length;
   return normalized.slice(0, end).trim().replace(/[,:;\-\s]+$/gu, "");
