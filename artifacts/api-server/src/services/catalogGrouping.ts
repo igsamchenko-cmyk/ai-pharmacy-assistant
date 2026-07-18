@@ -228,14 +228,25 @@ export function groupRegistryProducts(
       current.push(product);
       tradeMap.set(key, current);
     }
-    const trades = [...tradeMap.entries()].sort(([, a], [, b]) =>
-      a[0].tradeName.localeCompare(b[0].tradeName),
-    );
+    const normalizedQuery = normalizedText(input.q);
+    const trades = [...tradeMap.entries()].sort(([, a], [, b]) => {
+      const aExact = normalizedQuery === normalizedText(a[0].tradeName);
+      const bExact = normalizedQuery === normalizedText(b[0].tradeName);
+      return Number(bExact) - Number(aExact) ||
+        a[0].tradeName.localeCompare(b[0].tradeName);
+    });
     const tradePageNumber = input.groupKey === descriptor.key ? input.tradePage : 1;
     const tradePage = page(trades, tradePageNumber, input.tradePageSize);
     const tradeItems = tradePage.items.map(([key, tradeProducts]) => {
       const collapsed = collapseExactDuplicates(tradeProducts);
-      const variants = input.groupKey === descriptor.key && input.tradeNameKey === key
+      const exactTradeInInitialResponse =
+        !input.groupKey &&
+        !input.tradeNameKey &&
+        Boolean(normalizedQuery) &&
+        normalizedQuery === normalizedText(tradeProducts[0].tradeName);
+      const variants =
+        exactTradeInInitialResponse ||
+        (input.groupKey === descriptor.key && input.tradeNameKey === key)
         ? (() => {
             const variantPage = page(collapsed, input.variantPage, input.variantPageSize);
             return {

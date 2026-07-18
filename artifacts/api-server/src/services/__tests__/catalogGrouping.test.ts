@@ -59,6 +59,46 @@ function groupingInput(overrides: Record<string, unknown> = {}) {
 }
 
 describe("registry catalog grouping", () => {
+  it("puts an exact brand first and embeds its variants in the initial response", () => {
+    const related = Array.from({ length: 12 }, (_, index) => product(
+      "related-" + index,
+      "5 mg",
+      "UA/related/" + index,
+      { tradeName: "Brand " + String(index).padStart(2, "0") },
+    ));
+    const products = [
+      ...related,
+      product("exact-5", "5 mg", "UA/exact/5", {
+        tradeName: "EXACT BRAND®",
+      }),
+      product("exact-10", "10 mg", "UA/exact/10", {
+        tradeName: "EXACT BRAND®",
+      }),
+    ];
+
+    const result = groupRegistryProducts(
+      products,
+      groupingInput({ q: "Exact Brand", variantPageSize: 25 }),
+    );
+    const group = result.groups.items[0];
+    const exactTrade = group.tradeNames.items[0];
+
+    expect(exactTrade.tradeName).toBe("EXACT BRAND®");
+    expect(exactTrade.variants).toMatchObject({
+      total: 2,
+      page: 1,
+      pageSize: 25,
+      hasNext: false,
+    });
+    expect(exactTrade.variants?.items.map((item) => item.strength).sort()).toEqual([
+      "10 mg",
+      "5 mg",
+    ]);
+    expect(group.tradeNames.hasNext).toBe(true);
+    expect(
+      group.tradeNames.items.slice(1).every((trade) => trade.variants === null),
+    ).toBe(true);
+  });
   it("groups by composition and trade name while preserving distinct strengths", () => {
     const products = [
       product("p-1", "5 mg", "UA/1"),
