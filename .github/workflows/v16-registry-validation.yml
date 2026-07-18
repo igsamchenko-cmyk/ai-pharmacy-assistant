@@ -12,6 +12,7 @@ on:
       - "package.json"
       - "pnpm-lock.yaml"
       - ".github/workflows/v16-registry-validation.yml"
+      - ".github/workflows/production-search-indexes.yml"
   workflow_dispatch:
 
 jobs:
