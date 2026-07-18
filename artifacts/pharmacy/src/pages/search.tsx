@@ -428,6 +428,35 @@ function IngredientCard({ ingredient }: { ingredient: CatalogIngredientResult })
 }
 
 type GroupedRegistryCatalog = NonNullable<CatalogSearchResponse["registryGroups"]>;
+type RegistryCompositionGroup = GroupedRegistryCatalog["groups"]["items"][number];
+type RegistryTradeNameGroup = RegistryCompositionGroup["tradeNames"]["items"][number];
+
+export function normalizeExactTradeName(value: string): string {
+  return value
+    .replace(/[®™]/gu, "")
+    .normalize("NFKC")
+    .toLocaleLowerCase("uk-UA")
+    .replace(/[‐‑‒–—−]/gu, "-")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim()
+    .replace(/\s+/gu, " ");
+}
+
+export function isExactTradeNameQuery(query: string, tradeName: string): boolean {
+  const normalizedQuery = normalizeExactTradeName(query);
+  return Boolean(normalizedQuery) && normalizedQuery === normalizeExactTradeName(tradeName);
+}
+
+export function findExactTradeNameMatches(
+  catalog: GroupedRegistryCatalog,
+  query: string,
+): Array<{ group: RegistryCompositionGroup; trade: RegistryTradeNameGroup }> {
+  return catalog.groups.items.flatMap((group) =>
+    group.tradeNames.items
+      .filter((trade) => isExactTradeNameQuery(query, trade.tradeName))
+      .map((trade) => ({ group, trade })),
+  );
+}
 
 export const CATALOG_QUERY_STALE_MS = 120_000;
 
@@ -480,6 +509,88 @@ export function mergeCatalogVariantPage(
   };
 }
 
+function ExactBrandCard({
+  group, trade, query, isSelected, isFetching, isVariantFetching, isVariantError,
+  onRetryVariants, onSelect, onVariantPage,
+}: {
+  group: RegistryCompositionGroup;
+  trade: RegistryTradeNameGroup;
+  query: string;
+  isSelected: boolean;
+  isFetching: boolean;
+  isVariantFetching: boolean;
+  isVariantError: boolean;
+  onRetryVariants: () => void;
+  onSelect: () => void;
+  onVariantPage: (page: number) => void;
+}) {
+  const instructionAvailable = trade.variants?.items.some(
+    (product) => product.instructionAvailable,
+  ) ?? false;
+  return (
+    <Card className="max-w-full overflow-hidden border-primary/40 bg-primary/[0.03]" data-testid={"exact-brand-card-" + trade.key}>
+      <CardContent className="space-y-4 p-4 sm:p-5">
+        <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-xl font-semibold break-words">{trade.tradeName}</h3>
+              <Badge>Точний збіг за торговою назвою</Badge>
+              <InstructionAvailabilityBadge productId={"trade-" + trade.key} available={instructionAvailable} />
+            </div>
+            <p className="text-sm text-muted-foreground break-words">
+              Діюча речовина: <span className="font-medium text-foreground">{group.displayName}</span>
+            </p>
+          </div>
+          <Badge variant="secondary">{numberFormatter.format(trade.summary.totalRegistryPositions)} реєстрових позицій</Badge>
+        </div>
+        <dl className="grid gap-3 text-sm sm:grid-cols-3">
+          <div className="min-w-0"><dt className="text-xs text-muted-foreground">Дозування</dt><dd className="break-words">{trade.strengths.length ? trade.strengths.join(", ") : "Не зазначено"}</dd></div>
+          <div className="min-w-0"><dt className="text-xs text-muted-foreground">Форми</dt><dd className="break-words">{trade.forms.length ? trade.forms.join(", ") : "Не зазначено"}</dd></div>
+          <div className="min-w-0"><dt className="text-xs text-muted-foreground">Виробники</dt><dd className="break-words">{trade.manufacturers.length ? trade.manufacturers.join(", ") : "Не зазначено"}</dd></div>
+        </dl>
+        {trade.variants ? (
+          <div className="space-y-3" data-testid={"exact-brand-variants-" + trade.key}>
+            <h4 className="font-medium">Конкретні реєстрові позиції</h4>
+            {trade.variants.items.map((product) => <RegistryProductCard key={product.id} product={product} query={query} />)}
+            {trade.variants.totalPages > 1 ? (
+              <nav className="flex items-center justify-between gap-2" aria-label="Сторінки реєстрових позицій бренду">
+                <Button type="button" variant="outline" disabled={trade.variants.page <= 1 || isFetching} onClick={() => onVariantPage(Math.max(1, trade.variants!.page - 1))}><ArrowLeft className="h-4 w-4" /><span className="sr-only sm:not-sr-only">Попередня</span></Button>
+                <span className="text-xs text-muted-foreground">{trade.variants.page} / {trade.variants.totalPages}</span>
+                <Button type="button" variant="outline" disabled={!trade.variants.hasNext || isFetching} onClick={() => onVariantPage(trade.variants!.page + 1)}><span className="sr-only sm:not-sr-only">Наступна</span><ArrowRight className="h-4 w-4" /></Button>
+              </nav>
+            ) : null}
+          </div>
+        ) : isSelected && isVariantFetching ? (
+          <div className="space-y-2" aria-label="Завантаження реєстрових позицій бренду" data-testid="exact-brand-loading">
+            <div className="h-36 w-full animate-pulse rounded-md bg-primary/10" /><div className="h-36 w-full animate-pulse rounded-md bg-primary/10" />
+          </div>
+        ) : isSelected && isVariantError ? (
+          <div className="space-y-3 border-y py-4" role="alert" data-testid="exact-brand-error">
+            <p className="text-sm text-muted-foreground">Не вдалося завантажити реєстрові позиції. Сервіс може прокидатися після паузи.</p>
+            <Button type="button" variant="outline" className="min-h-11" onClick={onRetryVariants}><RefreshCw className="h-4 w-4" />Спробувати ще раз</Button>
+          </div>
+        ) : (
+          <Button type="button" variant="outline" className="min-h-11 w-full sm:w-auto" onClick={onSelect}>
+            Показати конкретні реєстрові позиції <ChevronDown className="h-4 w-4" />
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function BrandAlternatives({ enabled, ingredient, children }: { enabled: boolean; ingredient: string; children: React.ReactNode }) {
+  if (!enabled) return <>{children}</>;
+  return (
+    <details className="group max-w-full overflow-hidden rounded-lg border" data-testid="brand-alternatives">
+      <summary className="flex min-h-12 cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium">
+        <span className="break-words">Інші препарати з {ingredient}</span>
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">Розгорнути<ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" /></span>
+      </summary>
+      <div className="space-y-5 border-t p-4">{children}</div>
+    </details>
+  );
+}
 export function GroupedRegistryResults({
   catalog,
   query,
@@ -510,6 +621,32 @@ export function GroupedRegistryResults({
     () => new Set(catalog.groups.items.slice(0, 1).map((group) => group.key)),
   );
 
+  const exactTradeMatches = findExactTradeNameMatches(catalog, query);
+  const primaryExactMatch = exactTradeMatches[0] ?? null;
+  const exactTradeKeys = new Set(exactTradeMatches.map(
+    ({ group, trade }) => group.key + "::" + trade.key,
+  ));
+  const remainingGroups = exactTradeMatches.length
+    ? catalog.groups.items.map((group) => ({
+        ...group,
+        tradeNames: {
+          ...group.tradeNames,
+          items: group.tradeNames.items.filter(
+            (trade) => !exactTradeKeys.has(group.key + "::" + trade.key),
+          ),
+        },
+      })).filter((group) => group.tradeNames.items.length > 0)
+    : catalog.groups.items;
+
+  useEffect(() => {
+    if (!primaryExactMatch || selectedTradeNameKey !== null) return;
+    onSelectTrade(primaryExactMatch.group.key, primaryExactMatch.trade.key);
+  }, [
+    onSelectTrade,
+    primaryExactMatch?.group.key,
+    primaryExactMatch?.trade.key,
+    selectedTradeNameKey,
+  ]);
   useEffect(() => {
     setOpenGroupKeys(new Set(catalog.groups.items.slice(0, 1).map((group) => group.key)));
   }, [catalog.groups.page, catalog.groups.items[0]?.key]);
@@ -534,7 +671,37 @@ export function GroupedRegistryResults({
         </p>
       </div>
 
-      {catalog.groups.items.map((group) => {
+      {exactTradeMatches.length ? (
+        <section className="space-y-3" data-testid="exact-brand-results">
+          <div>
+            <h2 className="text-lg font-semibold">Точний збіг за торговою назвою</h2>
+            <p className="text-xs text-muted-foreground">
+              Бренд показано перед результатами за МНН, alias та нечіткими збігами.
+            </p>
+          </div>
+          {exactTradeMatches.map(({ group, trade }) => (
+            <ExactBrandCard
+              key={group.key + "::" + trade.key}
+              group={group}
+              trade={trade}
+              query={query}
+              isSelected={trade.key === selectedTradeNameKey}
+              isFetching={isFetching}
+              isVariantFetching={isVariantFetching}
+              isVariantError={isVariantError}
+              onRetryVariants={onRetryVariants}
+              onSelect={() => onSelectTrade(group.key, trade.key)}
+              onVariantPage={onVariantPage}
+            />
+          ))}
+        </section>
+      ) : null}
+
+      <BrandAlternatives
+        enabled={exactTradeMatches.length > 0 && remainingGroups.length > 0}
+        ingredient={primaryExactMatch?.group.displayName ?? "тією самою діючою речовиною"}
+      >
+      {remainingGroups.map((group) => {
         const hasOpenTrade = group.tradeNames.items.some(
           (trade) => Boolean(trade.variants) || trade.key === selectedTradeNameKey,
         );
@@ -671,6 +838,7 @@ export function GroupedRegistryResults({
           </section>
         );
       })}
+      </BrandAlternatives>
       {catalog.groups.totalPages > 1 ? (
         <nav className="grid grid-cols-[1fr_auto_1fr] items-center gap-2" aria-label="Сторінки груп складу">
           <Button type="button" variant="outline" className="min-h-11 justify-self-start" disabled={catalog.groups.page <= 1 || isFetching} onClick={() => onGroupPage(Math.max(1, catalog.groups.page - 1))}>
@@ -772,7 +940,7 @@ export default function SearchPage() {
       groupPageSize: 10 as const,
       tradePage: requestedTradePage,
       tradePageSize: 10 as const,
-      variantPageSize: 10 as const,
+      variantPageSize: 25 as const,
       ...(requestedGroupKey && !requestedTradeNameKey
         ? { groupKey: requestedGroupKey }
         : {}),
