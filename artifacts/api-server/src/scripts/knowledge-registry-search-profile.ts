@@ -366,6 +366,13 @@ async function main(): Promise<void> {
     const exactTrade = String(exactTradeResult.rows[0]?.trade_name ?? "");
     if (!exactTrade)
       throw new Error("No unique exact trade name is available.");
+    const extensions = await executor.query(
+      `SELECT extname
+         FROM pg_extension
+        WHERE extname = ANY($1::text[])
+        ORDER BY extname`,
+      [["pg_trgm", "hypopg"]],
+    );
     const indexes = await executor.query(
       `SELECT tablename, indexname, indexdef
          FROM pg_indexes
@@ -431,6 +438,7 @@ async function main(): Promise<void> {
       initialConnectionAcquireMs: Number(acquireMs.toFixed(3)),
       exactTradeQuery: exactTrade,
       profiles,
+      extensions: extensions.rows,
       indexes: indexes.rows,
       statistics: statistics.rows,
       idleTransactions,
