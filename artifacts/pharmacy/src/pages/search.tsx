@@ -56,8 +56,7 @@ const SEARCH_TYPES: Array<{ value: SearchType; label: string }> = [
 
 const numberFormatter = new Intl.NumberFormat("uk-UA");
 
-const PACKAGING_QUANTITY_PATTERN =
-  /(?:,\s*|\s+)по\s+\d+(?:[\s.,]\d+)?\s*(?:таблет\p{L}*|капсул\p{L}*|ампул\p{L}*|флакон\p{L}*|блістер\p{L}*|пакет\p{L}*|пач\p{L}*|контейнер\p{L}*|туб\p{L}*|доз\p{L}*)(?!\p{L})/iu;
+const PACKAGING_QUANTITY_PATTERN = /(?:,\s*|\s+)по\s+\d/iu;
 
 export function conciseDosageForm(value: string): string {
   const normalized = value.trim().replace(/\s+/gu, " ");

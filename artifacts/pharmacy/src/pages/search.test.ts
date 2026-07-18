@@ -167,6 +167,19 @@ describe("registry catalog UI", () => {
     expect(
       conciseDosageForm("капсули тверді; по 10 капсул у блістері"),
     ).toBe("капсули тверді");
+    const representativeForms = [
+      ["розчин для ін'єкцій, по 2 мл в ампулі", "розчин для ін'єкцій"],
+      ["капсули тверді, по 10 капсул у блістері", "капсули тверді"],
+      ["порошок для орального розчину, по 5 г у саше", "порошок для орального розчину"],
+      ["крем для зовнішнього застосування, по 30 г у тубі", "крем для зовнішнього застосування"],
+      ["мазь очна, по 5 г у тубі", "мазь очна"],
+      ["супозиторії ректальні, по 5 супозиторіїв у стрипі", "супозиторії ректальні"],
+      ["спрей назальний, по 10 мл у флаконі", "спрей назальний"],
+    ] as const;
+    for (const [rawForm, expectedForm] of representativeForms) {
+      expect(conciseDosageForm(rawForm)).toBe(expectedForm);
+      expect(conciseDosageForm(expectedForm)).toBe(expectedForm);
+    }
     expect(
       conciseDosageForms([
         "таблетки in bulk; по 5000 таблеток у пакетах",
