@@ -667,6 +667,9 @@ describe("catalog search service", () => {
       );
       expect(sql).toContain("LOWER(ingredient_product.trade_name) LIKE $5");
       expect(sql).toContain("LOWER(ingredient_product.inn) LIKE $5");
+      expect(sql).toContain(
+        "LOWER(ingredient_product.inn) LIKE ANY($9::text[])",
+      );
       expect(sql).toContain("UNION");
       expect(sql).toContain(
         "candidate_alias.normalized = alias_product.normalized_trade_name",

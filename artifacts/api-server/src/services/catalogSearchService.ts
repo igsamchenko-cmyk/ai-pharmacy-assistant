@@ -696,6 +696,9 @@ function buildProductFilter(input: CatalogSearchInput) {
               LOWER(ingredient_product.trade_name) LIKE ${contains} ESCAPE '\\'
               OR LOWER(ingredient_product.inn) LIKE ${contains} ESCAPE '\\'
               OR LOWER(ingredient_product.active_ingredient) LIKE ${contains} ESCAPE '\\'
+              OR LOWER(ingredient_product.trade_name) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+              OR LOWER(ingredient_product.inn) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+              OR LOWER(ingredient_product.active_ingredient) LIKE ANY(${aliasLowerPrefixesRef}::text[])
             )
           UNION
           SELECT alias_product.registry_id
