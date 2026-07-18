@@ -10,6 +10,9 @@ import { QueryClient } from "@tanstack/react-query";
 import {
   GroupedRegistryResults,
   RegistryProductCard,
+  findExactTradeNameMatches,
+  isExactTradeNameQuery,
+  normalizeExactTradeName,
   applyPastedQuery,
   catalogQueryDebounceMs,
   CATALOG_QUERY_DEBOUNCE_MS,
@@ -286,6 +289,126 @@ describe("registry catalog UI", () => {
     expect(html).not.toContain("DATABASE_URL");
   });
 
+  it.each([
+    ["Енап", "ЕНАП®", "Еналаприл", "Еналаприл-Тева"],
+    ["Нурофен", "НУРОФЕН™", "Ібупрофен", "Ібупрофен-Дарниця"],
+    ["Еліквіс", "ЕЛІКВІС", "Апіксабан", "Апіксабан"],
+    ["Амоксиклав", "АМОКСИКЛАВ®", "Амоксицилін + клавуланова кислота", "Аугментин"],
+    ["Ксарелто", "КСАРЕЛТО", "Ривароксабан", "Ривароксабан-Тева"],
+  ])("prioritizes the exact %s brand and keeps related INN products collapsed", (
+    query, registryTradeName, inn, relatedTradeName,
+  ) => {
+    const summary = {
+      totalRegistryPositions: 3, uniqueTradeNames: 2, uniqueStrengths: 2,
+      uniqueDosageForms: 2, uniqueManufacturers: 1, monotherapyCount: 3,
+      combinationCount: 0, unknownCompositionCount: 0,
+      approvedMappedCount: 3, unmappedCount: 0,
+    };
+    const brandProduct = {
+      ...product,
+      id: "exact-" + normalizeExactTradeName(query),
+      tradeName: registryTradeName,
+      inn,
+      activeIngredient: inn,
+      strength: "5 мг",
+      dosageForm: "таблетки",
+      manufacturers: [{ name: "KRKA", country: "Словенія" }],
+    };
+    const secondBrandProduct = {
+      ...brandProduct,
+      id: brandProduct.id + "-10",
+      strength: "10 мг",
+      dosageForm: "таблетки пролонгованої дії",
+      registration: { ...brandProduct.registration, number: "UA/5678/01/02" },
+    };
+    const catalog = {
+      summary,
+      groups: {
+        items: [{
+          key: "composition-" + normalizeExactTradeName(inn),
+          displayName: inn,
+          officialCompositions: [inn],
+          compositionType: inn.includes("+") ? "combination" : "monotherapy",
+          mappingStatus: "approved",
+          summary,
+          source: { key: "state_registry", label: "State registry" },
+          tradeNames: {
+            items: [{
+              key: "trade-exact-" + normalizeExactTradeName(query),
+              tradeName: registryTradeName,
+              normalizedTradeName: normalizeExactTradeName(registryTradeName),
+              summary: { ...summary, totalRegistryPositions: 2, uniqueTradeNames: 1 },
+              forms: ["таблетки", "таблетки пролонгованої дії"],
+              strengths: ["5 мг", "10 мг"],
+              manufacturers: ["KRKA"],
+              variants: {
+                items: [brandProduct, secondBrandProduct],
+                total: 2, page: 1, pageSize: 25, totalPages: 1, hasNext: false,
+              },
+            }, {
+              key: "trade-related-" + normalizeExactTradeName(relatedTradeName),
+              tradeName: relatedTradeName,
+              normalizedTradeName: normalizeExactTradeName(relatedTradeName),
+              summary: { ...summary, totalRegistryPositions: 1, uniqueTradeNames: 1 },
+              forms: ["таблетки"],
+              strengths: ["5 мг"],
+              manufacturers: ["Інший виробник"],
+              variants: null,
+            }],
+            total: 2, page: 1, pageSize: 10, totalPages: 1, hasNext: false,
+          },
+        }],
+        total: 1, page: 1, pageSize: 10, totalPages: 1, hasNext: false,
+      },
+      appliedFilters: {
+        query, tradeName: null, manufacturer: null, form: null, strength: null,
+        compositionType: "all", mappingStatus: "all", nationalListStatus: "all",
+        registrationStatus: null,
+      },
+      bounded: true,
+    } as NonNullable<CatalogSearchResponse["registryGroups"]>;
+
+    expect(isExactTradeNameQuery(query, registryTradeName)).toBe(true);
+    expect(findExactTradeNameMatches(catalog, query)).toHaveLength(1);
+    const html = renderToStaticMarkup(createElement(GroupedRegistryResults, {
+      catalog,
+      query,
+      isFetching: false,
+      isVariantFetching: false,
+      isVariantError: false,
+      selectedTradeNameKey: "trade-exact-" + normalizeExactTradeName(query),
+      onRetryVariants: () => undefined,
+      onSelectTrade: () => undefined,
+      onGroupPage: () => undefined,
+      onTradePage: () => undefined,
+      onVariantPage: () => undefined,
+    }));
+
+    expect(html).toContain('data-testid="exact-brand-results"');
+    expect(html).toContain("Точний збіг за торговою назвою");
+    expect(html).toContain("Діюча речовина:");
+    expect(html).toContain(inn);
+    expect(html).toContain("5 мг, 10 мг");
+    expect(html).toContain("таблетки пролонгованої дії");
+    expect(html).toContain("KRKA");
+    expect(html).toContain("Конкретні реєстрові позиції");
+    expect(html).toContain('data-testid="brand-alternatives"');
+    expect(html).toContain("Інші препарати з " + inn);
+    expect(html.indexOf(registryTradeName)).toBeLessThan(html.indexOf(relatedTradeName));
+    expect(html).toContain("/instructions/" + brandProduct.id);
+    expect(html).toContain('data-testid="instruction-action-' + brandProduct.id + '"');
+    expect(html).not.toContain("<details open=");
+    expect(html).not.toContain("overflow-x-auto");
+  });
+
+  it("normalizes registered marks, punctuation, spacing, and case deterministically", () => {
+    expect(normalizeExactTradeName("  ЕНАП®  ")).toBe("енап");
+    expect(normalizeExactTradeName("Амоксиклав®/Квіктаб")).toBe(
+      normalizeExactTradeName("амоксиклав квіктаб"),
+    );
+    expect(isExactTradeNameQuery("Нурофен", "НУРОФЕН™")).toBe(true);
+    expect(isExactTradeNameQuery("Енап", "Еналаприл")).toBe(false);
+  });
   it("renders composition and trade-name hierarchy before variants", () => {
     const catalog: NonNullable<CatalogSearchResponse["registryGroups"]> = {
       summary: {
