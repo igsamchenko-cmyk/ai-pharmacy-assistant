@@ -32,6 +32,8 @@
     "knowledge:registry:parity": "tsx src/scripts/knowledge-registry-parity.ts",
     "knowledge:registry:confirm-production-apply": "tsx src/scripts/knowledge-registry-confirm-production-apply.ts",
     "knowledge:registry:artifact-preflight": "tsx src/scripts/knowledge-registry-artifact-preflight.ts",
+    "knowledge:registry:search-profile-confirm": "tsx src/scripts/knowledge-registry-search-profile-confirm.ts",
+    "knowledge:registry:search-profile": "tsx src/scripts/knowledge-registry-search-profile.ts",
     "knowledge:registry:sync-summary": "tsx src/scripts/knowledge-registry-sync-summary.ts",
     "knowledge:catalog:completeness-report": "tsx src/scripts/knowledge-catalog-completeness-report.ts",
     "knowledge:catalog:search-coverage-report": "tsx src/scripts/knowledge-catalog-search-coverage-report.ts",
