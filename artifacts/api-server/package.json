@@ -30,6 +30,7 @@
     "knowledge:registry:mapping-db-smoke": "tsx src/scripts/knowledge-registry-mapping-db-smoke.ts",
     "knowledge:registry:production-report": "tsx src/scripts/knowledge-registry-production-report.ts",
     "knowledge:registry:parity": "tsx src/scripts/knowledge-registry-parity.ts",
+    "knowledge:registry:confirm-production-apply": "tsx src/scripts/knowledge-registry-confirm-production-apply.ts",
     "knowledge:registry:sync-summary": "tsx src/scripts/knowledge-registry-sync-summary.ts",
     "knowledge:catalog:completeness-report": "tsx src/scripts/knowledge-catalog-completeness-report.ts",
     "knowledge:catalog:search-coverage-report": "tsx src/scripts/knowledge-catalog-search-coverage-report.ts",

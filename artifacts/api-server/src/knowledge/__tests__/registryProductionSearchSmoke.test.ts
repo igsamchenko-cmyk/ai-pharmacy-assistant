@@ -224,7 +224,7 @@ describe("post-commit workflow state", () => {
     expect(markdown).not.toMatch(/[A-Za-z]:\\|\/(?:home|tmp|var)\//);
   });
 
-  it("keeps the protected environment on the apply job and passes every contract marker", () => {
+  it("keeps environment-scoped secrets and every protected smoke marker", () => {
     const workflowPath = fileURLToPath(
       new URL(
         "../../../../../.github/workflows/official-registry-sync.yml",
@@ -233,6 +233,19 @@ describe("post-commit workflow state", () => {
     );
     const workflow = readFileSync(workflowPath, "utf8");
     expect(workflow).toContain("environment: production-registry-sync");
+    expect(workflow).toContain("confirm_production_apply:");
+    expect(workflow).toContain("CONFIRM_PRODUCTION_APPLY_INPUT:");
+    expect(workflow).toContain("CONFIRM_PRODUCTION_REGISTRY_APPLY:");
+    expect(workflow).toContain("Require fail-closed production confirmation");
+    expect(workflow).toContain("confirmation_passed != 'true'");
+    const applyJob = workflow.slice(workflow.indexOf("\n  apply:"));
+    const applyHeader = applyJob.slice(0, applyJob.indexOf("\n    steps:"));
+    expect(applyHeader).not.toContain("DATABASE_URL");
+    expect(
+      applyJob.indexOf("Require fail-closed production confirmation"),
+    ).toBeLessThan(
+      applyJob.indexOf("DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}"),
+    );
     expect(workflow).toContain('REGISTRY_PRODUCTION_SEARCH_SMOKE: "true"');
     expect(workflow).toContain("AUDITED_REGISTRY_SNAPSHOT_SHA:");
     expect(workflow).toContain("CONFIRM_REGISTRY_SNAPSHOT_SHA:");
