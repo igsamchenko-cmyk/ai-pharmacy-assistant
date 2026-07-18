@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   assertCatalogSmokeHasNoIdleTransactions,
   assertReadOnlyCatalogStatement,
+  authorizeCatalogProfileDatabase,
   authorizeCatalogSmokeDatabase,
   closeCatalogSmokePool,
   configureCatalogSmokeReadOnlySession,
@@ -38,6 +39,28 @@ function protectedContext(
     GITHUB_REPOSITORY: "igsamchenko-cmyk/ai-pharmacy-assistant",
     GITHUB_EVENT_NAME: "workflow_dispatch",
     GITHUB_REF: "refs/heads/main",
+    GITHUB_RUN_ID: "123456",
+    ...overrides,
+  };
+}
+
+function profileContext(
+  overrides: CatalogSmokeEnvironment = {},
+): CatalogSmokeEnvironment {
+  return {
+    REGISTRY_PRODUCTION_SEARCH_PROFILE: "true",
+    CONFIRM_REGISTRY_SNAPSHOT_SHA: SHA,
+    AUDITED_REGISTRY_SNAPSHOT_SHA: SHA,
+    CONFIRM_PRODUCTION_APPLY_INPUT: SHA,
+    CONFIRM_PRODUCTION_REGISTRY_APPLY: SHA,
+    REGISTRY_SYNC_MODE: "profile",
+    REGISTRY_SYNC_PURPOSE: "production-registry-search-profile",
+    REGISTRY_SYNC_ENVIRONMENT: "production-registry-sync",
+    GITHUB_ACTIONS: "true",
+    GITHUB_WORKFLOW: "Official registry parity and gated sync",
+    GITHUB_REPOSITORY: "igsamchenko-cmyk/ai-pharmacy-assistant",
+    GITHUB_EVENT_NAME: "workflow_dispatch",
+    GITHUB_REF: "refs/heads/fix/production-search-regression",
     GITHUB_RUN_ID: "123456",
     ...overrides,
   };
@@ -88,6 +111,52 @@ describe("protected production catalog smoke authorization", () => {
   it("allows the complete protected apply context", () => {
     expect(
       authorizeCatalogSmokeDatabase(RENDER_URL, protectedContext()),
+    ).toEqual({
+      protectedProduction: true,
+      databaseLabel: "protected-production-read-only",
+    });
+  });
+});
+
+describe("protected production search profile authorization", () => {
+  it("blocks incomplete and mismatched profile confirmations", () => {
+    expect(() =>
+      authorizeCatalogProfileDatabase(RENDER_URL, {
+        REGISTRY_PRODUCTION_SEARCH_PROFILE: "true",
+      }),
+    ).toThrow(/approved read-only/);
+    expect(() =>
+      authorizeCatalogProfileDatabase(
+        RENDER_URL,
+        profileContext({ CONFIRM_PRODUCTION_REGISTRY_APPLY: "a".repeat(64) }),
+      ),
+    ).toThrow(/approved read-only/);
+  });
+
+  it("blocks wrong mode, workflow and branch markers", () => {
+    expect(() =>
+      authorizeCatalogProfileDatabase(
+        RENDER_URL,
+        profileContext({ REGISTRY_SYNC_MODE: "apply" }),
+      ),
+    ).toThrow(/approved read-only/);
+    expect(() =>
+      authorizeCatalogProfileDatabase(
+        RENDER_URL,
+        profileContext({ GITHUB_WORKFLOW: "Ordinary CI" }),
+      ),
+    ).toThrow(/approved read-only/);
+    expect(() =>
+      authorizeCatalogProfileDatabase(
+        RENDER_URL,
+        profileContext({ GITHUB_REF: "refs/heads/arbitrary" }),
+      ),
+    ).toThrow(/approved read-only/);
+  });
+
+  it("allows only the complete protected read-only profile context", () => {
+    expect(
+      authorizeCatalogProfileDatabase(RENDER_URL, profileContext()),
     ).toEqual({
       protectedProduction: true,
       databaseLabel: "protected-production-read-only",
@@ -280,5 +349,31 @@ describe("post-commit workflow state", () => {
     );
     expect(workflow).toContain("Post-commit state summary");
     expect(workflow).not.toMatch(/ALLOW_PRODUCTION\s*[:=]/);
+
+    const profileJob = workflow.slice(
+      workflow.indexOf("\n  profile:"),
+      workflow.indexOf("\n  apply:"),
+    );
+    const profileHeader = profileJob.slice(
+      0,
+      profileJob.indexOf("\n    steps:"),
+    );
+    expect(profileHeader).not.toContain("DATABASE_URL");
+    expect(profileJob).toContain(
+      "Require fail-closed read-only profile confirmation",
+    );
+    expect(
+      profileJob.indexOf("profile_confirmation_passed != 'true'"),
+    ).toBeLessThan(
+      profileJob.indexOf(
+        "DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}",
+      ),
+    );
+    expect(profileJob).toContain("REGISTRY_SYNC_MODE: profile");
+    expect(profileJob).toContain(
+      "REGISTRY_SYNC_PURPOSE: production-registry-search-profile",
+    );
+    expect(profileJob).not.toContain("pnpm db:push");
+    expect(profileJob).not.toContain("--apply");
   });
 });

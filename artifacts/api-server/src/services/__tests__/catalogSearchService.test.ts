@@ -628,6 +628,64 @@ describe("catalog search service", () => {
     resetRegistrySearchCachesForTests();
   });
 
+  it("uses the complete registry candidate path for source-backed ingredient queries", async () => {
+    resetRegistrySearchCachesForTests();
+    const query = vi.fn(async (sql: string, _values: unknown[] = []) => {
+      if (sql.includes("SELECT COUNT(*)::int AS count")) {
+        return { rows: [{ count: 165, snapshot_version: "batch-test" }] };
+      }
+      if (sql.includes("SELECT product_registry_id, name, country")) {
+        return { rows: [manufacturer] };
+      }
+      if (sql.includes("n.normalized") && sql.includes("ingredient_id")) {
+        return { rows: [approvedMapping] };
+      }
+      if (sql.includes("p.registry_id")) {
+        return { rows: [productRow] };
+      }
+      throw new Error("Unexpected test query");
+    });
+    const dbStore = await createPostgresRegistryCatalogStore({
+      executor: { query },
+    });
+
+    const result = await dbStore.searchProducts(
+      input({ q: "Ibuprofen", view: "flat" }),
+    );
+    expect(result.items).toHaveLength(1);
+
+    const searchSqls = query.mock.calls
+      .map(([sql]) => sql)
+      .filter((sql) => sql.includes("exact_approved_alias"));
+    expect(searchSqls).toHaveLength(2);
+    for (const sql of searchSqls) {
+      expect(sql).toContain(
+        "JOIN (\n          SELECT ingredient_product.registry_id",
+      );
+      expect(sql).toContain(
+        "LEFT JOIN (\n          SELECT DISTINCT product_alias.normalized",
+      );
+      expect(sql).toContain("LOWER(ingredient_product.trade_name) LIKE $5");
+      expect(sql).toContain("LOWER(ingredient_product.inn) LIKE $5");
+      expect(sql).toContain(
+        "LOWER(ingredient_product.inn) LIKE ANY($9::text[])",
+      );
+      expect(sql).toContain("UNION");
+      expect(sql).toContain(
+        "candidate_alias.normalized = alias_product.normalized_trade_name",
+      );
+      expect(sql).toContain(
+        "LOWER(ingredient_product.active_ingredient) LIKE $5",
+      );
+      expect(sql).toContain("$1::text IS NOT NULL");
+      expect(sql).toContain("cardinality($9::text[]) >= 0");
+      expect(sql).not.toContain("prefix_approved_alias");
+      expect(sql).not.toContain("search_manufacturer");
+      expect(sql.split("ORDER BY")[0]).not.toContain(
+        "LOWER(p.trade_name) LIKE",
+      );
+    }
+  });
   it("reuses one bounded grouped snapshot without N+1 queries", async () => {
     resetRegistrySearchCachesForTests();
     const labels: string[] = [];

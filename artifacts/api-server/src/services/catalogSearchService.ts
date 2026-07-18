@@ -658,10 +658,12 @@ function buildProductFilter(input: CatalogSearchInput) {
       const aliasLowerPrefixesRef = add(
         aliasLowerTerms.map((value) => `${escapeLike(value)}%`),
       );
-      const exactApproved = "exact_approved_alias.normalized IS NOT NULL";
-      const prefixApproved = "prefix_approved_alias.normalized IS NOT NULL";
       const ingredientLevelQuery =
         resolved?.kind !== undefined && resolved.kind !== "brand";
+      const exactApproved = "exact_approved_alias.normalized IS NOT NULL";
+      const prefixApproved = ingredientLevelQuery
+        ? "FALSE"
+        : "prefix_approved_alias.normalized IS NOT NULL";
       const exactTradeScope = ingredientLevelQuery
         ? "TRUE"
         : `(
@@ -673,6 +675,48 @@ function buildProductFilter(input: CatalogSearchInput) {
           )
           OR p.normalized_trade_name = ${normalizedExact}
         )`;
+      const ingredientParameterTypeAnchor = `(
+        ${lowerExact}::text IS NOT NULL
+        AND ${normalizedExact}::text IS NOT NULL
+        AND ${lowerPrefix}::text IS NOT NULL
+        AND ${normalizedPrefix}::text IS NOT NULL
+        AND ${contains}::text IS NOT NULL
+        AND ${normalizedContains}::text IS NOT NULL
+        AND cardinality(${aliasLowerRef}::text[]) >= 0
+        AND cardinality(${aliasLowerPrefixesRef}::text[]) >= 0
+      )`;
+
+      if (ingredientLevelQuery) {
+        joinSql += `
+        JOIN (
+          SELECT ingredient_product.registry_id
+          FROM knowledge_registry_products ingredient_product
+          WHERE ingredient_product.review_status <> 'stale'
+            AND (
+              LOWER(ingredient_product.trade_name) LIKE ${contains} ESCAPE '\\'
+              OR LOWER(ingredient_product.inn) LIKE ${contains} ESCAPE '\\'
+              OR LOWER(ingredient_product.active_ingredient) LIKE ${contains} ESCAPE '\\'
+              OR LOWER(ingredient_product.trade_name) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+              OR LOWER(ingredient_product.inn) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+              OR LOWER(ingredient_product.active_ingredient) LIKE ANY(${aliasLowerPrefixesRef}::text[])
+            )
+          UNION
+          SELECT alias_product.registry_id
+          FROM knowledge_registry_products alias_product
+          JOIN (
+            SELECT DISTINCT product_alias.normalized
+            FROM knowledge_ingredient_names query_alias
+            JOIN knowledge_ingredient_names product_alias
+              ON product_alias.ingredient_inn_key = query_alias.ingredient_inn_key
+             AND product_alias.review_status = 'approved'
+            WHERE query_alias.review_status = 'approved'
+              AND query_alias.normalized = ANY(${aliasKeysRef}::text[])
+          ) candidate_alias
+            ON candidate_alias.normalized = alias_product.normalized_trade_name
+          WHERE alias_product.review_status <> 'stale'
+        ) ingredient_candidates
+          ON ingredient_candidates.registry_id = p.registry_id`;
+      }
 
       joinSql += `
         LEFT JOIN (
@@ -684,7 +728,10 @@ function buildProductFilter(input: CatalogSearchInput) {
           WHERE query_alias.review_status = 'approved'
             AND query_alias.normalized = ANY(${aliasKeysRef}::text[])
         ) exact_approved_alias
-          ON exact_approved_alias.normalized = p.normalized_trade_name
+          ON exact_approved_alias.normalized = p.normalized_trade_name`;
+
+      if (!ingredientLevelQuery) {
+        joinSql += `
         LEFT JOIN (
           SELECT DISTINCT product_alias.normalized
           FROM knowledge_ingredient_names query_alias
@@ -695,6 +742,7 @@ function buildProductFilter(input: CatalogSearchInput) {
             AND query_alias.normalized LIKE ${normalizedPrefix} ESCAPE '\\'
         ) prefix_approved_alias
           ON prefix_approved_alias.normalized = p.normalized_trade_name`;
+      }
 
       const directContains = `(
         LOWER(p.trade_name) LIKE ${contains} ESCAPE '\\'
@@ -715,7 +763,10 @@ function buildProductFilter(input: CatalogSearchInput) {
         )
       )`;
 
-      clauses.push(`(
+      clauses.push(
+        ingredientLevelQuery
+          ? `(${exactTradeScope} AND ingredient_candidates.registry_id IS NOT NULL AND ${ingredientParameterTypeAnchor})`
+          : `(
         ${exactTradeScope}
         AND (
           p.normalized_trade_name = ${normalizedExact}
@@ -734,7 +785,8 @@ function buildProductFilter(input: CatalogSearchInput) {
           OR ${prefixApproved}
           OR ${directContains}
         )
-      )`);
+      )`,
+      );
       rankSql = `CASE
         WHEN LOWER(p.registration_number) = ${lowerExact} THEN 1
         WHEN p.normalized_trade_name = ${normalizedExact}

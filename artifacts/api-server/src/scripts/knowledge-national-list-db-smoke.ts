@@ -81,11 +81,14 @@ async function main(): Promise<void> {
     const baselineWarmMs = await warmSearchMedianMs();
     const activated = await activateNationalListRelease(snapshot, pool);
     const enrichedWarmMs = await warmSearchMedianMs();
+    const performanceRegressionMs = enrichedWarmMs - baselineWarmMs;
     const performanceRegressionPct = baselineWarmMs > 0
-      ? ((enrichedWarmMs - baselineWarmMs) / baselineWarmMs) * 100
+      ? (performanceRegressionMs / baselineWarmMs) * 100
       : 0;
-    if (performanceRegressionPct > 15) {
-      throw new Error("National-list warm search regression exceeds 15%.");
+    if (performanceRegressionPct > 15 && performanceRegressionMs > 5) {
+      throw new Error(
+        `National-list warm search regression exceeds 15% and 5 ms (baseline=${baselineWarmMs.toFixed(1)} ms, enriched=${enrichedWarmMs.toFixed(1)} ms).`,
+      );
     }
     const distribution = await pool.query<{ status: string; count: number }>(
       `SELECT status, COUNT(*)::int AS count

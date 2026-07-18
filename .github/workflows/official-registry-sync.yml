@@ -6,19 +6,20 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Audit only, or apply after the fail-closed production confirmation gate"
+        description: "Audit, read-only production profile, or confirmed apply"
         required: true
         default: audit
         type: choice
         options:
           - audit
+          - profile
           - apply
       confirm_sha256:
-        description: "Required for apply; exact SHA-256 printed by the audit job"
+        description: "Required for profile/apply; exact SHA-256 printed by audit"
         required: false
         type: string
       confirm_production_apply:
-        description: "Required for apply; must exactly match the environment confirmation secret"
+        description: "Required for profile/apply; must match the environment confirmation secret"
         required: false
         type: string
   pull_request:
@@ -32,6 +33,8 @@ on:
       - "artifacts/api-server/src/scripts/knowledge-registry-confirm-production-apply.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-artifact-preflight.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-catalog-db-smoke.ts"
+      - "artifacts/api-server/src/scripts/knowledge-registry-search-profile-confirm.ts"
+      - "artifacts/api-server/src/scripts/knowledge-registry-search-profile.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-sync-summary.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-parity.ts"
       - "artifacts/api-server/src/services/catalogSearchService.ts"
@@ -105,6 +108,8 @@ jobs:
           --file="$RUNNER_TEMP/reestr.csv"
           --products-only
 
+      - name: Enable additive trigram search indexes in CI
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
       - name: Initialize ephemeral CI schema
         run: pnpm db:push
 
@@ -144,6 +149,72 @@ jobs:
           retention-days: 90
           if-no-files-found: error
           path: ${{ runner.temp }}/registry-checkpoint/
+
+  profile:
+    name: Confirmed production read-only search profile
+    needs: audit
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'profile'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production-registry-sync
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25.8.2
+
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+
+      - name: Require fail-closed read-only profile confirmation
+        id: profile_confirmation
+        continue-on-error: true
+        env:
+          REGISTRY_PRODUCTION_SEARCH_PROFILE: "true"
+          CONFIRM_REGISTRY_SNAPSHOT_SHA: ${{ inputs.confirm_sha256 }}
+          AUDITED_REGISTRY_SNAPSHOT_SHA: ${{ needs.audit.outputs.source_sha256 }}
+          CONFIRM_PRODUCTION_APPLY_INPUT: ${{ inputs.confirm_production_apply }}
+          CONFIRM_PRODUCTION_REGISTRY_APPLY: ${{ secrets.CONFIRM_PRODUCTION_REGISTRY_APPLY }}
+          REGISTRY_SYNC_MODE: profile
+          REGISTRY_SYNC_PURPOSE: production-registry-search-profile
+          REGISTRY_SYNC_ENVIRONMENT: production-registry-sync
+        run: pnpm knowledge:registry:search-profile-confirm
+
+      - name: Fail before production access when profile confirmation is invalid
+        if: >-
+          steps.profile_confirmation.outcome != 'success' ||
+          steps.profile_confirmation.outputs.profile_confirmation_passed != 'true'
+        run: |
+          echo "Production search profile confirmation failed. No database step was started."
+          exit 1
+
+      - name: Profile production registry search read-only
+        id: search_profile
+        env:
+          REGISTRY_PRODUCTION_SEARCH_PROFILE: "true"
+          CONFIRM_REGISTRY_SNAPSHOT_SHA: ${{ inputs.confirm_sha256 }}
+          AUDITED_REGISTRY_SNAPSHOT_SHA: ${{ needs.audit.outputs.source_sha256 }}
+          CONFIRM_PRODUCTION_APPLY_INPUT: ${{ inputs.confirm_production_apply }}
+          CONFIRM_PRODUCTION_REGISTRY_APPLY: ${{ secrets.CONFIRM_PRODUCTION_REGISTRY_APPLY }}
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_SSL: "true"
+          KNOWLEDGE_DB_RUNTIME: "true"
+          REGISTRY_SYNC_MODE: profile
+          REGISTRY_SYNC_PURPOSE: production-registry-search-profile
+          REGISTRY_SYNC_ENVIRONMENT: production-registry-sync
+        run: >-
+          pnpm knowledge:registry:search-profile --
+          --output="$RUNNER_TEMP/registry-production-search-profile.json"
+
+      - name: Upload sanitized production search profile
+        if: steps.search_profile.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: registry-production-search-profile-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: ${{ runner.temp }}/registry-production-search-profile.json
 
   apply:
     name: Confirmed additive/upsert and mark-stale update
@@ -192,6 +263,10 @@ jobs:
         env:
           REGISTRY_ARTIFACT_DIRECTORY: ${{ runner.temp }}/registry-audit
         run: pnpm knowledge:registry:artifact-preflight
+      - name: Enable additive production trigram extension
+        run: psql "$PRODUCTION_DATABASE_URL" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
       - name: Apply additive schema changes
         run: pnpm db:push
         env:

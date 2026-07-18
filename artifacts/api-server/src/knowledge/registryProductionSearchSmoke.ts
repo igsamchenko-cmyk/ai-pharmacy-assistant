@@ -1,8 +1,10 @@
 const EXPECTED_WORKFLOW = "Official registry parity and gated sync";
 const EXPECTED_REPOSITORY = "igsamchenko-cmyk/ai-pharmacy-assistant";
 const EXPECTED_PURPOSE = "post-apply-registry-search-smoke";
+const EXPECTED_PROFILE_PURPOSE = "production-registry-search-profile";
 const EXPECTED_ENVIRONMENT = "production-registry-sync";
 const EXPECTED_APP_NAME = "farmassist-registry-production-search-smoke";
+const EXPECTED_PROFILE_BRANCH = "refs/heads/fix/production-search-regression";
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 
 export interface CatalogSmokeEnvironment {
@@ -56,6 +58,61 @@ function assertProtectedProductionContext(env: CatalogSmokeEnvironment): void {
       "Catalog DB smoke refuses the production host outside the approved post-apply registry workflow.",
     );
   }
+}
+
+export function assertProtectedProductionProfileContext(
+  env: CatalogSmokeEnvironment,
+): void {
+  const confirmedSha = env.CONFIRM_REGISTRY_SNAPSHOT_SHA?.toLowerCase() ?? "";
+  const auditedSha = env.AUDITED_REGISTRY_SNAPSHOT_SHA?.toLowerCase() ?? "";
+  const confirmationInput =
+    env.CONFIRM_PRODUCTION_APPLY_INPUT?.toLowerCase() ?? "";
+  const confirmationSecret =
+    env.CONFIRM_PRODUCTION_REGISTRY_APPLY?.toLowerCase() ?? "";
+  const requirements = [
+    env.REGISTRY_PRODUCTION_SEARCH_PROFILE === "true",
+    SHA256_PATTERN.test(confirmedSha),
+    SHA256_PATTERN.test(auditedSha),
+    SHA256_PATTERN.test(confirmationInput),
+    SHA256_PATTERN.test(confirmationSecret),
+    confirmedSha === auditedSha,
+    confirmationInput === auditedSha,
+    confirmationSecret === auditedSha,
+    env.REGISTRY_SYNC_MODE === "profile",
+    env.REGISTRY_SYNC_PURPOSE === EXPECTED_PROFILE_PURPOSE,
+    env.REGISTRY_SYNC_ENVIRONMENT === EXPECTED_ENVIRONMENT,
+    env.GITHUB_ACTIONS === "true",
+    env.GITHUB_WORKFLOW === EXPECTED_WORKFLOW,
+    env.GITHUB_REPOSITORY === EXPECTED_REPOSITORY,
+    env.GITHUB_EVENT_NAME === "workflow_dispatch",
+    ["refs/heads/main", EXPECTED_PROFILE_BRANCH].includes(env.GITHUB_REF ?? ""),
+    /^\d+$/.test(env.GITHUB_RUN_ID ?? ""),
+  ];
+  if (requirements.some((requirement) => !requirement)) {
+    throw new Error(
+      "Catalog DB profile refuses production access outside the approved read-only registry workflow.",
+    );
+  }
+}
+
+export function authorizeCatalogProfileDatabase(
+  rawDatabaseUrl: string | undefined,
+  env: CatalogSmokeEnvironment,
+): CatalogSmokeAuthorization {
+  if (!rawDatabaseUrl) {
+    throw new Error(
+      "Production database configuration is required for profiling.",
+    );
+  }
+  const host = new URL(rawDatabaseUrl).hostname.toLowerCase();
+  if (!isRenderHost(host)) {
+    throw new Error("Registry production profiling requires the Render host.");
+  }
+  assertProtectedProductionProfileContext(env);
+  return {
+    protectedProduction: true,
+    databaseLabel: "protected-production-read-only",
+  };
 }
 
 export function authorizeCatalogSmokeDatabase(
