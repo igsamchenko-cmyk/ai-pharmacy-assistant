@@ -458,6 +458,20 @@ export function findExactTradeNameMatches(
   );
 }
 
+export function shouldAutoLoadExactTradeVariants(
+  variantsLoaded: boolean,
+  selectedTradeNameKey: string | null,
+): boolean {
+  return !variantsLoaded && selectedTradeNameKey === null;
+}
+
+export function shouldShowPrimarySearchSpinner(
+  isUpdating: boolean,
+  isBaseFetching: boolean,
+  _isVariantFetching: boolean,
+): boolean {
+  return isUpdating || isBaseFetching;
+}
 export const CATALOG_QUERY_STALE_MS = 120_000;
 
 export function shouldRetryCatalogRequest(
@@ -623,6 +637,7 @@ export function GroupedRegistryResults({
 
   const exactTradeMatches = findExactTradeNameMatches(catalog, query);
   const primaryExactMatch = exactTradeMatches[0] ?? null;
+  const primaryExactVariantsLoaded = Boolean(primaryExactMatch?.trade.variants);
   const exactTradeKeys = new Set(exactTradeMatches.map(
     ({ group, trade }) => group.key + "::" + trade.key,
   ));
@@ -639,12 +654,19 @@ export function GroupedRegistryResults({
     : catalog.groups.items;
 
   useEffect(() => {
-    if (!primaryExactMatch || selectedTradeNameKey !== null) return;
+    if (
+      !primaryExactMatch ||
+      !shouldAutoLoadExactTradeVariants(
+        primaryExactVariantsLoaded,
+        selectedTradeNameKey,
+      )
+    ) return;
     onSelectTrade(primaryExactMatch.group.key, primaryExactMatch.trade.key);
   }, [
     onSelectTrade,
     primaryExactMatch?.group.key,
     primaryExactMatch?.trade.key,
+    primaryExactVariantsLoaded,
     selectedTradeNameKey,
   ]);
   useEffect(() => {
@@ -1221,7 +1243,11 @@ export default function SearchPage() {
             aria-label="Пошук у каталозі препаратів"
             data-testid="input-search-q"
           />
-          {(isUpdating || isFetching) && (
+          {shouldShowPrimarySearchSpinner(
+            isUpdating,
+            isBaseFetching,
+            isVariantFetching,
+          ) && (
             <LoaderCircle className="absolute right-12 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
           )}
           </label>

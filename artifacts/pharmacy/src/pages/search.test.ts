@@ -13,6 +13,8 @@ import {
   findExactTradeNameMatches,
   isExactTradeNameQuery,
   normalizeExactTradeName,
+  shouldAutoLoadExactTradeVariants,
+  shouldShowPrimarySearchSpinner,
   applyPastedQuery,
   catalogQueryDebounceMs,
   CATALOG_QUERY_DEBOUNCE_MS,
@@ -408,6 +410,14 @@ describe("registry catalog UI", () => {
     );
     expect(isExactTradeNameQuery("Нурофен", "НУРОФЕН™")).toBe(true);
     expect(isExactTradeNameQuery("Енап", "Еналаприл")).toBe(false);
+  });
+  it("does not refetch embedded exact variants or keep the primary spinner active", () => {
+    expect(shouldAutoLoadExactTradeVariants(true, null)).toBe(false);
+    expect(shouldAutoLoadExactTradeVariants(false, null)).toBe(true);
+    expect(shouldAutoLoadExactTradeVariants(false, "trade-selected")).toBe(false);
+    expect(shouldShowPrimarySearchSpinner(false, false, true)).toBe(false);
+    expect(shouldShowPrimarySearchSpinner(false, true, false)).toBe(true);
+    expect(shouldShowPrimarySearchSpinner(true, false, false)).toBe(true);
   });
   it("renders composition and trade-name hierarchy before variants", () => {
     const catalog: NonNullable<CatalogSearchResponse["registryGroups"]> = {
