@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ComparisonProductRef } from "@/hooks/use-product-comparison";
-import {
-  EVIDENCE_COMPARISON_COVERAGE,
-  potentialUnorderedPairs,
-} from "./evidence-comparison-coverage";
+import evidenceRegistryIndex from "./evidence-comparison-registry-index.json";
 import {
   EVIDENCE_REGISTRY,
   EVIDENCE_REVIEWED_AT,
@@ -195,19 +192,15 @@ describe("generic evidence registry and resolver", () => {
     }
   });
 
-  it("reports complete catalog denominator and fail-closed evidence coverage", () => {
-    expect(potentialUnorderedPairs(1_638)).toBe(1_340_703);
-    expect(EVIDENCE_COMPARISON_COVERAGE.counts).toEqual({
-      normalizedInnExpressions: 1_638,
-      therapeuticClasses: 545,
-      potentialInnPairs: 1_340_703,
-      verifiedEvidenceRecords: 3,
-      verifiedInnPairs: 3,
-      insufficientEvidencePairs: 1_340_700,
-    });
-    expect(EVIDENCE_COMPARISON_COVERAGE.officialRegistry).toMatchObject({
-      validRows: 16_533,
-      invalidRows: 0,
-    });
+  it("keeps the generator index synchronized with the generic evidence registry", () => {
+    expect(evidenceRegistryIndex.records).toEqual(
+      EVIDENCE_REGISTRY.map((record) => ({
+        id: record.id,
+        comparatorInnKeys: record.comparators.map(
+          (comparator) => comparator.exactInnAliases[0],
+        ),
+        indicationIds: [record.indication.id],
+      })),
+    );
   });
 });
