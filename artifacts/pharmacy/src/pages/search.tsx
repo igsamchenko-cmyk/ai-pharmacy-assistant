@@ -26,7 +26,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Columns3,
   Database,
   Filter,
   FlaskConical,
@@ -40,6 +39,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ReportIssueButton } from "@/components/report-issue-button";
+import { ProductCompareButton } from "@/components/product-compare-button";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
 
@@ -233,12 +233,11 @@ export function ProductActions({ product }: { product: RegistryProductResult }) 
           Взаємодії
         </a>
       </Button>
-      <Button asChild size="sm" variant="outline" className="min-h-10 min-w-0 px-2 sm:px-3">
-        <a href="/compare" data-testid={`compare-action-${product.id}`}>
-          <Columns3 className="h-4 w-4" />
-          Порівняти
-        </a>
-      </Button>
+      <ProductCompareButton
+        product={product}
+        conciseForm={conciseDosageForm(product.dosageForm)}
+        className="min-h-10 min-w-0 px-2 sm:px-3"
+      />
     </div>
   );
 }
