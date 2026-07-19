@@ -152,7 +152,7 @@ export const CLINICAL_EVIDENCE_COMPARISONS: readonly ClinicalEvidenceComparison[
     ],
     comparisonType:
       "Пряме рандомізоване single-dose порівняння в моделі стоматологічного болю плюс непряма class-level evidence для інших типів гострого болю.",
-    confidence: "moderate",
+    confidence: "low",
     confidenceRationale:
       "Помірна для короткочасного полегшення післяопераційного стоматологічного болю; низька для універсального порівняння всіх причин гострого болю та серйозних ризиків.",
     neutralConclusion:

@@ -81,4 +81,14 @@ describe("clinical evidence comparison registry", () => {
       expect(comparison.keyRisks.length).toBeGreaterThan(1);
     }
   });
+
+
+  it("does not overstate confidence for the broad acute-pain comparison", () => {
+    const comparison = CLINICAL_EVIDENCE_COMPARISONS.find(
+      (item) => item.id === "ibuprofen-naproxen-acute-pain",
+    );
+    expect(comparison?.confidence).toBe("low");
+    expect(comparison?.confidenceRationale).toContain("стоматологічного болю");
+    expect(comparison?.confidenceRationale).toContain("низька");
+  });
 });
