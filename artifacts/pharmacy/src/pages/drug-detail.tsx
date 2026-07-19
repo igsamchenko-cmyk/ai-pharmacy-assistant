@@ -36,6 +36,8 @@ export default function DrugDetail() {
         id: drug.id,
         brandName: drug.brandName,
         inn: drug.inn,
+        dosage: drug.dosage,
+        form: drug.form,
       });
     }
   }, [drug]);
@@ -127,6 +129,8 @@ export default function DrugDetail() {
                     id: drug.id,
                     brandName: drug.brandName,
                     inn: drug.inn,
+                    dosage: drug.dosage,
+                    form: drug.form,
                   })
                 }
                 className="p-2 rounded-full hover:bg-accent transition-colors"

@@ -21,6 +21,7 @@ import Hospital from "@/pages/hospital";
 import AiReference from "@/pages/ai-reference";
 import Scan from "@/pages/scan";
 import History from "@/pages/history";
+import Favorites from "@/pages/favorites";
 import About from "@/pages/about";
 import DataQuality from "@/pages/data-quality";
 import ReviewQueue from "@/pages/review";
@@ -38,6 +39,7 @@ const ProtectedHospital = () => <ProtectedRoute component={Hospital} />;
 const ProtectedAiReference = () => <ProtectedRoute component={AiReference} />;
 const ProtectedScan = () => <ProtectedRoute component={Scan} />;
 const ProtectedHistory = () => <ProtectedRoute component={History} />;
+const ProtectedFavorites = () => <ProtectedRoute component={Favorites} />;
 const ProtectedDataQuality = () => (
   <ProtectedRoute component={DataQuality} minRole="reviewer" />
 );
@@ -68,6 +70,7 @@ function Router() {
           <Route path="/ai" component={ProtectedAiReference} />
           <Route path="/scan" component={ProtectedScan} />
           <Route path="/history" component={ProtectedHistory} />
+          <Route path="/favorites" component={ProtectedFavorites} />
           <Route path="/data-quality" component={ProtectedDataQuality} />
           <Route path="/review" component={ProtectedReviewQueue} />
           <Route path="/beta-dashboard" component={ProtectedBetaDashboard} />

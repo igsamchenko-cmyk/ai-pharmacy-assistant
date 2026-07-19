@@ -130,6 +130,8 @@ export default function Hospital() {
                           id: drug.id,
                           brandName: drug.brandName,
                           inn: drug.inn,
+                          dosage: drug.dosage,
+                          form: drug.form,
                         })
                       }
                       className="p-2 rounded-full hover:bg-accent shrink-0"

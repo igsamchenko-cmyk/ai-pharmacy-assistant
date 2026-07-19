@@ -91,10 +91,16 @@ export default function Home() {
       desc: "Розпізнати препарат по фото",
     },
     {
+      href: "/favorites",
+      icon: Star,
+      title: "Обране",
+      desc: "Збережені препарати у цьому браузері",
+    },
+    {
       href: "/history",
       icon: Clock,
       title: "Історія",
-      desc: "Останні запити та пошуки",
+      desc: "Останні 20 переглянутих препаратів",
     },
   ];
 

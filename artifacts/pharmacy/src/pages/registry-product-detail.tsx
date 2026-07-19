@@ -21,7 +21,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { conciseDosageForm } from "@/pages/search";
-import { recordRecentlyViewed, useFavorites } from "@/hooks/use-favorites";
+import {
+  recordRecentlyViewed,
+  removeStaleDrugRef,
+  type DrugRef,
+  useFavorites,
+} from "@/hooks/use-favorites";
 import {
   REGISTRY_PRODUCT_ID_PATTERN,
   registrationFromSearch,
@@ -63,6 +68,21 @@ function manufacturerText(product: RegistryProductResult): string {
         .map((item) => [item.name, item.country].filter(Boolean).join(", "))
         .join("; ")
     : "Не зазначено";
+}
+
+export function registryProductDrugRef(
+  product: RegistryProductResult,
+): DrugRef {
+  return {
+    id: product.id,
+    brandName: product.tradeName,
+    inn: product.inn || product.activeIngredient,
+    dosage: product.strength ?? undefined,
+    form: conciseDosageForm(product.dosageForm),
+    manufacturer: manufacturerText(product),
+    registration: product.registration.number,
+    href: registryProductDetailHref(product),
+  };
 }
 
 function ExpandableSection({
@@ -484,13 +504,19 @@ export default function RegistryProductDetail() {
 
   useEffect(() => {
     if (!product) return;
-    recordRecentlyViewed({
-      id: product.id,
-      brandName: product.tradeName,
-      inn: product.inn || product.activeIngredient,
-      href: registryProductDetailHref(product),
-    });
+    recordRecentlyViewed(registryProductDrugRef(product));
   }, [product]);
+
+  useEffect(() => {
+    if (!validRoute || isLoading || isError || !data || product) return;
+    removeStaleDrugRef(
+      productId,
+      registryProductDetailHref({
+        id: productId,
+        registration: { number: registration },
+      }),
+    );
+  }, [data, isError, isLoading, product, productId, registration, validRoute]);
 
   if (!validRoute) return <RegistryProductError invalid />;
   if (isLoading) return <RegistryProductDetailSkeleton />;
@@ -515,12 +541,7 @@ export default function RegistryProductDetail() {
       product={product}
       favorite={isFavorite(product.id)}
       onToggleFavorite={() =>
-        toggleFavorite({
-          id: product.id,
-          brandName: product.tradeName,
-          inn: product.inn || product.activeIngredient,
-          href: registryProductDetailHref(product),
-        })
+        toggleFavorite(registryProductDrugRef(product))
       }
     />
   );
