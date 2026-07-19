@@ -7,6 +7,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
 import { AuthProvider } from "@/lib/auth";
+import { CatalogClientIndexProvider } from "@/lib/catalog-client-index";
 import { ProtectedRoute } from "@/components/protected-route";
 
 import Home from "@/pages/home";
@@ -46,9 +47,15 @@ const ProtectedDataQuality = () => (
 const ProtectedReviewQueue = () => (
   <ProtectedRoute component={ReviewQueue} minRole="reviewer" />
 );
-const ProtectedBetaDashboard = () => <ProtectedRoute component={BetaDashboard} />;
-const ProtectedDrugInstruction = () => <ProtectedRoute component={DrugInstruction} />;
-const ProtectedRegistryProductDetail = () => <ProtectedRoute component={RegistryProductDetail} />;
+const ProtectedBetaDashboard = () => (
+  <ProtectedRoute component={BetaDashboard} />
+);
+const ProtectedDrugInstruction = () => (
+  <ProtectedRoute component={DrugInstruction} />
+);
+const ProtectedRegistryProductDetail = () => (
+  <ProtectedRoute component={RegistryProductDetail} />
+);
 const AccessDeniedRoute = () => <AccessDenied />;
 
 function Router() {
@@ -60,8 +67,14 @@ function Router() {
           <Route path="/login" component={LoginPage} />
           <Route path="/access-denied" component={AccessDeniedRoute} />
           <Route path="/search" component={ProtectedSearch} />
-          <Route path="/instructions/:productId" component={ProtectedDrugInstruction} />
-          <Route path="/products/:productId" component={ProtectedRegistryProductDetail} />
+          <Route
+            path="/instructions/:productId"
+            component={ProtectedDrugInstruction}
+          />
+          <Route
+            path="/products/:productId"
+            component={ProtectedRegistryProductDetail}
+          />
           <Route path="/drug/:id" component={ProtectedDrugDetail} />
           <Route path="/analogs/:id" component={ProtectedAnalogs} />
           <Route path="/interactions" component={ProtectedInteractions} />
@@ -87,12 +100,14 @@ function App() {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <TooltipProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
-            </WouterRouter>
-            <Toaster />
-          </TooltipProvider>
+          <CatalogClientIndexProvider>
+            <TooltipProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <Router />
+              </WouterRouter>
+              <Toaster />
+            </TooltipProvider>
+          </CatalogClientIndexProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

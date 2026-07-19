@@ -976,6 +976,51 @@ export interface RegistryProductPage {
   hasNext: boolean;
 }
 
+/**
+ * @minItems 6
+ * @maxItems 6
+ * @items.maxLength 500
+ */
+export type CatalogClientIndexRow = string[];
+
+/**
+ * @minItems 2
+ * @maxItems 2
+ * @items.maxLength 500
+ */
+export type CatalogClientIndexAliasRow = string[];
+
+export type CatalogClientIndexResponseVersion = typeof CatalogClientIndexResponseVersion[keyof typeof CatalogClientIndexResponseVersion];
+
+
+export const CatalogClientIndexResponseVersion = {
+  NUMBER_1: 1,
+} as const;
+
+export interface CatalogClientIndexResponse {
+  version: CatalogClientIndexResponseVersion;
+  /** @pattern ^[a-f0-9]{64}$ */
+  snapshotHash: string;
+  generatedAt: string;
+  /**
+     * @minimum 1
+     * @maximum 20000
+     */
+  productCount: number;
+  /**
+     * @minimum 0
+     * @maximum 5000
+     */
+  aliasCount: number;
+  /**
+     * @minItems 1
+     * @maxItems 20000
+     */
+  rows: CatalogClientIndexRow[];
+  /** @maxItems 5000 */
+  aliases: CatalogClientIndexAliasRow[];
+}
+
 export type CatalogSearchResponseType = typeof CatalogSearchResponseType[keyof typeof CatalogSearchResponseType];
 
 

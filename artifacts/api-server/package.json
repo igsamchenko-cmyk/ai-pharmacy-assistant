@@ -37,6 +37,7 @@
     "knowledge:registry:sync-summary": "tsx src/scripts/knowledge-registry-sync-summary.ts",
     "knowledge:catalog:completeness-report": "tsx src/scripts/knowledge-catalog-completeness-report.ts",
     "knowledge:catalog:search-coverage-report": "tsx src/scripts/knowledge-catalog-search-coverage-report.ts",
+    "knowledge:catalog:client-index-benchmark": "tsx src/scripts/knowledge-catalog-client-index-benchmark.ts",
     "knowledge:evidence:coverage-report": "tsx src/scripts/knowledge-evidence-comparison-coverage-report.ts",
     "knowledge:candidates:generate": "tsx src/scripts/knowledge-candidates-generate.ts",
     "knowledge:candidates:preview": "tsx src/scripts/knowledge-candidates-preview.ts",
@@ -54,6 +55,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.10.0",
+    "@workspace/catalog-index": "workspace:*",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
     "cookie-parser": "^1.4.7",

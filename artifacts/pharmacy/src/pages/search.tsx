@@ -42,13 +42,20 @@ import { ReportIssueButton } from "@/components/report-issue-button";
 import { ProductCompareButton } from "@/components/product-compare-button";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
+import { LocalCatalogResults } from "@/components/local-catalog-results";
+import { useCatalogClientIndex } from "@/lib/catalog-client-index";
 
 type SearchType = "all" | "ingredients" | "registry_products";
 type RegistrationStatus = "active" | "terminated" | "unknown";
 type PageSize = 25 | 50;
 type CompositionFilter = "all" | "monotherapy" | "combination";
 type MappingFilter = "all" | "approved" | "unmapped";
-type NationalListFilter = "all" | "exact" | "ingredient_only" | "uncertain" | "not_listed";
+type NationalListFilter =
+  | "all"
+  | "exact"
+  | "ingredient_only"
+  | "uncertain"
+  | "not_listed";
 
 const SEARCH_TYPES: Array<{ value: SearchType; label: string }> = [
   { value: "all", label: "Усі" },
@@ -81,16 +88,21 @@ export function conciseDosageForm(value: string): string {
     normalized.search(PHARMACEUTICAL_BULK_DETAILS_PATTERN),
   ].filter((index) => index >= 0);
   const end = cutPoints.length ? Math.min(...cutPoints) : normalized.length;
-  return normalized.slice(0, end).trim().replace(/[,:;\-\s]+$/gu, "");
+  return normalized
+    .slice(0, end)
+    .trim()
+    .replace(/[,:;\-\s]+$/gu, "");
 }
 
 export function conciseDosageForms(values: readonly string[]): string[] {
-  return [...new Map(
-    values
-      .map(conciseDosageForm)
-      .filter(Boolean)
-      .map((value) => [value.toLocaleLowerCase("uk-UA"), value] as const),
-  ).values()];
+  return [
+    ...new Map(
+      values
+        .map(conciseDosageForm)
+        .filter(Boolean)
+        .map((value) => [value.toLocaleLowerCase("uk-UA"), value] as const),
+    ).values(),
+  ];
 }
 
 export const REGISTRY_CATALOG_SAFETY_COPY =
@@ -112,15 +124,26 @@ export function isCatalogQueryEnabled(value: string): boolean {
   const length = value.trim().length;
   return length === 0 || length >= 3;
 }
+export function shouldUseServerCatalogSearch(
+  status: "idle" | "loading" | "ready" | "error",
+  hasServerOnlyFilters: boolean,
+  query: string,
+): boolean {
+  return (
+    (status === "error" || hasServerOnlyFilters) && isCatalogQueryEnabled(query)
+  );
+}
 
 export function shouldDisplayCatalogResponse(
   draft: string,
   effective: string,
   isPlaceholder: boolean,
 ): boolean {
-  return draft.trim() === effective.trim() &&
+  return (
+    draft.trim() === effective.trim() &&
     isCatalogQueryEnabled(effective) &&
-    !isPlaceholder;
+    !isPlaceholder
+  );
 }
 
 export function shouldPreserveCatalogResults(
@@ -129,9 +152,9 @@ export function shouldPreserveCatalogResults(
   isUpdating: boolean,
   isPlaceholder: boolean,
 ): boolean {
-  return hasData &&
-    isCatalogQueryEnabled(draft) &&
-    (isUpdating || isPlaceholder);
+  return (
+    hasData && isCatalogQueryEnabled(draft) && (isUpdating || isPlaceholder)
+  );
 }
 
 export function applyPastedQuery(
@@ -162,7 +185,7 @@ function initialSearchState(): { q: string; type: SearchType } {
   return {
     q: params.get("q") ?? "",
     type: SEARCH_TYPES.some((item) => item.value === requestedType)
-      ? requestedType as SearchType
+      ? (requestedType as SearchType)
       : "all",
   };
 }
@@ -174,7 +197,9 @@ function statusLabel(status: RegistryProductResult["registration"]["status"]) {
 }
 
 function registryComposition(product: RegistryProductResult): string {
-  return product.inn || product.activeIngredient || "Склад у реєстрі не зазначено";
+  return (
+    product.inn || product.activeIngredient || "Склад у реєстрі не зазначено"
+  );
 }
 
 export function InstructionAvailabilityBadge({
@@ -191,13 +216,16 @@ export function InstructionAvailabilityBadge({
       className="gap-1 whitespace-normal text-left"
       data-testid={`instruction-badge-${productId}`}
     >
-      <BookOpenText className="h-3 w-3 shrink-0" />
-      Є інструкція
+      <BookOpenText className="h-3 w-3 shrink-0" />Є інструкція
     </Badge>
   );
 }
 
-export function InstructionAction({ product }: { product: RegistryProductResult }) {
+export function InstructionAction({
+  product,
+}: {
+  product: RegistryProductResult;
+}) {
   if (!product.instructionAvailable) return null;
   return (
     <Button
@@ -216,7 +244,11 @@ export function InstructionAction({ product }: { product: RegistryProductResult 
   );
 }
 
-export function ProductActions({ product }: { product: RegistryProductResult }) {
+export function ProductActions({
+  product,
+}: {
+  product: RegistryProductResult;
+}) {
   return (
     <div
       className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap"
@@ -227,8 +259,16 @@ export function ProductActions({ product }: { product: RegistryProductResult }) 
           <InstructionAction product={product} />
         </div>
       ) : null}
-      <Button asChild size="sm" variant="outline" className="min-h-10 min-w-0 px-2 sm:px-3">
-        <a href="/interactions" data-testid={`interaction-action-${product.id}`}>
+      <Button
+        asChild
+        size="sm"
+        variant="outline"
+        className="min-h-10 min-w-0 px-2 sm:px-3"
+      >
+        <a
+          href="/interactions"
+          data-testid={`interaction-action-${product.id}`}
+        >
           <GitCompare className="h-4 w-4" />
           Взаємодії
         </a>
@@ -243,9 +283,17 @@ export function ProductActions({ product }: { product: RegistryProductResult }) 
 }
 export function SearchLoadingSkeletons() {
   return (
-    <div className="grid gap-3" aria-label="Завантаження каталогу" data-testid="search-skeletons">
+    <div
+      className="grid gap-3"
+      aria-label="Завантаження каталогу"
+      data-testid="search-skeletons"
+    >
       {Array.from({ length: 3 }).map((_, index) => (
-        <Card key={index} className="max-w-full overflow-hidden rounded-2xl" data-testid="search-skeleton-card">
+        <Card
+          key={index}
+          className="max-w-full overflow-hidden rounded-2xl"
+          data-testid="search-skeleton-card"
+        >
           <CardContent className="space-y-4 p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1 space-y-2">
@@ -274,7 +322,10 @@ function NationalListBadge({ product }: { product: RegistryProductResult }) {
   if (product.nationalListStatus === "not_applicable") return null;
   if (product.nationalListStatus === "exact") {
     return (
-      <Badge className="gap-1 whitespace-normal" data-testid="national-list-exact">
+      <Badge
+        className="gap-1 whitespace-normal"
+        data-testid="national-list-exact"
+      >
         <CheckCircle2 className="h-3 w-3" />
         Нацперелік
       </Badge>
@@ -305,7 +356,8 @@ export function RegistryProductCard({
   query: string;
   showReportIssue?: boolean;
 }) {
-  const approved = product.mappingStatus === "approved" && product.approvedMapping;
+  const approved =
+    product.mappingStatus === "approved" && product.approvedMapping;
   const displayForm = conciseDosageForm(product.dosageForm);
   const manufacturerText = product.manufacturers.length
     ? product.manufacturers
@@ -334,7 +386,8 @@ export function RegistryProductCard({
               </a>
             </h3>
             <p className="mt-0.5 break-words text-xs text-muted-foreground">
-              {product.registration.number || "Реєстраційний номер не зазначено"}
+              {product.registration.number ||
+                "Реєстраційний номер не зазначено"}
             </p>
           </div>
           <Badge variant="outline" className="shrink-0 text-[11px]">
@@ -342,9 +395,15 @@ export function RegistryProductCard({
           </Badge>
         </div>
 
-        <div className="flex min-w-0 flex-wrap gap-1.5" aria-label="Форма та дозування">
+        <div
+          className="flex min-w-0 flex-wrap gap-1.5"
+          aria-label="Форма та дозування"
+        >
           {product.strength ? (
-            <Badge className="max-w-full whitespace-normal" data-testid={`dosage-chip-${product.id}`}>
+            <Badge
+              className="max-w-full whitespace-normal"
+              data-testid={`dosage-chip-${product.id}`}
+            >
               {product.strength}
             </Badge>
           ) : null}
@@ -365,7 +424,8 @@ export function RegistryProductCard({
         </div>
 
         <p className="break-words text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">Виробник:</span> {manufacturerText}
+          <span className="font-medium text-foreground">Виробник:</span>{" "}
+          {manufacturerText}
         </p>
 
         <div data-testid={`instruction-discovery-${product.id}`}>
@@ -386,51 +446,111 @@ export function RegistryProductCard({
                 <Database className="h-3 w-3" />
                 Державний реєстр
               </Badge>
-              <Badge variant={approved ? "default" : "outline"} className="gap-1 whitespace-normal text-left">
-                {approved ? <CheckCircle2 className="h-3 w-3" /> : <ShieldAlert className="h-3 w-3" />}
-                {approved ? "Підтверджено" : "Реєстровий запис — mapping не підтверджений"}
+              <Badge
+                variant={approved ? "default" : "outline"}
+                className="gap-1 whitespace-normal text-left"
+              >
+                {approved ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : (
+                  <ShieldAlert className="h-3 w-3" />
+                )}
+                {approved
+                  ? "Підтверджено"
+                  : "Реєстровий запис — mapping не підтверджений"}
               </Badge>
               {product.sourceRecordCount > 1 ? (
-                <Badge variant="outline">Джерельних записів: {product.sourceRecordCount}</Badge>
+                <Badge variant="outline">
+                  Джерельних записів: {product.sourceRecordCount}
+                </Badge>
               ) : null}
             </div>
 
             <dl className="grid min-w-0 gap-3 text-sm sm:grid-cols-2">
               <div className="min-w-0">
-                <dt className="text-xs font-medium text-muted-foreground">Реєстрове МНН / склад</dt>
-                <dd className="mt-1 break-words">{registryComposition(product)}</dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-xs font-medium text-muted-foreground">Форма та дозування</dt>
+                <dt className="text-xs font-medium text-muted-foreground">
+                  Реєстрове МНН / склад
+                </dt>
                 <dd className="mt-1 break-words">
-                  {[displayForm, product.strength].filter(Boolean).join(", ") || "не зазначено"}
+                  {registryComposition(product)}
                 </dd>
               </div>
               <div className="min-w-0">
-                <dt className="text-xs font-medium text-muted-foreground">Реєстрація</dt>
+                <dt className="text-xs font-medium text-muted-foreground">
+                  Форма та дозування
+                </dt>
+                <dd className="mt-1 break-words">
+                  {[displayForm, product.strength].filter(Boolean).join(", ") ||
+                    "не зазначено"}
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-xs font-medium text-muted-foreground">
+                  Реєстрація
+                </dt>
                 <dd className="mt-1 break-words">
                   {product.registration.number || "номер не зазначено"}
                   <span className="block text-xs text-muted-foreground">
                     {statusLabel(product.registration.status)}
-                    {product.registration.endDate ? ` до ${product.registration.endDate}` : ""}
+                    {product.registration.endDate
+                      ? ` до ${product.registration.endDate}`
+                      : ""}
                   </span>
                 </dd>
               </div>
             </dl>
 
             {product.nationalListStatus !== "not_applicable" ? (
-              <div className="border-y py-3 text-sm" data-testid="national-list-details">
+              <div
+                className="border-y py-3 text-sm"
+                data-testid="national-list-details"
+              >
                 <p className="font-medium">Національний перелік</p>
-                <p className="mt-1 text-muted-foreground">{product.nationalListMatchReason}</p>
+                <p className="mt-1 text-muted-foreground">
+                  {product.nationalListMatchReason}
+                </p>
                 {product.nationalListMatchDetails ? (
                   <dl className="mt-3 grid gap-2 sm:grid-cols-2">
-                    <div><dt className="text-xs text-muted-foreground">МНН / комбінація</dt><dd>{product.nationalListMatchDetails.officialName}</dd></div>
-                    <div><dt className="text-xs text-muted-foreground">Форма / route / strength</dt><dd>{product.nationalListMatchDetails.formMatch} / {product.nationalListMatchDetails.routeMatch} / {product.nationalListMatchDetails.strengthMatch}</dd></div>
-                    {product.nationalListSection ? <div><dt className="text-xs text-muted-foreground">Розділ</dt><dd>{product.nationalListSection}</dd></div> : null}
+                    <div>
+                      <dt className="text-xs text-muted-foreground">
+                        МНН / комбінація
+                      </dt>
+                      <dd>{product.nationalListMatchDetails.officialName}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">
+                        Форма / route / strength
+                      </dt>
+                      <dd>
+                        {product.nationalListMatchDetails.formMatch} /{" "}
+                        {product.nationalListMatchDetails.routeMatch} /{" "}
+                        {product.nationalListMatchDetails.strengthMatch}
+                      </dd>
+                    </div>
+                    {product.nationalListSection ? (
+                      <div>
+                        <dt className="text-xs text-muted-foreground">
+                          Розділ
+                        </dt>
+                        <dd>{product.nationalListSection}</dd>
+                      </div>
+                    ) : null}
                     {product.nationalListSource ? (
                       <div>
-                        <dt className="text-xs text-muted-foreground">Нормативний акт</dt>
-                        <dd><a className="underline underline-offset-2" href={product.nationalListSource.url} target="_blank" rel="noreferrer">Постанова №{product.nationalListSource.actNumber}, редакція {product.nationalListSource.revisionDate}</a></dd>
+                        <dt className="text-xs text-muted-foreground">
+                          Нормативний акт
+                        </dt>
+                        <dd>
+                          <a
+                            className="underline underline-offset-2"
+                            href={product.nationalListSource.url}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Постанова №{product.nationalListSource.actNumber},
+                            редакція {product.nationalListSource.revisionDate}
+                          </a>
+                        </dd>
                       </div>
                     ) : null}
                   </dl>
@@ -440,23 +560,34 @@ export function RegistryProductCard({
 
             {product.atcCode ? (
               <p className="break-words text-xs text-muted-foreground">
-                ATC: <span className="font-mono text-foreground">{product.atcCode}</span>
+                ATC:{" "}
+                <span className="font-mono text-foreground">
+                  {product.atcCode}
+                </span>
               </p>
             ) : null}
 
-            <div className={approved ? "border-l-2 border-primary pl-3 text-sm" : "border-l-2 border-amber-500 pl-3 text-sm"}>
+            <div
+              className={
+                approved
+                  ? "border-l-2 border-primary pl-3 text-sm"
+                  : "border-l-2 border-amber-500 pl-3 text-sm"
+              }
+            >
               {approved ? (
                 <>
                   <p className="font-medium">Внутрішній ingredient mapping</p>
                   <p className="mt-1 break-words text-muted-foreground">
-                    {approved.inn}{approved.latin ? ` / ${approved.latin}` : ""}
+                    {approved.inn}
+                    {approved.latin ? ` / ${approved.latin}` : ""}
                   </p>
                 </>
               ) : (
                 <>
                   <p className="font-medium">Підтвердженого mapping немає</p>
                   <p className="mt-1 text-muted-foreground">
-                    Офіційне реєстрове МНН показано як дані реєстру. Воно не підміняє перевірений внутрішній ingredient mapping.
+                    Офіційне реєстрове МНН показано як дані реєстру. Воно не
+                    підміняє перевірений внутрішній ingredient mapping.
                   </p>
                 </>
               )}
@@ -483,7 +614,11 @@ export function RegistryProductCard({
   );
 }
 
-function IngredientCard({ ingredient }: { ingredient: CatalogIngredientResult }) {
+function IngredientCard({
+  ingredient,
+}: {
+  ingredient: CatalogIngredientResult;
+}) {
   return (
     <Card data-testid={`ingredient-result-${ingredient.ingredientId}`}>
       <CardContent className="p-4 flex items-start gap-3">
@@ -502,7 +637,10 @@ function IngredientCard({ ingredient }: { ingredient: CatalogIngredientResult })
           {[ingredient.latin, ingredient.english]
             .filter(Boolean)
             .map((name) => (
-              <p key={name} className="mt-1 text-sm text-muted-foreground break-words">
+              <p
+                key={name}
+                className="mt-1 text-sm text-muted-foreground break-words"
+              >
                 {name}
               </p>
             ))}
@@ -524,9 +662,13 @@ function IngredientCard({ ingredient }: { ingredient: CatalogIngredientResult })
   );
 }
 
-type GroupedRegistryCatalog = NonNullable<CatalogSearchResponse["registryGroups"]>;
-type RegistryCompositionGroup = GroupedRegistryCatalog["groups"]["items"][number];
-type RegistryTradeNameGroup = RegistryCompositionGroup["tradeNames"]["items"][number];
+type GroupedRegistryCatalog = NonNullable<
+  CatalogSearchResponse["registryGroups"]
+>;
+type RegistryCompositionGroup =
+  GroupedRegistryCatalog["groups"]["items"][number];
+type RegistryTradeNameGroup =
+  RegistryCompositionGroup["tradeNames"]["items"][number];
 
 export function normalizeExactTradeName(value: string): string {
   return value
@@ -539,9 +681,15 @@ export function normalizeExactTradeName(value: string): string {
     .replace(/\s+/gu, " ");
 }
 
-export function isExactTradeNameQuery(query: string, tradeName: string): boolean {
+export function isExactTradeNameQuery(
+  query: string,
+  tradeName: string,
+): boolean {
   const normalizedQuery = normalizeExactTradeName(query);
-  return Boolean(normalizedQuery) && normalizedQuery === normalizeExactTradeName(tradeName);
+  return (
+    Boolean(normalizedQuery) &&
+    normalizedQuery === normalizeExactTradeName(tradeName)
+  );
 }
 
 export function findExactTradeNameMatches(
@@ -577,7 +725,9 @@ export function shouldRetryCatalogRequest(
 ): boolean {
   if (failureCount >= 1) return false;
   const status =
-    typeof error === "object" && error !== null && "status" in error &&
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
     typeof (error as { status?: unknown }).status === "number"
       ? (error as { status: number }).status
       : null;
@@ -621,8 +771,16 @@ export function mergeCatalogVariantPage(
 }
 
 function ExactBrandCard({
-  group, trade, query, isSelected, isFetching, isVariantFetching, isVariantError,
-  onRetryVariants, onSelect, onVariantPage,
+  group,
+  trade,
+  query,
+  isSelected,
+  isFetching,
+  isVariantFetching,
+  isVariantError,
+  onRetryVariants,
+  onSelect,
+  onVariantPage,
 }: {
   group: RegistryCompositionGroup;
   trade: RegistryTradeNameGroup;
@@ -650,41 +808,87 @@ function ExactBrandCard({
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <h3 className="break-words text-xl font-bold leading-tight sm:text-2xl">{trade.tradeName}</h3>
-              <Badge className="whitespace-normal text-left">Точний збіг за торговою назвою</Badge>
-              <InstructionAvailabilityBadge productId={`trade-${trade.key}`} available={instructionAvailable} />
+              <h3 className="break-words text-xl font-bold leading-tight sm:text-2xl">
+                {trade.tradeName}
+              </h3>
+              <Badge className="whitespace-normal text-left">
+                Точний збіг за торговою назвою
+              </Badge>
+              <InstructionAvailabilityBadge
+                productId={`trade-${trade.key}`}
+                available={instructionAvailable}
+              />
             </div>
             <p className="break-words text-sm text-muted-foreground">
-              Діюча речовина: <span className="font-medium text-foreground">{group.displayName}</span>
+              Діюча речовина:{" "}
+              <span className="font-medium text-foreground">
+                {group.displayName}
+              </span>
             </p>
           </div>
           <Badge variant="secondary" className="shrink-0">
-            {numberFormatter.format(trade.summary.totalRegistryPositions)} позицій
+            {numberFormatter.format(trade.summary.totalRegistryPositions)}{" "}
+            позицій
           </Badge>
         </div>
 
         <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <div className="min-w-0 space-y-1.5">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Дозування</p>
-            <div className="flex min-w-0 flex-wrap gap-1.5" data-testid="brand-strength-chips">
-              {trade.strengths.length ? trade.strengths.map((strength) => (
-                <Badge key={strength} className="max-w-full whitespace-normal">{strength}</Badge>
-              )) : <span className="text-sm text-muted-foreground">Не зазначено</span>}
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Дозування
+            </p>
+            <div
+              className="flex min-w-0 flex-wrap gap-1.5"
+              data-testid="brand-strength-chips"
+            >
+              {trade.strengths.length ? (
+                trade.strengths.map((strength) => (
+                  <Badge
+                    key={strength}
+                    className="max-w-full whitespace-normal"
+                  >
+                    {strength}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  Не зазначено
+                </span>
+              )}
             </div>
           </div>
           <div className="min-w-0 space-y-1.5">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Лікарські форми</p>
-            <div className="flex min-w-0 flex-wrap gap-1.5" data-testid="brand-form-badges">
-              {displayForms.length ? displayForms.map((form) => (
-                <Badge key={form} variant="secondary" className="max-w-full whitespace-normal">{form}</Badge>
-              )) : <span className="text-sm text-muted-foreground">Не зазначено</span>}
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Лікарські форми
+            </p>
+            <div
+              className="flex min-w-0 flex-wrap gap-1.5"
+              data-testid="brand-form-badges"
+            >
+              {displayForms.length ? (
+                displayForms.map((form) => (
+                  <Badge
+                    key={form}
+                    variant="secondary"
+                    className="max-w-full whitespace-normal"
+                  >
+                    {form}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  Не зазначено
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         <p className="break-words text-sm text-muted-foreground">
           <span className="font-medium text-foreground">Виробник:</span>{" "}
-          {trade.manufacturers.length ? trade.manufacturers.join(", ") : "Не зазначено"}
+          {trade.manufacturers.length
+            ? trade.manufacturers.join(", ")
+            : "Не зазначено"}
         </p>
 
         {primaryProduct ? <ProductActions product={primaryProduct} /> : null}
@@ -696,43 +900,93 @@ function ExactBrandCard({
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h4 className="font-semibold">Конкретні реєстрові позиції</h4>
-              <span className="text-xs text-muted-foreground">Форма, дозування та виробник</span>
+              <span className="text-xs text-muted-foreground">
+                Форма, дозування та виробник
+              </span>
             </div>
             {trade.variants.items.map((product) => (
-              <RegistryProductCard key={product.id} product={product} query={query} />
+              <RegistryProductCard
+                key={product.id}
+                product={product}
+                query={query}
+              />
             ))}
             {trade.variants.totalPages > 1 ? (
-              <nav className="flex items-center justify-between gap-2" aria-label="Сторінки реєстрових позицій бренду">
-                <Button type="button" variant="outline" disabled={trade.variants.page <= 1 || isFetching} onClick={() => onVariantPage(Math.max(1, trade.variants!.page - 1))}>
-                  <ArrowLeft className="h-4 w-4" /><span className="sr-only sm:not-sr-only">Попередня</span>
+              <nav
+                className="flex items-center justify-between gap-2"
+                aria-label="Сторінки реєстрових позицій бренду"
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={trade.variants.page <= 1 || isFetching}
+                  onClick={() =>
+                    onVariantPage(Math.max(1, trade.variants!.page - 1))
+                  }
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="sr-only sm:not-sr-only">Попередня</span>
                 </Button>
-                <span className="text-xs text-muted-foreground">{trade.variants.page} / {trade.variants.totalPages}</span>
-                <Button type="button" variant="outline" disabled={!trade.variants.hasNext || isFetching} onClick={() => onVariantPage(trade.variants!.page + 1)}>
-                  <span className="sr-only sm:not-sr-only">Наступна</span><ArrowRight className="h-4 w-4" />
+                <span className="text-xs text-muted-foreground">
+                  {trade.variants.page} / {trade.variants.totalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!trade.variants.hasNext || isFetching}
+                  onClick={() => onVariantPage(trade.variants!.page + 1)}
+                >
+                  <span className="sr-only sm:not-sr-only">Наступна</span>
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </nav>
             ) : null}
           </div>
         ) : isSelected && isVariantFetching ? (
-          <div className="grid gap-3 border-t pt-4 animate-in motion-reduce:animate-none fade-in duration-200" aria-label="Завантаження реєстрових позицій бренду" data-testid="exact-brand-loading">
+          <div
+            className="grid gap-3 border-t pt-4 animate-in motion-reduce:animate-none fade-in duration-200"
+            aria-label="Завантаження реєстрових позицій бренду"
+            data-testid="exact-brand-loading"
+          >
             {[0, 1].map((item) => (
               <div key={item} className="space-y-3 rounded-xl border p-4">
                 <div className="h-5 w-2/3 animate-pulse motion-reduce:animate-none rounded-md bg-primary/10" />
-                <div className="flex gap-2"><div className="h-6 w-20 animate-pulse motion-reduce:animate-none rounded-full bg-primary/10" /><div className="h-6 w-28 animate-pulse motion-reduce:animate-none rounded-full bg-primary/10" /></div>
+                <div className="flex gap-2">
+                  <div className="h-6 w-20 animate-pulse motion-reduce:animate-none rounded-full bg-primary/10" />
+                  <div className="h-6 w-28 animate-pulse motion-reduce:animate-none rounded-full bg-primary/10" />
+                </div>
                 <div className="h-10 w-full animate-pulse motion-reduce:animate-none rounded-md bg-primary/10" />
               </div>
             ))}
           </div>
         ) : isSelected && isVariantError ? (
-          <div className="space-y-3 border-t pt-4" role="alert" data-testid="exact-brand-error">
-            <p className="text-sm text-muted-foreground">Не вдалося завантажити реєстрові позиції. Спробуйте ще раз.</p>
-            <Button type="button" variant="outline" className="min-h-11" onClick={onRetryVariants}>
-              <RefreshCw className="h-4 w-4" />Спробувати ще раз
+          <div
+            className="space-y-3 border-t pt-4"
+            role="alert"
+            data-testid="exact-brand-error"
+          >
+            <p className="text-sm text-muted-foreground">
+              Не вдалося завантажити реєстрові позиції. Спробуйте ще раз.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11"
+              onClick={onRetryVariants}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Спробувати ще раз
             </Button>
           </div>
         ) : (
-          <Button type="button" variant="outline" className="min-h-11 w-full sm:w-auto" onClick={onSelect}>
-            Показати конкретні реєстрові позиції <ChevronDown className="h-4 w-4" />
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11 w-full sm:w-auto"
+            onClick={onSelect}
+          >
+            Показати конкретні реєстрові позиції{" "}
+            <ChevronDown className="h-4 w-4" />
           </Button>
         )}
       </CardContent>
@@ -740,15 +994,31 @@ function ExactBrandCard({
   );
 }
 
-function BrandAlternatives({ enabled, ingredient, children }: { enabled: boolean; ingredient: string; children: React.ReactNode }) {
+function BrandAlternatives({
+  enabled,
+  ingredient,
+  children,
+}: {
+  enabled: boolean;
+  ingredient: string;
+  children: React.ReactNode;
+}) {
   if (!enabled) return <>{children}</>;
   return (
-    <details className="group max-w-full overflow-hidden rounded-2xl border bg-card/80 shadow-sm" data-testid="brand-alternatives">
+    <details
+      className="group max-w-full overflow-hidden rounded-2xl border bg-card/80 shadow-sm"
+      data-testid="brand-alternatives"
+    >
       <summary className="flex min-h-12 cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-4 py-3 font-medium sm:px-5">
         <span className="break-words">Інші препарати з {ingredient}</span>
-        <span className="flex items-center gap-2 text-xs text-muted-foreground">Розгорнути<ChevronDown className="h-4 w-4 transition-transform motion-reduce:transition-none group-open:rotate-180" /></span>
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+          Розгорнути
+          <ChevronDown className="h-4 w-4 transition-transform motion-reduce:transition-none group-open:rotate-180" />
+        </span>
       </summary>
-      <div className="space-y-5 border-t p-4 animate-in motion-reduce:animate-none fade-in slide-in-from-top-2 duration-300 sm:p-5">{children}</div>
+      <div className="space-y-5 border-t p-4 animate-in motion-reduce:animate-none fade-in slide-in-from-top-2 duration-300 sm:p-5">
+        {children}
+      </div>
     </details>
   );
 }
@@ -785,19 +1055,21 @@ export function GroupedRegistryResults({
   const exactTradeMatches = findExactTradeNameMatches(catalog, query);
   const primaryExactMatch = exactTradeMatches[0] ?? null;
   const primaryExactVariantsLoaded = Boolean(primaryExactMatch?.trade.variants);
-  const exactTradeKeys = new Set(exactTradeMatches.map(
-    ({ group, trade }) => group.key + "::" + trade.key,
-  ));
+  const exactTradeKeys = new Set(
+    exactTradeMatches.map(({ group, trade }) => group.key + "::" + trade.key),
+  );
   const remainingGroups = exactTradeMatches.length
-    ? catalog.groups.items.map((group) => ({
-        ...group,
-        tradeNames: {
-          ...group.tradeNames,
-          items: group.tradeNames.items.filter(
-            (trade) => !exactTradeKeys.has(group.key + "::" + trade.key),
-          ),
-        },
-      })).filter((group) => group.tradeNames.items.length > 0)
+    ? catalog.groups.items
+        .map((group) => ({
+          ...group,
+          tradeNames: {
+            ...group.tradeNames,
+            items: group.tradeNames.items.filter(
+              (trade) => !exactTradeKeys.has(group.key + "::" + trade.key),
+            ),
+          },
+        }))
+        .filter((group) => group.tradeNames.items.length > 0)
     : catalog.groups.items;
 
   useEffect(() => {
@@ -807,7 +1079,8 @@ export function GroupedRegistryResults({
         primaryExactVariantsLoaded,
         selectedTradeNameKey,
       )
-    ) return;
+    )
+      return;
     onSelectTrade(primaryExactMatch.group.key, primaryExactMatch.trade.key);
   }, [
     onSelectTrade,
@@ -817,7 +1090,9 @@ export function GroupedRegistryResults({
     selectedTradeNameKey,
   ]);
   useEffect(() => {
-    setOpenGroupKeys(new Set(catalog.groups.items.slice(0, 1).map((group) => group.key)));
+    setOpenGroupKeys(
+      new Set(catalog.groups.items.slice(0, 1).map((group) => group.key)),
+    );
   }, [catalog.groups.page, catalog.groups.items[0]?.key]);
 
   return (
@@ -825,7 +1100,8 @@ export function GroupedRegistryResults({
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold">Результати пошуку</h2>
         <Badge variant="secondary">
-          {numberFormatter.format(summary.totalRegistryPositions)} реєстрових позицій
+          {numberFormatter.format(summary.totalRegistryPositions)} реєстрових
+          позицій
         </Badge>
       </div>
       <details
@@ -838,13 +1114,24 @@ export function GroupedRegistryResults({
         </summary>
         <div className="space-y-3 border-t p-3 text-sm animate-in motion-reduce:animate-none fade-in duration-200">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <span>Торгові назви: {numberFormatter.format(summary.uniqueTradeNames)}</span>
-            <span>Форми: {numberFormatter.format(summary.uniqueDosageForms)}</span>
-            <span>Дозування: {numberFormatter.format(summary.uniqueStrengths)}</span>
-            <span>Виробники: {numberFormatter.format(summary.uniqueManufacturers)}</span>
+            <span>
+              Торгові назви: {numberFormatter.format(summary.uniqueTradeNames)}
+            </span>
+            <span>
+              Форми: {numberFormatter.format(summary.uniqueDosageForms)}
+            </span>
+            <span>
+              Дозування: {numberFormatter.format(summary.uniqueStrengths)}
+            </span>
+            <span>
+              Виробники: {numberFormatter.format(summary.uniqueManufacturers)}
+            </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            Монопрепарати: {numberFormatter.format(summary.monotherapyCount)}; комбінації: {numberFormatter.format(summary.combinationCount)}; підтверджені: {numberFormatter.format(summary.approvedMappedCount)}; registry-only: {numberFormatter.format(summary.unmappedCount)}.
+            Монопрепарати: {numberFormatter.format(summary.monotherapyCount)};
+            комбінації: {numberFormatter.format(summary.combinationCount)};
+            підтверджені: {numberFormatter.format(summary.approvedMappedCount)};
+            registry-only: {numberFormatter.format(summary.unmappedCount)}.
           </p>
         </div>
       </details>
@@ -872,154 +1159,291 @@ export function GroupedRegistryResults({
 
       <BrandAlternatives
         enabled={exactTradeMatches.length > 0 && remainingGroups.length > 0}
-        ingredient={primaryExactMatch?.group.displayName ?? "тією самою діючою речовиною"}
+        ingredient={
+          primaryExactMatch?.group.displayName ?? "тією самою діючою речовиною"
+        }
       >
-      {remainingGroups.map((group) => {
-        const hasOpenTrade = group.tradeNames.items.some(
-          (trade) => Boolean(trade.variants) || trade.key === selectedTradeNameKey,
-        );
-        const groupExpanded = openGroupKeys.has(group.key) || hasOpenTrade;
-        return (
-          <section key={group.key} className="space-y-3 border-b pb-5" data-testid={`composition-group-${group.key}`}>
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-semibold break-words">{group.displayName}</h3>
-                <Badge variant="outline">
-                  {group.compositionType === "monotherapy"
-                    ? "Монопрепарат"
-                    : group.compositionType === "combination"
-                      ? "Комбінація"
-                      : "Склад потребує уточнення"}
-                </Badge>
-                <Badge variant={group.mappingStatus === "approved" ? "default" : "secondary"}>
-                  {group.mappingStatus === "approved" ? "Mapping підтверджено" : "Registry-only / mixed"}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {numberFormatter.format(group.summary.totalRegistryPositions)} позицій; {numberFormatter.format(group.summary.uniqueTradeNames)} торгових назв
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                className="min-h-11 w-full justify-between sm:w-auto"
-                aria-expanded={groupExpanded}
-                onClick={() => setOpenGroupKeys((current) => {
-                  const next = new Set(current);
-                  if (next.has(group.key)) next.delete(group.key);
-                  else next.add(group.key);
-                  return next;
-                })}
-              >
-                {groupExpanded ? "Сховати торгові назви" : "Показати торгові назви"}
-                {groupExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
-            </div>
-
-            {groupExpanded ? (
+        {remainingGroups.map((group) => {
+          const hasOpenTrade = group.tradeNames.items.some(
+            (trade) =>
+              Boolean(trade.variants) || trade.key === selectedTradeNameKey,
+          );
+          const groupExpanded = openGroupKeys.has(group.key) || hasOpenTrade;
+          return (
+            <section
+              key={group.key}
+              className="space-y-3 border-b pb-5"
+              data-testid={`composition-group-${group.key}`}
+            >
               <div className="space-y-2">
-                {group.tradeNames.items.map((trade) => {
-                  const expanded = Boolean(trade.variants) || trade.key === selectedTradeNameKey;
-                  const instructionAvailable = trade.variants?.items.some(
-                    (product) => product.instructionAvailable,
-                  ) ?? false;
-                  return (
-                    <div key={trade.key} className="border-l-2 border-primary/30 pl-3">
-                      <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="h-auto min-h-11 min-w-0 flex-1 justify-between whitespace-normal px-2 text-left"
-                          onClick={() => onSelectTrade(expanded ? null : group.key, expanded ? null : trade.key)}
-                          aria-expanded={expanded}
-                        >
-                          <span className="min-w-0">
-                            <span className="block font-medium break-words">{trade.tradeName}</span>
-                            <span className="block text-xs font-normal text-muted-foreground">
-                              {numberFormatter.format(trade.summary.totalRegistryPositions)} позицій; форм: {trade.summary.uniqueDosageForms}; дозувань: {trade.summary.uniqueStrengths}; виробників: {trade.summary.uniqueManufacturers}
-                            </span>
-                          </span>
-                          {expanded ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
-                        </Button>
-                        <InstructionAvailabilityBadge
-                          productId={`trade-${trade.key}`}
-                          available={instructionAvailable}
-                        />
-                      </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-semibold break-words">
+                    {group.displayName}
+                  </h3>
+                  <Badge variant="outline">
+                    {group.compositionType === "monotherapy"
+                      ? "Монопрепарат"
+                      : group.compositionType === "combination"
+                        ? "Комбінація"
+                        : "Склад потребує уточнення"}
+                  </Badge>
+                  <Badge
+                    variant={
+                      group.mappingStatus === "approved"
+                        ? "default"
+                        : "secondary"
+                    }
+                  >
+                    {group.mappingStatus === "approved"
+                      ? "Mapping підтверджено"
+                      : "Registry-only / mixed"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {numberFormatter.format(group.summary.totalRegistryPositions)}{" "}
+                  позицій;{" "}
+                  {numberFormatter.format(group.summary.uniqueTradeNames)}{" "}
+                  торгових назв
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11 w-full justify-between sm:w-auto"
+                  aria-expanded={groupExpanded}
+                  onClick={() =>
+                    setOpenGroupKeys((current) => {
+                      const next = new Set(current);
+                      if (next.has(group.key)) next.delete(group.key);
+                      else next.add(group.key);
+                      return next;
+                    })
+                  }
+                >
+                  {groupExpanded
+                    ? "Сховати торгові назви"
+                    : "Показати торгові назви"}
+                  {groupExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
 
-                      {trade.variants ? (
-                        <div className="mt-3 grid min-w-0 gap-3 overflow-hidden animate-in motion-reduce:animate-none fade-in slide-in-from-top-2 duration-300" data-testid={`trade-variants-${trade.key}`}>
-                          {trade.variants.items.map((product) => (
-                            <RegistryProductCard key={product.id} product={product} query={query} />
-                          ))}
-                          {trade.variants.totalPages > 1 ? (
-                            <nav className="flex items-center justify-between gap-2" aria-label="Сторінки варіантів препарату">
-                              <Button type="button" variant="outline" disabled={trade.variants.page <= 1 || isFetching} onClick={() => onVariantPage(Math.max(1, trade.variants!.page - 1))}>
-                                <ArrowLeft className="h-4 w-4" /><span className="sr-only sm:not-sr-only">Попередня</span>
-                              </Button>
-                              <span className="text-xs text-muted-foreground">{trade.variants.page} / {trade.variants.totalPages}</span>
-                              <Button type="button" variant="outline" disabled={!trade.variants.hasNext || isFetching} onClick={() => onVariantPage(trade.variants!.page + 1)}>
-                                <span className="sr-only sm:not-sr-only">Наступна</span><ArrowRight className="h-4 w-4" />
-                              </Button>
-                            </nav>
-                          ) : null}
-                        </div>
-                      ) : trade.key === selectedTradeNameKey && isVariantFetching ? (
-                        <div
-                          className="mt-3 grid gap-3 animate-in motion-reduce:animate-none fade-in duration-200"
-                          aria-label="Завантаження варіантів препарату"
-                          data-testid="variant-loading"
-                        >
-                          <div className="h-32 w-full animate-pulse motion-reduce:animate-none rounded-xl bg-primary/10" />
-                          <div className="h-32 w-full animate-pulse motion-reduce:animate-none rounded-xl bg-primary/10" />
-                        </div>
-                      ) : trade.key === selectedTradeNameKey && isVariantError ? (
-                        <div
-                          className="mt-3 space-y-3 border-y py-4"
-                          role="alert"
-                          data-testid="variant-error"
-                        >
-                          <p className="text-sm text-muted-foreground">
-                            Не вдалося завантажити варіанти. Сервіс може прокидатися після паузи.
-                          </p>
+              {groupExpanded ? (
+                <div className="space-y-2">
+                  {group.tradeNames.items.map((trade) => {
+                    const expanded =
+                      Boolean(trade.variants) ||
+                      trade.key === selectedTradeNameKey;
+                    const instructionAvailable =
+                      trade.variants?.items.some(
+                        (product) => product.instructionAvailable,
+                      ) ?? false;
+                    return (
+                      <div
+                        key={trade.key}
+                        className="border-l-2 border-primary/30 pl-3"
+                      >
+                        <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <Button
                             type="button"
-                            variant="outline"
-                            className="min-h-11"
-                            onClick={onRetryVariants}
+                            variant="ghost"
+                            className="h-auto min-h-11 min-w-0 flex-1 justify-between whitespace-normal px-2 text-left"
+                            onClick={() =>
+                              onSelectTrade(
+                                expanded ? null : group.key,
+                                expanded ? null : trade.key,
+                              )
+                            }
+                            aria-expanded={expanded}
                           >
-                            <RefreshCw className="h-4 w-4" />
-                            Спробувати ще раз
+                            <span className="min-w-0">
+                              <span className="block font-medium break-words">
+                                {trade.tradeName}
+                              </span>
+                              <span className="block text-xs font-normal text-muted-foreground">
+                                {numberFormatter.format(
+                                  trade.summary.totalRegistryPositions,
+                                )}{" "}
+                                позицій; форм: {trade.summary.uniqueDosageForms}
+                                ; дозувань: {trade.summary.uniqueStrengths};
+                                виробників: {trade.summary.uniqueManufacturers}
+                              </span>
+                            </span>
+                            {expanded ? (
+                              <ChevronUp className="h-4 w-4 shrink-0" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 shrink-0" />
+                            )}
                           </Button>
+                          <InstructionAvailabilityBadge
+                            productId={`trade-${trade.key}`}
+                            available={instructionAvailable}
+                          />
                         </div>
-                      ) : null}
-                    </div>
-                  );
-                })}
-                {group.tradeNames.totalPages > 1 ? (
-                  <nav className="flex items-center justify-between gap-2 pt-2" aria-label="Сторінки торгових назв">
-                    <Button type="button" variant="outline" disabled={group.tradeNames.page <= 1 || isFetching} onClick={() => onTradePage(group.key, Math.max(1, group.tradeNames.page - 1))}>
-                      <ArrowLeft className="h-4 w-4" /><span className="sr-only sm:not-sr-only">Попередня</span>
-                    </Button>
-                    <span className="text-xs text-muted-foreground">{group.tradeNames.page} / {group.tradeNames.totalPages}</span>
-                    <Button type="button" variant="outline" disabled={!group.tradeNames.hasNext || isFetching} onClick={() => onTradePage(group.key, group.tradeNames.page + 1)}>
-                      <span className="sr-only sm:not-sr-only">Наступна</span><ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </nav>
-                ) : null}
-              </div>
-            ) : null}
-          </section>
-        );
-      })}
+
+                        {trade.variants ? (
+                          <div
+                            className="mt-3 grid min-w-0 gap-3 overflow-hidden animate-in motion-reduce:animate-none fade-in slide-in-from-top-2 duration-300"
+                            data-testid={`trade-variants-${trade.key}`}
+                          >
+                            {trade.variants.items.map((product) => (
+                              <RegistryProductCard
+                                key={product.id}
+                                product={product}
+                                query={query}
+                              />
+                            ))}
+                            {trade.variants.totalPages > 1 ? (
+                              <nav
+                                className="flex items-center justify-between gap-2"
+                                aria-label="Сторінки варіантів препарату"
+                              >
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  disabled={
+                                    trade.variants.page <= 1 || isFetching
+                                  }
+                                  onClick={() =>
+                                    onVariantPage(
+                                      Math.max(1, trade.variants!.page - 1),
+                                    )
+                                  }
+                                >
+                                  <ArrowLeft className="h-4 w-4" />
+                                  <span className="sr-only sm:not-sr-only">
+                                    Попередня
+                                  </span>
+                                </Button>
+                                <span className="text-xs text-muted-foreground">
+                                  {trade.variants.page} /{" "}
+                                  {trade.variants.totalPages}
+                                </span>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  disabled={
+                                    !trade.variants.hasNext || isFetching
+                                  }
+                                  onClick={() =>
+                                    onVariantPage(trade.variants!.page + 1)
+                                  }
+                                >
+                                  <span className="sr-only sm:not-sr-only">
+                                    Наступна
+                                  </span>
+                                  <ArrowRight className="h-4 w-4" />
+                                </Button>
+                              </nav>
+                            ) : null}
+                          </div>
+                        ) : trade.key === selectedTradeNameKey &&
+                          isVariantFetching ? (
+                          <div
+                            className="mt-3 grid gap-3 animate-in motion-reduce:animate-none fade-in duration-200"
+                            aria-label="Завантаження варіантів препарату"
+                            data-testid="variant-loading"
+                          >
+                            <div className="h-32 w-full animate-pulse motion-reduce:animate-none rounded-xl bg-primary/10" />
+                            <div className="h-32 w-full animate-pulse motion-reduce:animate-none rounded-xl bg-primary/10" />
+                          </div>
+                        ) : trade.key === selectedTradeNameKey &&
+                          isVariantError ? (
+                          <div
+                            className="mt-3 space-y-3 border-y py-4"
+                            role="alert"
+                            data-testid="variant-error"
+                          >
+                            <p className="text-sm text-muted-foreground">
+                              Не вдалося завантажити варіанти. Сервіс може
+                              прокидатися після паузи.
+                            </p>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="min-h-11"
+                              onClick={onRetryVariants}
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                              Спробувати ще раз
+                            </Button>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                  {group.tradeNames.totalPages > 1 ? (
+                    <nav
+                      className="flex items-center justify-between gap-2 pt-2"
+                      aria-label="Сторінки торгових назв"
+                    >
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={group.tradeNames.page <= 1 || isFetching}
+                        onClick={() =>
+                          onTradePage(
+                            group.key,
+                            Math.max(1, group.tradeNames.page - 1),
+                          )
+                        }
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        <span className="sr-only sm:not-sr-only">
+                          Попередня
+                        </span>
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        {group.tradeNames.page} / {group.tradeNames.totalPages}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={!group.tradeNames.hasNext || isFetching}
+                        onClick={() =>
+                          onTradePage(group.key, group.tradeNames.page + 1)
+                        }
+                      >
+                        <span className="sr-only sm:not-sr-only">Наступна</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </nav>
+                  ) : null}
+                </div>
+              ) : null}
+            </section>
+          );
+        })}
       </BrandAlternatives>
       {catalog.groups.totalPages > 1 ? (
-        <nav className="grid grid-cols-[1fr_auto_1fr] items-center gap-2" aria-label="Сторінки груп складу">
-          <Button type="button" variant="outline" className="min-h-11 justify-self-start" disabled={catalog.groups.page <= 1 || isFetching} onClick={() => onGroupPage(Math.max(1, catalog.groups.page - 1))}>
-            <ArrowLeft className="h-4 w-4" /><span className="sr-only sm:not-sr-only">Попередня</span>
+        <nav
+          className="grid grid-cols-[1fr_auto_1fr] items-center gap-2"
+          aria-label="Сторінки груп складу"
+        >
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11 justify-self-start"
+            disabled={catalog.groups.page <= 1 || isFetching}
+            onClick={() => onGroupPage(Math.max(1, catalog.groups.page - 1))}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="sr-only sm:not-sr-only">Попередня</span>
           </Button>
-          <span className="text-xs text-muted-foreground">Група {catalog.groups.page} з {catalog.groups.totalPages}</span>
-          <Button type="button" variant="outline" className="min-h-11 justify-self-end" disabled={!catalog.groups.hasNext || isFetching} onClick={() => onGroupPage(catalog.groups.page + 1)}>
-            <span className="sr-only sm:not-sr-only">Наступна</span><ArrowRight className="h-4 w-4" />
+          <span className="text-xs text-muted-foreground">
+            Група {catalog.groups.page} з {catalog.groups.totalPages}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11 justify-self-end"
+            disabled={!catalog.groups.hasNext || isFetching}
+            onClick={() => onGroupPage(catalog.groups.page + 1)}
+          >
+            <span className="sr-only sm:not-sr-only">Наступна</span>
+            <ArrowRight className="h-4 w-4" />
           </Button>
         </nav>
       ) : null}
@@ -1035,36 +1459,72 @@ export default function SearchPage() {
   const [manufacturer, setManufacturer] = useState("");
   const [form, setForm] = useState("");
   const [strength, setStrength] = useState("");
-  const [compositionType, setCompositionType] = useState<CompositionFilter>("all");
+  const [compositionType, setCompositionType] =
+    useState<CompositionFilter>("all");
   const [mappingStatus, setMappingStatus] = useState<MappingFilter>("all");
-  const [nationalListStatus, setNationalListStatus] = useState<NationalListFilter>("all");
-  const [registrationStatus, setRegistrationStatus] =
-    useState<RegistrationStatus | "all">("all");
+  const [nationalListStatus, setNationalListStatus] =
+    useState<NationalListFilter>("all");
+  const [registrationStatus, setRegistrationStatus] = useState<
+    RegistrationStatus | "all"
+  >("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [groupPage, setGroupPage] = useState(1);
   const [selectedGroupKey, setSelectedGroupKey] = useState<string | null>(null);
-  const [selectedTradeNameKey, setSelectedTradeNameKey] = useState<string | null>(null);
+  const [selectedTradeNameKey, setSelectedTradeNameKey] = useState<
+    string | null
+  >(null);
   const [tradePage, setTradePage] = useState(1);
   const [variantPage, setVariantPage] = useState(1);
   const [effectiveQ, setEffectiveQ] = useState(initial.q.trim());
 
   const queryClient = useQueryClient();
+  const clientCatalog = useCatalogClientIndex();
   const debouncedManufacturer = useDebounce(manufacturer, 200);
   const debouncedForm = useDebounce(form, 200);
   const debouncedStrength = useDebounce(strength, 200);
-  const criteriaKey = useMemo(
-    () => JSON.stringify([
-      effectiveQ,
-      debouncedManufacturer.trim(),
-      debouncedForm.trim(),
-      debouncedStrength.trim(),
+  const serverOnlyFilters =
+    Boolean(manufacturer.trim()) ||
+    mappingStatus !== "all" ||
+    nationalListStatus !== "all" ||
+    registrationStatus !== "all";
+  const shouldUseLocalCatalog =
+    clientCatalog.status === "ready" && !serverOnlyFilters;
+  const serverSearchEnabled = shouldUseServerCatalogSearch(
+    clientCatalog.status,
+    serverOnlyFilters,
+    effectiveQ,
+  );
+  const localQuery = q.trim();
+  const localResult = useMemo(
+    () =>
+      clientCatalog.search(localQuery, {
+        limit: 100,
+        form: debouncedForm,
+        strength: debouncedStrength,
+        compositionType,
+      }),
+    [
+      clientCatalog,
       compositionType,
-      mappingStatus,
-      nationalListStatus,
-      registrationStatus,
-      type,
-      pageSize,
-    ]),
+      debouncedForm,
+      debouncedStrength,
+      localQuery,
+    ],
+  );
+  const criteriaKey = useMemo(
+    () =>
+      JSON.stringify([
+        effectiveQ,
+        debouncedManufacturer.trim(),
+        debouncedForm.trim(),
+        debouncedStrength.trim(),
+        compositionType,
+        mappingStatus,
+        nationalListStatus,
+        registrationStatus,
+        type,
+        pageSize,
+      ]),
     [
       effectiveQ,
       debouncedManufacturer,
@@ -1078,7 +1538,8 @@ export default function SearchPage() {
       pageSize,
     ],
   );
-  const [paginationCriteriaKey, setPaginationCriteriaKey] = useState(criteriaKey);
+  const [paginationCriteriaKey, setPaginationCriteriaKey] =
+    useState(criteriaKey);
   const paginationIsCurrent = paginationCriteriaKey === criteriaKey;
 
   useEffect(() => {
@@ -1106,9 +1567,10 @@ export default function SearchPage() {
       type,
       page: requestedPage,
       pageSize,
-      view: effectiveQ && type !== "ingredients"
-        ? "grouped" as const
-        : "flat" as const,
+      view:
+        effectiveQ && type !== "ingredients"
+          ? ("grouped" as const)
+          : ("flat" as const),
       groupPage: requestedGroupPage,
       groupPageSize: 10 as const,
       tradePage: requestedTradePage,
@@ -1121,7 +1583,9 @@ export default function SearchPage() {
         ? { manufacturer: debouncedManufacturer.trim() }
         : {}),
       ...(debouncedForm.trim() ? { form: debouncedForm.trim() } : {}),
-      ...(debouncedStrength.trim() ? { strength: debouncedStrength.trim() } : {}),
+      ...(debouncedStrength.trim()
+        ? { strength: debouncedStrength.trim() }
+        : {}),
       compositionType,
       mappingStatus,
       nationalListStatus,
@@ -1160,11 +1624,14 @@ export default function SearchPage() {
       page: 1,
       groupPage: 1,
       tradePage: 1,
-      view: nextQ && type !== "ingredients" ? "grouped" as const : "flat" as const,
+      view:
+        nextQ && type !== "ingredients"
+          ? ("grouped" as const)
+          : ("flat" as const),
     };
     if (
       queryClient.getQueryData(getSearchCatalogQueryKey(cachedParams)) !==
-        undefined
+      undefined
     ) {
       setEffectiveQ(nextQ);
       return;
@@ -1186,12 +1653,7 @@ export default function SearchPage() {
             variantPage: requestedVariantPage,
           }
         : null,
-    [
-      params,
-      requestedGroupKey,
-      requestedTradeNameKey,
-      requestedVariantPage,
-    ],
+    [params, requestedGroupKey, requestedTradeNameKey, requestedVariantPage],
   );
 
   const {
@@ -1204,7 +1666,7 @@ export default function SearchPage() {
   } = useSearchCatalog(params, {
     query: {
       queryKey: getSearchCatalogQueryKey(params),
-      enabled: isCatalogQueryEnabled(effectiveQ),
+      enabled: serverSearchEnabled,
       placeholderData: keepPreviousData,
       retry: shouldRetryCatalogRequest,
       retryDelay: 1_000,
@@ -1222,7 +1684,7 @@ export default function SearchPage() {
   } = useSearchCatalog(variantParams ?? params, {
     query: {
       queryKey: getSearchCatalogQueryKey(variantParams ?? params),
-      enabled: Boolean(variantParams) && isCatalogQueryEnabled(effectiveQ),
+      enabled: serverSearchEnabled && Boolean(variantParams),
       placeholderData: keepPreviousData,
       retry: shouldRetryCatalogRequest,
       retryDelay: 1_000,
@@ -1233,7 +1695,7 @@ export default function SearchPage() {
   });
 
   useEffect(() => {
-    if (!data || isPlaceholderData) return;
+    if (shouldUseLocalCatalog || !data || isPlaceholderData) return;
     const activeGroup = requestedGroupKey
       ? data.registryGroups?.groups.items.find(
           (group) => group.key === requestedGroupKey,
@@ -1261,15 +1723,22 @@ export default function SearchPage() {
     params,
     queryClient,
     requestedGroupKey,
+    shouldUseLocalCatalog,
   ]);
 
   useEffect(() => {
-    if (!variantParams || !variantData || !requestedTradeNameKey) return;
+    if (
+      shouldUseLocalCatalog ||
+      !variantParams ||
+      !variantData ||
+      !requestedTradeNameKey
+    )
+      return;
     const variants = variantData.registryGroups?.groups.items
       .find((group) => group.key === requestedGroupKey)
-      ?.tradeNames.items
-      .find((trade) => trade.key === requestedTradeNameKey)
-      ?.variants;
+      ?.tradeNames.items.find(
+        (trade) => trade.key === requestedTradeNameKey,
+      )?.variants;
     if (!variants?.hasNext) return;
     const nextParams = {
       ...variantParams,
@@ -1282,6 +1751,7 @@ export default function SearchPage() {
   }, [
     queryClient,
     requestedGroupKey,
+    shouldUseLocalCatalog,
     requestedTradeNameKey,
     variantData,
     variantParams,
@@ -1301,11 +1771,11 @@ export default function SearchPage() {
     isUpdating,
     isPlaceholderData,
   );
-  const visibleData = shouldDisplayCatalogResponse(
-    q,
-    effectiveQ,
-    isPlaceholderData,
-  ) || preservePreviousResults ? data : undefined;
+  const visibleData =
+    shouldDisplayCatalogResponse(q, effectiveQ, isPlaceholderData) ||
+    preservePreviousResults
+      ? data
+      : undefined;
   const registry = visibleData?.registryProducts;
   const registryGroups = mergeCatalogVariantPage(
     visibleData?.registryGroups,
@@ -1315,12 +1785,18 @@ export default function SearchPage() {
   );
   const hasFilters =
     Boolean(manufacturer || form || strength) ||
-    compositionType !== "all" || mappingStatus !== "all" || nationalListStatus !== "all" ||
+    compositionType !== "all" ||
+    mappingStatus !== "all" ||
+    nationalListStatus !== "all" ||
     registrationStatus !== "all";
   const hasResults =
-    Boolean(visibleData?.ingredients.length) || Boolean(registry?.items.length) || Boolean(registryGroups?.groups.items.length);
+    Boolean(visibleData?.ingredients.length) ||
+    Boolean(registry?.items.length) ||
+    Boolean(registryGroups?.groups.items.length);
   const viewState = resolveCatalogViewState(
-    isCatalogQueryEnabled(effectiveQ) && (isLoading || isUpdating) && !hasResults,
+    isCatalogQueryEnabled(effectiveQ) &&
+      (isLoading || isUpdating) &&
+      !hasResults,
     queryIsCurrent && isError,
     hasResults,
   );
@@ -1338,9 +1814,7 @@ export default function SearchPage() {
       <Alert className="bg-muted/30">
         <ShieldAlert className="h-4 w-4" />
         <AlertTitle>Реєстровий запис не є медичною рекомендацією</AlertTitle>
-        <AlertDescription>
-          {REGISTRY_CATALOG_SAFETY_COPY}
-        </AlertDescription>
+        <AlertDescription>{REGISTRY_CATALOG_SAFETY_COPY}</AlertDescription>
       </Alert>
 
       <section
@@ -1350,7 +1824,22 @@ export default function SearchPage() {
       >
         <Database className="h-5 w-5 shrink-0 text-primary" />
         <div className="min-w-0">
-          <p className="font-semibold break-words">
+          <p
+            className="font-semibold break-words"
+            data-testid="catalog-ready-status"
+          >
+            {clientCatalog.status === "ready"
+              ? `Каталог готовий · ${numberFormatter.format(clientCatalog.productCount)} препаратів${clientCatalog.isRefreshing ? " · перевіряємо оновлення" : ""}`
+              : clientCatalog.status === "error"
+                ? "Локальний каталог недоступний · працює серверний fallback"
+                : "Готуємо локальний каталог..."}
+          </p>
+          {clientCatalog.status === "ready" ? (
+            <p className="text-xs text-muted-foreground">
+              Пошук виконується у браузері без запиту до API.
+            </p>
+          ) : null}
+          <p className="sr-only">
             {data
               ? `Каталог: ${numberFormatter.format(data.catalogTotal)} зареєстровані препарати`
               : "Каталог завантажується..."}
@@ -1359,64 +1848,65 @@ export default function SearchPage() {
       </section>
 
       <div className="space-y-3">
-        <div
-          className={SEARCH_STICKY_CLASS}
-          data-testid="sticky-search"
-        >
-        <form
-          className="relative block"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const nextQ = q.trim();
-            if (nextQ === effectiveQ && isCatalogQueryEnabled(nextQ)) {
-              void refetch();
-            } else {
-              setEffectiveQ(nextQ);
-            }
-          }}
-        >
-          <label>
-          <span className="sr-only">
-            Пошук за назвою, МНН, виробником або реєстраційним номером
-          </span>
-          <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Назва, МНН, виробник, реєстраційний номер..."
-            className="min-h-11 bg-card pl-9 pr-20"
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            onPaste={(event) => {
-              const next = applyPastedQuery(
-                q,
-                event.currentTarget.selectionStart,
-                event.currentTarget.selectionEnd,
-                event.clipboardData.getData("text"),
-              );
+        <div className={SEARCH_STICKY_CLASS} data-testid="sticky-search">
+          <form
+            className="relative block"
+            onSubmit={(event) => {
               event.preventDefault();
-              setQ(next);
-              setEffectiveQ(next.trim());
+              const nextQ = q.trim();
+              if (
+                !shouldUseLocalCatalog &&
+                nextQ === effectiveQ &&
+                isCatalogQueryEnabled(nextQ)
+              ) {
+                void refetch();
+              } else {
+                setEffectiveQ(nextQ);
+              }
             }}
-            aria-label="Пошук у каталозі препаратів"
-            data-testid="input-search-q"
-          />
-          {shouldShowPrimarySearchSpinner(
-            isUpdating,
-            isBaseFetching,
-            isVariantFetching,
-          ) && (
-            <LoaderCircle className="absolute right-12 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-          )}
-          </label>
-          <Button
-            type="submit"
-            size="icon"
-            className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2"
-            title="Шукати"
-            aria-label="Шукати"
           >
-            <SearchIcon className="h-4 w-4" />
-          </Button>
-        </form>
+            <label>
+              <span className="sr-only">
+                Пошук за назвою, МНН, виробником або реєстраційним номером
+              </span>
+              <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Назва, МНН, виробник, реєстраційний номер..."
+                className="min-h-11 bg-card pl-9 pr-20"
+                value={q}
+                onChange={(event) => setQ(event.target.value)}
+                onPaste={(event) => {
+                  const next = applyPastedQuery(
+                    q,
+                    event.currentTarget.selectionStart,
+                    event.currentTarget.selectionEnd,
+                    event.clipboardData.getData("text"),
+                  );
+                  event.preventDefault();
+                  setQ(next);
+                  setEffectiveQ(next.trim());
+                }}
+                aria-label="Пошук у каталозі препаратів"
+                data-testid="input-search-q"
+              />
+              {shouldShowPrimarySearchSpinner(
+                shouldUseLocalCatalog ? false : isUpdating,
+                shouldUseLocalCatalog ? false : isBaseFetching,
+                shouldUseLocalCatalog ? false : isVariantFetching,
+              ) && (
+                <LoaderCircle className="absolute right-12 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
+            </label>
+            <Button
+              type="submit"
+              size="icon"
+              className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2"
+              title="Шукати"
+              aria-label="Шукати"
+            >
+              <SearchIcon className="h-4 w-4" />
+            </Button>
+          </form>
         </div>
 
         <div
@@ -1440,12 +1930,17 @@ export default function SearchPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-1 rounded-md border bg-muted/30 p-1" aria-label="Фільтр за типом складу">
-          {([
-            ["all", "Усі"],
-            ["monotherapy", "Монопрепарати"],
-            ["combination", "Комбінації"],
-          ] as const).map(([value, label]) => (
+        <div
+          className="grid grid-cols-3 gap-1 rounded-md border bg-muted/30 p-1"
+          aria-label="Фільтр за типом складу"
+        >
+          {(
+            [
+              ["all", "Усі"],
+              ["monotherapy", "Монопрепарати"],
+              ["combination", "Комбінації"],
+            ] as const
+          ).map(([value, label]) => (
             <Button
               key={value}
               type="button"
@@ -1513,13 +2008,19 @@ export default function SearchPage() {
               <span className="font-medium">Ingredient mapping</span>
               <Select
                 value={mappingStatus}
-                onValueChange={(value) => setMappingStatus(value as MappingFilter)}
+                onValueChange={(value) =>
+                  setMappingStatus(value as MappingFilter)
+                }
               >
-                <SelectTrigger className="min-h-11"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="min-h-11">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Усі записи</SelectItem>
                   <SelectItem value="approved">Підтверджені</SelectItem>
-                  <SelectItem value="unmapped">Registry-only / непідтверджені</SelectItem>
+                  <SelectItem value="unmapped">
+                    Registry-only / непідтверджені
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </label>
@@ -1527,13 +2028,19 @@ export default function SearchPage() {
               <span className="font-medium">Національний перелік</span>
               <Select
                 value={nationalListStatus}
-                onValueChange={(value) => setNationalListStatus(value as NationalListFilter)}
+                onValueChange={(value) =>
+                  setNationalListStatus(value as NationalListFilter)
+                }
               >
-                <SelectTrigger className="min-h-11"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="min-h-11">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Усі</SelectItem>
                   <SelectItem value="exact">Нацперелік</SelectItem>
-                  <SelectItem value="ingredient_only">МНН у Нацпереліку</SelectItem>
+                  <SelectItem value="ingredient_only">
+                    МНН у Нацпереліку
+                  </SelectItem>
                   <SelectItem value="uncertain">Потребує уточнення</SelectItem>
                   <SelectItem value="not_listed">Не в Нацпереліку</SelectItem>
                 </SelectContent>
@@ -1582,17 +2089,31 @@ export default function SearchPage() {
         )}
       </div>
 
-      {data?.runtimeMode === "static" && (
+      {!shouldUseLocalCatalog && data?.runtimeMode === "static" && (
         <Alert className="rounded-xl">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Показуємо доступну частину каталогу</AlertTitle>
           <AlertDescription>
-            Повний перелік тимчасово недоступний. Спробуйте оновити пошук за кілька секунд.
+            Повний перелік тимчасово недоступний. Спробуйте оновити пошук за
+            кілька секунд.
           </AlertDescription>
         </Alert>
       )}
 
-      {viewState === "loading" ? (
+      {clientCatalog.status === "loading" ? (
+        <SearchLoadingSkeletons />
+      ) : shouldUseLocalCatalog ? (
+        shortQuery ? (
+          <div
+            className="border-y py-8 text-center text-sm text-muted-foreground"
+            data-testid="local-query-too-short"
+          >
+            Введіть щонайменше 3 символи.
+          </div>
+        ) : (
+          <LocalCatalogResults result={localResult} />
+        )
+      ) : viewState === "loading" ? (
         <SearchLoadingSkeletons />
       ) : viewState === "error" ? (
         <div className="space-y-4 border-y py-8 text-center">
@@ -1600,7 +2121,8 @@ export default function SearchPage() {
           <div>
             <p className="font-semibold">Не вдалося завантажити каталог</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Сервіс пошуку тимчасово не відповідає. Спробуйте ще раз за кілька секунд.
+              Сервіс пошуку тимчасово не відповідає. Спробуйте ще раз за кілька
+              секунд.
             </p>
           </div>
           <Button
@@ -1713,7 +2235,9 @@ export default function SearchPage() {
                     variant="outline"
                     className="min-h-11 justify-self-start px-3"
                     disabled={page <= 1 || isFetching}
-                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    onClick={() =>
+                      setPage((current) => Math.max(1, current - 1))
+                    }
                   >
                     <ArrowLeft className="h-4 w-4" />
                     <span className="hidden sm:inline">Попередня</span>

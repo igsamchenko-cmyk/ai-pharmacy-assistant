@@ -363,6 +363,34 @@ paths:
                 $ref: "#/components/schemas/CatalogSearchResponse"
         "400":
           description: Invalid search parameters
+  /catalog/client-index:
+    get:
+      operationId: getCatalogClientIndex
+      tags: [drugs]
+      summary: Download the authenticated versioned browser catalog index
+      description: >-
+        Returns a bounded six-field projection of every current registry product.
+        The snapshot SHA-256 is also the ETag. Clients keep the previous IndexedDB
+        snapshot active until a changed response has been validated and compiled.
+      responses:
+        "200":
+          description: Complete current client catalog index
+          headers:
+            ETag:
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogClientIndexResponse"
+        "304":
+          description: The client already has the current registry snapshot
+        "503":
+          description: A safe complete index is temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /catalog/products/{productId}/instruction:
     get:
       operationId: getDrugInstruction
@@ -2019,6 +2047,54 @@ components:
           minimum: 0
         hasNext:
           type: boolean
+    CatalogClientIndexRow:
+      type: array
+      minItems: 6
+      maxItems: 6
+      items:
+        type: string
+        maxLength: 500
+    CatalogClientIndexAliasRow:
+      type: array
+      minItems: 2
+      maxItems: 2
+      items:
+        type: string
+        maxLength: 500
+    CatalogClientIndexResponse:
+      type: object
+      required:
+        [version, snapshotHash, generatedAt, productCount, aliasCount, rows, aliases]
+      properties:
+        version:
+          type: integer
+          enum: [1]
+        snapshotHash:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        generatedAt:
+          type: string
+          format: date-time
+        productCount:
+          type: integer
+          minimum: 1
+          maximum: 20000
+        aliasCount:
+          type: integer
+          minimum: 0
+          maximum: 5000
+        rows:
+          type: array
+          minItems: 1
+          maxItems: 20000
+          items:
+            $ref: "#/components/schemas/CatalogClientIndexRow"
+        aliases:
+          type: array
+          maxItems: 5000
+          items:
+            $ref: "#/components/schemas/CatalogClientIndexAliasRow"
+
     CatalogSearchResponse:
       type: object
       required:
