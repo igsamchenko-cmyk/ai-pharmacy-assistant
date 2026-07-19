@@ -10,7 +10,6 @@ import {
   BookOpenText,
   CheckCircle2,
   ChevronDown,
-  Columns3,
   Database,
   GitCompare,
   Pill,
@@ -21,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { conciseDosageForm } from "@/pages/search";
+import { ProductCompareButton } from "@/components/product-compare-button";
 import {
   recordRecentlyViewed,
   removeStaleDrugRef,
@@ -317,17 +317,13 @@ export function RegistryProductDetailContent({
                 Взаємодії
               </a>
             </Button>
-            <Button
-              asChild
+            <ProductCompareButton
+              product={product}
+              conciseForm={displayForm}
               size="lg"
-              variant="outline"
               className="min-h-12 min-w-0 whitespace-normal"
-            >
-              <a href="/compare" data-testid="detail-compare-action">
-                <Columns3 className="h-5 w-5 shrink-0" />
-                Порівняти
-              </a>
-            </Button>
+              testId="detail-compare-action"
+            />
             <Button
               type="button"
               size="lg"
