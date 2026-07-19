@@ -9,6 +9,12 @@ import {
 } from "./evidence-comparison-panel";
 import { CLINICAL_EVIDENCE_COMPARISONS } from "@/lib/evidence-comparisons";
 
+function expectedWithoutRankingLanguage(value: string): string {
+  return value
+    .replace("назвати один кращим за інший", "стверджувати про перевагу одного над іншим")
+    .replace("визначити кращий препарат", "визначити перевагу одного препарату");
+}
+
 describe("evidence comparison mobile panel", () => {
   it.each(CLINICAL_EVIDENCE_COMPARISONS)(
     "renders the scannable evidence hierarchy for $id",
@@ -21,8 +27,15 @@ describe("evidence comparison mobile panel", () => {
       expect(html).toContain(comparison.alternatives);
       expect(html).toContain(comparison.comparisonType);
       expect(html).toContain(comparison.confidenceRationale);
-      expect(html).toContain(comparison.neutralConclusion);
-      expect(html).toContain(comparison.insufficientData);
+      expect(html).toContain(
+        expectedWithoutRankingLanguage(comparison.neutralConclusion),
+      );
+      expect(html).toContain(
+        expectedWithoutRankingLanguage(comparison.insufficientData),
+      );
+      expect(
+        comparison.neutralConclusion.trim().split(/\s+/u).length,
+      ).toBeLessThanOrEqual(35);
       expect(html).toContain("Що відомо");
       expect(html).toContain("Ефективність");
       expect(html).toContain("Безпека");
@@ -41,8 +54,7 @@ describe("evidence comparison mobile panel", () => {
       expect(html).toContain("motion-reduce:transition-none");
       expect(html).toContain("overflow-x-hidden");
       expect(html).not.toContain("overflow-x-auto");
-      expect(html).not.toContain("Кращий препарат");
-      expect(html).not.toContain("Гірший препарат");
+      expect(html).not.toMatch(/(?<!\p{L})(?:кращий|кращим|кращого|кращому|краща|краще|кращі|гірший|гіршим|гіршого|гіршому|гірша|гірше|гірші)(?!\p{L})/iu);
 
       const hierarchy = [
         'data-testid="evidence-what-is-known"',

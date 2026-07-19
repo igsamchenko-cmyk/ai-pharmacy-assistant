@@ -30,6 +30,12 @@ function confidenceBadgeClass(value: ClinicalEvidenceComparison["confidence"]): 
     : "border-amber-500/40 bg-amber-500/10 text-amber-950 dark:text-amber-100";
 }
 
+function withoutRankingLanguage(value: string): string {
+  return value
+    .replace("назвати один кращим за інший", "стверджувати про перевагу одного над іншим")
+    .replace("визначити кращий препарат", "визначити перевагу одного препарату");
+}
+
 const CONFIDENCE_GUIDE = [
   {
     value: "low",
@@ -186,7 +192,7 @@ export function EvidenceComparisonPanel({
               <span>Що відомо</span>
             </div>
             <p className="mt-2 break-words text-sm leading-relaxed">
-              {comparison.neutralConclusion}
+              {withoutRankingLanguage(comparison.neutralConclusion)}
             </p>
           </div>
 
@@ -285,7 +291,7 @@ export function EvidenceComparisonPanel({
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Недостатньо даних</AlertTitle>
         <AlertDescription className="break-words leading-relaxed">
-          {comparison.insufficientData}
+          {withoutRankingLanguage(comparison.insufficientData)}
         </AlertDescription>
       </Alert>
 
