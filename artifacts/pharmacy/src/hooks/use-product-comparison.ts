@@ -23,6 +23,7 @@ export interface ComparisonProductRef {
   registrationNumber: string;
   tradeName: string;
   inn: string | null;
+  atcCode: string | null;
   activeIngredient: string | null;
   strength: string | null;
   dosageForm: string | null;
@@ -77,6 +78,7 @@ export function normalizeComparisonProduct(value: unknown): ComparisonProductRef
     registrationNumber,
     tradeName,
     inn: nullableText(candidate.inn),
+    atcCode: nullableText(candidate.atcCode)?.toUpperCase() ?? null,
     activeIngredient: nullableText(candidate.activeIngredient),
     strength: nullableText(candidate.strength),
     dosageForm: nullableText(candidate.dosageForm),
@@ -130,6 +132,7 @@ export function comparisonProductFromRegistry(
     registrationNumber: product.registration.number,
     tradeName: product.tradeName,
     inn: product.inn,
+    atcCode: product.atcCode,
     activeIngredient: product.activeIngredient,
     strength: product.strength,
     dosageForm: conciseForm,

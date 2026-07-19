@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "evidence-comparison-registry-index-v1",
+  "records": [
+    {
+      "id": "apixaban-rivaroxaban-af",
+      "comparatorInnKeys": ["апіксабан", "ривароксабан"],
+      "indicationIds": ["atrial-fibrillation-stroke-prevention"]
+    },
+    {
+      "id": "enalapril-lisinopril-hypertension",
+      "comparatorInnKeys": ["еналаприл", "лізиноприл"],
+      "indicationIds": ["primary-arterial-hypertension"]
+    },
+    {
+      "id": "ibuprofen-naproxen-acute-pain",
+      "comparatorInnKeys": ["ібупрофен", "напроксен"],
+      "indicationIds": ["acute-postoperative-dental-pain"]
+    }
+  ]
+}

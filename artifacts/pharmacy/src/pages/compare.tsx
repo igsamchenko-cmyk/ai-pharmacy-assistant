@@ -22,10 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  EvidenceComparisonPanel,
-  EvidenceComparisonUnavailable,
-} from "@/components/evidence-comparison-panel";
+import { EvidenceComparisonExperience } from "@/components/evidence-comparison-panel";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
@@ -33,7 +30,7 @@ import {
   type ComparisonProductRef,
   useProductComparison,
 } from "@/hooks/use-product-comparison";
-import { findClinicalEvidenceComparison } from "@/lib/evidence-comparisons";
+import { resolveEvidenceComparison } from "@/lib/evidence-comparisons";
 import { conciseDosageForm } from "@/pages/search";
 
 const NO_DATA = "Немає даних";
@@ -324,11 +321,30 @@ function RegistryPicker() {
   );
 }
 
+export function EvidenceResolutionSection({
+  products,
+}: {
+  products: ComparisonProductRef[];
+}) {
+  const [selectedIndicationId, setSelectedIndicationId] = useState<string | null>(null);
+  const resolution = useMemo(
+    () => resolveEvidenceComparison(products, selectedIndicationId),
+    [products, selectedIndicationId],
+  );
+
+  return (
+    <EvidenceComparisonExperience
+      resolution={resolution}
+      selectedIndicationId={selectedIndicationId}
+      onSelectIndication={setSelectedIndicationId}
+    />
+  );
+}
+
 export default function Compare() {
   const { products, removeProduct, clear } = useProductComparison();
   const first = products[0];
   const second = products[1];
-  const evidenceComparison = findClinicalEvidenceComparison(products);
 
   const firstInstruction = useGetDrugInstruction(first?.productId ?? "", {
     query: {
@@ -414,11 +430,10 @@ export default function Compare() {
             <Badge variant="secondary">2 точні реєстрові позиції</Badge>
             <Badge variant="outline">Довгі тексти згорнуті</Badge>
           </div>
-          {evidenceComparison ? (
-            <EvidenceComparisonPanel comparison={evidenceComparison} />
-          ) : (
-            <EvidenceComparisonUnavailable />
-          )}
+          <EvidenceResolutionSection
+            key={products.map((product) => product.productId).sort().join(":")}
+            products={products}
+          />
           <ProductComparisonGrid
             products={products}
             instructions={instructions}

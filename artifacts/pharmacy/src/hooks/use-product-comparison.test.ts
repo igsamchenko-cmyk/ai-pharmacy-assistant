@@ -20,6 +20,7 @@ function ref(
     registrationNumber,
     tradeName,
     inn: "тестова речовина",
+    atcCode: null,
     activeIngredient: "тестова речовина",
     strength: "10 мг",
     dosageForm: "таблетки",

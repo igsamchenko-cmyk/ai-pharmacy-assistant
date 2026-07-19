@@ -20,6 +20,7 @@ function product(
     registrationNumber,
     tradeName,
     inn,
+    atcCode: null,
     activeIngredient: inn,
     strength: "10 мг",
     dosageForm: "таблетки",
