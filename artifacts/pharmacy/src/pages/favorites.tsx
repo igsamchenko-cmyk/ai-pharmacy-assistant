@@ -1,21 +1,16 @@
 import React from "react";
 import { Link } from "wouter";
-import { Clock3, Search, Trash2 } from "lucide-react";
+import { Heart, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SavedDrugCard } from "@/components/saved-drug-card";
-import {
-  clearRecentlyViewed,
-  removeRecentlyViewed,
-  type DrugRef,
-  useRecentlyViewed,
-} from "@/hooks/use-favorites";
+import { type DrugRef, useFavorites } from "@/hooks/use-favorites";
 
-export function ViewingHistoryContent({
-  recent,
+export function FavoritesContent({
+  favorites,
   onRemove,
   onClear,
 }: {
-  recent: DrugRef[];
+  favorites: DrugRef[];
   onRemove: (id: string) => void;
   onClear: () => void;
 }) {
@@ -24,21 +19,21 @@ export function ViewingHistoryContent({
       <header className="flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <h1 className="flex items-center gap-2 text-2xl font-bold text-primary">
-            <Clock3 className="h-6 w-6" />
-            Історія переглядів
+            <Heart className="h-6 w-6 fill-primary/15" />
+            Обране
           </h1>
           <p className="text-sm text-muted-foreground">
-            Останні 20 відкритих препаратів у цьому браузері.
+            Збережені препарати доступні лише у цьому браузері.
           </p>
         </div>
-        {recent.length ? (
+        {favorites.length ? (
           <Button
             type="button"
             variant="outline"
             size="sm"
             className="max-w-full text-destructive"
             onClick={onClear}
-            data-testid="clear-viewing-history"
+            data-testid="clear-favorites"
           >
             <Trash2 className="h-4 w-4" />
             Очистити
@@ -46,34 +41,31 @@ export function ViewingHistoryContent({
         ) : null}
       </header>
 
-      {recent.length ? (
-        <section
-          className="grid min-w-0 gap-3"
-          aria-label="Нещодавно переглянуті препарати"
-        >
-          {recent.map((drug) => (
+      {favorites.length ? (
+        <section className="grid min-w-0 gap-3" aria-label="Збережені препарати">
+          {favorites.map((drug) => (
             <SavedDrugCard
               key={drug.id}
               drug={drug}
               onRemove={onRemove}
-              removeLabel="Прибрати з історії"
+              removeLabel="Прибрати з обраного"
             />
           ))}
         </section>
       ) : (
         <section
           className="rounded-2xl border-2 border-dashed px-4 py-14 text-center"
-          data-testid="viewing-history-empty-state"
+          data-testid="favorites-empty-state"
         >
-          <Clock3 className="mx-auto h-12 w-12 text-muted-foreground/30" />
-          <h2 className="mt-4 text-lg font-bold">Історія поки порожня</h2>
+          <Heart className="mx-auto h-12 w-12 text-muted-foreground/30" />
+          <h2 className="mt-4 text-lg font-bold">Обране поки порожнє</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
-            Тут з’являться конкретні препарати, які ви відкриєте з пошуку.
+            Відкрийте конкретний препарат і натисніть «В обране».
           </p>
           <Button asChild className="mt-5">
             <Link href="/search?type=registry_products">
               <Search className="h-4 w-4" />
-              Перейти до пошуку
+              Знайти препарат
             </Link>
           </Button>
         </section>
@@ -82,13 +74,13 @@ export function ViewingHistoryContent({
   );
 }
 
-export default function History() {
-  const recent = useRecentlyViewed();
+export default function Favorites() {
+  const { favorites, removeFavorite, clearFavorites } = useFavorites();
   return (
-    <ViewingHistoryContent
-      recent={recent}
-      onRemove={removeRecentlyViewed}
-      onClear={clearRecentlyViewed}
+    <FavoritesContent
+      favorites={favorites}
+      onRemove={removeFavorite}
+      onClear={clearFavorites}
     />
   );
 }

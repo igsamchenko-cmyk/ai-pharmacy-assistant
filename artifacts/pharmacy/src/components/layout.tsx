@@ -9,6 +9,7 @@ import {
   Sparkles,
   Scan,
   Clock,
+  Heart,
   Info,
   Database,
   ClipboardList,
@@ -36,6 +37,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/compare", icon: Columns3, label: "Порівняння" },
     { href: "/ai", icon: Sparkles, label: "AI" },
     { href: "/scan", icon: Scan, label: "Скан" },
+    { href: "/favorites", icon: Heart, label: "Обране" },
     { href: "/history", icon: Clock, label: "Історія" },
   ];
 
@@ -61,6 +63,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         >
           <Pill className="w-6 h-6" />
           <span>FarmAssist</span>
+        </Link>
+        <Link
+          href="/favorites"
+          className="ml-auto rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-primary"
+          data-testid="mobile-favorites-link"
+          aria-label="Відкрити обране"
+        >
+          <Heart className="h-5 w-5" />
         </Link>
         <button
           onClick={toggleTheme}
