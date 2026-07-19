@@ -14,17 +14,28 @@ import {
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { ClinicalEvidenceComparison } from "@/lib/evidence-comparisons";
+import type {
+  ClinicalEvidenceComparison,
+  ComparisonClassification,
+  EvidenceComparisonResolution,
+  EvidenceDirectness,
+} from "@/lib/evidence-comparisons";
 
 export const EVIDENCE_COMPARISON_DISCLAIMER =
-  "Цей огляд узагальнює клінічні докази для діючих речовин у зазначеному сценарії. Він не підтверджує, що обрана форма або доза підходить конкретній людині, і не замінює рішення лікаря.";
+  "Клінічний висновок застосовується лише до exact INN/composition, вибраного показання, population та outcomes у verified evidence record. Він не переноситься автоматично на інші дози, форми, комбінації або показання, не є висновком про конкретний бренд і не замінює рішення лікаря.";
 
-function confidenceLabel(value: ClinicalEvidenceComparison["confidence"]): string {
+function confidenceLabel(
+  value: ClinicalEvidenceComparison["confidence"],
+): string {
+  if (value === "high") return "Висока впевненість";
   return value === "moderate" ? "Помірна впевненість" : "Низька впевненість";
 }
 
-function confidenceBadgeClass(value: ClinicalEvidenceComparison["confidence"]): string {
+function confidenceBadgeClass(
+  value: ClinicalEvidenceComparison["confidence"],
+): string {
   return value === "moderate"
     ? "border-sky-500/40 bg-sky-500/10 text-sky-950 dark:text-sky-100"
     : "border-amber-500/40 bg-amber-500/10 text-amber-950 dark:text-amber-100";
@@ -32,20 +43,28 @@ function confidenceBadgeClass(value: ClinicalEvidenceComparison["confidence"]): 
 
 function withoutRankingLanguage(value: string): string {
   return value
-    .replace("назвати один кращим за інший", "стверджувати про перевагу одного над іншим")
-    .replace("визначити кращий препарат", "визначити перевагу одного препарату");
+    .replace(
+      "назвати один кращим за інший",
+      "стверджувати про перевагу одного над іншим",
+    )
+    .replace(
+      "визначити кращий препарат",
+      "визначити перевагу одного препарату",
+    );
 }
 
 const CONFIDENCE_GUIDE = [
   {
     value: "low",
     label: "Низька",
-    description: "Дані обмежені; висновок може змінитися після нових досліджень.",
+    description:
+      "Дані обмежені; висновок може змінитися після нових досліджень.",
   },
   {
     value: "moderate",
     label: "Помірна",
-    description: "Дані достатньо узгоджені, але важлива невизначеність залишається.",
+    description:
+      "Дані достатньо узгоджені, але важлива невизначеність залишається.",
   },
   {
     value: "high",
@@ -54,38 +73,48 @@ const CONFIDENCE_GUIDE = [
   },
 ] as const;
 
-function directnessPresentation(value: string): {
+function directnessPresentation(value: EvidenceDirectness): {
   label: string;
   description: string;
 } {
-  const hasDirectEvidence = value.includes("Прям");
-  const hasIndirectEvidence = value.toLocaleLowerCase("uk-UA").includes("непрям");
-
-  if (hasDirectEvidence && hasIndirectEvidence) {
+  if (value === "mixed") {
     return {
       label: "Прямі + непрямі дані",
       description: "Є head-to-head дані, доповнені непрямими порівняннями.",
     };
   }
-
-  if (hasDirectEvidence) {
+  if (value === "direct") {
     return {
       label: "Пряме порівняння",
       description: "Препарати безпосередньо порівнювали в одному дослідженні.",
     };
   }
-
+  if (value === "indirect") {
+    return {
+      label: "Непрямі дані",
+      description: "Висновок сформовано без надійного head-to-head порівняння.",
+    };
+  }
   return {
-    label: "Непрямі дані",
-    description: "Висновок сформовано без надійного head-to-head порівняння.",
+    label: "Недостатньо доказів",
+    description: "Verified evidence record для вибраного контексту відсутній.",
   };
 }
 
+function classificationLabel(value: ComparisonClassification): string {
+  if (value === "same_ingredient") return "Однакова діюча речовина";
+  if (value === "same_therapeutic_class") return "Один терапевтичний клас";
+  if (value === "clinical_alternatives") return "Клінічні альтернативи";
+  return "Клінічно непорівнювані";
+}
 function reviewedAtLabel(value: string): string {
   const date = new Date(`${value}T00:00:00Z`);
   return Number.isNaN(date.getTime())
     ? value
-    : new Intl.DateTimeFormat("uk-UA", { dateStyle: "long", timeZone: "UTC" }).format(date);
+    : new Intl.DateTimeFormat("uk-UA", {
+        dateStyle: "long",
+        timeZone: "UTC",
+      }).format(date);
 }
 
 function EvidenceList({ items }: { items: readonly string[] }) {
@@ -121,7 +150,9 @@ function EvidenceSection({
           <span>{title}</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="min-w-0 p-4 pt-0 sm:p-5 sm:pt-0">{children}</CardContent>
+      <CardContent className="min-w-0 p-4 pt-0 sm:p-5 sm:pt-0">
+        {children}
+      </CardContent>
     </Card>
   );
 }
@@ -154,7 +185,7 @@ export function EvidenceComparisonPanel({
 }: {
   comparison: ClinicalEvidenceComparison;
 }) {
-  const directness = directnessPresentation(comparison.comparisonType);
+  const directness = directnessPresentation(comparison.directness);
 
   return (
     <section
@@ -173,11 +204,18 @@ export function EvidenceComparisonPanel({
             >
               {confidenceLabel(comparison.confidence)}
             </Badge>
-            <Badge className="border-violet-500/40 bg-violet-500/10 text-violet-950 dark:text-violet-100" variant="outline" data-testid="directness-badge">
+            <Badge
+              className="border-violet-500/40 bg-violet-500/10 text-violet-950 dark:text-violet-100"
+              variant="outline"
+              data-testid="directness-badge"
+            >
               {directness.label}
             </Badge>
           </div>
-          <CardTitle id="clinical-evidence-title" className="flex items-start gap-2 text-xl">
+          <CardTitle
+            id="clinical-evidence-title"
+            className="flex items-start gap-2 text-xl"
+          >
             <BookOpenCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
             <span className="break-words">{comparison.title}</span>
           </CardTitle>
@@ -201,13 +239,38 @@ export function EvidenceComparisonPanel({
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Клінічне показання
               </p>
-              <p className="mt-2 break-words text-sm leading-relaxed">{comparison.indication}</p>
+              <p className="mt-2 break-words text-sm font-medium">
+                {comparison.indication.label}
+              </p>
+              <p className="mt-1 break-words text-sm leading-relaxed">
+                {comparison.indication.description}
+              </p>
             </div>
             <div className="min-w-0 rounded-xl border bg-background/70 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Чи це справжні альтернативи?
               </p>
-              <p className="mt-2 break-words text-sm leading-relaxed">{comparison.alternatives}</p>
+              <p className="mt-2 break-words text-sm leading-relaxed">
+                {comparison.alternatives}
+              </p>
+            </div>
+            <div className="min-w-0 rounded-xl border bg-background/70 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Population
+              </p>
+              <p className="mt-2 break-words text-sm leading-relaxed">
+                {comparison.indication.population}
+              </p>
+            </div>
+            <div className="min-w-0 rounded-xl border bg-background/70 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Outcomes
+              </p>
+              <p className="mt-2 break-words text-sm leading-relaxed">
+                {comparison.indication.outcomes
+                  .map((outcome) => outcome.label)
+                  .join(" · ")}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -236,7 +299,9 @@ export function EvidenceComparisonPanel({
       >
         <div className="grid min-w-0 gap-4">
           <div className="flex min-w-0 flex-wrap gap-2">
-            <Badge variant="outline">{confidenceLabel(comparison.confidence)}</Badge>
+            <Badge variant="outline">
+              {confidenceLabel(comparison.confidence)}
+            </Badge>
             <Badge variant="outline">{directness.label}</Badge>
           </div>
 
@@ -310,7 +375,10 @@ export function EvidenceComparisonPanel({
         </div>
         <ol className="grid min-w-0 gap-3">
           {comparison.sources.map((source) => (
-            <li key={source.url} className="min-w-0 max-w-full rounded-xl border p-3">
+            <li
+              key={source.url}
+              className="min-w-0 max-w-full rounded-xl border p-3"
+            >
               <a
                 href={source.url}
                 target="_blank"
@@ -340,14 +408,118 @@ export function EvidenceComparisonPanel({
   );
 }
 
-export function EvidenceComparisonUnavailable() {
+export function EvidenceComparisonUnavailable({
+  resolution,
+}: {
+  resolution: EvidenceComparisonResolution;
+}) {
   return (
-    <Card className="max-w-full overflow-hidden border-dashed">
-      <CardContent className="p-4 text-sm text-muted-foreground">
-        Evidence-based огляд поки доступний лише для трьох клінічних пар MVP:
-        апіксабан/ривароксабан, еналаприл/лізиноприл та ібупрофен/напроксен.
-        Для цієї пари клінічний висновок не формується.
-      </CardContent>
-    </Card>
+    <Alert
+      className="min-w-0 border-amber-500/45 bg-amber-500/10"
+      data-testid="evidence-unavailable"
+    >
+      <AlertTriangle className="h-4 w-4" />
+      <AlertTitle>Надійного порівняння немає</AlertTitle>
+      <AlertDescription className="grid gap-2">
+        <p className="break-words">{resolution.message}</p>
+        <p className="break-words text-xs">
+          Клінічний висновок не генерується з інструкцій або LLM. Поки exact
+          evidence match відсутній, FarmAssist показує лише реєстрові дані обох
+          препаратів.
+        </p>
+      </AlertDescription>
+    </Alert>
+  );
+}
+
+export function EvidenceComparisonExperience({
+  resolution,
+  selectedIndicationId,
+  onSelectIndication,
+}: {
+  resolution: EvidenceComparisonResolution;
+  selectedIndicationId: string | null;
+  onSelectIndication: (indicationId: string) => void;
+}) {
+  return (
+    <section
+      className="grid min-w-0 max-w-full gap-3 overflow-x-hidden"
+      data-testid="evidence-resolver"
+    >
+      <Card className="min-w-0 max-w-full overflow-hidden">
+        <CardContent className="grid gap-3 p-4">
+          <div className="flex min-w-0 flex-wrap gap-2">
+            <Badge variant="secondary">Database-driven resolver</Badge>
+            <Badge variant="outline" data-testid="comparison-classification">
+              {classificationLabel(resolution.classification)}
+            </Badge>
+          </div>
+          {resolution.identities ? (
+            <div
+              className="grid min-w-0 gap-2 text-sm sm:grid-cols-2"
+              data-testid="exact-composition-identities"
+            >
+              {resolution.identities.map((identity, index) => (
+                <div
+                  key={`${identity.signature ?? "unknown"}-${index}`}
+                  className="min-w-0 rounded-xl border bg-muted/20 p-3"
+                >
+                  <p className="break-words font-medium">
+                    {identity.rawInn || "INN/composition не визначено"}
+                  </p>
+                  <p className="mt-1 break-words text-xs text-muted-foreground">
+                    {identity.kind === "combination"
+                      ? "Комбінація"
+                      : identity.kind === "monotherapy"
+                        ? "Монопрепарат"
+                        : "Невідомий склад"}
+                    {identity.therapeuticClassKey
+                      ? ` · ATC ${identity.therapeuticClassKey}`
+                      : ""}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {resolution.availableIndications.length > 0 ? (
+            <fieldset className="grid min-w-0 gap-2">
+              <legend className="text-sm font-semibold">
+                Оберіть клінічне показання
+              </legend>
+              <div className="flex min-w-0 flex-wrap gap-2">
+                {resolution.availableIndications.map((indication) => (
+                  <Button
+                    key={indication.id}
+                    type="button"
+                    size="sm"
+                    variant={
+                      selectedIndicationId === indication.id
+                        ? "default"
+                        : "outline"
+                    }
+                    className="h-auto min-w-0 max-w-full whitespace-normal text-left"
+                    onClick={() => onSelectIndication(indication.id)}
+                  >
+                    {indication.label}
+                  </Button>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      {resolution.status === "verified" && resolution.comparison ? (
+        <EvidenceComparisonPanel comparison={resolution.comparison} />
+      ) : resolution.status === "indication_required" ? (
+        <Alert data-testid="evidence-indication-required">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Спочатку виберіть показання</AlertTitle>
+          <AlertDescription>{resolution.message}</AlertDescription>
+        </Alert>
+      ) : (
+        <EvidenceComparisonUnavailable resolution={resolution} />
+      )}
+    </section>
   );
 }
