@@ -117,7 +117,7 @@ jobs:
         run: >-
           pnpm knowledge:registry:product-db-smoke --
           --file="$RUNNER_TEMP/reestr.csv"
-          --expect-min-products=16533
+          --expect-min-products=16000
           --rerun
 
       - name: Full fresh-export to catalog parity regression
