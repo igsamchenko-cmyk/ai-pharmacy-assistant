@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import {
+  GetCatalogClientIndexResponse,
   GetDrugInstructionParams,
   GetDrugInstructionResponse,
   SearchCatalogQueryParams,
@@ -7,6 +8,7 @@ import {
 } from "@workspace/api-zod";
 import { requireRole } from "../auth";
 import { getInstructionForProduct } from "../knowledge/instructions/catalog";
+import { loadCatalogClientIndex } from "../services/catalogClientIndexService";
 import { searchCatalog } from "../services/catalogSearchService";
 
 const PAGE_SIZE_QUERY_KEYS = [
@@ -27,6 +29,31 @@ export function normalizeCatalogQueryParams(
 }
 const router: IRouter = Router();
 router.use(requireRole("user"));
+
+router.get("/catalog/client-index", async (req, res): Promise<void> => {
+  try {
+    const result = await loadCatalogClientIndex(req.get("if-none-match"));
+    res.set({
+      "Cache-Control": "private, max-age=0, must-revalidate",
+      ETag: `"${result.status === "ready" ? result.payload.snapshotHash : result.snapshotHash}"`,
+      "X-Catalog-Product-Count": String(
+        result.status === "ready"
+          ? result.payload.productCount
+          : result.productCount,
+      ),
+    });
+    if (result.status === "not_modified") {
+      res.status(304).end();
+      return;
+    }
+    res.set("X-Catalog-Index-Bytes", String(result.wireBytes));
+    res.json(GetCatalogClientIndexResponse.parse(result.payload));
+  } catch {
+    res.status(503).json({
+      error: "Complete local catalog index is temporarily unavailable",
+    });
+  }
+});
 
 router.get("/catalog/search", async (req, res): Promise<void> => {
   const parsed = SearchCatalogQueryParams.safeParse(

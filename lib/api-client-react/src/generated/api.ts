@@ -31,6 +31,7 @@ import type {
   BetaDashboardRunRequest,
   BetaDashboardRunResponse,
   BetaDashboardStatus,
+  CatalogClientIndexResponse,
   CatalogSearchResponse,
   CompareInput,
   CompareResult,
@@ -777,6 +778,84 @@ export function useSearchCatalog<TData = Awaited<ReturnType<typeof searchCatalog
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getSearchCatalogQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetCatalogClientIndexUrl = () => {
+
+
+
+
+  return `/api/catalog/client-index`
+}
+
+/**
+ * Returns a bounded six-field projection of every current registry product. The snapshot SHA-256 is also the ETag. Clients keep the previous IndexedDB snapshot active until a changed response has been validated and compiled.
+ * @summary Download the authenticated versioned browser catalog index
+ */
+export const getCatalogClientIndex = async ( options?: RequestInit): Promise<CatalogClientIndexResponse> => {
+
+  return customFetch<CatalogClientIndexResponse>(getGetCatalogClientIndexUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCatalogClientIndexQueryKey = () => {
+    return [
+    `/api/catalog/client-index`
+    ] as const;
+    }
+
+
+export const getGetCatalogClientIndexQueryOptions = <TData = Awaited<ReturnType<typeof getCatalogClientIndex>>, TError = ErrorType<void | ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCatalogClientIndex>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCatalogClientIndexQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCatalogClientIndex>>> = ({ signal }) => getCatalogClientIndex({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCatalogClientIndex>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCatalogClientIndexQueryResult = NonNullable<Awaited<ReturnType<typeof getCatalogClientIndex>>>
+export type GetCatalogClientIndexQueryError = ErrorType<void | ErrorResponse>
+
+
+/**
+ * @summary Download the authenticated versioned browser catalog index
+ */
+
+export function useGetCatalogClientIndex<TData = Awaited<ReturnType<typeof getCatalogClientIndex>>, TError = ErrorType<void | ErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCatalogClientIndex>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCatalogClientIndexQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

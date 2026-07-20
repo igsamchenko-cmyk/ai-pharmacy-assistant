@@ -727,6 +727,43 @@ export const SearchCatalogResponse = zod.object({
 
 
 /**
+ * Returns a bounded six-field projection of every current registry product. The snapshot SHA-256 is also the ETag. Clients keep the previous IndexedDB snapshot active until a changed response has been validated and compiled.
+ * @summary Download the authenticated versioned browser catalog index
+ */
+export const getCatalogClientIndexResponseSnapshotHashRegExp = new RegExp('^[a-f0-9]{64}$');
+export const getCatalogClientIndexResponseProductCountMax = 20000;
+
+export const getCatalogClientIndexResponseAliasCountMin = 0;
+export const getCatalogClientIndexResponseAliasCountMax = 5000;
+
+export const getCatalogClientIndexResponseRowsItemItemMax = 500;
+
+export const getCatalogClientIndexResponseRowsItemMin = 6;
+export const getCatalogClientIndexResponseRowsItemMax = 6;
+
+export const getCatalogClientIndexResponseRowsMax = 20000;
+
+export const getCatalogClientIndexResponseAliasesItemItemMax = 500;
+
+export const getCatalogClientIndexResponseAliasesItemMin = 2;
+export const getCatalogClientIndexResponseAliasesItemMax = 2;
+
+export const getCatalogClientIndexResponseAliasesMax = 5000;
+
+
+
+export const GetCatalogClientIndexResponse = zod.object({
+  "version": zod.literal(1),
+  "snapshotHash": zod.string().regex(getCatalogClientIndexResponseSnapshotHashRegExp),
+  "generatedAt": zod.coerce.date(),
+  "productCount": zod.number().min(1).max(getCatalogClientIndexResponseProductCountMax),
+  "aliasCount": zod.number().min(getCatalogClientIndexResponseAliasCountMin).max(getCatalogClientIndexResponseAliasCountMax),
+  "rows": zod.array(zod.array(zod.string().max(getCatalogClientIndexResponseRowsItemItemMax)).min(getCatalogClientIndexResponseRowsItemMin).max(getCatalogClientIndexResponseRowsItemMax)).min(1).max(getCatalogClientIndexResponseRowsMax),
+  "aliases": zod.array(zod.array(zod.string().max(getCatalogClientIndexResponseAliasesItemItemMax)).min(getCatalogClientIndexResponseAliasesItemMin).max(getCatalogClientIndexResponseAliasesItemMax)).max(getCatalogClientIndexResponseAliasesMax)
+})
+
+
+/**
  * Lazily returns a bounded structured snapshot parsed from the official Ukrainian registry document for this exact registry product. Missing sections remain null. The response contains no generated clinical text, secrets, raw environment values or server filesystem paths.
  * @summary Get a structured official instruction for one registry product
  */

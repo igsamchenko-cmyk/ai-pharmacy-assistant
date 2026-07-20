@@ -1,0 +1,176 @@
+{
+  "schemaVersion": "catalog-client-index-benchmark-v1",
+  "source": {
+    "sha256": "228b8a201491de53d85788d398143586cd20fcd461731892d5db4ab2d8f4dd96",
+    "officialRows": 16533
+  },
+  "coverage": {
+    "indexedProducts": 16533,
+    "searchableProducts": 16533,
+    "missingProducts": 0
+  },
+  "bounds": {
+    "wireBytes": 2876124,
+    "estimatedMemoryBytes": 9058334,
+    "wireBudgetBytes": 8388608,
+    "memoryBudgetBytes": 33554432
+  },
+  "performance": {
+    "warmRunsPerQuery": 10,
+    "samples": 110,
+    "p50Ms": 3.339,
+    "p95Ms": 10.405,
+    "maxMs": 13.223,
+    "acceptanceP95Ms": 50
+  },
+  "ranking": {
+    "contract": "exact trade > trade prefix > exact INN > INN prefix > transliteration > source-backed alias",
+    "representative": [
+      {
+        "query": "Енап",
+        "expectedTradePrefix": "Енап",
+        "expectedAlias": false,
+        "matches": 9,
+        "topTradeName": "ЕНАП®",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Еліквіс",
+        "expectedTradePrefix": "Еліквіс",
+        "expectedAlias": false,
+        "matches": 20,
+        "topTradeName": "ЕЛІКВІС",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Амоксиклав",
+        "expectedTradePrefix": "Амоксиклав",
+        "expectedAlias": false,
+        "matches": 6,
+        "topTradeName": "АМОКСИКЛАВ®",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Ксарелто",
+        "expectedTradePrefix": "Ксарелто",
+        "expectedAlias": false,
+        "matches": 18,
+        "topTradeName": "КСАРЕЛТО®",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Парацетамол",
+        "expectedTradePrefix": "Парацетамол",
+        "expectedAlias": false,
+        "matches": 47,
+        "topTradeName": "ПАРАЦЕТАМОЛ",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Цефтріаксон",
+        "expectedTradePrefix": "Цефтріаксон",
+        "expectedAlias": false,
+        "matches": 47,
+        "topTradeName": "ЦЕФТРІАКСОН",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Метформін",
+        "expectedTradePrefix": "Метформін",
+        "expectedAlias": false,
+        "matches": 144,
+        "topTradeName": "МЕТФОРМІН",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Омепразол",
+        "expectedTradePrefix": "Омепразол",
+        "expectedAlias": false,
+        "matches": 51,
+        "topTradeName": "ОМЕПРАЗОЛ",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Амлодипін",
+        "expectedTradePrefix": "Амлодипін",
+        "expectedAlias": false,
+        "matches": 58,
+        "topTradeName": "АМЛОДИПІН",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Форксига",
+        "expectedTradePrefix": "Форксіга",
+        "expectedAlias": false,
+        "matches": 2,
+        "topTradeName": "ФОРКСІГА",
+        "matchedBy": "trade_transliteration_exact",
+        "exactTradeExists": false,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Джардінс",
+        "expectedTradePrefix": "Джардінс",
+        "expectedAlias": false,
+        "matches": 2,
+        "topTradeName": "ДЖАРДІНС®",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      }
+    ],
+    "representativeExactTradeFirst": true,
+    "representativeServerSemanticFirst": true,
+    "transliteration": [
+      {
+        "query": "enap",
+        "matches": 9,
+        "topTradeName": "ЕНАП®"
+      },
+      {
+        "query": "elikvis",
+        "matches": 20,
+        "topTradeName": "ЕЛІКВІС"
+      },
+      {
+        "query": "ksarelto",
+        "matches": 18,
+        "topTradeName": "КСАРЕЛТО®"
+      }
+    ]
+  },
+  "offline": {
+    "storage": "IndexedDB",
+    "activation": "old snapshot remains active until changed payload validates and commits",
+    "serverFallback": true
+  }
+}

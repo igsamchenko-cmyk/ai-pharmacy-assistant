@@ -10,6 +10,9 @@
   "include": ["src"],
   "references": [
     {
+      "path": "../../lib/catalog-index"
+    },
+    {
       "path": "../../lib/db"
     },
     {
