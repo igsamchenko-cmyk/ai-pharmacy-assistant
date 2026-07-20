@@ -240,8 +240,8 @@ describe("catalog client index", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("does not enable a server request for typing while the local index loads or is ready", () => {
-    expect(shouldUseServerCatalogSearch("loading", false, "Енап")).toBe(false);
+  it("uses a server request only while the local index loads or is unavailable", () => {
+    expect(shouldUseServerCatalogSearch("loading", false, "Енап")).toBe(true);
     expect(shouldUseServerCatalogSearch("ready", false, "Енап")).toBe(false);
     expect(shouldUseServerCatalogSearch("error", false, "Енап")).toBe(true);
     expect(shouldUseServerCatalogSearch("ready", true, "Енап")).toBe(true);
