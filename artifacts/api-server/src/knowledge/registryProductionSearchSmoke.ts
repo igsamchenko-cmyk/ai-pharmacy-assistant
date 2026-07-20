@@ -27,6 +27,34 @@ export interface CloseablePool {
   end(): Promise<void>;
 }
 
+export interface CatalogProfileSnapshot {
+  currentRows: number;
+  staleRows: number;
+  searchableRows: number;
+  snapshotHashes: number;
+  minHash: string | null;
+  maxHash: string | null;
+}
+
+export function assertCatalogProfileSnapshot(
+  snapshot: CatalogProfileSnapshot,
+  confirmedSha: string,
+  minimumCurrentRows = 16_000,
+): void {
+  const normalizedSha = confirmedSha.toLowerCase();
+  if (
+    !Number.isInteger(snapshot.currentRows) ||
+    snapshot.currentRows < minimumCurrentRows ||
+    snapshot.searchableRows !== snapshot.currentRows ||
+    snapshot.staleRows < 0 ||
+    snapshot.snapshotHashes !== 1 ||
+    snapshot.minHash?.toLowerCase() !== normalizedSha ||
+    snapshot.maxHash?.toLowerCase() !== normalizedSha
+  ) {
+    throw new Error("Production profile snapshot gate failed.");
+  }
+}
+
 function isRenderHost(host: string): boolean {
   return host.includes("render.com") || host.includes("render-postgres");
 }
