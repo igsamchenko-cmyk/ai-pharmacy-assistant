@@ -3,6 +3,7 @@ import {
   SearchCatalogQueryParams,
   SearchCatalogResponse,
 } from "@workspace/api-zod";
+import { normalize } from "../../lib/text";
 import {
   CATALOG_BROWSE_RANK_SQL,
   catalogAliasQueryKeys,
@@ -689,7 +690,11 @@ describe("catalog search service", () => {
       "БЕНДАМУСТИН АККОРД 25 МГ, ПОРОШОК ДЛЯ ПРИГОТУВАННЯ КОНЦЕНТРАТУ ДЛЯ РОЗЧИНУ ДЛЯ ІНФУЗІЙ, " +
       "БЕНДАМУСТИН АККОРД 100 МГ, ПОРОШОК ДЛЯ ПРИГОТУВАННЯ КОНЦЕНТРАТУ ДЛЯ РОЗЧИНУ ДЛЯ ІНФУЗІЙ";
     const statements = new Map<string, string>();
-    const query = vi.fn(async (sql: string) => {
+    const filteredValues: unknown[][] = [];
+    const query = vi.fn(async (sql: string, values: unknown[] = []) => {
+      if (sql.includes("catalog_keys.inn_key")) {
+        filteredValues.push(values);
+      }
       if (sql.includes("AS snapshot_version")) {
         return { rows: [{ count: 16_474, snapshot_version: "batch-current" }] };
       }
@@ -735,6 +740,9 @@ describe("catalog search service", () => {
       expect(sql).toContain("LOWER(COALESCE(p.trade_name, ''))");
       expect(sql).toContain("= ANY(");
       expect(sql).toContain("catalog_keys.inn_key LIKE");
+    }
+    for (const values of filteredValues) {
+      expect(values[0]).toEqual(expect.arrayContaining([normalize(tradeName)]));
     }
     expect(statements.get("registry-flat-page") ?? "").toContain(
       "CASE WHEN (",
