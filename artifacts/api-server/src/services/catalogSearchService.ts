@@ -630,6 +630,9 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
       );
       rankSql = "1";
     } else if (combinationTerms.length) {
+      const normalizedVariantsRef = add(
+        normalizedVariants.length ? normalizedVariants : [normalized],
+      );
       joinSql += CATALOG_KEYS_JOIN_SQL;
       hasCatalogKeysJoin = true;
       const combinationMatch = `(${CATALOG_COMPOSITION_SOURCE_SQL} ~* ${CATALOG_COMBINATION_PATTERN_SQL} AND (${combinationTerms
@@ -641,8 +644,12 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
           )`;
         })
         .join(" AND ")}))`;
-      clauses.push(combinationMatch);
-      rankSql = `CASE WHEN ${combinationMatch} THEN 1 ELSE 2 END`;
+      const exactTradeMatch =
+        `p.normalized_trade_name = ANY(${normalizedVariantsRef}::text[])`;
+      clauses.push(`(${exactTradeMatch} OR ${combinationMatch})`);
+      rankSql =
+        `CASE WHEN ${exactTradeMatch} THEN 1 ` +
+        `WHEN ${combinationMatch} THEN 2 ELSE 3 END`;
     } else {
       const lowerExact = add(lower);
       const normalizedExact = add(normalized);
