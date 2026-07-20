@@ -130,8 +130,16 @@ export function shouldUseServerCatalogSearch(
   query: string,
 ): boolean {
   return (
-    (status === "error" || hasServerOnlyFilters) && isCatalogQueryEnabled(query)
+    (status === "loading" || status === "error" || hasServerOnlyFilters) &&
+    isCatalogQueryEnabled(query)
   );
+}
+
+export function shouldShowCatalogIndexSkeleton(
+  status: "idle" | "loading" | "ready" | "error",
+  hasServerResponse: boolean,
+): boolean {
+  return status === "loading" && !hasServerResponse;
 }
 
 export function shouldDisplayCatalogResponse(
@@ -2100,7 +2108,10 @@ export default function SearchPage() {
         </Alert>
       )}
 
-      {clientCatalog.status === "loading" ? (
+      {shouldShowCatalogIndexSkeleton(
+        clientCatalog.status,
+        Boolean(visibleData),
+      ) ? (
         <SearchLoadingSkeletons />
       ) : shouldUseLocalCatalog ? (
         shortQuery ? (

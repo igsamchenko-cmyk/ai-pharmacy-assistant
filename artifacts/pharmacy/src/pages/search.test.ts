@@ -19,6 +19,8 @@ import {
   normalizeExactTradeName,
   shouldAutoLoadExactTradeVariants,
   shouldShowPrimarySearchSpinner,
+  shouldShowCatalogIndexSkeleton,
+  shouldUseServerCatalogSearch,
   applyPastedQuery,
   catalogQueryDebounceMs,
   CATALOG_QUERY_DEBOUNCE_MS,
@@ -37,6 +39,21 @@ import { registryProductDetailHref } from "@/lib/registry-product-route";
 vi.mock("@/components/report-issue-button", () => ({
   ReportIssueButton: () => null,
 }));
+
+describe("catalog index readiness fallback", () => {
+  it("uses the debounced server fallback only until the local catalog is ready", () => {
+    expect(shouldUseServerCatalogSearch("loading", false, "Enap")).toBe(true);
+    expect(shouldUseServerCatalogSearch("ready", false, "Enap")).toBe(false);
+    expect(shouldUseServerCatalogSearch("error", false, "Enap")).toBe(true);
+    expect(shouldUseServerCatalogSearch("ready", true, "Enap")).toBe(true);
+  });
+
+  it("replaces the catalog skeleton as soon as a fallback response exists", () => {
+    expect(shouldShowCatalogIndexSkeleton("loading", false)).toBe(true);
+    expect(shouldShowCatalogIndexSkeleton("loading", true)).toBe(false);
+    expect(shouldShowCatalogIndexSkeleton("ready", false)).toBe(false);
+  });
+});
 
 const product: RegistryProductResult = {
   resultType: "registry_product",
