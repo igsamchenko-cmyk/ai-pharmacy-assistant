@@ -644,8 +644,10 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
           )`;
         })
         .join(" AND ")}))`;
-      const exactTradeMatch =
-        `p.normalized_trade_name = ANY(${normalizedVariantsRef}::text[])`;
+      const exactTradeMatch = `(
+        p.normalized_trade_name = ANY(${normalizedVariantsRef}::text[])
+        OR ${catalogSearchKeySql("p.trade_name")} = ANY(${normalizedVariantsRef}::text[])
+      )`;
       clauses.push(`(${exactTradeMatch} OR ${combinationMatch})`);
       rankSql =
         `CASE WHEN ${exactTradeMatch} THEN 1 ` +

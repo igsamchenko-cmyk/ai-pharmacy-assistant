@@ -732,10 +732,12 @@ describe("catalog search service", () => {
     for (const label of ["registry-flat-count", "registry-flat-page"]) {
       const sql = statements.get(label) ?? "";
       expect(sql).toContain("p.normalized_trade_name = ANY(");
+      expect(sql).toContain("LOWER(COALESCE(p.trade_name, ''))");
+      expect(sql).toContain("= ANY(");
       expect(sql).toContain("catalog_keys.inn_key LIKE");
     }
     expect(statements.get("registry-flat-page") ?? "").toContain(
-      "CASE WHEN p.normalized_trade_name = ANY(",
+      "CASE WHEN (",
     );
     resetRegistrySearchCachesForTests();
   });
