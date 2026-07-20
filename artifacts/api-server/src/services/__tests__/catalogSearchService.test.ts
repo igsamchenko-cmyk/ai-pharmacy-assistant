@@ -595,7 +595,7 @@ describe("catalog search service", () => {
       .map(([sql]) => sql)
       .find((sql) => sql.includes("WITH exact_candidates"));
     expect(exactSql).toContain("p.registration_number = $1");
-    expect(exactSql).toContain("p.normalized_trade_name = $2");
+    expect(exactSql).toContain("p.normalized_trade_name = ANY($2::text[])");
     expect(exactSql).toContain("p.review_status <> 'stale'");
     expect(exactSql).toContain("TRANSLATE");
     expect(exactSql).not.toContain("query_alias");
@@ -661,11 +661,11 @@ describe("catalog search service", () => {
     expect(result.filteredTotal).toBe(1);
     expect(result.items[0]?.tradeName).toBe("Nurofen");
     expect(statements.get("registry-exact-trade-exists")).toContain(
-      "exact_trade.normalized_trade_name = $1",
+      "exact_trade.normalized_trade_name = ANY($1::text[])",
     );
     for (const label of ["registry-flat-count", "registry-flat-page"]) {
       const sql = statements.get(label) ?? "";
-      expect(sql).toContain("p.normalized_trade_name = $1");
+      expect(sql).toContain("p.normalized_trade_name = ANY($1::text[])");
       expect(sql).not.toContain("exact_approved_alias");
       expect(sql).not.toContain("LOWER(p.trade_name) LIKE");
       expect(sql).not.toContain("search_manufacturer");
@@ -764,7 +764,10 @@ describe("catalog search service", () => {
     });
 
     const first = await dbStore.searchProductsForGrouping!(
-      input({ q: "Nurofen", view: "grouped" }),
+      input({
+        q: "\u041d\u0443\u0440\u043e\u0444\u0435\u043d",
+        view: "grouped",
+      }),
     );
     expect(first.items).toHaveLength(1);
     expect(query).toHaveBeenCalledTimes(4);
@@ -780,6 +783,16 @@ describe("catalog search service", () => {
     const groupedSql = query.mock.calls
       .map(([sql]) => sql)
       .find((sql) => sql.includes("knowledge_registry_products p"));
+    const groupedValues =
+      query.mock.calls.find(([sql]) =>
+        sql.includes("knowledge_registry_products p"),
+      )?.[1] ?? [];
+    expect(groupedValues).toContainEqual(
+      expect.arrayContaining([
+        "\u043d\u0443\u0440\u043e\u0444\u0435\u043d",
+        "\u043d\u0443\u0440\u043e\u0444\u0454\u043d",
+      ]),
+    );
     expect(groupedSql).toContain("p.review_status <> 'stale'");
     expect(groupedSql).toContain("to_jsonb(search_manufacturer)");
     expect(groupedSql).toContain("query_alias.normalized = ANY($7::text[])");

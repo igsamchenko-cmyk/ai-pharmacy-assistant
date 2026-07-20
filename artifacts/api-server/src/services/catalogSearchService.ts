@@ -1,5 +1,9 @@
 import type { z } from "zod";
 import {
+  catalogSearchTokenVariants,
+  normalizeCatalogIndexText,
+} from "@workspace/catalog-index";
+import {
   SearchCatalogQueryParams,
   SearchCatalogResponse,
 } from "@workspace/api-zod";
@@ -290,18 +294,17 @@ const CATALOG_COMBINATION_PATTERN_SQL =
 
 export function catalogAliasQueryKeys(query: string): string[] {
   const resolved = resolveSourceBackedDictionaryQuery(query);
+  const normalizedKeys = [
+    normalize(query),
+    resolved?.name,
+    resolved?.ingredient.inn,
+    resolved?.ingredient.latin,
+    resolved?.ingredient.english,
+  ]
+    .map((value) => normalize(value ?? ""))
+    .filter(Boolean);
   return [
-    ...new Set(
-      [
-        normalize(query),
-        resolved?.name,
-        resolved?.ingredient.inn,
-        resolved?.ingredient.latin,
-        resolved?.ingredient.english,
-      ]
-        .map((value) => normalize(value ?? ""))
-        .filter(Boolean),
-    ),
+    ...new Set([...normalizedKeys, ...catalogSearchTokenVariants(query)]),
   ];
 }
 
@@ -614,11 +617,17 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
   let rankSql = CATALOG_BROWSE_RANK_SQL;
   if (query) {
     const lower = query.toLocaleLowerCase("uk-UA");
-    const normalized = normalize(query) || lower;
+    const normalized = normalizeCatalogIndexText(query) || lower;
+    const normalizedVariants = catalogSearchTokenVariants(query);
     const combinationTerms = catalogCompositionSearchTerms(query);
 
     if (exactTradeOnly) {
-      clauses.push(`p.normalized_trade_name = ${add(normalized)}`);
+      const normalizedVariantsRef = add(
+        normalizedVariants.length ? normalizedVariants : [normalized],
+      );
+      clauses.push(
+        `p.normalized_trade_name = ANY(${normalizedVariantsRef}::text[])`,
+      );
       rankSql = "1";
     } else if (combinationTerms.length) {
       joinSql += CATALOG_KEYS_JOIN_SQL;
@@ -641,7 +650,9 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
       const normalizedPrefix = add(`${escapeLike(normalized)}%`);
       const contains = add(`%${escapeLike(lower)}%`);
       const normalizedContains = add(`%${escapeLike(normalized)}%`);
-      const aliasKeys = catalogAliasQueryKeys(query);
+      const aliasKeys = [
+        ...new Set([...catalogAliasQueryKeys(query), ...normalizedVariants]),
+      ];
       const aliasKeysRef = add(aliasKeys.length ? aliasKeys : [normalized]);
       const resolved = resolveSourceBackedDictionaryQuery(query);
       const aliasLowerTerms = [
@@ -652,6 +663,7 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
             resolved?.ingredient.inn,
             resolved?.ingredient.latin,
             resolved?.ingredient.english,
+            ...normalizedVariants,
           ]
             .map((value) => value?.trim().toLocaleLowerCase("uk-UA") ?? "")
             .filter(Boolean),
@@ -963,17 +975,16 @@ export async function createPostgresRegistryCatalogStore(
     input: CatalogSearchInput,
   ): Promise<boolean> => {
     if (!isExactTradePageEligible(input)) return false;
-    const normalized =
-      normalize(input.q.trim()) || input.q.trim().toLocaleLowerCase("uk-UA");
+    const normalizedVariants = catalogSearchTokenVariants(input.q);
     const result = await runQuery<{ exists: boolean }>(
       "registry-exact-trade-exists",
       `SELECT EXISTS (
          SELECT 1
          FROM knowledge_registry_products exact_trade
          WHERE exact_trade.review_status <> 'stale'
-           AND exact_trade.normalized_trade_name = $1
+           AND exact_trade.normalized_trade_name = ANY($1::text[])
        ) AS exists`,
-      [normalized],
+      [normalizedVariants],
     );
     return result.rows[0]?.exists === true;
   };
@@ -1041,8 +1052,7 @@ export async function createPostgresRegistryCatalogStore(
         cacheKey,
         async () => {
           const query = input.q.trim();
-          const normalized =
-            normalize(query) || query.toLocaleLowerCase("uk-UA");
+          const normalizedVariants = catalogSearchTokenVariants(query);
           const [snapshot, exactResult] = await Promise.all([
             getCatalogSnapshot(),
             runQuery<ProductRow>(
@@ -1056,8 +1066,8 @@ export async function createPostgresRegistryCatalogStore(
                  SELECT p.registry_id, 2 AS priority
                  FROM knowledge_registry_products p
                  WHERE p.review_status <> 'stale'
-                   AND (p.normalized_trade_name = $2
-                     OR ${catalogSearchKeySql("p.trade_name")} = $2)
+                   AND (p.normalized_trade_name = ANY($2::text[])
+                     OR ${catalogSearchKeySql("p.trade_name")} = ANY($2::text[]))
                ), winning_priority AS (
                  SELECT MIN(priority) AS priority FROM exact_candidates
                ), unique_candidates AS (
@@ -1085,7 +1095,7 @@ export async function createPostgresRegistryCatalogStore(
                JOIN unique_candidates candidate ON candidate.registry_id = p.registry_id
                ${NATIONAL_LIST_MATCH_JOIN_SQL}
                ORDER BY p.registry_id`,
-              [query.toUpperCase(), normalized],
+              [query.toUpperCase(), normalizedVariants],
             ),
           ]);
           const result =

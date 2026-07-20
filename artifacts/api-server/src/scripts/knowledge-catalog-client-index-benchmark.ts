@@ -28,6 +28,10 @@ const DEFAULT_REPORT_PATH = fileURLToPath(
 );
 const REPRESENTATIVE_QUERIES = [
   { query: "Енап", expectedTradePrefix: "Енап" },
+  {
+    query: "\u041d\u0443\u0440\u043e\u0444\u0435\u043d",
+    expectedTradePrefix: "\u041d\u0423\u0420\u041e\u0424\u0404\u041d",
+  },
   { query: "Еліквіс", expectedTradePrefix: "Еліквіс" },
   { query: "Амоксиклав", expectedTradePrefix: "Амоксиклав" },
   { query: "Ксарелто", expectedTradePrefix: "Ксарелто" },
