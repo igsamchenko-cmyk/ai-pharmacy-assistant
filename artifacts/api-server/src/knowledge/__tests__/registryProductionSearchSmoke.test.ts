@@ -302,6 +302,8 @@ describe("post-commit workflow state", () => {
     );
     const workflow = readFileSync(workflowPath, "utf8");
     expect(workflow).toContain("environment: production-registry-sync");
+    expect(workflow).toContain("--expect-min-products=16000");
+    expect(workflow).not.toContain("--expect-min-products=16533");
     expect(workflow).toContain("confirm_production_apply:");
     expect(workflow).toContain("CONFIRM_PRODUCTION_APPLY_INPUT:");
     expect(workflow).toContain("CONFIRM_PRODUCTION_REGISTRY_APPLY:");
@@ -375,5 +377,21 @@ describe("post-commit workflow state", () => {
     );
     expect(profileJob).not.toContain("pnpm db:push");
     expect(profileJob).not.toContain("--apply");
+  });
+
+  it("uses a moving-source anomaly floor instead of a stale exact DRLZ count", () => {
+    const workflowPath = fileURLToPath(
+      new URL(
+        "../../../../../.github/workflows/v16-registry-validation.yml",
+        import.meta.url,
+      ),
+    );
+    const workflow = readFileSync(workflowPath, "utf8");
+    expect(workflow).toContain("--expect-min-products=16000");
+    expect(workflow).not.toContain("--expect-min-products=16533");
+    expect(workflow).not.toContain("--expect-products=16533");
+    expect(workflow).toContain(
+      "the smoke itself verifies that every parsed row is persisted",
+    );
   });
 });

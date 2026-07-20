@@ -3,6 +3,7 @@ import {
   SearchCatalogQueryParams,
   SearchCatalogResponse,
 } from "@workspace/api-zod";
+import { normalize } from "../../lib/text";
 import {
   CATALOG_BROWSE_RANK_SQL,
   catalogAliasQueryKeys,
@@ -682,6 +683,73 @@ describe("catalog search service", () => {
     ).toBe(false);
     resetRegistrySearchCachesForTests();
   });
+
+  it("keeps an exact official trade name above combination parsing", async () => {
+    resetRegistrySearchCachesForTests();
+    const tradeName =
+      "БЕНДАМУСТИН АККОРД 25 МГ, ПОРОШОК ДЛЯ ПРИГОТУВАННЯ КОНЦЕНТРАТУ ДЛЯ РОЗЧИНУ ДЛЯ ІНФУЗІЙ, " +
+      "БЕНДАМУСТИН АККОРД 100 МГ, ПОРОШОК ДЛЯ ПРИГОТУВАННЯ КОНЦЕНТРАТУ ДЛЯ РОЗЧИНУ ДЛЯ ІНФУЗІЙ";
+    const statements = new Map<string, string>();
+    const filteredValues: unknown[][] = [];
+    const query = vi.fn(async (sql: string, values: unknown[] = []) => {
+      if (sql.includes("catalog_keys.inn_key")) {
+        filteredValues.push(values);
+      }
+      if (sql.includes("AS snapshot_version")) {
+        return { rows: [{ count: 16_474, snapshot_version: "batch-current" }] };
+      }
+      if (sql.includes("SELECT COUNT(*)::int AS count")) {
+        return { rows: [{ count: 1 }] };
+      }
+      if (sql.includes("SELECT product_registry_id, name, country")) {
+        return { rows: [] };
+      }
+      if (sql.includes("n.normalized") && sql.includes("ingredient_id")) {
+        return { rows: [] };
+      }
+      if (sql.includes("p.registry_id")) {
+        return {
+          rows: [
+            {
+              ...productRow,
+              registry_id: "registry-bendamustine",
+              trade_name: tradeName,
+              normalized_trade_name: tradeName
+                .toLocaleLowerCase("uk-UA")
+                .replace(/\s+/gu, ""),
+            },
+          ],
+        };
+      }
+      throw new Error("Unexpected long exact-trade test query");
+    });
+    const dbStore = await createPostgresRegistryCatalogStore({
+      executor: { query },
+      onQuery: (metric) => statements.set(metric.label, metric.statement),
+    });
+
+    expect(catalogCompositionSearchTerms(tradeName)).not.toEqual([]);
+    const result = await dbStore.searchProducts(
+      input({ q: tradeName, type: "registry_products", view: "grouped" }),
+    );
+
+    expect(result.items[0]?.tradeName).toBe(tradeName);
+    for (const label of ["registry-flat-count", "registry-flat-page"]) {
+      const sql = statements.get(label) ?? "";
+      expect(sql).toContain("p.normalized_trade_name = ANY(");
+      expect(sql).toContain("LOWER(COALESCE(p.trade_name, ''))");
+      expect(sql).toContain("= ANY(");
+      expect(sql).toContain("catalog_keys.inn_key LIKE");
+    }
+    for (const values of filteredValues) {
+      expect(values[0]).toEqual(expect.arrayContaining([normalize(tradeName)]));
+    }
+    expect(statements.get("registry-flat-page") ?? "").toContain(
+      "CASE WHEN (",
+    );
+    resetRegistrySearchCachesForTests();
+  });
+
   it("uses the complete registry candidate path for source-backed ingredient queries", async () => {
     resetRegistrySearchCachesForTests();
     const query = vi.fn(async (sql: string, _values: unknown[] = []) => {

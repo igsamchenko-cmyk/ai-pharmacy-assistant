@@ -308,6 +308,14 @@ export function catalogAliasQueryKeys(query: string): string[] {
   ];
 }
 
+function catalogExactTradeKeys(query: string): string[] {
+  return [
+    ...new Set(
+      [...catalogSearchTokenVariants(query), normalize(query)].filter(Boolean),
+    ),
+  ];
+}
+
 export function catalogCompositionSearchTerms(query: string): string[] {
   if (/^UA\//iu.test(query.trim())) return [];
   const slashParts = query.split(/\s*\/\s*/u);
@@ -618,18 +626,21 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
   if (query) {
     const lower = query.toLocaleLowerCase("uk-UA");
     const normalized = normalizeCatalogIndexText(query) || lower;
-    const normalizedVariants = catalogSearchTokenVariants(query);
+    const exactTradeKeys = catalogExactTradeKeys(query);
     const combinationTerms = catalogCompositionSearchTerms(query);
 
     if (exactTradeOnly) {
       const normalizedVariantsRef = add(
-        normalizedVariants.length ? normalizedVariants : [normalized],
+        exactTradeKeys.length ? exactTradeKeys : [normalized],
       );
       clauses.push(
         `p.normalized_trade_name = ANY(${normalizedVariantsRef}::text[])`,
       );
       rankSql = "1";
     } else if (combinationTerms.length) {
+      const normalizedVariantsRef = add(
+        exactTradeKeys.length ? exactTradeKeys : [normalized],
+      );
       joinSql += CATALOG_KEYS_JOIN_SQL;
       hasCatalogKeysJoin = true;
       const combinationMatch = `(${CATALOG_COMPOSITION_SOURCE_SQL} ~* ${CATALOG_COMBINATION_PATTERN_SQL} AND (${combinationTerms
@@ -641,8 +652,14 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
           )`;
         })
         .join(" AND ")}))`;
-      clauses.push(combinationMatch);
-      rankSql = `CASE WHEN ${combinationMatch} THEN 1 ELSE 2 END`;
+      const exactTradeMatch = `(
+        p.normalized_trade_name = ANY(${normalizedVariantsRef}::text[])
+        OR ${catalogSearchKeySql("p.trade_name")} = ANY(${normalizedVariantsRef}::text[])
+      )`;
+      clauses.push(`(${exactTradeMatch} OR ${combinationMatch})`);
+      rankSql =
+        `CASE WHEN ${exactTradeMatch} THEN 1 ` +
+        `WHEN ${combinationMatch} THEN 2 ELSE 3 END`;
     } else {
       const lowerExact = add(lower);
       const normalizedExact = add(normalized);
@@ -651,7 +668,7 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
       const contains = add(`%${escapeLike(lower)}%`);
       const normalizedContains = add(`%${escapeLike(normalized)}%`);
       const aliasKeys = [
-        ...new Set([...catalogAliasQueryKeys(query), ...normalizedVariants]),
+        ...new Set([...catalogAliasQueryKeys(query), ...exactTradeKeys]),
       ];
       const aliasKeysRef = add(aliasKeys.length ? aliasKeys : [normalized]);
       const resolved = resolveSourceBackedDictionaryQuery(query);
@@ -663,7 +680,7 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
             resolved?.ingredient.inn,
             resolved?.ingredient.latin,
             resolved?.ingredient.english,
-            ...normalizedVariants,
+            ...exactTradeKeys,
           ]
             .map((value) => value?.trim().toLocaleLowerCase("uk-UA") ?? "")
             .filter(Boolean),
@@ -975,7 +992,7 @@ export async function createPostgresRegistryCatalogStore(
     input: CatalogSearchInput,
   ): Promise<boolean> => {
     if (!isExactTradePageEligible(input)) return false;
-    const normalizedVariants = catalogSearchTokenVariants(input.q);
+    const exactTradeKeys = catalogExactTradeKeys(input.q);
     const result = await runQuery<{ exists: boolean }>(
       "registry-exact-trade-exists",
       `SELECT EXISTS (
@@ -984,7 +1001,7 @@ export async function createPostgresRegistryCatalogStore(
          WHERE exact_trade.review_status <> 'stale'
            AND exact_trade.normalized_trade_name = ANY($1::text[])
        ) AS exists`,
-      [normalizedVariants],
+      [exactTradeKeys],
     );
     return result.rows[0]?.exists === true;
   };
@@ -1052,7 +1069,7 @@ export async function createPostgresRegistryCatalogStore(
         cacheKey,
         async () => {
           const query = input.q.trim();
-          const normalizedVariants = catalogSearchTokenVariants(query);
+          const exactTradeKeys = catalogExactTradeKeys(query);
           const [snapshot, exactResult] = await Promise.all([
             getCatalogSnapshot(),
             runQuery<ProductRow>(
@@ -1095,7 +1112,7 @@ export async function createPostgresRegistryCatalogStore(
                JOIN unique_candidates candidate ON candidate.registry_id = p.registry_id
                ${NATIONAL_LIST_MATCH_JOIN_SQL}
                ORDER BY p.registry_id`,
-              [query.toUpperCase(), normalizedVariants],
+              [query.toUpperCase(), exactTradeKeys],
             ),
           ]);
           const result =
