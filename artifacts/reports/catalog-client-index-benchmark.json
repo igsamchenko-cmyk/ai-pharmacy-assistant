@@ -17,10 +17,10 @@
   },
   "performance": {
     "warmRunsPerQuery": 10,
-    "samples": 110,
-    "p50Ms": 3.339,
-    "p95Ms": 10.405,
-    "maxMs": 13.223,
+    "samples": 120,
+    "p50Ms": 3.235,
+    "p95Ms": 6.2,
+    "maxMs": 17.677,
     "acceptanceP95Ms": 50
   },
   "ranking": {
@@ -32,6 +32,17 @@
         "expectedAlias": false,
         "matches": 9,
         "topTradeName": "ЕНАП®",
+        "matchedBy": "trade_exact",
+        "exactTradeExists": true,
+        "exactTradeFirst": true,
+        "serverSemanticFirst": true
+      },
+      {
+        "query": "Нурофен",
+        "expectedTradePrefix": "НУРОФЄН",
+        "expectedAlias": false,
+        "matches": 130,
+        "topTradeName": "НУРОФЄН®",
         "matchedBy": "trade_exact",
         "exactTradeExists": true,
         "exactTradeFirst": true,

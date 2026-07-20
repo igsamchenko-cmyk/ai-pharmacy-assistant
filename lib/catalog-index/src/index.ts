@@ -143,9 +143,40 @@ export function normalizeCatalogIndexText(value: string): string {
     .normalize("NFKD")
     .toLocaleLowerCase("uk-UA")
     .replace(/[\u0300-\u036f]/gu, "")
+    .replace(/\u0454/gu, "\u0435")
     .replace(/[\u2019\u02bc\u2018\u0060\u00b4\u02b9\u2032']/gu, "")
     .replace(/[\s\-_\u2010\u2011\u2012\u2013\u2014\u2015./\\()+]+/gu, "")
     .trim();
+}
+
+const CATALOG_SEARCH_TOKEN_VARIANT_LIMIT = 32;
+
+/**
+ * Return bounded spellings for matching canonical search tokens against
+ * persisted keys created before Ukrainian e/ye equivalence was introduced.
+ */
+export function catalogSearchTokenVariants(value: string): string[] {
+  const canonical = normalizeCatalogIndexText(value);
+  if (!canonical) return [];
+  const positions = [...canonical].flatMap((character, index) =>
+    character === "\u0435" ? [index] : [],
+  );
+  if (!positions.length) return [canonical];
+
+  const chars = [...canonical];
+  const variantCount = Math.min(
+    2 ** positions.length,
+    CATALOG_SEARCH_TOKEN_VARIANT_LIMIT,
+  );
+  const variants = new Set<string>();
+  for (let mask = 0; mask < variantCount; mask += 1) {
+    const candidate = [...chars];
+    positions.forEach((position, bit) => {
+      if (mask & (1 << bit)) candidate[position] = "\u0454";
+    });
+    variants.add(candidate.join(""));
+  }
+  return [...variants];
 }
 
 export function transliterateCatalogIndexText(value: string): string {

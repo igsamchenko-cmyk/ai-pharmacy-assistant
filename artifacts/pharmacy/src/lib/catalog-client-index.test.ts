@@ -125,6 +125,59 @@ describe("catalog client index", () => {
     ).toBe("ЕЛІКВІС®");
   });
 
+  it("matches the controlled Ukrainian e/ye search-token equivalence", () => {
+    const nurofen = "\u041d\u0423\u0420\u041e\u0424\u0404\u041d\u00ae";
+    const amoxiclav =
+      "\u0410\u041c\u041e\u041a\u0421\u0418\u041a\u041b\u0410\u0412\u00ae";
+    const unrelated = "\u041d\u0415\u0423\u0420\u041e\u0411\u0415\u041a\u0421";
+    const index = compileCatalogClientIndex(
+      payload([
+        ...representativeProducts,
+        product(7, nurofen, "Ibuprofen", "200 \u043c\u0433"),
+        product(
+          8,
+          amoxiclav,
+          "Amoxicillin + clavulanic acid",
+          "625 \u043c\u0433",
+        ),
+        product(9, unrelated, "Vitamins", "10 \u043c\u0433"),
+      ]),
+    );
+
+    for (const query of [
+      "\u041d\u0443\u0440\u043e\u0444\u0435\u043d",
+      "\u041d\u0423\u0420\u041e\u0424\u0404\u041d",
+    ]) {
+      const result = searchCatalogClientIndex(index, query);
+      expect(result.items[0]?.product.tradeName).toBe(nurofen);
+      expect(result.items[0]?.matchedBy).toBe("trade_exact");
+      expect(
+        result.items.some((item) => item.product.tradeName === unrelated),
+      ).toBe(false);
+    }
+
+    const regressions = [
+      ["\u0415\u043d\u0430\u043f", "\u0415\u041d\u0410\u041f\u00ae"],
+      [
+        "\u0415\u043b\u0456\u043a\u0432\u0456\u0441",
+        "\u0415\u041b\u0406\u041a\u0412\u0406\u0421\u00ae",
+      ],
+      [
+        "\u0410\u043c\u043e\u043a\u0441\u0438\u043a\u043b\u0430\u0432",
+        amoxiclav,
+      ],
+      [
+        "\u041a\u0441\u0430\u0440\u0435\u043b\u0442\u043e",
+        "\u041a\u0421\u0410\u0420\u0415\u041b\u0422\u041e\u00ae",
+      ],
+    ] as const;
+    for (const [query, expected] of regressions) {
+      expect(
+        searchCatalogClientIndex(index, query).items[0]?.product.tradeName,
+      ).toBe(expected);
+    }
+  });
+
   it("resolves source-backed brand aliases locally without outranking direct trade matches", () => {
     const products = [
       ...representativeProducts.filter((item) => item.tradeName !== "ЕЛІКВІС®"),
