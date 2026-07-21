@@ -119,6 +119,25 @@ describe("official registry parity", () => {
     expect(comparison.changed).toMatchObject({ forms: 1, any: 1 });
   });
 
+  it("matches the importer manufacturer dedupe key", () => {
+    const parsed = parseRegistryText(
+      [
+        "id,trade_name,inn,active_ingredient,form,strength,manufacturer_1_name,manufacturer_1_country,manufacturer_2_name,manufacturer_2_country,registration_number,registration_end,early_termination",
+        "duplicate-makers,Duplicate makers,Ingredient D,Ingredient D,tablet,10 mg,Maker A,India,Maker A,India,UA/4,31.12.2027,Ні",
+        "normalized-makers,Normalized makers,Ingredient E,Ingredient E,tablet,20 mg,Maker (bulk))),India,Maker (bulk)),India,UA/5,31.12.2027,Ні",
+      ].join("\n"),
+    );
+    const databaseRows = parsed.rows.map((row) => ({
+      ...registryComparableFromOfficial(row),
+      manufacturers: [row.manufacturers.at(-1)!],
+    }));
+
+    const comparison = compareRegistryParity(parsed, databaseRows);
+
+    expect(comparison.changed).toMatchObject({ manufacturers: 0, any: 0 });
+    expect(comparison.exactParity).toBe(true);
+  });
+
   it("requires the full official product set in the import plan even without INN mappings", () => {
     const parsed = parseRegistryText(
       [
