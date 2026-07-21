@@ -29,6 +29,7 @@ import {
   createIndexedDbCatalogIndexStorage,
   type CatalogClientIndexStorage,
 } from "@/lib/catalog-client-index-storage";
+import type { CatalogClientIndexWorkerResponse } from "@/lib/catalog-client-index.worker";
 
 export type CatalogClientIndexStatus = "idle" | "loading" | "ready" | "error";
 export type CatalogClientIndexSource = "cache" | "network";
@@ -126,6 +127,88 @@ export async function compileCatalogClientIndexCooperatively(
   };
 }
 
+export interface CatalogClientIndexWorkerLike {
+  onmessage:
+    | ((event: MessageEvent<CatalogClientIndexWorkerResponse>) => void)
+    | null;
+  onerror: ((event: Event) => void) | null;
+  postMessage(payload: CatalogClientIndexPayload): void;
+  terminate(): void;
+}
+
+export type CatalogClientIndexWorkerFactory =
+  () => CatalogClientIndexWorkerLike;
+
+function createCatalogClientIndexWorker(): CatalogClientIndexWorkerLike {
+  return new Worker(
+    new URL("./catalog-client-index.worker.ts", import.meta.url),
+    { type: "module" },
+  ) as unknown as CatalogClientIndexWorkerLike;
+}
+
+export async function compileCatalogClientIndexOffMainThread(
+  payload: CatalogClientIndexPayload,
+  signal?: AbortSignal,
+  workerFactory?: CatalogClientIndexWorkerFactory,
+): Promise<CompiledCatalogClientIndex> {
+  if (signal?.aborted) {
+    throw new DOMException("Catalog index compilation aborted.", "AbortError");
+  }
+  const factory =
+    workerFactory ??
+    (typeof Worker === "undefined" ? null : createCatalogClientIndexWorker);
+  if (!factory) return compileCatalogClientIndexCooperatively(payload);
+
+  let worker: CatalogClientIndexWorkerLike;
+  try {
+    worker = factory();
+  } catch {
+    return compileCatalogClientIndexCooperatively(payload);
+  }
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      signal?.removeEventListener("abort", onAbort);
+      worker.terminate();
+    };
+    const onAbort = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(
+        new DOMException("Catalog index compilation aborted.", "AbortError"),
+      );
+    };
+    worker.onmessage = (event) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      if (event.data.status === "ready") {
+        resolve(event.data.index);
+      } else {
+        reject(new Error("Catalog index worker rejected the payload."));
+      }
+    };
+    worker.onerror = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      void compileCatalogClientIndexCooperatively(payload).then(
+        resolve,
+        reject,
+      );
+    };
+    signal?.addEventListener("abort", onAbort, { once: true });
+    try {
+      worker.postMessage(payload);
+    } catch (error) {
+      settled = true;
+      cleanup();
+      reject(error);
+    }
+  });
+}
 function waitForCatalogClientIndexRefreshWindow(
   signal?: AbortSignal,
 ): Promise<void> {
@@ -246,28 +329,29 @@ export async function fetchCatalogClientIndex(
   return payloadFromUnknown(await response.json());
 }
 
+export type CatalogClientIndexCompiler = (
+  payload: CatalogClientIndexPayload,
+  signal?: AbortSignal,
+) => Promise<CompiledCatalogClientIndex>;
+
 export async function refreshCatalogClientIndex(
   storage: CatalogClientIndexStorage,
   fetcher: CatalogClientIndexFetcher,
   onCached?: (index: CompiledCatalogClientIndex) => void,
   signal?: AbortSignal,
+  compiler: CatalogClientIndexCompiler = compileCatalogClientIndexOffMainThread,
 ): Promise<CatalogClientIndexRefreshResult> {
-  let cachedPayload: CatalogClientIndexPayload | null = null;
   let cachedIndex: CompiledCatalogClientIndex | null = null;
   try {
-    cachedPayload = await storage.readActive();
-    if (cachedPayload) {
-      cachedIndex = await compileCatalogClientIndexCooperatively(cachedPayload);
-      onCached?.(cachedIndex);
-    }
+    cachedIndex = await storage.readActive();
+    if (cachedIndex) onCached?.(cachedIndex);
   } catch {
-    cachedPayload = null;
     cachedIndex = null;
   }
 
   try {
     const remotePayload = await fetcher(
-      cachedPayload?.snapshotHash ?? null,
+      cachedIndex?.snapshotHash ?? null,
       signal,
     );
     if (!remotePayload) {
@@ -280,11 +364,10 @@ export async function refreshCatalogClientIndex(
         persistenceAvailable: true,
       };
     }
-    const remoteIndex =
-      await compileCatalogClientIndexCooperatively(remotePayload);
+    const remoteIndex = await compiler(remotePayload, signal);
     let persistenceAvailable = true;
     try {
-      await storage.writeAndActivate(remotePayload);
+      await storage.writeAndActivate(remoteIndex);
     } catch {
       persistenceAvailable = false;
     }

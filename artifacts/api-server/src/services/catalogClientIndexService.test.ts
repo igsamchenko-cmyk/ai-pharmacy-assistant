@@ -4,6 +4,7 @@ import {
   conciseCatalogIndexForm,
   loadCatalogClientIndex,
   resetCatalogClientIndexCacheForTests,
+  warmCatalogClientIndexCache,
   type CatalogClientIndexQueryExecutor,
 } from "./catalogClientIndexService";
 
@@ -82,6 +83,31 @@ describe("catalog client index service", () => {
     expect(result.payload.rows[1]?.[4]).toBe("таблетки");
     expect(result.wireBytes).toBeGreaterThan(0);
     expect(store.query).toHaveBeenCalledTimes(2);
+  });
+
+  it("prewarms once and shares one payload build across concurrent clients", async () => {
+    const warmStore = executor();
+    await expect(warmCatalogClientIndexCache(warmStore)).resolves.toMatchObject(
+      {
+        snapshotHash: SHA,
+        productCount: 2,
+      },
+    );
+    await loadCatalogClientIndex(null, warmStore);
+    expect(warmStore.query).toHaveBeenCalledTimes(3);
+
+    resetCatalogClientIndexCacheForTests();
+    const concurrentStore = executor();
+    const [first, second] = await Promise.all([
+      loadCatalogClientIndex(null, concurrentStore),
+      loadCatalogClientIndex(null, concurrentStore),
+    ]);
+    expect(first.status).toBe("ready");
+    expect(second.status).toBe("ready");
+    expect(concurrentStore.query).toHaveBeenCalledTimes(3);
+    if (first.status === "ready" && second.status === "ready") {
+      expect(first.payload).toBe(second.payload);
+    }
   });
 
   it("returns not-modified after the metadata query without loading product rows", async () => {

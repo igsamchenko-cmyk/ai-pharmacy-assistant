@@ -45,7 +45,13 @@ export type CatalogClientIndexLoadResult =
   | { status: "not_modified"; snapshotHash: string; productCount: number }
   | { status: "ready"; payload: CatalogClientIndexPayload; wireBytes: number };
 
+interface PendingCatalogClientIndexBuild {
+  snapshotHash: string;
+  promise: Promise<{ payload: CatalogClientIndexPayload; wireBytes: number }>;
+}
+
 let cachedPayload: CatalogClientIndexPayload | null = null;
+let pendingBuild: PendingCatalogClientIndexBuild | null = null;
 
 function normalizeEtag(value: string | null | undefined): string | null {
   const normalized =
@@ -136,16 +142,10 @@ async function readSnapshot(
   return { productCount, snapshotHash, generatedAt };
 }
 
-async function buildPayload(
+async function buildPayloadUncached(
   snapshot: CatalogClientIndexSnapshot,
   executor: CatalogClientIndexQueryExecutor,
 ): Promise<{ payload: CatalogClientIndexPayload; wireBytes: number }> {
-  if (cachedPayload?.snapshotHash === snapshot.snapshotHash) {
-    return {
-      payload: cachedPayload,
-      wireBytes: catalogClientIndexWireBytes(cachedPayload),
-    };
-  }
   const result = await executor.query(
     `SELECT registry_id, registration_number, trade_name, inn, form, strength,
             source_snapshot_hash
@@ -191,6 +191,28 @@ async function buildPayload(
   return { payload, wireBytes };
 }
 
+async function buildPayload(
+  snapshot: CatalogClientIndexSnapshot,
+  executor: CatalogClientIndexQueryExecutor,
+): Promise<{ payload: CatalogClientIndexPayload; wireBytes: number }> {
+  if (cachedPayload?.snapshotHash === snapshot.snapshotHash) {
+    return {
+      payload: cachedPayload,
+      wireBytes: catalogClientIndexWireBytes(cachedPayload),
+    };
+  }
+  if (pendingBuild?.snapshotHash === snapshot.snapshotHash) {
+    return pendingBuild.promise;
+  }
+  const promise = buildPayloadUncached(snapshot, executor);
+  pendingBuild = { snapshotHash: snapshot.snapshotHash, promise };
+  try {
+    return await promise;
+  } finally {
+    if (pendingBuild?.promise === promise) pendingBuild = null;
+  }
+}
+
 export async function loadCatalogClientIndex(
   ifNoneMatch?: string | null,
   executor?: CatalogClientIndexQueryExecutor,
@@ -208,6 +230,21 @@ export async function loadCatalogClientIndex(
   return { status: "ready", ...built };
 }
 
+export async function warmCatalogClientIndexCache(
+  executor?: CatalogClientIndexQueryExecutor,
+): Promise<{ snapshotHash: string; productCount: number; wireBytes: number }> {
+  const result = await loadCatalogClientIndex(null, executor);
+  if (result.status !== "ready") {
+    throw new Error("Catalog client index prewarm did not build a payload.");
+  }
+  return {
+    snapshotHash: result.payload.snapshotHash,
+    productCount: result.payload.productCount,
+    wireBytes: result.wireBytes,
+  };
+}
+
 export function resetCatalogClientIndexCacheForTests(): void {
   cachedPayload = null;
+  pendingBuild = null;
 }
