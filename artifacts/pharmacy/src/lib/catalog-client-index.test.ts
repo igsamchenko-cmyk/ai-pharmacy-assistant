@@ -16,7 +16,7 @@ import {
   groupLocalCatalogResults,
 } from "@/components/local-catalog-results";
 import {
-  CATALOG_CLIENT_INDEX_INITIAL_FETCH_DELAY_MS,
+  CATALOG_CLIENT_INDEX_REFRESH_DELAY_MS,
   compileCatalogClientIndexCooperatively,
   deferCatalogClientIndexFetcher,
   refreshCatalogClientIndex,
@@ -244,7 +244,7 @@ describe("catalog client index", () => {
   });
 
   it("uses a server request only while the local index loads or is unavailable", () => {
-    expect(shouldUseServerCatalogSearch("loading", false, "Енап")).toBe(true);
+    expect(shouldUseServerCatalogSearch("loading", false, "Енап")).toBe(false);
     expect(shouldUseServerCatalogSearch("ready", false, "Енап")).toBe(false);
     expect(shouldUseServerCatalogSearch("error", false, "Енап")).toBe(true);
     expect(shouldUseServerCatalogSearch("ready", true, "Енап")).toBe(true);
@@ -270,20 +270,26 @@ describe("catalog client index", () => {
     expect(searchCatalogClientIndex(compiled, "MEDICINE 250").total).toBe(1);
   });
 
-  it("defers the large network index so typed server search gets priority", async () => {
+  it("starts the initial index immediately and defers only cached refresh", async () => {
     vi.useFakeTimers();
     try {
       const upstream = vi
         .fn<CatalogClientIndexFetcher>()
         .mockResolvedValue(null);
       const deferred = deferCatalogClientIndexFetcher(upstream);
-      const pending = deferred(null);
+
+      const initial = deferred(null);
+      expect(upstream).toHaveBeenCalledOnce();
+      await expect(initial).resolves.toBeNull();
+
+      upstream.mockClear();
+      const refresh = deferred(HASH_A);
       await vi.advanceTimersByTimeAsync(
-        CATALOG_CLIENT_INDEX_INITIAL_FETCH_DELAY_MS - 1,
+        CATALOG_CLIENT_INDEX_REFRESH_DELAY_MS - 1,
       );
       expect(upstream).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(1);
-      await expect(pending).resolves.toBeNull();
+      await expect(refresh).resolves.toBeNull();
       expect(upstream).toHaveBeenCalledOnce();
     } finally {
       vi.useRealTimers();

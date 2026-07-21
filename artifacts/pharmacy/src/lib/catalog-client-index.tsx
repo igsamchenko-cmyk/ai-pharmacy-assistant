@@ -45,7 +45,6 @@ export type CatalogClientIndexFetcher = (
   signal?: AbortSignal,
 ) => Promise<CatalogClientIndexPayload | null>;
 
-export const CATALOG_CLIENT_INDEX_INITIAL_FETCH_DELAY_MS = 6_000;
 export const CATALOG_CLIENT_INDEX_REFRESH_DELAY_MS = 30_000;
 export const CATALOG_CLIENT_INDEX_COMPILE_CHUNK_SIZE = 128;
 
@@ -127,13 +126,9 @@ export async function compileCatalogClientIndexCooperatively(
   };
 }
 
-function waitForCatalogClientIndexBackgroundWindow(
-  activeSnapshotHash: string | null,
+function waitForCatalogClientIndexRefreshWindow(
   signal?: AbortSignal,
 ): Promise<void> {
-  const delayMs = activeSnapshotHash
-    ? CATALOG_CLIENT_INDEX_REFRESH_DELAY_MS
-    : CATALOG_CLIENT_INDEX_INITIAL_FETCH_DELAY_MS;
   return new Promise((resolve, reject) => {
     if (signal?.aborted) {
       reject(new DOMException("Catalog index refresh aborted.", "AbortError"));
@@ -146,7 +141,7 @@ function waitForCatalogClientIndexBackgroundWindow(
     const timer = setTimeout(() => {
       signal?.removeEventListener("abort", onAbort);
       resolve();
-    }, delayMs);
+    }, CATALOG_CLIENT_INDEX_REFRESH_DELAY_MS);
     signal?.addEventListener("abort", onAbort, { once: true });
   });
 }
@@ -155,7 +150,10 @@ export function deferCatalogClientIndexFetcher(
   fetcher: CatalogClientIndexFetcher,
 ): CatalogClientIndexFetcher {
   return async (activeSnapshotHash, signal) => {
-    await waitForCatalogClientIndexBackgroundWindow(activeSnapshotHash, signal);
+    if (!activeSnapshotHash) {
+      return fetcher(activeSnapshotHash, signal);
+    }
+    await waitForCatalogClientIndexRefreshWindow(signal);
     return fetcher(activeSnapshotHash, signal);
   };
 }
