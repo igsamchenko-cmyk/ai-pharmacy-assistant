@@ -155,8 +155,15 @@ function duplicateStats(values: readonly string[]) {
 function canonicalManufacturers(
   manufacturers: readonly { name: string; country: string }[],
 ): string[] {
-  return manufacturers
-    .map((item) => `${item.name.trim()}\u001f${item.country.trim()}`)
+  const unique = new Map<string, { name: string; country: string }>();
+  for (const item of manufacturers) {
+    const name = item.name.trim();
+    const country = item.country.trim();
+    if (!name) continue;
+    unique.set(`${normalize(name)}\u0000${country}`, { name, country });
+  }
+  return [...unique.values()]
+    .map((item) => `${item.name}\u001f${item.country}`)
     .sort((a, b) => a.localeCompare(b));
 }
 
