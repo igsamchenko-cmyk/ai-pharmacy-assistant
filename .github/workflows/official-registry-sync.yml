@@ -6,20 +6,25 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Audit, read-only production profile, or confirmed apply"
+        description: "Audit, profile, metadata reconciliation, or apply"
         required: true
         default: audit
         type: choice
         options:
           - audit
           - profile
+          - reconcile
           - apply
       confirm_sha256:
-        description: "Required for profile/apply; exact SHA-256 printed by audit"
+        description: "Required for profile/reconcile/apply; exact audited SHA-256"
         required: false
         type: string
       confirm_production_apply:
-        description: "Required for profile/apply; must match the environment confirmation secret"
+        description: "Required for profile/apply; must match its environment secret"
+        required: false
+        type: string
+      confirm_production_reconcile:
+        description: "Required for reconcile; must match its dedicated environment secret"
         required: false
         type: string
   pull_request:
@@ -29,10 +34,13 @@ on:
       - "artifacts/api-server/src/knowledge/registryProductionSearchSmoke.ts"
       - "artifacts/api-server/src/knowledge/registryApplyConfirmation.ts"
       - "artifacts/api-server/src/knowledge/registryArtifactPath.ts"
+      - "artifacts/api-server/src/knowledge/registryAuditReconciliation.ts"
       - "artifacts/api-server/src/knowledge/registrySyncWorkflowState.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-confirm-production-apply.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-artifact-preflight.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-catalog-db-smoke.ts"
+      - "artifacts/api-server/src/scripts/knowledge-registry-reconcile-audit.ts"
+      - "artifacts/api-server/src/scripts/knowledge-registry-reconcile-confirm.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-search-profile-confirm.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-search-profile.ts"
       - "artifacts/api-server/src/scripts/knowledge-registry-sync-summary.ts"
@@ -215,6 +223,86 @@ jobs:
           retention-days: 30
           if-no-files-found: error
           path: ${{ runner.temp }}/registry-production-search-profile.json
+
+  reconcile:
+    name: Confirmed metadata-only registry audit reconciliation
+    needs: audit
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'reconcile'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production-registry-sync
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25.8.2
+
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+
+      - name: Require fail-closed reconciliation confirmation
+        id: reconciliation_confirmation
+        continue-on-error: true
+        env:
+          REGISTRY_PRODUCTION_AUDIT_RECONCILIATION: "true"
+          CONFIRM_REGISTRY_SNAPSHOT_SHA: ${{ inputs.confirm_sha256 }}
+          AUDITED_REGISTRY_SNAPSHOT_SHA: ${{ needs.audit.outputs.source_sha256 }}
+          CONFIRM_PRODUCTION_RECONCILE_INPUT: ${{ inputs.confirm_production_reconcile }}
+          CONFIRM_PRODUCTION_REGISTRY_RECONCILE: ${{ secrets.CONFIRM_PRODUCTION_REGISTRY_RECONCILE }}
+          REGISTRY_SYNC_MODE: reconcile
+          REGISTRY_SYNC_PURPOSE: production-registry-audit-reconciliation
+          REGISTRY_SYNC_ENVIRONMENT: production-registry-sync
+        run: pnpm knowledge:registry:reconcile-confirm
+
+      - name: Fail before production access when reconciliation confirmation is invalid
+        if: >-
+          steps.reconciliation_confirmation.outcome != 'success' ||
+          steps.reconciliation_confirmation.outputs.reconciliation_confirmation_passed != 'true'
+        run: |
+          echo "Registry audit reconciliation confirmation failed. No database step was started."
+          exit 1
+
+      - name: Download the audited immutable checkpoint
+        uses: actions/download-artifact@v4
+        with:
+          name: official-registry-${{ github.run_id }}-${{ needs.audit.outputs.source_sha256 }}
+          path: ${{ runner.temp }}/registry-audit
+
+      - name: Verify downloaded registry CSV before DB access
+        id: registry_artifact
+        env:
+          REGISTRY_ARTIFACT_DIRECTORY: ${{ runner.temp }}/registry-audit
+        run: pnpm knowledge:registry:artifact-preflight
+
+      - name: Append exact production parity audit metadata
+        id: reconcile_registry_audit
+        env:
+          REGISTRY_PRODUCTION_AUDIT_RECONCILIATION: "true"
+          CONFIRM_REGISTRY_SNAPSHOT_SHA: ${{ inputs.confirm_sha256 }}
+          AUDITED_REGISTRY_SNAPSHOT_SHA: ${{ needs.audit.outputs.source_sha256 }}
+          CONFIRM_PRODUCTION_RECONCILE_INPUT: ${{ inputs.confirm_production_reconcile }}
+          CONFIRM_PRODUCTION_REGISTRY_RECONCILE: ${{ secrets.CONFIRM_PRODUCTION_REGISTRY_RECONCILE }}
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_SSL: "true"
+          KNOWLEDGE_DB_RUNTIME: "true"
+          REGISTRY_SYNC_MODE: reconcile
+          REGISTRY_SYNC_PURPOSE: production-registry-audit-reconciliation
+          REGISTRY_SYNC_ENVIRONMENT: production-registry-sync
+        run: >-
+          pnpm knowledge:registry:reconcile-audit --
+          --file="${{ steps.registry_artifact.outputs.csv_path }}"
+          --source-url="$OFFICIAL_REGISTRY_URL"
+          --downloaded-at="${{ needs.audit.outputs.downloaded_at }}"
+          --output="$RUNNER_TEMP/registry-audit-reconciliation.json"
+
+      - name: Upload sanitized reconciliation result
+        uses: actions/upload-artifact@v4
+        with:
+          name: registry-audit-reconciliation-${{ github.run_id }}
+          retention-days: 90
+          if-no-files-found: error
+          path: ${{ runner.temp }}/registry-audit-reconciliation.json
 
   apply:
     name: Confirmed additive/upsert and mark-stale update
