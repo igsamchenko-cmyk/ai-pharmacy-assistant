@@ -189,4 +189,19 @@ describe("protected registry audit reconciliation", () => {
     expect(job).not.toContain("pnpm db:push");
     expect(job).not.toContain("--apply");
   });
+
+  it("exposes reconciliation commands from the workspace root used by Actions", () => {
+    const rootPackage = JSON.parse(
+      readFileSync(
+        fileURLToPath(new URL("../../../../../package.json", import.meta.url)),
+        "utf8",
+      ),
+    ) as { scripts?: Record<string, string> };
+    expect(rootPackage.scripts?.["knowledge:registry:reconcile-confirm"]).toBe(
+      "pnpm --filter @workspace/api-server run knowledge:registry:reconcile-confirm",
+    );
+    expect(rootPackage.scripts?.["knowledge:registry:reconcile-audit"]).toBe(
+      "pnpm --filter @workspace/api-server run knowledge:registry:reconcile-audit",
+    );
+  });
 });

@@ -32,6 +32,8 @@
     "knowledge:registry:artifact-preflight": "pnpm --filter @workspace/api-server run knowledge:registry:artifact-preflight",
     "knowledge:registry:search-profile-confirm": "pnpm --filter @workspace/api-server run knowledge:registry:search-profile-confirm",
     "knowledge:registry:search-profile": "pnpm --filter @workspace/api-server run knowledge:registry:search-profile",
+    "knowledge:registry:reconcile-confirm": "pnpm --filter @workspace/api-server run knowledge:registry:reconcile-confirm",
+    "knowledge:registry:reconcile-audit": "pnpm --filter @workspace/api-server run knowledge:registry:reconcile-audit",
     "knowledge:registry:sync-summary": "pnpm --filter @workspace/api-server run knowledge:registry:sync-summary",
     "knowledge:catalog:completeness-report": "pnpm --filter @workspace/api-server run knowledge:catalog:completeness-report",
     "knowledge:catalog:search-coverage-report": "pnpm --filter @workspace/api-server run knowledge:catalog:search-coverage-report",
