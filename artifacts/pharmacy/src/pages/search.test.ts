@@ -46,6 +46,8 @@ describe("catalog index readiness fallback", () => {
     expect(shouldUseServerCatalogSearch("ready", false, "Enap")).toBe(false);
     expect(shouldUseServerCatalogSearch("error", false, "Enap")).toBe(true);
     expect(shouldUseServerCatalogSearch("ready", true, "Enap")).toBe(true);
+    expect(shouldUseServerCatalogSearch("loading", false, "")).toBe(false);
+    expect(shouldUseServerCatalogSearch("error", false, "")).toBe(true);
   });
 
   it("replaces the catalog skeleton as soon as a fallback response exists", () => {
