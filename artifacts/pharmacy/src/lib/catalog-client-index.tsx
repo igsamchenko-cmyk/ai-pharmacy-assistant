@@ -1,4 +1,7 @@
 import {
+  CATALOG_CLIENT_INDEX_MAX_ALIASES,
+  CATALOG_CLIENT_INDEX_MAX_MEMORY_BYTES,
+  CATALOG_CLIENT_INDEX_MAX_PRODUCTS,
   CATALOG_CLIENT_INDEX_MAX_WIRE_BYTES,
   CATALOG_CLIENT_INDEX_VERSION,
   catalogClientIndexWireBytes,
@@ -42,6 +45,120 @@ export type CatalogClientIndexFetcher = (
   signal?: AbortSignal,
 ) => Promise<CatalogClientIndexPayload | null>;
 
+export const CATALOG_CLIENT_INDEX_INITIAL_FETCH_DELAY_MS = 6_000;
+export const CATALOG_CLIENT_INDEX_REFRESH_DELAY_MS = 30_000;
+export const CATALOG_CLIENT_INDEX_COMPILE_CHUNK_SIZE = 128;
+
+type CatalogClientIndexCompileOptions = {
+  chunkSize?: number;
+  yieldControl?: () => Promise<void>;
+};
+
+function defaultYieldControl(): Promise<void> {
+  const scheduler = (
+    globalThis as typeof globalThis & {
+      scheduler?: { yield?: () => Promise<void> };
+    }
+  ).scheduler;
+  if (typeof scheduler?.yield === "function") return scheduler.yield();
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+export async function compileCatalogClientIndexCooperatively(
+  payload: CatalogClientIndexPayload,
+  options: CatalogClientIndexCompileOptions = {},
+): Promise<CompiledCatalogClientIndex> {
+  if (
+    payload.productCount !== payload.rows.length ||
+    payload.rows.length > CATALOG_CLIENT_INDEX_MAX_PRODUCTS ||
+    payload.aliasCount !== payload.aliases.length ||
+    payload.aliases.length > CATALOG_CLIENT_INDEX_MAX_ALIASES
+  ) {
+    throw new Error("Catalog client index count is invalid.");
+  }
+  const chunkSize = Math.max(
+    1,
+    Math.floor(options.chunkSize ?? CATALOG_CLIENT_INDEX_COMPILE_CHUNK_SIZE),
+  );
+  const yieldControl = options.yieldControl ?? defaultYieldControl;
+  const identities = new Set<string>();
+  const products: CompiledCatalogClientIndex["products"][number][] = [];
+  let estimatedMemoryBytes = 0;
+
+  for (let offset = 0; offset < payload.rows.length; offset += chunkSize) {
+    const rows = payload.rows.slice(offset, offset + chunkSize);
+    for (const row of rows) {
+      if (!Array.isArray(row) || row.length !== 6)
+        throw new Error("Catalog client index row is invalid.");
+      const identity = `${row[0]}\u0000${row[1]}`;
+      if (identities.has(identity))
+        throw new Error("Catalog client index contains duplicates.");
+      identities.add(identity);
+    }
+    const compiled = compileCatalogClientIndex({
+      ...payload,
+      productCount: rows.length,
+      aliasCount: 0,
+      rows,
+      aliases: [],
+    });
+    products.push(...compiled.products);
+    estimatedMemoryBytes += compiled.estimatedMemoryBytes;
+    if (offset + chunkSize < payload.rows.length) await yieldControl();
+  }
+
+  const compiledAliases = compileCatalogClientIndex({
+    ...payload,
+    productCount: 0,
+    rows: [],
+  });
+  estimatedMemoryBytes += compiledAliases.estimatedMemoryBytes;
+  if (estimatedMemoryBytes > CATALOG_CLIENT_INDEX_MAX_MEMORY_BYTES) {
+    throw new Error("Catalog client index exceeds the memory budget.");
+  }
+  return {
+    version: payload.version,
+    snapshotHash: payload.snapshotHash,
+    productCount: payload.productCount,
+    aliasCount: payload.aliasCount,
+    estimatedMemoryBytes,
+    products,
+    aliases: compiledAliases.aliases,
+  };
+}
+
+function waitForCatalogClientIndexBackgroundWindow(
+  activeSnapshotHash: string | null,
+  signal?: AbortSignal,
+): Promise<void> {
+  const delayMs = activeSnapshotHash
+    ? CATALOG_CLIENT_INDEX_REFRESH_DELAY_MS
+    : CATALOG_CLIENT_INDEX_INITIAL_FETCH_DELAY_MS;
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException("Catalog index refresh aborted.", "AbortError"));
+      return;
+    }
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(new DOMException("Catalog index refresh aborted.", "AbortError"));
+    };
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, delayMs);
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
+export function deferCatalogClientIndexFetcher(
+  fetcher: CatalogClientIndexFetcher,
+): CatalogClientIndexFetcher {
+  return async (activeSnapshotHash, signal) => {
+    await waitForCatalogClientIndexBackgroundWindow(activeSnapshotHash, signal);
+    return fetcher(activeSnapshotHash, signal);
+  };
+}
 interface CatalogClientIndexContextValue {
   status: CatalogClientIndexStatus;
   source: CatalogClientIndexSource | null;
@@ -142,7 +259,7 @@ export async function refreshCatalogClientIndex(
   try {
     cachedPayload = await storage.readActive();
     if (cachedPayload) {
-      cachedIndex = compileCatalogClientIndex(cachedPayload);
+      cachedIndex = await compileCatalogClientIndexCooperatively(cachedPayload);
       onCached?.(cachedIndex);
     }
   } catch {
@@ -165,7 +282,8 @@ export async function refreshCatalogClientIndex(
         persistenceAvailable: true,
       };
     }
-    const remoteIndex = compileCatalogClientIndex(remotePayload);
+    const remoteIndex =
+      await compileCatalogClientIndexCooperatively(remotePayload);
     let persistenceAvailable = true;
     try {
       await storage.writeAndActivate(remotePayload);
@@ -219,7 +337,7 @@ export function CatalogClientIndexProvider({
     setIsRefreshing(true);
     void refreshCatalogClientIndex(
       storage,
-      fetchCatalogClientIndex,
+      deferCatalogClientIndexFetcher(fetchCatalogClientIndex),
       (cached) => {
         if (!active) return;
         setIndex(cached);

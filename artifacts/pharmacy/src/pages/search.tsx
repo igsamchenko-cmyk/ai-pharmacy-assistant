@@ -129,10 +129,10 @@ export function shouldUseServerCatalogSearch(
   hasServerOnlyFilters: boolean,
   query: string,
 ): boolean {
-  return (
-    (status === "loading" || status === "error" || hasServerOnlyFilters) &&
-    isCatalogQueryEnabled(query)
-  );
+  if (!isCatalogQueryEnabled(query)) return false;
+  if (status === "ready") return hasServerOnlyFilters;
+  if (status === "error") return true;
+  return Boolean(query.trim()) || hasServerOnlyFilters;
 }
 
 export function shouldShowCatalogIndexSkeleton(

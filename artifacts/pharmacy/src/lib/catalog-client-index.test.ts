@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   CATALOG_CLIENT_INDEX_VERSION,
   compileCatalogClientIndex,
@@ -16,6 +16,9 @@ import {
   groupLocalCatalogResults,
 } from "@/components/local-catalog-results";
 import {
+  CATALOG_CLIENT_INDEX_INITIAL_FETCH_DELAY_MS,
+  compileCatalogClientIndexCooperatively,
+  deferCatalogClientIndexFetcher,
   refreshCatalogClientIndex,
   type CatalogClientIndexFetcher,
 } from "@/lib/catalog-client-index";
@@ -245,6 +248,46 @@ describe("catalog client index", () => {
     expect(shouldUseServerCatalogSearch("ready", false, "Енап")).toBe(false);
     expect(shouldUseServerCatalogSearch("error", false, "Енап")).toBe(true);
     expect(shouldUseServerCatalogSearch("ready", true, "Енап")).toBe(true);
+    expect(shouldUseServerCatalogSearch("loading", false, "")).toBe(false);
+    expect(shouldUseServerCatalogSearch("error", false, "")).toBe(true);
+  });
+
+  it("compiles a full payload cooperatively without changing search results", async () => {
+    const products = Array.from({ length: 300 }, (_, index) =>
+      product(
+        index + 1,
+        "MEDICINE " + (index + 1),
+        "Ingredient " + (index + 1),
+      ),
+    );
+    const yieldControl = vi.fn().mockResolvedValue(undefined);
+    const compiled = await compileCatalogClientIndexCooperatively(
+      payload(products),
+      { chunkSize: 64, yieldControl },
+    );
+    expect(compiled.productCount).toBe(300);
+    expect(yieldControl).toHaveBeenCalledTimes(4);
+    expect(searchCatalogClientIndex(compiled, "MEDICINE 250").total).toBe(1);
+  });
+
+  it("defers the large network index so typed server search gets priority", async () => {
+    vi.useFakeTimers();
+    try {
+      const upstream = vi
+        .fn<CatalogClientIndexFetcher>()
+        .mockResolvedValue(null);
+      const deferred = deferCatalogClientIndexFetcher(upstream);
+      const pending = deferred(null);
+      await vi.advanceTimersByTimeAsync(
+        CATALOG_CLIENT_INDEX_INITIAL_FETCH_DELAY_MS - 1,
+      );
+      expect(upstream).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      await expect(pending).resolves.toBeNull();
+      expect(upstream).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("renders exact product routes without horizontal overflow", () => {
