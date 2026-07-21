@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { warmCatalogClientIndexCache } from "./services/catalogClientIndexService";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,21 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  const prewarmStartedAt = Date.now();
+  void warmCatalogClientIndexCache()
+    .then(({ productCount, snapshotHash, wireBytes }) => {
+      logger.info(
+        {
+          durationMs: Date.now() - prewarmStartedAt,
+          productCount,
+          snapshotHash,
+          wireBytes,
+        },
+        "Catalog client index prewarmed",
+      );
+    })
+    .catch(() => {
+      logger.warn("Catalog client index prewarm unavailable");
+    });
 });

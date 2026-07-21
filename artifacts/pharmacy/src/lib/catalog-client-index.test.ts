@@ -10,6 +10,7 @@ import {
   type CatalogClientIndexAliasRow,
   type CatalogClientIndexPayload,
   type CatalogClientIndexProduct,
+  type CompiledCatalogClientIndex,
 } from "@workspace/catalog-index";
 import {
   LocalCatalogResults,
@@ -18,11 +19,16 @@ import {
 import {
   CATALOG_CLIENT_INDEX_REFRESH_DELAY_MS,
   compileCatalogClientIndexCooperatively,
+  compileCatalogClientIndexOffMainThread,
   deferCatalogClientIndexFetcher,
   refreshCatalogClientIndex,
   type CatalogClientIndexFetcher,
+  type CatalogClientIndexWorkerLike,
 } from "@/lib/catalog-client-index";
-import type { CatalogClientIndexStorage } from "@/lib/catalog-client-index-storage";
+import {
+  validatePersistedCatalogClientIndex,
+  type CatalogClientIndexStorage,
+} from "@/lib/catalog-client-index-storage";
 import { shouldUseServerCatalogSearch } from "@/pages/search";
 
 const HASH_A = "a".repeat(64);
@@ -74,23 +80,22 @@ const representativeProducts = [
 ];
 
 class MemoryStorage implements CatalogClientIndexStorage {
-  active: CatalogClientIndexPayload | null;
+  active: CompiledCatalogClientIndex | null;
   writes: string[] = [];
 
-  constructor(active: CatalogClientIndexPayload | null = null) {
+  constructor(active: CompiledCatalogClientIndex | null = null) {
     this.active = active;
   }
 
-  async readActive(): Promise<CatalogClientIndexPayload | null> {
+  async readActive(): Promise<CompiledCatalogClientIndex | null> {
     return this.active;
   }
 
-  async writeAndActivate(next: CatalogClientIndexPayload): Promise<void> {
+  async writeAndActivate(next: CompiledCatalogClientIndex): Promise<void> {
     this.writes.push(next.snapshotHash);
     this.active = next;
   }
 }
-
 describe("catalog client index", () => {
   it("keeps exact trade names above INN and groups same-brand variants", () => {
     const index = compileCatalogClientIndex(payload(representativeProducts));
@@ -221,7 +226,7 @@ describe("catalog client index", () => {
   it("keeps a cached snapshot searchable offline and activates a changed hash only after validation", async () => {
     const oldPayload = payload(representativeProducts, HASH_A);
     const nextPayload = payload(representativeProducts, HASH_B);
-    const storage = new MemoryStorage(oldPayload);
+    const storage = new MemoryStorage(compileCatalogClientIndex(oldPayload));
     const seen: string[] = [];
     const refreshed = await refreshCatalogClientIndex(
       storage,
@@ -243,6 +248,84 @@ describe("catalog client index", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("reuses a persisted prepared index without recompiling it", async () => {
+    const cached = compileCatalogClientIndex(
+      payload(representativeProducts, HASH_A),
+    );
+    const storage = new MemoryStorage(cached);
+    const compiler = vi.fn(async () => {
+      throw new Error("warm cache must not compile");
+    });
+    const refreshed = await refreshCatalogClientIndex(
+      storage,
+      async (snapshotHash) => {
+        expect(snapshotHash).toBe(HASH_A);
+        return null;
+      },
+      undefined,
+      undefined,
+      compiler,
+    );
+    expect(compiler).not.toHaveBeenCalled();
+    expect(refreshed.index).toBe(cached);
+  });
+
+  it("accepts only bounded, versioned prepared indexes from persistence", () => {
+    const index = compileCatalogClientIndex(
+      payload(representativeProducts, HASH_A),
+    );
+    const record = {
+      storageVersion: 1,
+      snapshotHash: HASH_A,
+      index,
+    };
+    expect(validatePersistedCatalogClientIndex(record)).toBe(index);
+    expect(
+      validatePersistedCatalogClientIndex({
+        ...record,
+        snapshotHash: HASH_B,
+      }),
+    ).toBeNull();
+    expect(
+      validatePersistedCatalogClientIndex({
+        ...record,
+        index: {
+          ...index,
+          estimatedMemoryBytes: index.estimatedMemoryBytes + 2,
+        },
+      }),
+    ).toBeNull();
+    expect(
+      validatePersistedCatalogClientIndex(
+        payload(representativeProducts, HASH_A),
+      ),
+    ).toBeNull();
+  });
+
+  it("compiles a cold payload in a worker and terminates it", async () => {
+    const source = payload(representativeProducts, HASH_A);
+    const expected = compileCatalogClientIndex(source);
+    const worker: CatalogClientIndexWorkerLike = {
+      onmessage: null,
+      onerror: null,
+      postMessage: vi.fn(() => {
+        queueMicrotask(() =>
+          worker.onmessage?.({
+            data: { status: "ready", index: expected },
+          } as MessageEvent),
+        );
+      }),
+      terminate: vi.fn(),
+    };
+    const compiled = await compileCatalogClientIndexOffMainThread(
+      source,
+      undefined,
+      () => worker,
+    );
+    expect(compiled).toBe(expected);
+    expect(worker.postMessage).toHaveBeenCalledWith(source);
+    expect(worker.terminate).toHaveBeenCalledOnce();
+  });
   it("uses a server request only while the local index loads or is unavailable", () => {
     expect(shouldUseServerCatalogSearch("loading", false, "Енап")).toBe(false);
     expect(shouldUseServerCatalogSearch("ready", false, "Енап")).toBe(false);
@@ -317,7 +400,9 @@ describe("catalog client index", () => {
         `Ingredient ${index + 1}`,
       ),
     );
+    const compileStartedAt = performance.now();
     const compiled = compileCatalogClientIndex(payload(products));
+    expect(performance.now() - compileStartedAt).toBeLessThanOrEqual(5_000);
     expect(compiled.productCount).toBe(16_533);
     expect(
       compiled.products.every((item) =>
