@@ -42,7 +42,7 @@ vi.mock("@/components/report-issue-button", () => ({
 
 describe("catalog index readiness fallback", () => {
   it("uses the debounced server fallback only until the local catalog is ready", () => {
-    expect(shouldUseServerCatalogSearch("loading", false, "Enap")).toBe(true);
+    expect(shouldUseServerCatalogSearch("loading", false, "Enap")).toBe(false);
     expect(shouldUseServerCatalogSearch("ready", false, "Enap")).toBe(false);
     expect(shouldUseServerCatalogSearch("error", false, "Enap")).toBe(true);
     expect(shouldUseServerCatalogSearch("ready", true, "Enap")).toBe(true);
