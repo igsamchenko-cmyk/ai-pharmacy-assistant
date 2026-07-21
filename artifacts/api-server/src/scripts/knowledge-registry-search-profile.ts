@@ -4,6 +4,7 @@ import { performance } from "node:perf_hooks";
 import { SearchCatalogQueryParams } from "@workspace/api-zod";
 import { normalizeQuery } from "../knowledge/dictionary";
 import {
+  assertCatalogProfileSnapshot,
   assertCatalogSmokeHasNoIdleTransactions,
   authorizeCatalogProfileDatabase,
   closeCatalogSmokePool,
@@ -336,25 +337,42 @@ async function main(): Promise<void> {
     });
     await verifyCatalogSmokeReadOnlySession(executor);
     const snapshot = await executor.query(
-      `SELECT COUNT(*) FILTER (WHERE review_status <> 'stale')::int AS current_rows,
-              COUNT(*) FILTER (WHERE review_status = 'stale')::int AS stale_rows,
+      `SELECT COUNT(*) FILTER (
+                WHERE COALESCE(current_status, 'current') <> 'stale'
+              )::int AS current_rows,
+              COUNT(*) FILTER (
+                WHERE COALESCE(current_status, 'current') = 'stale'
+              )::int AS stale_rows,
+              COUNT(*) FILTER (WHERE review_status <> 'stale')::int AS searchable_rows,
               COUNT(DISTINCT source_snapshot_hash)
-                FILTER (WHERE review_status <> 'stale')::int AS snapshot_hashes,
+                FILTER (WHERE COALESCE(current_status, 'current') <> 'stale')::int
+                AS snapshot_hashes,
               MIN(source_snapshot_hash)
-                FILTER (WHERE review_status <> 'stale') AS min_hash,
+                FILTER (WHERE COALESCE(current_status, 'current') <> 'stale') AS min_hash,
               MAX(source_snapshot_hash)
-                FILTER (WHERE review_status <> 'stale') AS max_hash
+                FILTER (WHERE COALESCE(current_status, 'current') <> 'stale') AS max_hash
          FROM knowledge_registry_products`,
     );
     const row = snapshot.rows[0] ?? {};
-    if (
-      Number(row.current_rows) !== 16_533 ||
-      Number(row.snapshot_hashes) !== 1 ||
-      row.min_hash !== confirmedSha ||
-      row.max_hash !== confirmedSha
-    ) {
-      throw new Error("Production profile snapshot gate failed.");
-    }
+    const snapshotState = {
+      currentRows: Number(row.current_rows),
+      staleRows: Number(row.stale_rows),
+      searchableRows: Number(row.searchable_rows),
+      snapshotHashes: Number(row.snapshot_hashes),
+      minHash: typeof row.min_hash === "string" ? row.min_hash : null,
+      maxHash: typeof row.max_hash === "string" ? row.max_hash : null,
+    };
+    assertCatalogProfileSnapshot(snapshotState, confirmedSha);
+    const latestSyncResult = await executor.query(
+      `SELECT status, source_hash, official_rows, farmassist_rows_before,
+              farmassist_rows_after, stale_marked_count, missing_count,
+              extra_count, changed_count, parity_status, completed_at::text
+         FROM knowledge_registry_sync_runs
+        WHERE mode = 'apply'
+        ORDER BY completed_at DESC NULLS LAST, id DESC
+        LIMIT 1`,
+    );
+    const latestSync = latestSyncResult.rows[0] ?? null;
     const exactTradeResult = await executor.query(
       `SELECT MIN(trade_name) AS trade_name
          FROM knowledge_registry_products
@@ -433,9 +451,9 @@ async function main(): Promise<void> {
       generatedAt: new Date().toISOString(),
       snapshot: {
         sha256: confirmedSha,
-        currentRows: Number(row.current_rows),
-        staleRows: Number(row.stale_rows),
+        ...snapshotState,
       },
+      latestSync,
       initialConnectionAcquireMs: Number(acquireMs.toFixed(3)),
       exactTradeQuery: exactTrade,
       profiles,
@@ -459,8 +477,11 @@ async function main(): Promise<void> {
       "## Production registry search profile",
       "",
       `- Snapshot: \`${confirmedSha}\``,
-      `- Current/stale: ${row.current_rows}/${row.stale_rows}`,
+      `- Current/stale/searchable: ${snapshotState.currentRows}/${snapshotState.staleRows}/${snapshotState.searchableRows}`,
       `- Idle transactions: ${idleTransactions}`,
+      `- Latest sync status/parity: ${String(latestSync?.status ?? "missing")}/${String(latestSync?.parity_status ?? "missing")}`,
+      `- Latest sync missing/extra/changed: ${Number(latestSync?.missing_count ?? -1)}/${Number(latestSync?.extra_count ?? -1)}/${Number(latestSync?.changed_count ?? -1)}`,
+      `- Latest sync official/current/stale-marked: ${Number(latestSync?.official_rows ?? -1)}/${Number(latestSync?.farmassist_rows_after ?? -1)}/${Number(latestSync?.stale_marked_count ?? -1)}`,
       "",
       "| Query | Kind | SQL p50/p95 | Total p50/p95 |",
       "| --- | --- | ---: | ---: |",

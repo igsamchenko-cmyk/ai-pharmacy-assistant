@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import {
+  assertCatalogProfileSnapshot,
   assertCatalogSmokeHasNoIdleTransactions,
   assertReadOnlyCatalogStatement,
   authorizeCatalogProfileDatabase,
@@ -161,6 +162,42 @@ describe("protected production search profile authorization", () => {
       protectedProduction: true,
       databaseLabel: "protected-production-read-only",
     });
+  });
+});
+
+describe("moving production profile snapshot gate", () => {
+  const snapshot = {
+    currentRows: 16_474,
+    staleRows: 59,
+    searchableRows: 16_474,
+    snapshotHashes: 1,
+    minHash: SHA,
+    maxHash: SHA,
+  };
+
+  it("accepts a confirmed moving official count above the anomaly floor", () => {
+    expect(() => assertCatalogProfileSnapshot(snapshot, SHA)).not.toThrow();
+  });
+
+  it("fails closed for partial, hidden, mixed, or wrong snapshots", () => {
+    expect(() =>
+      assertCatalogProfileSnapshot({ ...snapshot, currentRows: 15_999 }, SHA),
+    ).toThrow(/snapshot gate/);
+    expect(() =>
+      assertCatalogProfileSnapshot(
+        { ...snapshot, searchableRows: snapshot.currentRows - 1 },
+        SHA,
+      ),
+    ).toThrow(/snapshot gate/);
+    expect(() =>
+      assertCatalogProfileSnapshot({ ...snapshot, snapshotHashes: 2 }, SHA),
+    ).toThrow(/snapshot gate/);
+    expect(() =>
+      assertCatalogProfileSnapshot(
+        { ...snapshot, minHash: "a".repeat(64), maxHash: "a".repeat(64) },
+        SHA,
+      ),
+    ).toThrow(/snapshot gate/);
   });
 });
 
@@ -393,5 +430,16 @@ describe("post-commit workflow state", () => {
     expect(workflow).toContain(
       "the smoke itself verifies that every parsed row is persisted",
     );
+  });
+
+  it("keeps the production profile moving-count and read-only diagnostics", () => {
+    const profilePath = fileURLToPath(
+      new URL("../../scripts/knowledge-registry-search-profile.ts", import.meta.url),
+    );
+    const profile = readFileSync(profilePath, "utf8");
+    expect(profile).not.toContain("16_533");
+    expect(profile).toContain("assertCatalogProfileSnapshot");
+    expect(profile).toContain("FROM knowledge_registry_sync_runs");
+    expect(profile).toContain("Latest sync missing/extra/changed");
   });
 });
