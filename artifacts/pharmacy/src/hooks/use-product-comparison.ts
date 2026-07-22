@@ -6,6 +6,7 @@ import {
   REGISTRY_PRODUCT_ID_PATTERN,
   registryProductDetailHref,
 } from "@/lib/registry-product-route";
+import { conciseManufacturerText } from "@/lib/manufacturer-display";
 
 export const PRODUCT_COMPARISON_STORAGE_KEY = "farmassist:product-comparison";
 export const PRODUCT_COMPARISON_LIMIT = 2;
@@ -136,9 +137,8 @@ export function comparisonProductFromRegistry(
     activeIngredient: product.activeIngredient,
     strength: product.strength,
     dosageForm: conciseForm,
-    manufacturer: product.manufacturers.length
-      ? product.manufacturers.map((item) => [item.name, item.country].filter(Boolean).join(", ")).join("; ")
-      : null,
+    manufacturer:
+      conciseManufacturerText(product.manufacturers, "") || null,
     nationalListStatus: product.nationalListStatus,
     instructionAvailable: product.instructionAvailable === true,
     href: registryProductDetailHref(product),

@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
+import type { RegistryProductResult } from "@workspace/api-client-react";
 import {
   PRODUCT_COMPARISON_LIMIT,
   PRODUCT_COMPARISON_STORAGE_KEY,
   addComparisonProductRef,
+  comparisonProductFromRegistry,
   normalizeComparisonProduct,
   readComparisonProducts,
   removeComparisonProductRef,
@@ -52,6 +54,30 @@ describe("product comparison local store", () => {
     expect(normalizeComparisonProduct(enap)).toEqual(enap);
     expect(sanitizeComparisonProducts([enap, enap, krka])).toEqual([enap, krka]);
     expect(removeComparisonProductRef([enap, krka], enap.productId)).toEqual([krka]);
+  });
+
+  it("stores only concise manufacturer names for comparison", () => {
+    const product = {
+      id: enap.productId,
+      registration: { number: enap.registrationNumber },
+      tradeName: enap.tradeName,
+      inn: enap.inn,
+      atcCode: enap.atcCode,
+      activeIngredient: enap.activeIngredient,
+      strength: enap.strength,
+      manufacturers: [
+        {
+          name: 'АТ "Лубнифарм" (первинне пакування, контроль та випуск серій)',
+          country: "Україна",
+        },
+      ],
+      nationalListStatus: "exact",
+      instructionAvailable: true,
+    } as RegistryProductResult;
+
+    expect(comparisonProductFromRegistry(product, "таблетки").manufacturer).toBe(
+      'АТ "Лубнифарм", Україна',
+    );
   });
 
   it("allows at most two registry positions", () => {
