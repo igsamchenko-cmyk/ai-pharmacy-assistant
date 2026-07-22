@@ -1,5 +1,6 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { Router } from "wouter";
 import { describe, expect, it, vi } from "vitest";
 import {
   CATALOG_CLIENT_INDEX_VERSION,
@@ -385,9 +386,15 @@ describe("catalog client index", () => {
       "Енап",
     );
     const html = renderToStaticMarkup(
-      createElement(LocalCatalogResults, { result }),
+      createElement(
+        Router,
+        { hook: () => ["/search", () => undefined] },
+        createElement(LocalCatalogResults, { result }),
+      ),
     );
     expect(html).toContain(`/products/${id(1)}?registration=UA%2F1%2F01%2F01`);
+    expect(html).toContain('data-navigation="spa"');
+    expect(html).toContain('data-testid="local-product-open-');
     expect(html).toContain("overflow-x-hidden");
     expect(html).not.toContain("overflow-x-auto");
   });

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "wouter";
 import {
   normalizeCatalogIndexText,
   type CatalogClientIndexSearchItem,
@@ -147,15 +148,17 @@ export function LocalCatalogResults({
                       variant="outline"
                       className="min-h-11 w-full sm:w-auto"
                     >
-                      <a
+                      <Link
                         href={registryProductDetailHref({
                           id: product.productId,
                           registration: { number: product.registration },
                         })}
+                        data-navigation="spa"
+                        data-testid={"local-product-open-" + product.productId}
                       >
                         Відкрити
                         <ChevronRight className="h-4 w-4" />
-                      </a>
+                      </Link>
                     </Button>
                   </div>
                 ))}
