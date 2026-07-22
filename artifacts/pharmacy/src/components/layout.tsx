@@ -21,6 +21,14 @@ import { ServiceWarmupStatus } from "@/components/service-warmup-status";
 import { useThemeContext } from "./theme-provider";
 import { AuthStatus } from "./auth-status";
 
+export const DESKTOP_SIDEBAR_CLASS =
+  "fixed inset-y-0 z-40 hidden h-[100dvh] w-64 shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-border bg-card md:flex";
+
+export const DESKTOP_SIDEBAR_NAV_CLASS = "space-y-2 px-4";
+
+export const DESKTOP_SIDEBAR_FOOTER_CLASS =
+  "mt-4 flex shrink-0 flex-col gap-2 border-t border-border p-4";
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { theme, setTheme } = useThemeContext();
@@ -92,7 +100,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-card border-r border-border shrink-0 fixed h-full z-40">
+      <aside className={DESKTOP_SIDEBAR_CLASS}>
         <div className="p-6 flex items-center justify-between">
           <Link
             href="/"
@@ -102,7 +110,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <span>FarmAssist</span>
           </Link>
         </div>
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+        <nav className={DESKTOP_SIDEBAR_NAV_CLASS}>
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -115,8 +123,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
-        <div className="p-4 border-t border-border flex flex-col gap-2">
-          <AuthStatus />
+        <div className={DESKTOP_SIDEBAR_FOOTER_CLASS}>
           <Link
             href="/beta-dashboard"
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium ${location === "/beta-dashboard" ? "bg-primary text-primary-foreground" : "hover:bg-accent text-foreground"}`}
@@ -159,6 +166,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
             {theme === "dark" ? "Світла тема" : "Темна тема"}
           </button>
+          <AuthStatus compact />
         </div>
       </aside>
 
