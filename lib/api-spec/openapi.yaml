@@ -209,6 +209,13 @@ paths:
             type: string
             maxLength: 200
             default: ""
+        - name: productId
+          in: query
+          required: false
+          description: Exact registry product identifier used with q=registration number.
+          schema:
+            type: string
+            pattern: "^[A-F0-9]{32}$"
         - name: type
           in: query
           required: false

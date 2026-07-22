@@ -20,6 +20,11 @@ export type SearchCatalogParams = {
  * @maxLength 200
  */
 q?: string;
+/**
+ * Exact registry product identifier used with q=registration number.
+ * @pattern ^[A-F0-9]{32}$
+ */
+productId?: string;
 type?: SearchCatalogType;
 /**
  * Flat keeps registry browse pagination. When omitted for a non-empty registry query, the server resolves grouped view.

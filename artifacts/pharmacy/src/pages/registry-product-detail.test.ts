@@ -118,8 +118,14 @@ function productFixture(
 
 describe("registry product mobile detail UI", () => {
   it("uses the exact-registration fast path for product detail requests", () => {
-    expect(registryProductDetailSearchParams("UA/10299/01/01")).toEqual({
+    expect(
+      registryProductDetailSearchParams(
+        "FD14BF34ACB8E705C2258BCB00314A4A",
+        "UA/10299/01/01",
+      ),
+    ).toEqual({
       q: "UA/10299/01/01",
+      productId: "FD14BF34ACB8E705C2258BCB00314A4A",
       type: "registry_products",
       view: "grouped",
       page: 1,
