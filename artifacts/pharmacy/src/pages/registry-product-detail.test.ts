@@ -152,8 +152,7 @@ describe("registry product mobile detail UI", () => {
       expect(html).not.toContain("по 20 таблеток");
       expect(html).not.toContain("по 28 таблеток");
       expect(html).toContain("Реєстр");
-      expect(html).toContain("Нацперелік: Так — входить");
-      expect(html).toContain("Так — входить до Нацпереліку");
+      expect(html).toContain("У Нацпереліку");
       expect(html).toContain("Є інструкція");
       expect(html).toContain(`href="/instructions/${item.id}"`);
       expect(html).toContain('href="/interactions"');
@@ -168,10 +167,10 @@ describe("registry product mobile detail UI", () => {
   );
 
   it.each([
-    ["exact", "Так — входить до Нацпереліку"],
-    ["ingredient_only", "Лише МНН у Нацпереліку — цю позицію не підтверджено"],
-    ["uncertain", "Не визначено однозначно"],
-    ["not_listed", "Ні — не входить до Нацпереліку"],
+    ["exact", "У Нацпереліку"],
+    ["ingredient_only", "Не підтверджено для цієї реєстрової позиції"],
+    ["uncertain", "Статус Нацпереліку не визначено"],
+    ["not_listed", "Не у Нацпереліку"],
     ["not_applicable", "Не визначено — активний Нацперелік недоступний"],
   ] as const)(
     "shows an explicit per-position National List verdict for %s",
@@ -207,6 +206,29 @@ describe("registry product mobile detail UI", () => {
       );
     },
   );
+
+  it("shows concise official manufacturer names without production roles", () => {
+    const product = productFixture(representativeProducts[0], {
+      manufacturers: [
+        {
+          name: 'АТ "Лубнифарм" (відповідальний за виробництво, первинне, вторинне пакування, контроль якості)',
+          country: "Україна",
+        },
+        {
+          name: 'ПрАТ "ФІТОФАРМ" (відповідальний за пакування, контроль та випуск серій)',
+          country: "Україна",
+        },
+      ],
+    });
+    const html = renderToStaticMarkup(
+      createElement(RegistryProductDetailContent, { product }),
+    );
+
+    expect(html).toContain("Виробники");
+    expect(html).toContain('АТ &quot;Лубнифарм&quot;, Україна');
+    expect(html).toContain('ПрАТ &quot;ФІТОФАРМ&quot;, Україна');
+    expect(html).not.toMatch(/первинне|пакування|контроль|випуск серій/iu);
+  });
 
   it("renders a reduced-motion skeleton without horizontal overflow", () => {
     const html = renderToStaticMarkup(

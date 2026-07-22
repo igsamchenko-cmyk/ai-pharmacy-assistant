@@ -33,6 +33,10 @@ import {
   registryProductDetailHref,
 } from "@/lib/registry-product-route";
 import { nationalListVerdict } from "@/lib/national-list-status";
+import {
+  conciseManufacturerText,
+  manufacturerHeading,
+} from "@/lib/manufacturer-display";
 
 export const REGISTRY_PRODUCT_TOP_BAR_CLASS =
   "sticky top-[65px] z-30 -mx-4 flex min-h-12 items-center gap-3 border-y bg-background/95 px-4 py-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:rounded-xl sm:border md:top-0";
@@ -54,11 +58,7 @@ function mappingStatusLabel(
 }
 
 function manufacturerText(product: RegistryProductResult): string {
-  return product.manufacturers.length
-    ? product.manufacturers
-        .map((item) => [item.name, item.country].filter(Boolean).join(", "))
-        .join("; ")
-    : "Не зазначено";
+  return conciseManufacturerText(product.manufacturers);
 }
 
 export function registryProductDrugRef(
@@ -218,7 +218,7 @@ export function RegistryProductDetailContent({
           <dl className="grid min-w-0 gap-3 rounded-xl border bg-background/60 p-3 text-sm sm:grid-cols-2">
             <div className="min-w-0">
               <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Виробник
+                {manufacturerHeading(product.manufacturers)}
               </dt>
               <dd className="mt-1 break-words font-medium">
                 {manufacturerText(product)}
@@ -253,7 +253,7 @@ export function RegistryProductDetailContent({
               {listVerdict.isConfirmed ? (
                 <CheckCircle2 className="h-3.5 w-3.5" />
               ) : null}
-              Нацперелік: {listVerdict.shortLabel}
+              {listVerdict.shortLabel}
             </Badge>
             {product.instructionAvailable ? (
               <Badge
@@ -359,7 +359,9 @@ export function RegistryProductDetailContent({
               <dd>{product.registration.endDate || "Не зазначено"}</dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Виробник</dt>
+              <dt className="text-xs text-muted-foreground">
+                {manufacturerHeading(product.manufacturers)}
+              </dt>
               <dd className="break-words">{manufacturerText(product)}</dd>
             </div>
           </dl>

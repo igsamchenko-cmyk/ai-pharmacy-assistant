@@ -45,6 +45,10 @@ import { registryProductDetailHref } from "@/lib/registry-product-route";
 import { LocalCatalogResults } from "@/components/local-catalog-results";
 import { useCatalogClientIndex } from "@/lib/catalog-client-index";
 import { nationalListVerdict } from "@/lib/national-list-status";
+import {
+  conciseManufacturerNames,
+  conciseManufacturerText,
+} from "@/lib/manufacturer-display";
 
 type SearchType = "all" | "ingredients" | "registry_products";
 type RegistrationStatus = "active" | "terminated" | "unknown";
@@ -338,7 +342,7 @@ function NationalListBadge({ product }: { product: RegistryProductResult }) {
       }
     >
       {verdict.isConfirmed ? <CheckCircle2 className="h-3 w-3" /> : null}
-      Нацперелік: {verdict.shortLabel}
+      {verdict.shortLabel}
     </Badge>
   );
 }
@@ -356,11 +360,10 @@ export function RegistryProductCard({
     product.mappingStatus === "approved" && product.approvedMapping;
   const displayForm = conciseDosageForm(product.dosageForm);
   const nationalList = nationalListVerdict(product.nationalListStatus);
-  const manufacturerText = product.manufacturers.length
-    ? product.manufacturers
-        .map((item) => [item.name, item.country].filter(Boolean).join(", "))
-        .join("; ")
-    : "не зазначено у реєстровому записі";
+  const manufacturerText = conciseManufacturerText(
+    product.manufacturers,
+    "не зазначено у реєстровому записі",
+  );
 
   return (
     <Card
@@ -882,9 +885,7 @@ function ExactBrandCard({
 
         <p className="break-words text-sm text-muted-foreground">
           <span className="font-medium text-foreground">Виробник:</span>{" "}
-          {trade.manufacturers.length
-            ? trade.manufacturers.join(", ")
-            : "Не зазначено"}
+          {conciseManufacturerNames(trade.manufacturers, "Не зазначено")}
         </p>
 
         {primaryProduct ? <ProductActions product={primaryProduct} /> : null}

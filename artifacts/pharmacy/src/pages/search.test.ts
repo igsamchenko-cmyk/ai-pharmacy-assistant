@@ -273,8 +273,7 @@ describe("registry catalog UI", () => {
     expect(html).toContain("Підтверджено");
     expect(html).toContain("break-words");
     expect(html).toContain("overflow-hidden");
-    expect(html).toContain("Нацперелік: Так — входить");
-    expect(html).toContain("Так — входить до Нацпереліку");
+    expect(html).toContain("У Нацпереліку");
     expect(html).toContain('data-testid="national-list-exact"');
     expect(html).not.toContain("INN, form, route and strength match.");
     expect(html).toContain(`/instructions/${product.id}`);
@@ -345,6 +344,27 @@ describe("registry catalog UI", () => {
     expect(html).not.toContain("instruction-action-");
   });
 
+  it("keeps manufacturer roles out of the visible registry card", () => {
+    const html = renderToStaticMarkup(
+      createElement(RegistryProductCard, {
+        product: {
+          ...product,
+          manufacturers: [
+            {
+              name: 'АТ "Лубнифарм" (виробництво in bulk, первинне пакування, контроль та випуск серій)',
+              country: "Україна",
+            },
+          ],
+        },
+        query: "",
+        showReportIssue: false,
+      }),
+    );
+
+    expect(html).toContain('АТ &quot;Лубнифарм&quot;, Україна');
+    expect(html).not.toMatch(/in bulk|пакування|контроль|випуск серій/iu);
+  });
+
   it("shows an explicit National List verdict for every registry position", () => {
     const ingredientOnly = renderToStaticMarkup(createElement(RegistryProductCard, {
       product: { ...product, nationalListStatus: "ingredient_only" },
@@ -352,7 +372,7 @@ describe("registry catalog UI", () => {
       showReportIssue: false,
     }));
     expect(ingredientOnly).toContain(
-      "Лише МНН у Нацпереліку — цю позицію не підтверджено",
+      "Не підтверджено для цієї реєстрової позиції",
     );
     expect(ingredientOnly).not.toContain('data-testid="national-list-exact"');
 
@@ -361,7 +381,7 @@ describe("registry catalog UI", () => {
       query: "",
       showReportIssue: false,
     }));
-    expect(uncertain).toContain("Не визначено однозначно");
+    expect(uncertain).toContain("Статус Нацпереліку не визначено");
     expect(uncertain).not.toContain('data-testid="national-list-exact"');
 
     const notListed = renderToStaticMarkup(createElement(RegistryProductCard, {
@@ -374,7 +394,7 @@ describe("registry catalog UI", () => {
       query: "",
       showReportIssue: false,
     }));
-    expect(notListed).toContain("Ні — не входить до Нацпереліку");
+    expect(notListed).toContain("Не у Нацпереліку");
     expect(notListed).not.toContain(
       "No matching INN or fixed combination exists in the active release.",
     );
