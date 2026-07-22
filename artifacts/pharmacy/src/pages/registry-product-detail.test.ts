@@ -6,6 +6,7 @@ import {
   REGISTRY_PRODUCT_TOP_BAR_CLASS,
   RegistryProductDetailContent,
   RegistryProductDetailSkeleton,
+  registryProductDetailSearchParams,
 } from "./registry-product-detail";
 import {
   registrationFromSearch,
@@ -116,6 +117,15 @@ function productFixture(
 }
 
 describe("registry product mobile detail UI", () => {
+  it("uses the exact-registration fast path for product detail requests", () => {
+    expect(registryProductDetailSearchParams("UA/10299/01/01")).toEqual({
+      q: "UA/10299/01/01",
+      type: "registry_products",
+      view: "grouped",
+      page: 1,
+      pageSize: 25,
+    });
+  });
   it.each(representativeProducts)(
     "renders $tradeName as a compact, actionable registry product page",
     (item) => {
