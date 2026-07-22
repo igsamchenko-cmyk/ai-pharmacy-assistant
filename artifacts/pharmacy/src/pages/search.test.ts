@@ -273,8 +273,10 @@ describe("registry catalog UI", () => {
     expect(html).toContain("Підтверджено");
     expect(html).toContain("break-words");
     expect(html).toContain("overflow-hidden");
-    expect(html).toContain("Нацперелік");
+    expect(html).toContain("Нацперелік: Так — входить");
+    expect(html).toContain("Так — входить до Нацпереліку");
     expect(html).toContain('data-testid="national-list-exact"');
+    expect(html).not.toContain("INN, form, route and strength match.");
     expect(html).toContain(`/instructions/${product.id}`);
     expect(html).toContain("Інструкція");
     expect(html).toContain("Є інструкція");
@@ -343,21 +345,40 @@ describe("registry catalog UI", () => {
     expect(html).not.toContain("instruction-action-");
   });
 
-  it("shows the National List badge only for exact matches", () => {
+  it("shows an explicit National List verdict for every registry position", () => {
     const ingredientOnly = renderToStaticMarkup(createElement(RegistryProductCard, {
       product: { ...product, nationalListStatus: "ingredient_only" },
       query: "",
       showReportIssue: false,
     }));
-    expect(ingredientOnly).toContain("МНН у Нацпереліку");
+    expect(ingredientOnly).toContain(
+      "Лише МНН у Нацпереліку — цю позицію не підтверджено",
+    );
     expect(ingredientOnly).not.toContain('data-testid="national-list-exact"');
+
     const uncertain = renderToStaticMarkup(createElement(RegistryProductCard, {
       product: { ...product, nationalListStatus: "uncertain" },
       query: "",
       showReportIssue: false,
     }));
-    expect(uncertain).toContain("Потребує уточнення");
+    expect(uncertain).toContain("Не визначено однозначно");
     expect(uncertain).not.toContain('data-testid="national-list-exact"');
+
+    const notListed = renderToStaticMarkup(createElement(RegistryProductCard, {
+      product: {
+        ...product,
+        nationalListStatus: "not_listed",
+        nationalListMatchReason:
+          "No matching INN or fixed combination exists in the active release.",
+      },
+      query: "",
+      showReportIssue: false,
+    }));
+    expect(notListed).toContain("Ні — не входить до Нацпереліку");
+    expect(notListed).not.toContain(
+      "No matching INN or fixed combination exists in the active release.",
+    );
+
     const unavailable = renderToStaticMarkup(createElement(RegistryProductCard, {
       product: {
         ...product,
@@ -369,8 +390,12 @@ describe("registry catalog UI", () => {
       query: "",
       showReportIssue: false,
     }));
+    expect(unavailable).toContain("Статус недоступний");
+    expect(unavailable).toContain(
+      "Не визначено — активний Нацперелік недоступний",
+    );
     expect(unavailable).not.toContain('data-testid="national-list-exact"');
-    expect(unavailable).not.toContain('data-testid="national-list-details"');
+    expect(unavailable).toContain('data-testid="national-list-details"');
   });
 
   it("clearly labels a product without an approved mapping", () => {

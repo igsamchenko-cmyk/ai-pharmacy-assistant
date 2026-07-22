@@ -32,6 +32,7 @@ import {
   registrationFromSearch,
   registryProductDetailHref,
 } from "@/lib/registry-product-route";
+import { nationalListVerdict } from "@/lib/national-list-status";
 
 export const REGISTRY_PRODUCT_TOP_BAR_CLASS =
   "sticky top-[65px] z-30 -mx-4 flex min-h-12 items-center gap-3 border-y bg-background/95 px-4 py-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:rounded-xl sm:border md:top-0";
@@ -42,16 +43,6 @@ function registrationStatusLabel(
   if (status === "active") return "Чинна реєстрація";
   if (status === "terminated") return "Реєстрацію завершено";
   return "Статус уточнюється";
-}
-
-function nationalListLabel(
-  status: RegistryProductResult["nationalListStatus"],
-): string | null {
-  if (status === "exact") return "Нацперелік";
-  if (status === "ingredient_only") return "Нацперелік: за МНН";
-  if (status === "uncertain") return "Нацперелік: уточнюється";
-  if (status === "not_listed") return "Поза Нацпереліком";
-  return null;
 }
 
 function mappingStatusLabel(
@@ -154,7 +145,7 @@ export function RegistryProductDetailContent({
   onToggleFavorite: () => void;
 }) {
   const displayForm = conciseDosageForm(product.dosageForm);
-  const listLabel = nationalListLabel(product.nationalListStatus);
+  const listVerdict = nationalListVerdict(product.nationalListStatus);
   const detailHref = registryProductDetailHref(product);
 
   return (
@@ -254,18 +245,16 @@ export function RegistryProductDetailContent({
               <Database className="h-3.5 w-3.5" />
               Реєстр
             </Badge>
-            {listLabel ? (
-              <Badge
-                variant={
-                  product.nationalListStatus === "exact" ? "default" : "outline"
-                }
-                className="gap-1.5 whitespace-normal"
-                data-testid="national-list-badge"
-              >
+            <Badge
+              variant={listVerdict.isConfirmed ? "default" : "outline"}
+              className="gap-1.5 whitespace-normal text-left"
+              data-testid="national-list-badge"
+            >
+              {listVerdict.isConfirmed ? (
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                {listLabel}
-              </Badge>
-            ) : null}
+              ) : null}
+              Нацперелік: {listVerdict.shortLabel}
+            </Badge>
             {product.instructionAvailable ? (
               <Badge
                 variant="outline"
@@ -376,30 +365,39 @@ export function RegistryProductDetailContent({
           </dl>
         </ExpandableSection>
 
-        {product.nationalListStatus !== "not_applicable" ? (
-          <ExpandableSection
-            title="Національний перелік"
-            testId="national-list-details"
+        <ExpandableSection
+          title="Національний перелік"
+          testId="national-list-details"
+        >
+          <div
+            className="space-y-2 rounded-xl border bg-background/60 p-3"
+            data-testid="national-list-verdict"
           >
-            <p className="break-words">{product.nationalListMatchReason}</p>
-            {product.nationalListSection ? (
-              <p>
-                <span className="text-muted-foreground">Розділ:</span>{" "}
-                {product.nationalListSection}
-              </p>
-            ) : null}
-            {product.nationalListSource ? (
-              <a
-                className="inline-flex break-all text-primary underline underline-offset-4"
-                href={product.nationalListSource.url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Офіційне джерело Нацпереліку
-              </a>
-            ) : null}
-          </ExpandableSection>
-        ) : null}
+            <p className="break-words font-semibold">{listVerdict.label}</p>
+            <p className="break-words text-sm text-muted-foreground">
+              {listVerdict.description}
+            </p>
+            <p className="break-words text-xs text-muted-foreground">
+              Перевірено для реєстрової позиції {product.registration.number}.
+            </p>
+          </div>
+          {product.nationalListSection ? (
+            <p>
+              <span className="text-muted-foreground">Розділ:</span>{" "}
+              {product.nationalListSection}
+            </p>
+          ) : null}
+          {product.nationalListSource ? (
+            <a
+              className="inline-flex break-all text-primary underline underline-offset-4"
+              href={product.nationalListSource.url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Офіційне джерело Нацпереліку
+            </a>
+          ) : null}
+        </ExpandableSection>
 
         <ExpandableSection
           title="Детальніше"
