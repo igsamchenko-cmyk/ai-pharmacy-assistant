@@ -15,6 +15,8 @@ function executor(
     snapshotHash?: string;
     rowSnapshotHash?: string;
     productCount?: number;
+    tradeName?: string;
+    form?: string;
   } = {},
 ): CatalogClientIndexQueryExecutor & { query: ReturnType<typeof vi.fn> } {
   const snapshotHash = options.snapshotHash ?? SHA;
@@ -23,9 +25,9 @@ function executor(
     {
       registry_id: "A".repeat(32),
       registration_number: "UA/1/01/01",
-      trade_name: "ЕНАП®",
+      trade_name: options.tradeName ?? "ЕНАП®",
       inn: "Enalapril",
-      form: "таблетки; по 10 таблеток у блістері",
+      form: options.form ?? "таблетки; по 10 таблеток у блістері",
       strength: "10 мг",
       source_snapshot_hash: options.rowSnapshotHash ?? snapshotHash,
     },
@@ -108,6 +110,19 @@ describe("catalog client index service", () => {
     if (first.status === "ready" && second.status === "ready") {
       expect(first.payload).toBe(second.payload);
     }
+  });
+
+  it("accepts current official trade names and concise forms within the API bound", async () => {
+    const tradeName = "T".repeat(253);
+    const form = "F".repeat(326);
+    const result = await loadCatalogClientIndex(
+      null,
+      executor({ tradeName, form }),
+    );
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    expect(result.payload.rows[0]?.[2]).toHaveLength(253);
+    expect(result.payload.rows[0]?.[4]).toHaveLength(326);
   });
 
   it("returns not-modified after the metadata query without loading product rows", async () => {

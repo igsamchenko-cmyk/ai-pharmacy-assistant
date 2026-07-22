@@ -175,9 +175,9 @@ async function buildPayloadUncached(
       encodeCatalogClientIndexRow({
         productId: bounded(row.registry_id, 32, "productId"),
         registration: bounded(row.registration_number, 80, "registration"),
-        tradeName: bounded(row.trade_name, 240, "tradeName"),
+        tradeName: bounded(row.trade_name, 500, "tradeName"),
         inn: bounded(row.inn, 500, "inn"),
-        form: bounded(conciseCatalogIndexForm(row.form), 240, "form"),
+        form: bounded(conciseCatalogIndexForm(row.form), 500, "form"),
         strength: bounded(row.strength, 120, "strength"),
       }),
     ),
