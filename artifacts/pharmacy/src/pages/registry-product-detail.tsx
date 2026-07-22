@@ -465,9 +465,13 @@ function RegistryProductError({ invalid = false }: { invalid?: boolean }) {
   );
 }
 
-export function registryProductDetailSearchParams(registration: string) {
+export function registryProductDetailSearchParams(
+  productId: string,
+  registration: string,
+) {
   return {
     q: registration,
+    productId,
     type: "registry_products" as const,
     view: "grouped" as const,
     page: 1,
@@ -483,8 +487,8 @@ export default function RegistryProductDetail() {
   const validRoute =
     REGISTRY_PRODUCT_ID_PATTERN.test(productId) && Boolean(registration);
   const params = useMemo(
-    () => registryProductDetailSearchParams(registration),
-    [registration],
+    () => registryProductDetailSearchParams(productId, registration),
+    [productId, registration],
   );
   const { data, isLoading, isError, refetch } = useSearchCatalog(params, {
     query: {

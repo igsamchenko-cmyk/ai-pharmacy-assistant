@@ -305,6 +305,7 @@ export const SearchDrugsResponse = zod.array(SearchDrugsResponseItem)
 export const searchCatalogQueryQDefault = ``;
 export const searchCatalogQueryQMax = 200;
 
+export const searchCatalogQueryProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
 export const searchCatalogQueryTypeDefault = `all`;
 export const searchCatalogQueryPageDefault = 1;
 export const searchCatalogQueryPageMax = 10000;
@@ -349,6 +350,7 @@ export const searchCatalogQueryTradeNameKeyMax = 240;
 
 export const SearchCatalogQueryParams = zod.object({
   "q": zod.coerce.string().max(searchCatalogQueryQMax).default(searchCatalogQueryQDefault),
+  "productId": zod.coerce.string().regex(searchCatalogQueryProductIdRegExp).optional().describe('Exact registry product identifier used with q=registration number.'),
   "type": zod.enum(['all', 'ingredients', 'registry_products']).default(searchCatalogQueryTypeDefault),
   "view": zod.enum(['flat', 'grouped']).optional().describe('Flat keeps registry browse pagination. When omitted for a non-empty registry query, the server resolves grouped view.'),
   "page": zod.coerce.number().min(1).max(searchCatalogQueryPageMax).multipleOf(searchCatalogQueryPageMultipleOf).default(searchCatalogQueryPageDefault),

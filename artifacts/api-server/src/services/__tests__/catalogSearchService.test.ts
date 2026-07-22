@@ -409,6 +409,7 @@ describe("catalog search service", () => {
     const result = await searchCatalog(
       input({
         q: "UA/1234/01/01",
+        productId: "A".repeat(32),
         type: "registry_products",
         view: "grouped",
       }),
@@ -418,6 +419,33 @@ describe("catalog search service", () => {
     expect(result.view).toBe("flat");
     expect(result.registryProducts).toMatchObject({ total: 1, hasNext: false });
     expect(result.registryProducts.items[0]?.id).toBe("registry-1");
+    expect(exact).toHaveBeenCalledOnce();
+    expect(grouped).not.toHaveBeenCalled();
+    expect(flat).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when productId and registration do not match", async () => {
+    const exact = vi.fn(async () => null);
+    const grouped = vi.fn();
+    const flat = vi.fn();
+    const testStore = store({
+      findUniqueExactProduct: exact,
+      searchProductsForGrouping: grouped,
+      searchProducts: flat,
+    });
+
+    const result = await searchCatalog(
+      input({
+        q: "UA/1234/01/01",
+        productId: "B".repeat(32),
+        type: "registry_products",
+        view: "grouped",
+      }),
+      testStore,
+    );
+
+    expect(result.view).toBe("flat");
+    expect(result.registryProducts).toMatchObject({ total: 0, items: [] });
     expect(exact).toHaveBeenCalledOnce();
     expect(grouped).not.toHaveBeenCalled();
     expect(flat).not.toHaveBeenCalled();
@@ -470,6 +498,19 @@ describe("catalog search service", () => {
 
   it("invalidates registry caches when the snapshot version changes", () => {
     const params = input({ q: "  NUROFEN ", view: "grouped" });
+    expect(
+      registrySearchCacheKey(
+        "exact",
+        input({ q: "UA/1234/01/01", productId: "A".repeat(32) }),
+        "batch-a",
+      ),
+    ).not.toBe(
+      registrySearchCacheKey(
+        "exact",
+        input({ q: "UA/1234/01/01", productId: "B".repeat(32) }),
+        "batch-a",
+      ),
+    );
     expect(registrySearchCacheKey("grouped", params, "batch-a")).not.toBe(
       registrySearchCacheKey("grouped", params, "batch-b"),
     );
@@ -570,6 +611,7 @@ describe("catalog search service", () => {
     });
     const exactInput = input({
       q: "UA/1234/01/01",
+      productId: "A".repeat(32),
       type: "registry_products",
       view: "grouped",
     });
@@ -595,8 +637,9 @@ describe("catalog search service", () => {
     const exactSql = query.mock.calls
       .map(([sql]) => sql)
       .find((sql) => sql.includes("WITH exact_candidates"));
-    expect(exactSql).toContain("p.registration_number = $1");
-    expect(exactSql).toContain("p.normalized_trade_name = ANY($2::text[])");
+    expect(exactSql).toContain("p.registry_id = $1");
+    expect(exactSql).toContain("p.registration_number = $2");
+    expect(exactSql).toContain("p.normalized_trade_name = ANY($3::text[])");
     expect(exactSql).toContain("p.review_status <> 'stale'");
     expect(exactSql).toContain("TRANSLATE");
     expect(exactSql).not.toContain("query_alias");

@@ -226,6 +226,7 @@ export function registrySearchCacheKey(
     snapshotVersion,
     scope,
     input.view ?? "auto",
+    cacheValue(input.productId),
     cacheValue(input.q),
     cacheValue(input.tradeName),
     cacheValue(input.manufacturer),
@@ -1075,16 +1076,25 @@ export async function createPostgresRegistryCatalogStore(
             runQuery<ProductRow>(
               "registry-exact-product",
               `WITH exact_candidates AS (
+                 SELECT p.registry_id, 0 AS priority
+                 FROM knowledge_registry_products p
+                 WHERE p.review_status <> 'stale'
+                   AND $1::text IS NOT NULL
+                   AND p.registry_id = $1
+                   AND p.registration_number = $2
+                 UNION ALL
                  SELECT p.registry_id, 1 AS priority
                  FROM knowledge_registry_products p
                  WHERE p.review_status <> 'stale'
-                   AND p.registration_number = $1
+                   AND $1::text IS NULL
+                   AND p.registration_number = $2
                  UNION ALL
                  SELECT p.registry_id, 2 AS priority
                  FROM knowledge_registry_products p
                  WHERE p.review_status <> 'stale'
-                   AND (p.normalized_trade_name = ANY($2::text[])
-                     OR ${catalogSearchKeySql("p.trade_name")} = ANY($2::text[]))
+                   AND $1::text IS NULL
+                   AND (p.normalized_trade_name = ANY($3::text[])
+                     OR ${catalogSearchKeySql("p.trade_name")} = ANY($3::text[]))
                ), winning_priority AS (
                  SELECT MIN(priority) AS priority FROM exact_candidates
                ), unique_candidates AS (
@@ -1112,7 +1122,7 @@ export async function createPostgresRegistryCatalogStore(
                JOIN unique_candidates candidate ON candidate.registry_id = p.registry_id
                ${NATIONAL_LIST_MATCH_JOIN_SQL}
                ORDER BY p.registry_id`,
-              [query.toUpperCase(), exactTradeKeys],
+              [input.productId ?? null, query.toUpperCase(), exactTradeKeys],
             ),
           ]);
           const result =
@@ -1488,6 +1498,19 @@ export async function searchCatalog(
             totalPages: 1,
             hasNext: false,
           },
+          registryGroups: null,
+          warnings: [],
+        };
+      }
+      if (input.productId) {
+        return {
+          query: input.q,
+          type: input.type,
+          view: "flat",
+          runtimeMode: "db",
+          catalogTotal: await activeStore.getCatalogTotal(),
+          ingredients: exactIngredients,
+          registryProducts: emptyRegistryPage(input),
           registryGroups: null,
           warnings: [],
         };
