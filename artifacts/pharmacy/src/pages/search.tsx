@@ -44,6 +44,7 @@ import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
 import { LocalCatalogResults } from "@/components/local-catalog-results";
 import { useCatalogClientIndex } from "@/lib/catalog-client-index";
+import { nationalListVerdict } from "@/lib/national-list-status";
 
 type SearchType = "all" | "ingredients" | "registry_products";
 type RegistrationStatus = "active" | "terminated" | "unknown";
@@ -327,30 +328,17 @@ export function SearchLoadingSkeletons() {
   );
 }
 function NationalListBadge({ product }: { product: RegistryProductResult }) {
-  if (product.nationalListStatus === "not_applicable") return null;
-  if (product.nationalListStatus === "exact") {
-    return (
-      <Badge
-        className="gap-1 whitespace-normal"
-        data-testid="national-list-exact"
-      >
-        <CheckCircle2 className="h-3 w-3" />
-        Нацперелік
-      </Badge>
-    );
-  }
-  if (product.nationalListStatus === "ingredient_only") {
-    return (
-      <Badge variant="outline" className="whitespace-normal text-left">
-        МНН у Нацпереліку — форму/дозування не підтверджено
-      </Badge>
-    );
-  }
+  const verdict = nationalListVerdict(product.nationalListStatus);
   return (
-    <Badge variant="secondary" className="whitespace-normal text-left">
-      {product.nationalListStatus === "uncertain"
-        ? "Потребує уточнення"
-        : "Не в Нацпереліку"}
+    <Badge
+      variant={verdict.isConfirmed ? "default" : "outline"}
+      className="gap-1 whitespace-normal text-left"
+      data-testid={
+        verdict.isConfirmed ? "national-list-exact" : "national-list-status"
+      }
+    >
+      {verdict.isConfirmed ? <CheckCircle2 className="h-3 w-3" /> : null}
+      Нацперелік: {verdict.shortLabel}
     </Badge>
   );
 }
@@ -367,6 +355,7 @@ export function RegistryProductCard({
   const approved =
     product.mappingStatus === "approved" && product.approvedMapping;
   const displayForm = conciseDosageForm(product.dosageForm);
+  const nationalList = nationalListVerdict(product.nationalListStatus);
   const manufacturerText = product.manufacturers.length
     ? product.manufacturers
         .map((item) => [item.name, item.country].filter(Boolean).join(", "))
@@ -508,63 +497,62 @@ export function RegistryProductCard({
               </div>
             </dl>
 
-            {product.nationalListStatus !== "not_applicable" ? (
-              <div
-                className="border-y py-3 text-sm"
-                data-testid="national-list-details"
-              >
-                <p className="font-medium">Національний перелік</p>
-                <p className="mt-1 text-muted-foreground">
-                  {product.nationalListMatchReason}
-                </p>
-                {product.nationalListMatchDetails ? (
-                  <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div
+              className="border-y py-3 text-sm"
+              data-testid="national-list-details"
+            >
+              <p className="font-semibold">{nationalList.label}</p>
+              <p className="mt-1 text-muted-foreground">
+                {nationalList.description}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Перевірено для реєстрової позиції {product.registration.number}.
+              </p>
+              {product.nationalListMatchDetails ? (
+                <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      МНН / комбінація
+                    </dt>
+                    <dd>{product.nationalListMatchDetails.officialName}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-muted-foreground">
+                      Форма / шлях введення / дозування
+                    </dt>
+                    <dd>
+                      {product.nationalListMatchDetails.formMatch} /{" "}
+                      {product.nationalListMatchDetails.routeMatch} /{" "}
+                      {product.nationalListMatchDetails.strengthMatch}
+                    </dd>
+                  </div>
+                  {product.nationalListSection ? (
                     <div>
-                      <dt className="text-xs text-muted-foreground">
-                        МНН / комбінація
-                      </dt>
-                      <dd>{product.nationalListMatchDetails.officialName}</dd>
+                      <dt className="text-xs text-muted-foreground">Розділ</dt>
+                      <dd>{product.nationalListSection}</dd>
                     </div>
+                  ) : null}
+                  {product.nationalListSource ? (
                     <div>
                       <dt className="text-xs text-muted-foreground">
-                        Форма / route / strength
+                        Нормативний акт
                       </dt>
                       <dd>
-                        {product.nationalListMatchDetails.formMatch} /{" "}
-                        {product.nationalListMatchDetails.routeMatch} /{" "}
-                        {product.nationalListMatchDetails.strengthMatch}
+                        <a
+                          className="underline underline-offset-2"
+                          href={product.nationalListSource.url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Постанова №{product.nationalListSource.actNumber},
+                          редакція {product.nationalListSource.revisionDate}
+                        </a>
                       </dd>
                     </div>
-                    {product.nationalListSection ? (
-                      <div>
-                        <dt className="text-xs text-muted-foreground">
-                          Розділ
-                        </dt>
-                        <dd>{product.nationalListSection}</dd>
-                      </div>
-                    ) : null}
-                    {product.nationalListSource ? (
-                      <div>
-                        <dt className="text-xs text-muted-foreground">
-                          Нормативний акт
-                        </dt>
-                        <dd>
-                          <a
-                            className="underline underline-offset-2"
-                            href={product.nationalListSource.url}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Постанова №{product.nationalListSource.actNumber},
-                            редакція {product.nationalListSource.revisionDate}
-                          </a>
-                        </dd>
-                      </div>
-                    ) : null}
-                  </dl>
-                ) : null}
-              </div>
-            ) : null}
+                  ) : null}
+                </dl>
+              ) : null}
+            </div>
 
             {product.atcCode ? (
               <p className="break-words text-xs text-muted-foreground">

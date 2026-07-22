@@ -136,7 +136,8 @@ describe("registry product mobile detail UI", () => {
       expect(html).not.toContain("по 20 таблеток");
       expect(html).not.toContain("по 28 таблеток");
       expect(html).toContain("Реєстр");
-      expect(html).toContain("Нацперелік");
+      expect(html).toContain("Нацперелік: Так — входить");
+      expect(html).toContain("Так — входить до Нацпереліку");
       expect(html).toContain("Є інструкція");
       expect(html).toContain(`href="/instructions/${item.id}"`);
       expect(html).toContain('href="/interactions"');
@@ -147,6 +148,47 @@ describe("registry product mobile detail UI", () => {
       expect(html).toContain("motion-reduce:animate-none");
       expect(html).toContain("max-w-full");
       expect(html).not.toContain("overflow-x-auto");
+    },
+  );
+
+  it.each([
+    ["exact", "Так — входить до Нацпереліку"],
+    ["ingredient_only", "Лише МНН у Нацпереліку — цю позицію не підтверджено"],
+    ["uncertain", "Не визначено однозначно"],
+    ["not_listed", "Ні — не входить до Нацпереліку"],
+    ["not_applicable", "Не визначено — активний Нацперелік недоступний"],
+  ] as const)(
+    "shows an explicit per-position National List verdict for %s",
+    (nationalListStatus, expectedVerdict) => {
+      const product = productFixture(representativeProducts[0], {
+        nationalListStatus,
+        nationalListMatchReason:
+          "No matching INN or fixed combination exists in the active release.",
+        nationalListRelease:
+          nationalListStatus === "not_applicable"
+            ? null
+            : "ua-national-list-2025-10-10",
+        nationalListSource:
+          nationalListStatus === "not_applicable" ? null : undefined,
+        nationalListMatchDetails:
+          nationalListStatus === "not_applicable" ? null : undefined,
+      });
+      const html = renderToStaticMarkup(
+        createElement(RegistryProductDetailContent, {
+          product,
+          favorite: false,
+          onToggleFavorite: () => undefined,
+        }),
+      );
+
+      expect(html).toContain('data-testid="national-list-badge"');
+      expect(html).toContain('data-testid="national-list-details"');
+      expect(html).toContain('data-testid="national-list-verdict"');
+      expect(html).toContain(expectedVerdict);
+      expect(html).toContain(product.registration.number);
+      expect(html).not.toContain(
+        "No matching INN or fixed combination exists in the active release.",
+      );
     },
   );
 
