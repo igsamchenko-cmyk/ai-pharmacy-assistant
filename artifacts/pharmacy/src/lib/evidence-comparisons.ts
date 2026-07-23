@@ -1,6 +1,6 @@
 import type { ComparisonProductRef } from "@/hooks/use-product-comparison";
 
-export type EvidenceConfidence = "high" | "moderate" | "low";
+export type EvidenceConfidence = "high" | "moderate" | "low" | "very_low";
 export type EvidenceDirectness =
   | "direct"
   | "indirect"
@@ -27,6 +27,24 @@ export interface EvidenceSource {
 export interface EvidenceOutcomeDomain {
   id: string;
   label: string;
+}
+
+export interface EvidenceOutcomeAssessment {
+  outcomeId: string;
+  label: string;
+  category: "effectiveness" | "safety";
+  finding: string;
+  baselineRisk: string | null;
+  absoluteEffect: string | null;
+  relativeEffect: string | null;
+  confidenceInterval: string | null;
+  timeHorizon: string | null;
+  participants: number | null;
+  studyCount: number | null;
+  confidence: EvidenceConfidence;
+  confidenceRationale: string;
+  directness: Exclude<EvidenceDirectness, "insufficient">;
+  sourceUrls: readonly string[];
 }
 
 export interface EvidenceIndicationContext {
@@ -62,11 +80,10 @@ export interface ClinicalEvidenceComparison {
   title: string;
   indication: EvidenceIndicationContext;
   alternatives: string;
-  effectivenessOutcomes: readonly string[];
+  outcomeEvidence: readonly EvidenceOutcomeAssessment[];
   keyRisks: readonly string[];
   comparisonType: string;
   directness: Exclude<EvidenceDirectness, "insufficient">;
-  confidence: EvidenceConfidence;
   confidenceRationale: string;
   neutralConclusion: string;
   insufficientData: string;
@@ -141,10 +158,54 @@ export const EVIDENCE_REGISTRY: readonly ClinicalEvidenceComparison[] = [
     },
     alternatives:
       "Так, для багатьох пацієнтів, яким підходять прямі пероральні антикоагулянти. Конкретний вибір залежить від функції нирок, віку, супутніх ліків, ризику кровотечі, дози та прихильності до режиму.",
-    effectivenessOutcomes: [
-      "Обидві діючі речовини окремо мають рандомізовані докази профілактики інсульту або системної емболії порівняно з варфарином.",
-      "Прямих великих рандомізованих випробувань апіксабану проти ривароксабану немає.",
-      "Прямі ретроспективні когорти оцінювали інсульт, системну емболію та великі кровотечі; вони повідомляли відмінності на користь апіксабану за частиною outcomes, але залишковий confounding не дозволяє вважати це причинним доказом переваги.",
+    outcomeEvidence: [
+      {
+        outcomeId: "stroke-systemic-embolism",
+        label: "Інсульт або системна емболія",
+        category: "effectiveness",
+        finding:
+          "Прямих великих рандомізованих випробувань апіксабану проти ривароксабану немає. Прямі ретроспективні когорти оцінювали ці події, але залишковий confounding не дозволяє вважати відмінності причинним доказом переваги.",
+        baselineRisk: null,
+        absoluteEffect: null,
+        relativeEffect: null,
+        confidenceInterval: null,
+        timeHorizon: null,
+        participants: null,
+        studyCount: null,
+        confidence: "low",
+        confidenceRationale:
+          "Head-to-head дані observational, а окремі RCT не були спроєктовані для порівняння цих двох препаратів.",
+        directness: "mixed",
+        sourceUrls: [
+          "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001193",
+          "https://pubmed.ncbi.nlm.nih.gov/34932078/",
+          "https://pubmed.ncbi.nlm.nih.gov/32150751/",
+          "https://pubmed.ncbi.nlm.nih.gov/39154873/",
+        ],
+      },
+      {
+        outcomeId: "major-bleeding",
+        label: "Великі кровотечі",
+        category: "safety",
+        finding:
+          "Прямі ретроспективні когорти оцінювали великі кровотечі та повідомляли відмінності, але залишковий confounding не дозволяє вважати це причинним доказом переваги.",
+        baselineRisk: null,
+        absoluteEffect: null,
+        relativeEffect: null,
+        confidenceInterval: null,
+        timeHorizon: null,
+        participants: null,
+        studyCount: null,
+        confidence: "low",
+        confidenceRationale:
+          "Наявні прямі порівняння нерандомізовані, тому невиміряні відмінності між групами можуть впливати на результат.",
+        directness: "direct",
+        sourceUrls: [
+          "https://pubmed.ncbi.nlm.nih.gov/34932078/",
+          "https://pubmed.ncbi.nlm.nih.gov/32150751/",
+          "https://pubmed.ncbi.nlm.nih.gov/39154873/",
+        ],
+      },
     ],
     keyRisks: [
       "Для обох препаратів ключовий ризик — клінічно значуща кровотеча, зокрема шлунково-кишкова або внутрішньочерепна.",
@@ -154,7 +215,6 @@ export const EVIDENCE_REGISTRY: readonly ClinicalEvidenceComparison[] = [
     comparisonType:
       "Пряме нерандомізоване порівняння у великих когортах плюс непряме порівняння окремих RCT із варфарином як спільним comparator.",
     directness: "mixed",
-    confidence: "low",
     confidenceRationale:
       "Низька щодо переваги одного препарату над іншим: head-to-head дані observational, а окремі RCT не були спроєктовані для такого порівняння.",
     neutralConclusion:
@@ -226,10 +286,75 @@ export const EVIDENCE_REGISTRY: readonly ClinicalEvidenceComparison[] = [
     },
     alternatives:
       "Так, обидва є інгібіторами АПФ і можуть виконувати ту саму терапевтичну роль, якщо цей клас підходить пацієнту. Це не означає автоматичну заміну дози або конкретної реєстрової позиції.",
-    effectivenessOutcomes: [
-      "Короткі прямі рандомізовані дослідження показали, що обидва препарати знижують артеріальний тиск.",
-      "В одному 12-тижневому дослідженні застосовані діапазони доз лізиноприлу дали більше зниження тиску, але це surrogate outcome у відносно невеликій і короткій роботі.",
-      "Надійного прямого порівняння інфаркту, інсульту, серцевої недостатності або смертності між цими двома препаратами немає.",
+    outcomeEvidence: [
+      {
+        outcomeId: "blood-pressure",
+        label: "Зниження артеріального тиску",
+        category: "effectiveness",
+        finding:
+          "Короткі прямі рандомізовані дослідження показали, що обидва препарати знижують артеріальний тиск. В одному 12-тижневому дослідженні застосовані діапазони доз лізиноприлу дали більше зниження тиску, але це surrogate outcome у відносно невеликій і короткій роботі.",
+        baselineRisk: null,
+        absoluteEffect: null,
+        relativeEffect: null,
+        confidenceInterval: null,
+        timeHorizon: "12 тижнів для основного прямого дослідження",
+        participants: null,
+        studyCount: null,
+        confidence: "low",
+        confidenceRationale:
+          "Наявні прямі дослідження невеликі, короткі та оцінюють surrogate outcome.",
+        directness: "direct",
+        sourceUrls: [
+          "https://pubmed.ncbi.nlm.nih.gov/1663163/",
+          "https://pubmed.ncbi.nlm.nih.gov/2550644/",
+        ],
+      },
+      {
+        outcomeId: "cardiovascular-events",
+        label: "Серцево-судинні події",
+        category: "effectiveness",
+        finding:
+          "Надійного прямого порівняння інфаркту, інсульту або серцевої недостатності між цими двома препаратами немає.",
+        baselineRisk: null,
+        absoluteEffect: null,
+        relativeEffect: null,
+        confidenceInterval: null,
+        timeHorizon: null,
+        participants: null,
+        studyCount: null,
+        confidence: "low",
+        confidenceRationale:
+          "Пряме outcome-powered порівняння клінічно важливих серцево-судинних подій відсутнє.",
+        directness: "indirect",
+        sourceUrls: [
+          "https://www.who.int/publications/i/item/9789240033986",
+          "https://pubmed.ncbi.nlm.nih.gov/1663163/",
+          "https://pubmed.ncbi.nlm.nih.gov/2550644/",
+        ],
+      },
+      {
+        outcomeId: "mortality",
+        label: "Смертність",
+        category: "effectiveness",
+        finding:
+          "Надійного прямого порівняння смертності між цими двома препаратами немає.",
+        baselineRisk: null,
+        absoluteEffect: null,
+        relativeEffect: null,
+        confidenceInterval: null,
+        timeHorizon: null,
+        participants: null,
+        studyCount: null,
+        confidence: "low",
+        confidenceRationale:
+          "Наявні короткі дослідження не дають прямої оцінки смертності.",
+        directness: "indirect",
+        sourceUrls: [
+          "https://www.who.int/publications/i/item/9789240033986",
+          "https://pubmed.ncbi.nlm.nih.gov/1663163/",
+          "https://pubmed.ncbi.nlm.nih.gov/2550644/",
+        ],
+      },
     ],
     keyRisks: [
       "Обидва мають класові ризики інгібіторів АПФ: симптомна гіпотензія, погіршення функції нирок, гіперкаліємія, кашель і рідкісний ангіоневротичний набряк.",
@@ -239,7 +364,6 @@ export const EVIDENCE_REGISTRY: readonly ClinicalEvidenceComparison[] = [
     comparisonType:
       "Прямі рандомізовані короткострокові порівняння артеріального тиску; відсутнє пряме outcome-powered порівняння серцево-судинних подій.",
     directness: "direct",
-    confidence: "low",
     confidenceRationale:
       "Низька для клінічно важливих довгострокових outcomes через малий розмір, коротку тривалість і surrogate endpoints наявних head-to-head trials.",
     neutralConclusion:
@@ -304,10 +428,74 @@ export const EVIDENCE_REGISTRY: readonly ClinicalEvidenceComparison[] = [
     },
     alternatives:
       "Так, це альтернативні нестероїдні протизапальні засоби для частини пацієнтів без протипоказань. Їх не слід одночасно застосовувати як два NSAID без окремого клінічного обґрунтування.",
-    effectivenessOutcomes: [
-      "У прямому рандомізованому дослідженні після видалення зубів обидва препарати перевершували placebo й мали подібний початок та загальне полегшення болю.",
-      "Окремі дослідження припускають довшу тривалість ефекту напроксену в цій моделі, але це не доводить універсальної переваги для іншого гострого болю.",
-      "Настанови підтримують oral NSAID як клас для окремих гострих musculoskeletal injuries, але не встановлюють загального переможця між ібупрофеном і напроксеном.",
+    outcomeEvidence: [
+      {
+        outcomeId: "pain-relief",
+        label: "Полегшення болю",
+        category: "effectiveness",
+        finding:
+          "У прямому рандомізованому дослідженні після видалення зубів обидва препарати перевершували placebo й мали подібний початок та загальне полегшення болю.",
+        baselineRisk: null,
+        absoluteEffect: null,
+        relativeEffect: null,
+        confidenceInterval: null,
+        timeHorizon: "Після одноразової дози в моделі стоматологічного болю",
+        participants: null,
+        studyCount: null,
+        confidence: "moderate",
+        confidenceRationale:
+          "Є прямі рандомізовані дані для короткочасного післяопераційного стоматологічного болю, але не для всіх причин гострого болю.",
+        directness: "direct",
+        sourceUrls: [
+          "https://pubmed.ncbi.nlm.nih.gov/8269451/",
+          "https://clinicaltrials.gov/study/NCT03404206?tab=results",
+        ],
+      },
+      {
+        outcomeId: "analgesia-duration",
+        label: "Тривалість аналгезії",
+        category: "effectiveness",
+        finding:
+          "Окремі дослідження припускають довшу тривалість ефекту напроксену в цій моделі, але це не доводить універсальної переваги для іншого гострого болю.",
+        baselineRisk: null,
+        absoluteEffect: null,
+        relativeEffect: null,
+        confidenceInterval: null,
+        timeHorizon: "Після одноразової дози в моделі стоматологічного болю",
+        participants: null,
+        studyCount: null,
+        confidence: "low",
+        confidenceRationale:
+          "Застосовність обмежена конкретною короткочасною моделлю болю.",
+        directness: "direct",
+        sourceUrls: [
+          "https://pubmed.ncbi.nlm.nih.gov/8269451/",
+          "https://clinicaltrials.gov/study/NCT03404206?tab=results",
+        ],
+      },
+      {
+        outcomeId: "serious-adverse-events",
+        label: "Серйозні небажані явища",
+        category: "safety",
+        finding:
+          "Короткі single-dose pain trials недостатні для порівняння рідкісних серйозних небажаних явищ.",
+        baselineRisk: null,
+        absoluteEffect: null,
+        relativeEffect: null,
+        confidenceInterval: null,
+        timeHorizon: null,
+        participants: null,
+        studyCount: null,
+        confidence: "low",
+        confidenceRationale:
+          "Короткі випробування не мають достатньої тривалості й кількості подій для надійного порівняння рідкісних ризиків.",
+        directness: "indirect",
+        sourceUrls: [
+          "https://pubmed.ncbi.nlm.nih.gov/8269451/",
+          "https://clinicaltrials.gov/study/NCT03404206?tab=results",
+          "https://www.aafp.org/pubs/afp/issues/2020/1201/p697.html",
+        ],
+      },
     ],
     keyRisks: [
       "Обидва NSAID можуть спричиняти шлунково-кишкову кровотечу або виразку, ниркове ушкодження, затримку рідини, підвищення тиску та серцево-судинні тромботичні події.",
@@ -317,7 +505,6 @@ export const EVIDENCE_REGISTRY: readonly ClinicalEvidenceComparison[] = [
     comparisonType:
       "Пряме рандомізоване single-dose порівняння в моделі стоматологічного болю плюс непряма class-level evidence для інших типів гострого болю.",
     directness: "mixed",
-    confidence: "low",
     confidenceRationale:
       "Помірна для короткочасного полегшення післяопераційного стоматологічного болю; низька для універсального порівняння всіх причин гострого болю та серйозних ризиків.",
     neutralConclusion:
@@ -506,11 +693,17 @@ export function resolveEvidenceComparison(
       directness: "insufficient",
       comparison: null,
       message:
-        "Надійного порівняння немає: exact INN/composition не визначено для обох препаратів.",
+        "Склад одного або обох препаратів не вдалося надійно визначити, тому клінічне порівняння недоступне.",
     };
   }
 
   if (matchingRecords.length === 0) {
+    const message =
+      classification === "same_ingredient"
+        ? "Препарати мають однакову діючу речовину. Перевірених даних про клінічну різницю між цими реєстровими позиціями немає."
+        : identities.some((identity) => identity.kind === "combination")
+          ? "Для цієї точної комбінації діючих речовин і другого препарату немає перевіреного порівняння за спільним клінічним показанням."
+          : "Для цих діючих речовин немає перевіреного порівняння за спільним клінічним показанням.";
     return {
       status: "insufficient",
       classification,
@@ -519,8 +712,7 @@ export function resolveEvidenceComparison(
       selectedIndicationId,
       directness: "insufficient",
       comparison: null,
-      message:
-        "Надійного порівняння немає: у verified evidence registry відсутній exact INN/composition match для цієї пари.",
+      message,
     };
   }
 
@@ -552,7 +744,7 @@ export function resolveEvidenceComparison(
       directness: "insufficient",
       comparison: null,
       message:
-        "Надійного порівняння немає для вибраного показання, population та outcome scope.",
+        "Для вибраного показання немає перевірених даних, які дозволяють сформувати клінічний висновок.",
     };
   }
 
@@ -565,6 +757,6 @@ export function resolveEvidenceComparison(
     directness: comparison.directness,
     comparison,
     message:
-      "Знайдено verified evidence record для exact INN/composition та вибраного показання.",
+      "Знайдено перевірений доказовий запис для точного складу та вибраного показання.",
   };
 }
