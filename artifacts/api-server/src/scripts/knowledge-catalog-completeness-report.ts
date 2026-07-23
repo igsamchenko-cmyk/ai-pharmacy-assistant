@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   assertCatalogCompletenessReport,
+  assertOfficialIngredientCoverage,
   buildCatalogCompletenessReport,
   downloadOfficialRegistrySnapshot,
   parseRegistryFile,
@@ -49,6 +50,7 @@ async function main(): Promise<void> {
     : parseRegistryFile(file as string);
   const report = buildCatalogCompletenessReport(registry);
   assertCatalogCompletenessReport(report);
+  assertOfficialIngredientCoverage(report);
 
   if (process.argv.includes("--write")) {
     const requestedPath = argValue("--out=");
@@ -68,6 +70,8 @@ async function main(): Promise<void> {
           uniqueTradeNames: report.counts.uniqueTradeNames,
           unexplainedUnsearchableRows:
             report.coverage.unexplainedUnsearchableRows,
+          rowsWithoutInn: report.counts.missing.rawInn,
+          rowsWithoutActiveIngredient: report.counts.missing.activeIngredient,
           sourceSha256: report.source.sha256,
         },
         null,

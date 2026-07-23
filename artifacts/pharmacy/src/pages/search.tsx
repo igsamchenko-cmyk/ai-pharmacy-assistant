@@ -133,7 +133,9 @@ export function shouldUseServerCatalogSearch(
   status: "idle" | "loading" | "ready" | "error",
   hasServerOnlyFilters: boolean,
   query: string,
+  browseCompleteRegistry = false,
 ): boolean {
+  if (browseCompleteRegistry) return true;
   if (!isCatalogQueryEnabled(query)) return false;
   if (status === "ready") return hasServerOnlyFilters;
   if (status === "error") return true;
@@ -209,7 +211,7 @@ function statusLabel(status: RegistryProductResult["registration"]["status"]) {
   return "Статус не визначено";
 }
 
-function registryComposition(product: RegistryProductResult): string {
+export function registryComposition(product: RegistryProductResult): string {
   return (
     product.inn || product.activeIngredient || "Склад у реєстрі не зазначено"
   );
@@ -1484,12 +1486,14 @@ export default function SearchPage() {
     mappingStatus !== "all" ||
     nationalListStatus !== "all" ||
     registrationStatus !== "all";
+  const requiresServerCatalog = serverOnlyFilters || type === "ingredients";
   const shouldUseLocalCatalog =
-    clientCatalog.status === "ready" && !serverOnlyFilters;
+    clientCatalog.status === "ready" && !requiresServerCatalog;
   const serverSearchEnabled = shouldUseServerCatalogSearch(
     clientCatalog.status,
-    serverOnlyFilters,
+    requiresServerCatalog,
     effectiveQ,
+    type === "ingredients",
   );
   const localQuery = q.trim();
   const localResult = useMemo(
@@ -2185,15 +2189,22 @@ export default function SearchPage() {
               onVariantPage={setVariantPage}
             />
           ) : null}
-          {type !== "ingredients" && registry && !registryGroups ? (
+          {registry && !registryGroups ? (
             <section className="space-y-3">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold">
-                    Зареєстровані препарати
+                  <h2
+                    className="text-lg font-semibold"
+                    data-testid="catalog-product-section-title"
+                  >
+                    {type === "ingredients"
+                      ? "Препарати та їхні діючі речовини"
+                      : "Зареєстровані препарати"}
                   </h2>
                   <p className="text-xs text-muted-foreground">
-                    Знайдено {numberFormatter.format(registry.total)} записів
+                    {type === "ingredients"
+                      ? `Офіційне МНН/склад зазначено для кожної з ${numberFormatter.format(registry.total)} реєстрових позицій.`
+                      : `Знайдено ${numberFormatter.format(registry.total)} записів`}
                   </p>
                 </div>
                 <label className="flex items-center gap-2 text-sm">

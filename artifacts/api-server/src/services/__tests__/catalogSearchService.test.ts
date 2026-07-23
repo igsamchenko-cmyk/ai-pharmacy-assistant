@@ -406,6 +406,24 @@ describe("catalog search service", () => {
     expect(result.registryProducts.items).toHaveLength(1);
   });
 
+  it("returns registry products for the complete active-ingredient view", async () => {
+    const testStore = store();
+    const result = await searchCatalog(
+      input({ q: "Ibuprofen", type: "ingredients", view: "flat" }),
+      testStore,
+    );
+
+    expect(testStore.searchProducts).toHaveBeenCalledOnce();
+    expect(testStore.searchIngredients).not.toHaveBeenCalled();
+    expect(result.view).toBe("flat");
+    expect(result.ingredients).toEqual([]);
+    expect(result.registryProducts.items[0]).toMatchObject({
+      id: "registry-1",
+      inn: "Ibuprofen",
+      activeIngredient: "Ibuprofen 200 mg",
+    });
+    expect(result.registryProducts.total).toBe(16_533);
+  });
   it("returns combined approved ingredients and registry products", async () => {
     const result = await searchCatalog(
       input({ q: "Nurofen", type: "all" }),
@@ -579,17 +597,21 @@ describe("catalog search service", () => {
     expect(result.registryProducts.items).toEqual([]);
   });
 
-  it("uses count-only mode when browsing ingredients", async () => {
+  it("uses bounded product browse for the complete active-ingredient view", async () => {
     const testStore = store();
     const result = await searchCatalog(
       input({ type: "ingredients", pageSize: 50 }),
       testStore,
     );
-    expect(testStore.searchProducts).not.toHaveBeenCalled();
-    expect(testStore.getCatalogTotal).toHaveBeenCalledOnce();
+    expect(testStore.searchProducts).toHaveBeenCalledOnce();
+    expect(testStore.getCatalogTotal).not.toHaveBeenCalled();
     expect(result.catalogTotal).toBe(16_533);
-    expect(result.registryProducts.items).toEqual([]);
-    expect(result.ingredients).toHaveLength(1);
+    expect(result.registryProducts).toMatchObject({
+      total: 16_533,
+      pageSize: 50,
+    });
+    expect(result.registryProducts.items).toHaveLength(1);
+    expect(result.ingredients).toEqual([]);
   });
 
   it("rejects unbounded page sizes in the generated contract", () => {
@@ -829,6 +851,39 @@ describe("catalog search service", () => {
     resetRegistrySearchCachesForTests();
   });
 
+  it("restricts the active-ingredient view to official INN and composition fields", async () => {
+    resetRegistrySearchCachesForTests();
+    const statements = new Map<string, string>();
+    const query = vi.fn(async (sql: string) => {
+      if (sql.includes("SELECT product_registry_id, name, country")) {
+        return { rows: [manufacturer] };
+      }
+      if (sql.includes("n.normalized") && sql.includes("ingredient_id")) {
+        return { rows: [approvedMapping] };
+      }
+      if (sql.includes("SELECT COUNT(*)::int AS count")) {
+        return { rows: [{ count: 1, snapshot_version: "batch-test" }] };
+      }
+      if (sql.includes("p.registry_id")) return { rows: [productRow] };
+      throw new Error("Unexpected test query");
+    });
+    const dbStore = await createPostgresRegistryCatalogStore({
+      executor: { query },
+      onQuery: ({ label, statement }) => statements.set(label, statement),
+    });
+
+    const result = await dbStore.searchProducts(
+      input({ q: "Ibuprofen", type: "ingredients", view: "flat" }),
+    );
+    const pageSql = statements.get("registry-flat-page") ?? "";
+
+    expect(result.items).toHaveLength(1);
+
+    expect(pageSql).toContain("p.inn");
+    expect(pageSql).toContain("p.active_ingredient");
+    expect(pageSql).not.toContain("search_manufacturer");
+    expect(pageSql).not.toContain("LOWER(p.registration_number) LIKE");
+  });
   it("uses the complete registry candidate path for source-backed ingredient queries", async () => {
     resetRegistrySearchCachesForTests();
     const query = vi.fn(async (sql: string, _values: unknown[] = []) => {

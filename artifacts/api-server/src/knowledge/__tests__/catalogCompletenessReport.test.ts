@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   assertCatalogCompletenessReport,
+  assertOfficialIngredientCoverage,
   buildCatalogCompletenessReport,
   parseRegistryText,
   type RegistrySnapshotMetadata,
@@ -80,8 +81,28 @@ describe("catalog completeness report", () => {
       "neither count removes products",
     );
     expect(() => assertCatalogCompletenessReport(first)).not.toThrow();
+    expect(() => assertOfficialIngredientCoverage(first)).not.toThrow();
   });
 
+  it("fails closed when any official row lacks INN or active composition", () => {
+    const report = buildCatalogCompletenessReport(
+      parseRegistryText(
+        [
+          "id,trade_name,inn,active_ingredient,registration_number",
+          "missing-inn,Alpha,,Ingredient A,UA/1",
+          "missing-active,Beta,Ingredient B,,UA/2",
+        ].join("\n"),
+      ),
+    );
+
+    expect(report.counts.missing).toMatchObject({
+      rawInn: 1,
+      activeIngredient: 1,
+    });
+    expect(() => assertOfficialIngredientCoverage(report)).toThrow(
+      /Official ingredient coverage failed/u,
+    );
+  });
   it("fails an unsearchable product without an explicit product quarantine reason", () => {
     const registry = parseRegistryText(
       [
