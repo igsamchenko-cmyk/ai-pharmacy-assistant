@@ -434,6 +434,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: The exact official DRLZ document could not be retrieved or verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /drugs/stats:
     get:
       operationId: getDrugStats
@@ -1874,7 +1880,15 @@ components:
             - type: "null"
         instructionAvailable:
           type: boolean
-          description: Whether an exact-registration official instruction snapshot is available
+          description: Whether a committed snapshot or exact-product official DRLZ document is available
+        instructionSourceStatus:
+          type: string
+          enum: [structured, official_document, not_published, invalid_source]
+          description: Exact-product DRLZ source state; no registration fallback is used
+        officialInstructionDocumentUrl:
+          type: ["string", "null"]
+          format: uri
+          description: Validated exact-registration DRLZ document URL, when published
     DrugInstructionSections:
       type: object
       required: [indications, contraindications, adverseReactions, interactions, specialWarnings, pregnancyAndLactation, administration, overdose, storage]

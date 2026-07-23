@@ -564,6 +564,19 @@ export const RegistryProductResultNationalListStatus = {
   not_applicable: 'not_applicable',
 } as const;
 
+/**
+ * Exact-product DRLZ source state; no registration fallback is used
+ */
+export type RegistryProductResultInstructionSourceStatus = typeof RegistryProductResultInstructionSourceStatus[keyof typeof RegistryProductResultInstructionSourceStatus];
+
+
+export const RegistryProductResultInstructionSourceStatus = {
+  structured: 'structured',
+  official_document: 'official_document',
+  not_published: 'not_published',
+  invalid_source: 'invalid_source',
+} as const;
+
 export interface RegistryProductResult {
   resultType: RegistryProductResultResultType;
   id: string;
@@ -592,8 +605,15 @@ export interface RegistryProductResult {
   /** @nullable */
   nationalListCheckedAt: string | null;
   nationalListMatchDetails: NationalListMatchDetails | null;
-  /** Whether an exact-registration official instruction snapshot is available */
+  /** Whether a committed snapshot or exact-product official DRLZ document is available */
   instructionAvailable: boolean;
+  /** Exact-product DRLZ source state; no registration fallback is used */
+  instructionSourceStatus?: RegistryProductResultInstructionSourceStatus;
+  /**
+     * Validated exact-registration DRLZ document URL, when published
+     * @nullable
+     */
+  officialInstructionDocumentUrl?: string | null;
 }
 
 export interface DrugInstructionSections {

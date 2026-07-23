@@ -11,6 +11,7 @@ import type { CatalogRegistration } from './catalogRegistration';
 import type { CatalogSource } from './catalogSource';
 import type { NationalListMatchDetails } from './nationalListMatchDetails';
 import type { NationalListSource } from './nationalListSource';
+import type { RegistryProductResultInstructionSourceStatus } from './registryProductResultInstructionSourceStatus';
 import type { RegistryProductResultMappingStatus } from './registryProductResultMappingStatus';
 import type { RegistryProductResultNationalListStatus } from './registryProductResultNationalListStatus';
 import type { RegistryProductResultResultType } from './registryProductResultResultType';
@@ -43,6 +44,13 @@ export interface RegistryProductResult {
   /** @nullable */
   nationalListCheckedAt: string | null;
   nationalListMatchDetails: NationalListMatchDetails | null;
-  /** Whether an exact-registration official instruction snapshot is available */
+  /** Whether a committed snapshot or exact-product official DRLZ document is available */
   instructionAvailable: boolean;
+  /** Exact-product DRLZ source state; no registration fallback is used */
+  instructionSourceStatus?: RegistryProductResultInstructionSourceStatus;
+  /**
+     * Validated exact-registration DRLZ document URL, when published
+     * @nullable
+     */
+  officialInstructionDocumentUrl?: string | null;
 }

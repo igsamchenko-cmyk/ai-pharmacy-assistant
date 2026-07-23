@@ -567,7 +567,9 @@ export const SearchCatalogResponse = zod.object({
   "routeMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
   "strengthMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable'])
 }),zod.null()]),
-  "instructionAvailable": zod.boolean().describe('Whether an exact-registration official instruction snapshot is available')
+  "instructionAvailable": zod.boolean().describe('Whether a committed snapshot or exact-product official DRLZ document is available'),
+  "instructionSourceStatus": zod.enum(['structured', 'official_document', 'not_published', 'invalid_source']).optional().describe('Exact-product DRLZ source state; no registration fallback is used'),
+  "officialInstructionDocumentUrl": zod.string().url().nullish().describe('Validated exact-registration DRLZ document URL, when published')
 })),
   "total": zod.number().min(searchCatalogResponseRegistryProductsTotalMin),
   "page": zod.number().min(1),
@@ -688,7 +690,9 @@ export const SearchCatalogResponse = zod.object({
   "routeMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
   "strengthMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable'])
 }),zod.null()]),
-  "instructionAvailable": zod.boolean().describe('Whether an exact-registration official instruction snapshot is available')
+  "instructionAvailable": zod.boolean().describe('Whether a committed snapshot or exact-product official DRLZ document is available'),
+  "instructionSourceStatus": zod.enum(['structured', 'official_document', 'not_published', 'invalid_source']).optional().describe('Exact-product DRLZ source state; no registration fallback is used'),
+  "officialInstructionDocumentUrl": zod.string().url().nullish().describe('Validated exact-registration DRLZ document URL, when published')
 })).max(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneItemsMax),
   "total": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalMin),
   "totalRegistryPositions": zod.number().min(searchCatalogResponseRegistryGroupsOneGroupsItemsItemTradeNamesItemsItemVariantsOneTotalRegistryPositionsMin),

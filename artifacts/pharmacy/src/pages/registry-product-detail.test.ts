@@ -225,8 +225,8 @@ describe("registry product mobile detail UI", () => {
     );
 
     expect(html).toContain("Виробники");
-    expect(html).toContain('АТ &quot;Лубнифарм&quot;, Україна');
-    expect(html).toContain('ПрАТ &quot;ФІТОФАРМ&quot;, Україна');
+    expect(html).toContain("АТ &quot;Лубнифарм&quot;, Україна");
+    expect(html).toContain("ПрАТ &quot;ФІТОФАРМ&quot;, Україна");
     expect(html).not.toMatch(/первинне|пакування|контроль|випуск серій/iu);
   });
 
@@ -256,8 +256,33 @@ describe("registry product mobile detail UI", () => {
     );
     expect(html).not.toContain(`/instructions/${product.id}`);
     expect(html).toContain('data-testid="detail-instruction-unavailable"');
+    expect(html).toContain("ДРЛЗ не оприлюднив інструкцію");
   });
 
+  it("opens only the exact validated official DRLZ PDF document", () => {
+    const documentUrl =
+      "https://www.drlz.com.ua/ibp/lz_www.nsf/id/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC/$file/UA12340101_ABCD.pdf";
+    const product = productFixture(representativeProducts[0], {
+      instructionAvailable: false,
+      instructionSourceStatus: "official_document",
+      officialInstructionDocumentUrl: documentUrl,
+    });
+    const html = renderToStaticMarkup(
+      createElement(RegistryProductDetailContent, {
+        product,
+        favorite: false,
+        onToggleFavorite: () => undefined,
+      }),
+    );
+
+    expect(html).toContain(
+      'data-testid="detail-official-instruction-document"',
+    );
+    expect(html).toContain(`href="${documentUrl}"`);
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain('rel="noreferrer"');
+    expect(html).not.toContain(`/instructions/${product.id}`);
+  });
   it("builds and validates the exact product route without trusting malformed input", () => {
     const product = productFixture(representativeProducts[2]);
     const href = registryProductDetailHref(product);

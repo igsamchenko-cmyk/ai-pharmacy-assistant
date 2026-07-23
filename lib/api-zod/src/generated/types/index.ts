@@ -167,6 +167,7 @@ export * from './qualityIssueSeverity';
 export * from './registryProductPage';
 export * from './registryProductPagePageSize';
 export * from './registryProductResult';
+export * from './registryProductResultInstructionSourceStatus';
 export * from './registryProductResultMappingStatus';
 export * from './registryProductResultNationalListStatus';
 export * from './registryProductResultResultType';
