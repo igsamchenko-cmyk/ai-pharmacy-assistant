@@ -372,7 +372,7 @@ describe("registry catalog UI", () => {
       showReportIssue: false,
     }));
     expect(ingredientOnly).toContain(
-      "Не підтверджено для цієї реєстрової позиції",
+      "Не у Нацпереліку як конкретна реєстрова позиція",
     );
     expect(ingredientOnly).not.toContain('data-testid="national-list-exact"');
 

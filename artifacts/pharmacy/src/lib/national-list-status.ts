@@ -18,8 +18,8 @@ const VERDICTS: Record<NationalListStatus, NationalListVerdict> = {
     isConfirmed: true,
   },
   ingredient_only: {
-    shortLabel: "Не підтверджено у Нацпереліку",
-    label: "Не підтверджено для цієї реєстрової позиції",
+    shortLabel: "Не у Нацпереліку",
+    label: "Не у Нацпереліку як конкретна реєстрова позиція",
     description:
       "МНН або склад є у Нацпереліку, але форма, шлях введення чи дозування цієї реєстрової позиції не мають точного підтвердження.",
     isConfirmed: false,
