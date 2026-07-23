@@ -7,7 +7,7 @@ import {
   SearchCatalogResponse,
 } from "@workspace/api-zod";
 import { requireRole } from "../auth";
-import { getInstructionForProduct } from "../knowledge/instructions/catalog";
+import { getOfficialInstructionForProduct } from "../services/officialInstructionService";
 import { loadCatalogClientIndex } from "../services/catalogClientIndexService";
 import { searchCatalog } from "../services/catalogSearchService";
 
@@ -68,20 +68,32 @@ router.get("/catalog/search", async (req, res): Promise<void> => {
   res.json(SearchCatalogResponse.parse(result));
 });
 
-router.get("/catalog/products/:productId/instruction", (req, res): void => {
-  const parsed = GetDrugInstructionParams.safeParse(req.params);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Invalid product identifier" });
-    return;
-  }
+router.get(
+  "/catalog/products/:productId/instruction",
+  async (req, res): Promise<void> => {
+    const parsed = GetDrugInstructionParams.safeParse(req.params);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid product identifier" });
+      return;
+    }
 
-  const instruction = getInstructionForProduct(parsed.data.productId);
-  if (!instruction) {
-    res.status(404).json({ error: "Official instruction is not available" });
-    return;
-  }
-
-  res.json(GetDrugInstructionResponse.parse(instruction));
-});
+    try {
+      const instruction = await getOfficialInstructionForProduct(
+        parsed.data.productId,
+      );
+      if (!instruction) {
+        res
+          .status(404)
+          .json({ error: "Official instruction is not available" });
+        return;
+      }
+      res.json(GetDrugInstructionResponse.parse(instruction));
+    } catch {
+      res.status(503).json({
+        error: "Official instruction is temporarily unavailable",
+      });
+    }
+  },
+);
 
 export default router;

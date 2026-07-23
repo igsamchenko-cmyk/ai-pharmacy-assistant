@@ -87,6 +87,44 @@ function store(
 }
 
 describe("catalog search service", () => {
+  it("exposes an exact official DRLZ instruction source without a committed snapshot", () => {
+    const [result] = assembleRegistryProducts(
+      [
+        {
+          ...productRow,
+          instruction_url:
+            "https://www.drlz.com.ua/ibp/lz_www.nsf/id/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB/$file/UA12340101_ABCD.mht",
+        },
+      ],
+      [manufacturer],
+      [approvedMapping],
+    );
+    const [blocked] = assembleRegistryProducts(
+      [{ ...productRow, instruction_url: "https://example.com/file.mht" }],
+      [manufacturer],
+      [approvedMapping],
+    );
+
+    const [pdf] = assembleRegistryProducts(
+      [
+        {
+          ...productRow,
+          instruction_url:
+            "https://www.drlz.com.ua/ibp/lz_www.nsf/id/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC/$file/UA12340101_ABCD.pdf",
+        },
+      ],
+      [manufacturer],
+      [approvedMapping],
+    );
+
+    expect(result.instructionAvailable).toBe(true);
+    expect(result.instructionSourceStatus).toBe("structured");
+    expect(pdf.instructionAvailable).toBe(false);
+    expect(pdf.instructionSourceStatus).toBe("official_document");
+    expect(pdf.officialInstructionDocumentUrl).toMatch(/\.pdf$/u);
+    expect(blocked.instructionAvailable).toBe(false);
+    expect(blocked.instructionSourceStatus).toBe("invalid_source");
+  });
   it("uses a non-positional PostgreSQL rank expression in browse mode", () => {
     expect(CATALOG_BROWSE_RANK_SQL).toBe("NULL::int");
     expect(CATALOG_BROWSE_RANK_SQL).not.toMatch(/^\d+$/);
@@ -787,9 +825,7 @@ describe("catalog search service", () => {
     for (const values of filteredValues) {
       expect(values[0]).toEqual(expect.arrayContaining([normalize(tradeName)]));
     }
-    expect(statements.get("registry-flat-page") ?? "").toContain(
-      "CASE WHEN (",
-    );
+    expect(statements.get("registry-flat-page") ?? "").toContain("CASE WHEN (");
     resetRegistrySearchCachesForTests();
   });
 

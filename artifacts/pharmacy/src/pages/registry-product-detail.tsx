@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Database,
+  ExternalLink,
   GitCompare,
   Pill,
   RefreshCw,
@@ -147,6 +148,10 @@ export function RegistryProductDetailContent({
   const displayForm = conciseDosageForm(product.dosageForm);
   const listVerdict = nationalListVerdict(product.nationalListStatus);
   const detailHref = registryProductDetailHref(product);
+  const instructionSourceStatus =
+    product.instructionSourceStatus ??
+    (product.instructionAvailable ? "structured" : "not_published");
+  const officialDocumentUrl = product.officialInstructionDocumentUrl ?? null;
 
   return (
     <div
@@ -255,13 +260,16 @@ export function RegistryProductDetailContent({
               ) : null}
               {listVerdict.shortLabel}
             </Badge>
-            {product.instructionAvailable ? (
+            {product.instructionAvailable || officialDocumentUrl ? (
               <Badge
                 variant="outline"
                 className="gap-1.5 whitespace-normal border-primary/40 text-primary"
                 data-testid="instruction-available-badge"
               >
-                <BookOpenText className="h-3.5 w-3.5" />Є інструкція
+                <BookOpenText className="h-3.5 w-3.5" />
+                {product.instructionAvailable
+                  ? "Є інструкція"
+                  : "Є офіційний документ ДРЛЗ"}
               </Badge>
             ) : null}
           </div>
@@ -284,6 +292,24 @@ export function RegistryProductDetailContent({
                   Інструкція
                 </a>
               </Button>
+            ) : officialDocumentUrl &&
+              instructionSourceStatus === "official_document" ? (
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="col-span-2 min-h-12 min-w-0 whitespace-normal sm:col-span-1"
+              >
+                <a
+                  href={officialDocumentUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-testid="detail-official-instruction-document"
+                >
+                  <ExternalLink className="h-5 w-5 shrink-0" />
+                  Офіційна інструкція ДРЛЗ
+                </a>
+              </Button>
             ) : (
               <Button
                 size="lg"
@@ -292,7 +318,9 @@ export function RegistryProductDetailContent({
                 data-testid="detail-instruction-unavailable"
               >
                 <BookOpenText className="h-5 w-5 shrink-0" />
-                Інструкція недоступна
+                {instructionSourceStatus === "invalid_source"
+                  ? "Документ ДРЛЗ потребує перевірки"
+                  : "ДРЛЗ не оприлюднив інструкцію"}
               </Button>
             )}
             <Button
@@ -544,9 +572,7 @@ export default function RegistryProductDetail() {
     <RegistryProductDetailContent
       product={product}
       favorite={isFavorite(product.id)}
-      onToggleFavorite={() =>
-        toggleFavorite(registryProductDrugRef(product))
-      }
+      onToggleFavorite={() => toggleFavorite(registryProductDrugRef(product))}
     />
   );
 }

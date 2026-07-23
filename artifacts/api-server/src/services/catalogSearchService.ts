@@ -14,6 +14,7 @@ import { resolveSourceBackedDictionaryQuery } from "../knowledge/dictionary";
 import { isDbRuntimeEnabled } from "../knowledge/runtime";
 import { hasInstructionForProduct } from "../knowledge/instructions/catalog";
 import { searchDrugs } from "./drugService";
+import { resolveOfficialInstructionSource } from "../knowledge/instructions/source";
 import {
   GROUPED_CATALOG_ROW_LIMIT,
   groupRegistryProducts,
@@ -75,6 +76,7 @@ interface ProductRow {
   registration_number: string;
   registration_start_date: string;
   registration_end_date: string;
+  instruction_url?: string | null;
   source_key: string;
   registration_status: RegistrationStatus;
   national_list_status?:
@@ -530,6 +532,16 @@ export function assembleRegistryProducts(
       300,
     );
 
+    const committedInstruction = hasInstructionForProduct(
+      row.registry_id,
+      row.registration_number,
+    );
+    const instructionSource = resolveOfficialInstructionSource(
+      row.instruction_url,
+      row.registration_number,
+      committedInstruction,
+    );
+
     return {
       resultType: "registry_product",
       id: row.registry_id,
@@ -604,10 +616,9 @@ export function assembleRegistryProducts(
             strengthMatch: row.national_list_strength_match ?? "unknown",
           }
         : null,
-      instructionAvailable: hasInstructionForProduct(
-        row.registry_id,
-        row.registration_number,
-      ),
+      instructionAvailable: instructionSource.status === "structured",
+      instructionSourceStatus: instructionSource.status,
+      officialInstructionDocumentUrl: instructionSource.documentUrl,
     };
   });
 }
@@ -1115,6 +1126,7 @@ export async function createPostgresRegistryCatalogStore(
                  p.registration_number,
                  p.registration_start_date,
                  p.registration_end_date,
+                 p.instruction_url,
                  p.source_key,
                  ${REGISTRATION_STATUS_SQL} AS registration_status,
                  ${NATIONAL_LIST_MATCH_SELECT_SQL}
@@ -1182,6 +1194,7 @@ export async function createPostgresRegistryCatalogStore(
              p.registration_number,
              p.registration_start_date,
              p.registration_end_date,
+             p.instruction_url,
              p.source_key,
              ${REGISTRATION_STATUS_SQL} AS registration_status,
              ${NATIONAL_LIST_MATCH_SELECT_SQL}
@@ -1241,6 +1254,7 @@ export async function createPostgresRegistryCatalogStore(
                p.registration_number,
                p.registration_start_date,
                p.registration_end_date,
+               p.instruction_url,
                p.source_key,
                ${REGISTRATION_STATUS_SQL} AS registration_status,
                ${NATIONAL_LIST_MATCH_SELECT_SQL}
