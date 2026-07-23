@@ -14,6 +14,7 @@ import {
   conciseDosageForm,
   conciseDosageForms,
   RegistryProductCard,
+  registryComposition,
   findExactTradeNameMatches,
   isExactTradeNameQuery,
   normalizeExactTradeName,
@@ -48,6 +49,8 @@ describe("catalog index readiness fallback", () => {
     expect(shouldUseServerCatalogSearch("ready", true, "Enap")).toBe(true);
     expect(shouldUseServerCatalogSearch("loading", false, "")).toBe(false);
     expect(shouldUseServerCatalogSearch("error", false, "")).toBe(true);
+    expect(shouldUseServerCatalogSearch("ready", false, "", true)).toBe(true);
+    expect(shouldUseServerCatalogSearch("ready", false, "Ібупрофен", true)).toBe(true);
   });
 
   it("replaces the catalog skeleton as soon as a fallback response exists", () => {
@@ -258,6 +261,24 @@ describe("registry catalog UI", () => {
     expect(html).toContain("max-w-full");
     expect(html).toContain("motion-reduce:animate-none");
     expect(html).not.toContain("overflow-x-auto");
+  });
+  it("shows the official active composition when a normalized INN is unavailable", () => {
+    const registryOnly = {
+      ...product,
+      inn: "",
+      activeIngredient: "Ібупрофен 200 мг",
+    };
+    const html = renderToStaticMarkup(
+      createElement(RegistryProductCard, {
+        product: registryOnly,
+        query: "Ібупрофен",
+        showReportIssue: false,
+      }),
+    );
+
+    expect(registryComposition(registryOnly)).toBe("Ібупрофен 200 мг");
+    expect(html).toContain("Ібупрофен 200 мг");
+    expect(html).not.toContain("Склад у реєстрі не зазначено");
   });
   it("renders a mobile-safe registry card with production fields", () => {
     const html = renderToStaticMarkup(

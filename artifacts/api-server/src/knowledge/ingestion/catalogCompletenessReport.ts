@@ -381,6 +381,16 @@ export function buildCatalogCompletenessReport(
   };
 }
 
+export function assertOfficialIngredientCoverage(
+  report: CatalogCompletenessReport,
+): void {
+  const { rawInn, activeIngredient } = report.counts.missing;
+  if (rawInn > 0 || activeIngredient > 0) {
+    throw new Error(
+      `Official ingredient coverage failed: ${rawInn} rows lack INN and ${activeIngredient} rows lack active composition.`,
+    );
+  }
+}
 export function assertCatalogCompletenessReport(
   report: CatalogCompletenessReport,
 ): void {

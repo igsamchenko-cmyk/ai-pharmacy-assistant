@@ -641,7 +641,42 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
     const exactTradeKeys = catalogExactTradeKeys(query);
     const combinationTerms = catalogCompositionSearchTerms(query);
 
-    if (exactTradeOnly) {
+    if (input.type === "ingredients") {
+      const ingredientKeys = [
+        ...new Set(
+          [...catalogAliasQueryKeys(query), normalized].filter(Boolean),
+        ),
+      ];
+      const exactRef = add(ingredientKeys);
+      const prefixRef = add(
+        ingredientKeys.map((value) => `${escapeLike(value)}%`),
+      );
+      const containsRef = add(
+        ingredientKeys.map((value) => `%${escapeLike(value)}%`),
+      );
+      const innKey = catalogSearchKeySql("p.inn");
+      const activeKey = catalogSearchKeySql("p.active_ingredient");
+      const exactIngredient = `(
+        ${innKey} = ANY(${exactRef}::text[])
+        OR ${activeKey} = ANY(${exactRef}::text[])
+      )`;
+      const prefixIngredient = `(
+        ${innKey} LIKE ANY(${prefixRef}::text[])
+        OR ${activeKey} LIKE ANY(${prefixRef}::text[])
+      )`;
+      const containsIngredient = `(
+        ${innKey} LIKE ANY(${containsRef}::text[])
+        OR ${activeKey} LIKE ANY(${containsRef}::text[])
+      )`;
+      clauses.push(
+        `(${exactIngredient} OR ${prefixIngredient} OR ${containsIngredient})`,
+      );
+      rankSql = `CASE
+        WHEN ${exactIngredient} THEN 1
+        WHEN ${prefixIngredient} THEN 2
+        ELSE 3
+      END`;
+    } else if (exactTradeOnly) {
       const normalizedVariantsRef = add(
         exactTradeKeys.length ? exactTradeKeys : [normalized],
       );
@@ -1481,10 +1516,8 @@ export async function searchCatalog(
   try {
     const activeStore = store ?? (await createPostgresRegistryCatalogStore());
     const view = resolveCatalogView(input);
-    const includeProducts = input.type !== "ingredients";
-    const includeIngredients =
-      input.type === "ingredients" ||
-      (input.type === "all" && Boolean(input.q.trim()));
+    const includeProducts = true;
+    const includeIngredients = input.type === "all" && Boolean(input.q.trim());
     const ingredientSearch = includeIngredients
       ? activeStore.searchIngredients(
           input.q,
