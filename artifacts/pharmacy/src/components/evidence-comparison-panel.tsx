@@ -419,7 +419,7 @@ export function EvidenceComparisonUnavailable({
       data-testid="evidence-unavailable"
     >
       <AlertTriangle className="h-4 w-4" />
-      <AlertTitle>Надійного порівняння немає</AlertTitle>
+      <AlertTitle>Надійного клінічного порівняння немає</AlertTitle>
       <AlertDescription className="grid gap-2">
         <p className="break-words">{resolution.message}</p>
         <p className="break-words text-xs">

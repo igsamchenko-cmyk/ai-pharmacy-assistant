@@ -45,6 +45,31 @@ interface ComparisonInstructions {
   [productId: string]: DrugInstruction | null | undefined;
 }
 
+export function exactComparisonProductSearchParams(
+  product: ComparisonProductRef | undefined,
+) {
+  return {
+    q: product?.registrationNumber ?? "",
+    ...(product ? { productId: product.productId } : {}),
+    type: "registry_products" as const,
+    view: "grouped" as const,
+    page: 1,
+    pageSize: 25,
+  };
+}
+
+export function exactComparisonRegistryProduct(
+  selected: ComparisonProductRef,
+  candidates: readonly RegistryProductResult[],
+): RegistryProductResult | null {
+  const exactMatches = candidates.filter(
+    (candidate) =>
+      candidate.id === selected.productId &&
+      candidate.registration.number === selected.registrationNumber,
+  );
+  return exactMatches.length === 1 ? exactMatches[0] : null;
+}
+
 export function exactComparisonInstruction(
   product: ComparisonProductRef,
   instruction: DrugInstruction | null | undefined,
@@ -341,35 +366,83 @@ export function EvidenceResolutionSection({
   );
 }
 
+export function VerifiedProductComparison({
+  products,
+  instructions,
+  loadingIds,
+}: {
+  products: ComparisonProductRef[];
+  instructions: ComparisonInstructions;
+  loadingIds: string[];
+}) {
+  return (
+    <section className="space-y-5" aria-label="Результат порівняння">
+      <div className="flex flex-wrap gap-2">
+        <Badge variant="secondary">2 точні реєстрові позиції</Badge>
+        <Badge variant="outline">Дані підтверджено за product ID і реєстрацією</Badge>
+      </div>
+      <section className="space-y-3" aria-labelledby="registry-comparison-title">
+        <div>
+          <h2 id="registry-comparison-title" className="text-lg font-bold">Порівняння обраних реєстрових позицій</h2>
+          <p className="text-sm text-muted-foreground">Нижче показані дані саме двох вибраних позицій із каталогу.</p>
+        </div>
+        <ProductComparisonGrid products={products} instructions={instructions} loadingIds={loadingIds} />
+      </section>
+      <section className="space-y-3" aria-labelledby="evidence-comparison-title">
+        <div>
+          <h2 id="evidence-comparison-title" className="text-lg font-bold">Доказове клінічне порівняння</h2>
+          <p className="text-sm text-muted-foreground">Клінічний висновок доступний лише за точного збігу перевірених доказів.</p>
+        </div>
+        <EvidenceResolutionSection key={products.map((product) => product.productId).sort().join(":")} products={products} />
+      </section>
+    </section>
+  );
+}
+
 export default function Compare() {
   const { products, removeProduct, clear } = useProductComparison();
   const first = products[0];
   const second = products[1];
 
-  const firstInstruction = useGetDrugInstruction(first?.productId ?? "", {
-    query: {
-      queryKey: getGetDrugInstructionQueryKey(first?.productId ?? ""),
-      enabled: Boolean(first?.instructionAvailable),
-      retry: false,
-      staleTime: 6 * 60 * 60 * 1_000,
-    },
+  const firstExactParams = useMemo(() => exactComparisonProductSearchParams(first), [first]);
+  const secondExactParams = useMemo(() => exactComparisonProductSearchParams(second), [second]);
+  const firstExactQuery = useSearchCatalog(firstExactParams, {
+    query: { queryKey: getSearchCatalogQueryKey(firstExactParams), enabled: Boolean(first), retry: 1, staleTime: 60_000, refetchOnWindowFocus: false },
   });
-  const secondInstruction = useGetDrugInstruction(second?.productId ?? "", {
-    query: {
-      queryKey: getGetDrugInstructionQueryKey(second?.productId ?? ""),
-      enabled: Boolean(second?.instructionAvailable),
-      retry: false,
-      staleTime: 6 * 60 * 60 * 1_000,
-    },
+  const secondExactQuery = useSearchCatalog(secondExactParams, {
+    query: { queryKey: getSearchCatalogQueryKey(secondExactParams), enabled: Boolean(second), retry: 1, staleTime: 60_000, refetchOnWindowFocus: false },
+  });
+  const firstExactRegistryProduct = first
+    ? exactComparisonRegistryProduct(first, firstExactQuery.data?.registryProducts.items ?? [])
+    : null;
+  const secondExactRegistryProduct = second
+    ? exactComparisonRegistryProduct(second, secondExactQuery.data?.registryProducts.items ?? [])
+    : null;
+  const firstVerified = firstExactRegistryProduct
+    ? comparisonProductFromRegistry(firstExactRegistryProduct, conciseDosageForm(firstExactRegistryProduct.dosageForm))
+    : null;
+  const secondVerified = secondExactRegistryProduct
+    ? comparisonProductFromRegistry(secondExactRegistryProduct, conciseDosageForm(secondExactRegistryProduct.dosageForm))
+    : null;
+  const verifiedProducts = firstVerified && secondVerified ? [firstVerified, secondVerified] : [];
+  const isVerifyingExactProducts = products.length === 2 && (firstExactQuery.isLoading || secondExactQuery.isLoading);
+  const exactProductVerificationFailed = products.length === 2 && !isVerifyingExactProducts &&
+    (firstExactQuery.isError || secondExactQuery.isError || verifiedProducts.length !== 2);
+
+  const firstInstruction = useGetDrugInstruction(firstVerified?.productId ?? "", {
+    query: { queryKey: getGetDrugInstructionQueryKey(firstVerified?.productId ?? ""), enabled: Boolean(firstVerified?.instructionAvailable), retry: false, staleTime: 6 * 60 * 60 * 1_000 },
+  });
+  const secondInstruction = useGetDrugInstruction(secondVerified?.productId ?? "", {
+    query: { queryKey: getGetDrugInstructionQueryKey(secondVerified?.productId ?? ""), enabled: Boolean(secondVerified?.instructionAvailable), retry: false, staleTime: 6 * 60 * 60 * 1_000 },
   });
 
   const instructions: ComparisonInstructions = {
-    ...(first ? { [first.productId]: firstInstruction.data } : {}),
-    ...(second ? { [second.productId]: secondInstruction.data } : {}),
+    ...(firstVerified ? { [firstVerified.productId]: firstInstruction.data } : {}),
+    ...(secondVerified ? { [secondVerified.productId]: secondInstruction.data } : {}),
   };
   const loadingIds = [
-    ...(first?.instructionAvailable && firstInstruction.isLoading ? [first.productId] : []),
-    ...(second?.instructionAvailable && secondInstruction.isLoading ? [second.productId] : []),
+    ...(firstVerified?.instructionAvailable && firstInstruction.isLoading ? [firstVerified.productId] : []),
+    ...(secondVerified?.instructionAvailable && secondInstruction.isLoading ? [secondVerified.productId] : []),
   ];
 
   return (
@@ -424,22 +497,22 @@ export default function Compare() {
 
       <RegistryPicker />
 
-      {products.length === 2 ? (
-        <section className="space-y-3" aria-label="Результат порівняння">
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">2 точні реєстрові позиції</Badge>
-            <Badge variant="outline">Довгі тексти згорнуті</Badge>
-          </div>
-          <EvidenceResolutionSection
-            key={products.map((product) => product.productId).sort().join(":")}
-            products={products}
-          />
-          <ProductComparisonGrid
-            products={products}
-            instructions={instructions}
-            loadingIds={loadingIds}
-          />
-        </section>
+      {products.length === 2 && isVerifyingExactProducts ? (
+        <div className="flex items-center gap-2 rounded-xl border px-4 py-4 text-sm text-muted-foreground" role="status">
+          <LoaderCircle className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+          Перевіряємо точні реєстрові позиції…
+        </div>
+      ) : products.length === 2 && exactProductVerificationFailed ? (
+        <Alert className="border-amber-500/45 bg-amber-500/10">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Не вдалося підтвердити точні позиції</AlertTitle>
+          <AlertDescription>
+            Одна з вибраних позицій більше не збігається з актуальним каталогом за product ID і реєстраційним номером.
+            Приберіть її та оберіть знову. Дані іншого препарату не підставляються.
+          </AlertDescription>
+        </Alert>
+      ) : verifiedProducts.length === 2 ? (
+        <VerifiedProductComparison products={verifiedProducts} instructions={instructions} loadingIds={loadingIds} />
       ) : (
         <p className="rounded-xl border border-dashed px-4 py-4 text-sm text-muted-foreground">
           Додайте ще {2 - products.length} препарат, щоб побачити порівняння.

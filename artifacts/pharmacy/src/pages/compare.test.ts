@@ -1,10 +1,12 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { DrugInstruction } from "@workspace/api-client-react";
+import type { DrugInstruction, RegistryProductResult } from "@workspace/api-client-react";
 
 import {
   ProductComparisonGrid,
+  exactComparisonProductSearchParams,
+  exactComparisonRegistryProduct,
   exactComparisonInstruction,
 } from "./compare";
 import type { ComparisonProductRef } from "@/hooks/use-product-comparison";
@@ -68,6 +70,26 @@ const pairs = [
 ] as const;
 
 describe("exact registry product comparison", () => {
+  it("rehydrates only the exact selected productId and registration", () => {
+    const [selected] = pairs[0];
+    const exact = { id: selected.productId, registration: { number: selected.registrationNumber } } as RegistryProductResult;
+    expect(exactComparisonRegistryProduct(selected, [exact])).toBe(exact);
+    expect(exactComparisonRegistryProduct(selected, [{ ...exact, registration: { number: pairs[0][1].registrationNumber } }])).toBeNull();
+    expect(exactComparisonRegistryProduct(selected, [{ ...exact, id: pairs[0][1].productId }])).toBeNull();
+    expect(exactComparisonRegistryProduct(selected, [exact, exact])).toBeNull();
+  });
+
+  it("builds the fail-closed exact catalog lookup contract", () => {
+    const [selected] = pairs[1];
+    expect(exactComparisonProductSearchParams(selected)).toEqual({
+      q: selected.registrationNumber,
+      productId: selected.productId,
+      type: "registry_products",
+      view: "grouped",
+      page: 1,
+      pageSize: 25,
+    });
+  });
   it.each(pairs)("renders an exact mobile-first registry pair", (left, right) => {
     const html = renderToStaticMarkup(
       createElement(ProductComparisonGrid, {
