@@ -196,7 +196,20 @@ describe("registry product mobile detail UI", () => {
         }),
       );
 
+      expect(html).toContain('data-testid="registry-product-title-row"');
       expect(html).toContain('data-testid="national-list-badge"');
+      expect(html.match(/data-testid="national-list-badge"/gu)).toHaveLength(1);
+      const titleRowIndex = html.indexOf(
+        'data-testid="registry-product-title-row"',
+      );
+      const nationalListBadgeIndex = html.indexOf(
+        'data-testid="national-list-badge"',
+      );
+      const compositionIndex = html.indexOf("МНН / склад:");
+      expect(nationalListBadgeIndex).toBeGreaterThan(titleRowIndex);
+      expect(nationalListBadgeIndex).toBeLessThan(compositionIndex);
+      expect(html).toContain("justify-between");
+      expect(html).toContain("flex-wrap");
       expect(html).toContain('data-testid="national-list-details"');
       expect(html).toContain('data-testid="national-list-verdict"');
       expect(html).toContain(expectedVerdict);
@@ -225,8 +238,8 @@ describe("registry product mobile detail UI", () => {
     );
 
     expect(html).toContain("Виробники");
-    expect(html).toContain('АТ &quot;Лубнифарм&quot;, Україна');
-    expect(html).toContain('ПрАТ &quot;ФІТОФАРМ&quot;, Україна');
+    expect(html).toContain("АТ &quot;Лубнифарм&quot;, Україна");
+    expect(html).toContain("ПрАТ &quot;ФІТОФАРМ&quot;, Україна");
     expect(html).not.toMatch(/первинне|пакування|контроль|випуск серій/iu);
   });
 
