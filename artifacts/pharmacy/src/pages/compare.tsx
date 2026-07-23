@@ -1,7 +1,10 @@
 import React, { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import type { CatalogClientIndexProduct } from "@workspace/catalog-index";
 import {
   getGetDrugInstructionQueryKey,
   getSearchCatalogQueryKey,
+  getSearchCatalogQueryOptions,
   useGetDrugInstruction,
   useSearchCatalog,
   type DrugInstruction,
@@ -24,6 +27,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EvidenceComparisonExperience } from "@/components/evidence-comparison-panel";
 import { Input } from "@/components/ui/input";
+import {
+  type CatalogClientIndexStatus,
+  useCatalogClientIndex,
+} from "@/lib/catalog-client-index";
 import { useDebounce } from "@/hooks/use-debounce";
 import {
   comparisonProductFromRegistry,
@@ -45,12 +52,13 @@ interface ComparisonInstructions {
   [productId: string]: DrugInstruction | null | undefined;
 }
 
-export function exactComparisonProductSearchParams(
-  product: ComparisonProductRef | undefined,
+export function exactRegistryProductSearchParams(
+  productId: string | undefined,
+  registrationNumber: string | undefined,
 ) {
   return {
-    q: product?.registrationNumber ?? "",
-    ...(product ? { productId: product.productId } : {}),
+    q: registrationNumber ?? "",
+    ...(productId ? { productId } : {}),
     type: "registry_products" as const,
     view: "grouped" as const,
     page: 1,
@@ -58,8 +66,17 @@ export function exactComparisonProductSearchParams(
   };
 }
 
+export function exactComparisonProductSearchParams(
+  product: ComparisonProductRef | undefined,
+) {
+  return exactRegistryProductSearchParams(
+    product?.productId,
+    product?.registrationNumber,
+  );
+}
+
 export function exactComparisonRegistryProduct(
-  selected: ComparisonProductRef,
+  selected: Pick<ComparisonProductRef, "productId" | "registrationNumber">,
   candidates: readonly RegistryProductResult[],
 ): RegistryProductResult | null {
   const exactMatches = candidates.filter(
@@ -245,10 +262,50 @@ function SelectedProduct({
   );
 }
 
+export interface ComparisonPickerCandidate {
+  productId: string;
+  registrationNumber: string;
+  tradeName: string;
+  inn: string;
+  strength: string;
+  dosageForm: string;
+}
+
+export function comparisonPickerCandidateFromLocal(
+  product: CatalogClientIndexProduct,
+): ComparisonPickerCandidate {
+  return {
+    productId: product.productId,
+    registrationNumber: product.registration,
+    tradeName: product.tradeName,
+    inn: product.inn,
+    strength: product.strength,
+    dosageForm: product.form,
+  };
+}
+
+export function shouldUseComparisonServerSearch(
+  status: CatalogClientIndexStatus,
+  query: string,
+  isFull: boolean,
+): boolean {
+  return status !== "ready" && query.trim().length >= 3 && !isFull;
+}
+
 function RegistryPicker() {
   const [query, setQuery] = useState("");
+  const [pendingProductId, setPendingProductId] = useState<string | null>(null);
+  const [addError, setAddError] = useState(false);
   const debouncedQuery = useDebounce(query.trim(), 175);
   const { addProduct, isFull, isSelected } = useProductComparison();
+  const clientCatalog = useCatalogClientIndex();
+  const queryClient = useQueryClient();
+  const localQuery = query.trim();
+  const useLocalCatalog = clientCatalog.status === "ready";
+  const localResult = useMemo(
+    () => clientCatalog.search(localQuery, { limit: 25 }),
+    [clientCatalog, localQuery],
+  );
   const params = useMemo(
     () => ({
       q: debouncedQuery,
@@ -259,17 +316,67 @@ function RegistryPicker() {
     }),
     [debouncedQuery],
   );
-  const enabled = debouncedQuery.length >= 3 && !isFull;
+  const serverSearchEnabled = shouldUseComparisonServerSearch(
+    clientCatalog.status,
+    debouncedQuery,
+    isFull,
+  );
   const { data, isLoading, isError } = useSearchCatalog(params, {
     query: {
       queryKey: getSearchCatalogQueryKey(params),
-      enabled,
+      enabled: serverSearchEnabled,
       retry: false,
       staleTime: 60_000,
       refetchOnWindowFocus: false,
     },
   });
-  const products = data?.registryProducts.items ?? [];
+  const candidates = useMemo<ComparisonPickerCandidate[]>(() => {
+    if (localQuery.length < 2) return [];
+    if (useLocalCatalog) {
+      return localResult.items.map(({ product }) =>
+        comparisonPickerCandidateFromLocal(product),
+      );
+    }
+    return (data?.registryProducts.items ?? []).map((product) => ({
+      productId: product.id,
+      registrationNumber: product.registration.number,
+      tradeName: product.tradeName,
+      inn: product.inn ?? product.activeIngredient ?? "",
+      strength: product.strength ?? "",
+      dosageForm: conciseDosageForm(product.dosageForm) ?? "",
+    }));
+  }, [data, localQuery.length, localResult.items, useLocalCatalog]);
+
+  async function addExactProduct(candidate: ComparisonPickerCandidate) {
+    setPendingProductId(candidate.productId);
+    setAddError(false);
+    try {
+      const exactParams = exactRegistryProductSearchParams(
+        candidate.productId,
+        candidate.registrationNumber,
+      );
+      const exactData = await queryClient.fetchQuery({
+        ...getSearchCatalogQueryOptions(exactParams),
+        staleTime: 0,
+      });
+      const product = exactComparisonRegistryProduct(
+        candidate,
+        exactData.registryProducts.items,
+      );
+      if (!product) throw new Error("Exact registry product mismatch.");
+      addProduct(
+        comparisonProductFromRegistry(
+          product,
+          conciseDosageForm(product.dosageForm),
+        ),
+      );
+      setQuery("");
+    } catch {
+      setAddError(true);
+    } finally {
+      setPendingProductId(null);
+    }
+  }
 
   if (isFull) {
     return (
@@ -289,53 +396,72 @@ function RegistryPicker() {
         <Input
           id="comparison-search"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Назва або реєстраційний номер"
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setAddError(false);
+          }}
+          placeholder="Назва, МНН або реєстраційний номер"
           className="min-h-11 pl-9"
           data-testid="input-compare-search"
         />
       </div>
-      {isLoading ? (
+      {useLocalCatalog ? (
+        <p className="text-xs text-muted-foreground" data-testid="compare-local-catalog-status">
+          Каталог готовий · {clientCatalog.productCount.toLocaleString("uk-UA")} позицій
+          {localQuery.length >= 2 ? ` · ${localResult.durationMs.toFixed(1)} мс` : ""}
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Готуємо локальний каталог. До готовності доступний server fallback.
+        </p>
+      )}
+      {!useLocalCatalog && isLoading ? (
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <LoaderCircle className="h-4 w-4 animate-spin motion-reduce:animate-none" />
           Пошук…
         </p>
       ) : null}
-      {isError ? (
+      {!useLocalCatalog && isError ? (
         <p className="text-sm text-destructive">Не вдалося завантажити результати.</p>
       ) : null}
-      {enabled && !isLoading && !isError && products.length === 0 ? (
+      {addError ? (
+        <p className="text-sm text-destructive" role="alert">
+          Позиція не підтвердилася в актуальному каталозі. Оновіть пошук і спробуйте ще раз.
+        </p>
+      ) : null}
+      {((useLocalCatalog && localQuery.length >= 2) ||
+        (!useLocalCatalog && serverSearchEnabled)) &&
+      !isLoading && !isError && candidates.length === 0 ? (
         <p className="text-sm text-muted-foreground">Реєстрових позицій не знайдено.</p>
       ) : null}
       <div className="grid max-w-full gap-2">
-        {products.map((product: RegistryProductResult) => {
-          const selected = isSelected(product.id);
+        {candidates.map((candidate) => {
+          const selected = isSelected(candidate.productId);
+          const pending = pendingProductId === candidate.productId;
           return (
-            <Card key={product.id} className="max-w-full overflow-hidden">
-              <CardContent className="flex min-w-0 items-start gap-3 p-3">
-                <div className="min-w-0 flex-1">
-                  <p className="break-words font-semibold">{product.tradeName}</p>
+            <Card key={candidate.productId} className="max-w-full overflow-hidden">
+              <CardContent className="grid min-w-0 gap-3 p-3 sm:grid-cols-[1fr_auto] sm:items-start">
+                <div className="min-w-0">
+                  <p className="break-words font-semibold">{candidate.tradeName}</p>
+                  {candidate.inn ? (
+                    <p className="mt-1 break-words text-xs text-muted-foreground">МНН/склад: {candidate.inn}</p>
+                  ) : null}
                   <p className="mt-1 break-words text-xs text-muted-foreground">
-                    {[product.strength, conciseDosageForm(product.dosageForm)].filter(Boolean).join(" · ")}
+                    {[candidate.strength, candidate.dosageForm].filter(Boolean).join(" · ")}
                   </p>
-                  <p className="mt-1 break-words text-xs text-muted-foreground">
-                    {product.registration.number}
-                  </p>
+                  <p className="mt-1 break-all text-xs text-muted-foreground">{candidate.registrationNumber}</p>
                 </div>
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="shrink-0"
-                  disabled={selected}
-                  onClick={() => {
-                    addProduct(comparisonProductFromRegistry(product, conciseDosageForm(product.dosageForm)));
-                    setQuery("");
-                  }}
-                  data-testid={`btn-add-compare-${product.id}`}
+                  className="min-h-11 w-full sm:w-auto"
+                  disabled={selected || pending || pendingProductId !== null}
+                  onClick={() => void addExactProduct(candidate)}
+                  data-testid={`btn-add-compare-${candidate.productId}`}
                 >
-                  <Plus className="h-4 w-4" />
-                  {selected ? "Додано" : "Додати"}
+                  {pending ? <LoaderCircle className="h-4 w-4 animate-spin motion-reduce:animate-none" /> : <Plus className="h-4 w-4" />}
+                  {selected ? "Додано" : pending ? "Перевіряємо…" : "Додати"}
                 </Button>
               </CardContent>
             </Card>
