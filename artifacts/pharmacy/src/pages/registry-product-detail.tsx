@@ -10,6 +10,8 @@ import {
   BookOpenText,
   CheckCircle2,
   ChevronDown,
+  CircleHelp,
+  CircleX,
   Database,
   GitCompare,
   Pill,
@@ -146,6 +148,9 @@ export function RegistryProductDetailContent({
 }) {
   const displayForm = conciseDosageForm(product.dosageForm);
   const listVerdict = nationalListVerdict(product.nationalListStatus);
+  const isDefinitelyNotListed =
+    product.nationalListStatus === "ingredient_only" ||
+    product.nationalListStatus === "not_listed";
   const detailHref = registryProductDetailHref(product);
 
   return (
@@ -177,12 +182,37 @@ export function RegistryProductDetailContent({
               <Pill className="h-6 w-6 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <h1
-                className="break-words text-3xl font-bold leading-tight tracking-tight sm:text-4xl"
-                data-testid="registry-product-name"
+              <div
+                className="flex min-w-0 flex-wrap items-start justify-between gap-3"
+                data-testid="registry-product-title-row"
               >
-                {product.tradeName}
-              </h1>
+                <h1
+                  className="min-w-0 flex-1 break-words text-3xl font-bold leading-tight tracking-tight sm:text-4xl"
+                  data-testid="registry-product-name"
+                >
+                  {product.tradeName}
+                </h1>
+                <Badge
+                  variant={
+                    listVerdict.isConfirmed
+                      ? "default"
+                      : isDefinitelyNotListed
+                        ? "destructive"
+                        : "outline"
+                  }
+                  className="max-w-full shrink-0 gap-1.5 whitespace-normal px-3 py-1.5 text-left text-sm"
+                  data-testid="national-list-badge"
+                >
+                  {listVerdict.isConfirmed ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  ) : isDefinitelyNotListed ? (
+                    <CircleX className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <CircleHelp className="h-4 w-4 shrink-0" />
+                  )}
+                  {listVerdict.shortLabel}
+                </Badge>
+              </div>
               <p className="mt-2 break-words text-base text-muted-foreground">
                 <span className="font-medium text-foreground">
                   МНН / склад:
@@ -244,16 +274,6 @@ export function RegistryProductDetailContent({
             <Badge variant="secondary" className="gap-1.5 whitespace-normal">
               <Database className="h-3.5 w-3.5" />
               Реєстр
-            </Badge>
-            <Badge
-              variant={listVerdict.isConfirmed ? "default" : "outline"}
-              className="gap-1.5 whitespace-normal text-left"
-              data-testid="national-list-badge"
-            >
-              {listVerdict.isConfirmed ? (
-                <CheckCircle2 className="h-3.5 w-3.5" />
-              ) : null}
-              {listVerdict.shortLabel}
             </Badge>
             {product.instructionAvailable ? (
               <Badge
@@ -544,9 +564,7 @@ export default function RegistryProductDetail() {
     <RegistryProductDetailContent
       product={product}
       favorite={isFavorite(product.id)}
-      onToggleFavorite={() =>
-        toggleFavorite(registryProductDrugRef(product))
-      }
+      onToggleFavorite={() => toggleFavorite(registryProductDrugRef(product))}
     />
   );
 }
