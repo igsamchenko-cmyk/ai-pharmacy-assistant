@@ -2,12 +2,15 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { DrugInstruction, RegistryProductResult } from "@workspace/api-client-react";
+import type { CatalogClientIndexProduct } from "@workspace/catalog-index";
 
 import {
   ProductComparisonGrid,
+  comparisonPickerCandidateFromLocal,
   exactComparisonProductSearchParams,
   exactComparisonRegistryProduct,
   exactComparisonInstruction,
+  shouldUseComparisonServerSearch,
 } from "./compare";
 import type { ComparisonProductRef } from "@/hooks/use-product-comparison";
 
@@ -89,6 +92,44 @@ describe("exact registry product comparison", () => {
       page: 1,
       pageSize: 25,
     });
+  });
+  it("keeps compare typing on the local index once the catalog is ready", () => {
+    expect(shouldUseComparisonServerSearch("ready", "Канефрон", false)).toBe(false);
+    expect(shouldUseComparisonServerSearch("ready", "Енап", false)).toBe(false);
+    expect(shouldUseComparisonServerSearch("loading", "Канефрон", false)).toBe(true);
+    expect(shouldUseComparisonServerSearch("error", "Канефрон", false)).toBe(true);
+    expect(shouldUseComparisonServerSearch("loading", "Ка", false)).toBe(false);
+    expect(shouldUseComparisonServerSearch("loading", "Канефрон", true)).toBe(false);
+  });
+
+  it("preserves exact local productId and registration until DB verification", () => {
+    const localProduct: CatalogClientIndexProduct = {
+      productId: "99999999999999999999999999999999",
+      registration: "UA/99999/01/01",
+      tradeName: "КАНЕФРОН",
+      inn: "Herbal combination",
+      form: "таблетки",
+      strength: "",
+    };
+    const candidate = comparisonPickerCandidateFromLocal(localProduct);
+    expect(candidate).toEqual({
+      productId: localProduct.productId,
+      registrationNumber: localProduct.registration,
+      tradeName: localProduct.tradeName,
+      inn: localProduct.inn,
+      dosageForm: localProduct.form,
+      strength: localProduct.strength,
+    });
+    const exact = {
+      id: localProduct.productId,
+      registration: { number: localProduct.registration },
+    } as RegistryProductResult;
+    expect(exactComparisonRegistryProduct(candidate, [exact])).toBe(exact);
+    expect(
+      exactComparisonRegistryProduct(candidate, [
+        { ...exact, registration: { number: "UA/00000/00/00" } },
+      ]),
+    ).toBeNull();
   });
   it.each(pairs)("renders an exact mobile-first registry pair", (left, right) => {
     const html = renderToStaticMarkup(
