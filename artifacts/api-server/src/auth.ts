@@ -64,6 +64,67 @@ const sessions = new Map<
   { user: AuthUser; createdAt: number; expiresAt: number }
 >();
 
+const LOGIN_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1_000;
+const LOGIN_RATE_LIMIT_MAX_ATTEMPTS = 10;
+const LOGIN_RATE_LIMIT_MAX_KEYS = 10_000;
+
+interface LoginAttemptWindow {
+  count: number;
+  resetAt: number;
+}
+
+const loginAttemptWindows = new Map<string, LoginAttemptWindow>();
+
+function pruneLoginAttemptWindows(now: number): void {
+  for (const [key, window] of loginAttemptWindows) {
+    if (window.resetAt <= now) loginAttemptWindows.delete(key);
+  }
+  while (loginAttemptWindows.size >= LOGIN_RATE_LIMIT_MAX_KEYS) {
+    const oldest = loginAttemptWindows.keys().next().value;
+    if (typeof oldest !== "string") break;
+    loginAttemptWindows.delete(oldest);
+  }
+}
+
+export function limitLoginAttempts(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
+  const now = Date.now();
+  if (loginAttemptWindows.size >= LOGIN_RATE_LIMIT_MAX_KEYS) {
+    pruneLoginAttemptWindows(now);
+  }
+
+  const key = req.ip || req.socket.remoteAddress || "unknown";
+  const current = loginAttemptWindows.get(key);
+  const window =
+    current && current.resetAt > now
+      ? current
+      : { count: 0, resetAt: now + LOGIN_RATE_LIMIT_WINDOW_MS };
+
+  res.set({
+    "RateLimit-Limit": String(LOGIN_RATE_LIMIT_MAX_ATTEMPTS),
+    "RateLimit-Remaining": String(
+      Math.max(0, LOGIN_RATE_LIMIT_MAX_ATTEMPTS - window.count - 1),
+    ),
+    "RateLimit-Reset": String(Math.ceil(window.resetAt / 1_000)),
+  });
+
+  if (window.count >= LOGIN_RATE_LIMIT_MAX_ATTEMPTS) {
+    res.set(
+      "Retry-After",
+      String(Math.max(1, Math.ceil((window.resetAt - now) / 1_000))),
+    );
+    res.status(429).json({ error: "Забагато спроб входу. Спробуйте пізніше." });
+    return;
+  }
+
+  window.count += 1;
+  loginAttemptWindows.set(key, window);
+  next();
+}
+
 function booleanEnv(value: string | undefined, fallback: boolean): boolean {
   if (value === undefined || value.trim() === "") return fallback;
   return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
@@ -81,7 +142,8 @@ function splitList(value: string | undefined): string[] {
 }
 
 function parseRole(value: string | undefined): Exclude<AuthRole, "none"> {
-  if (value === "admin" || value === "reviewer" || value === "user") return value;
+  if (value === "admin" || value === "reviewer" || value === "user")
+    return value;
   return "user";
 }
 
@@ -114,26 +176,41 @@ function authMode(
 ): AuthMode {
   if (provider === "disabled") return "disabled";
   if (!authRequired) return "local_beta";
-  if (provider === "supabase") return supabaseConfigured ? "supabase" : "supabase";
+  if (provider === "supabase")
+    return supabaseConfigured ? "supabase" : "supabase";
   return "private_beta";
 }
 
-export function getAuthConfig(env: NodeJS.ProcessEnv = process.env): AuthConfig {
+export function getAuthConfig(
+  env: NodeJS.ProcessEnv = process.env,
+): AuthConfig {
   const provider = parseProvider(env.AUTH_PROVIDER);
-  const authRequired = provider === "disabled" ? false : booleanEnv(env.AUTH_REQUIRED, false);
+  const authRequired =
+    provider === "disabled" ? false : booleanEnv(env.AUTH_REQUIRED, false);
   const inviteOnly = booleanEnv(env.INVITE_ONLY, true);
   const adminEmails = new Set(splitList(env.ADMIN_EMAILS).map(normalizeEmail));
   const allowedUsers = parseAllowedUsers(env.ALLOWED_EMAILS, env.ADMIN_EMAILS);
-  const disabledEmails = new Set(splitList(env.DISABLED_EMAILS).map(normalizeEmail));
+  const disabledEmails = new Set(
+    splitList(env.DISABLED_EMAILS).map(normalizeEmail),
+  );
   const supabaseConfigured = Boolean(env.SUPABASE_URL && env.SUPABASE_ANON_KEY);
   const localBetaMode = !authRequired || provider === "disabled";
   const warnings: string[] = [];
 
   if (provider === "supabase" && !supabaseConfigured) {
-    warnings.push("Supabase provider selected but public Supabase config is incomplete.");
+    warnings.push(
+      "Supabase provider selected but public Supabase config is incomplete.",
+    );
   }
-  if (authRequired && provider === "local" && inviteOnly && allowedUsers.size === 0) {
-    warnings.push("Invite-only local auth has no ADMIN_EMAILS or ALLOWED_EMAILS.");
+  if (
+    authRequired &&
+    provider === "local" &&
+    inviteOnly &&
+    allowedUsers.size === 0
+  ) {
+    warnings.push(
+      "Invite-only local auth has no ADMIN_EMAILS or ALLOWED_EMAILS.",
+    );
   }
 
   return {
@@ -175,7 +252,8 @@ function cookieOptions() {
 }
 
 function sessionCookie(req: Request): string | null {
-  const parsed = (req as Request & { cookies?: Record<string, string> }).cookies;
+  const parsed = (req as Request & { cookies?: Record<string, string> })
+    .cookies;
   if (parsed?.[SESSION_COOKIE]) return parsed[SESSION_COOKIE];
   const raw = req.headers.cookie;
   if (!raw) return null;
@@ -218,13 +296,19 @@ function storedUser(req: Request, config: AuthConfig): AuthUser | null {
   return session.user;
 }
 
-export function getSessionUser(req: Request, env?: NodeJS.ProcessEnv): AuthUser | null {
+export function getSessionUser(
+  req: Request,
+  env?: NodeJS.ProcessEnv,
+): AuthUser | null {
   const config = getAuthConfig(env);
   if (config.localBetaMode) return localBetaUser();
   return storedUser(req, config);
 }
 
-export function buildAuthSession(req: Request, env?: NodeJS.ProcessEnv): AuthSession {
+export function buildAuthSession(
+  req: Request,
+  env?: NodeJS.ProcessEnv,
+): AuthSession {
   const config = getAuthConfig(env);
   const user = config.localBetaMode ? localBetaUser() : storedUser(req, config);
   return buildAuthSessionForUser(user, config);
@@ -285,7 +369,8 @@ export function loginLocal(
     return {
       ok: false,
       status: 400,
-      error: "Supabase auth placeholder is configured; use Supabase client flow in deployment.",
+      error:
+        "Supabase auth placeholder is configured; use Supabase client flow in deployment.",
     };
   }
   if (config.disabledEmails.has(email)) {
@@ -309,7 +394,9 @@ export function loginLocal(
 export function requireRole(required: Exclude<AuthRole, "none">) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const config = getAuthConfig();
-    const user = config.localBetaMode ? localBetaUser() : storedUser(req, config);
+    const user = config.localBetaMode
+      ? localBetaUser()
+      : storedUser(req, config);
     if (!user) {
       res.status(401).json({ error: "Потрібен вхід до приватної бети." });
       return;
@@ -325,4 +412,5 @@ export function requireRole(required: Exclude<AuthRole, "none">) {
 
 export function resetAuthSessionsForTests(): void {
   sessions.clear();
+  loginAttemptWindows.clear();
 }

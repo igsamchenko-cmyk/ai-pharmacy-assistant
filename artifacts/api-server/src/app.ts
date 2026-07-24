@@ -22,14 +22,96 @@ const defaultFrontendDist = fileURLToPath(
   new URL("../../pharmacy/dist/public", import.meta.url),
 );
 
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob:",
+  "connect-src 'self'",
+  "worker-src 'self' blob:",
+].join("; ");
+
+function normalizedHttpOrigin(value: string): string {
+  const url = new URL(value);
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("CORS_ALLOWED_ORIGINS accepts only HTTP(S) origins.");
+  }
+  return url.origin;
+}
+
+export function parseCorsAllowedOrigins(
+  value: string | undefined,
+): Set<string> {
+  const origins = new Set<string>();
+  for (const item of (value ?? "").split(/[,;\n]/u)) {
+    const candidate = item.trim();
+    if (candidate) origins.add(normalizedHttpOrigin(candidate));
+  }
+  return origins;
+}
+
+function requestOrigin(req: Request): string | null {
+  const host = req.get("host");
+  return host ? `${req.protocol}://${host}` : null;
+}
+
+function crossOriginAllowed(
+  req: Request,
+  allowedOrigins: ReadonlySet<string>,
+  nodeEnv: string | undefined,
+): boolean {
+  const header = req.get("origin");
+  if (!header) return true;
+
+  let origin: string;
+  try {
+    origin = normalizedHttpOrigin(header);
+  } catch {
+    return false;
+  }
+
+  if (origin === requestOrigin(req)) return true;
+  if (allowedOrigins.has(origin)) return true;
+  return nodeEnv !== "production" && allowedOrigins.size === 0;
+}
+
+function applySecurityHeaders(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+  nodeEnv: string | undefined,
+): void {
+  res.set({
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(self), microphone=(), geolocation=()",
+  });
+  if (nodeEnv === "production") {
+    res.set({
+      "Content-Security-Policy": CONTENT_SECURITY_POLICY,
+      "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    });
+  }
+  next();
+}
+
 export function createApp(options: AppOptions = {}): Express {
   const app: Express = express();
   const frontendDist = options.frontendDist ?? defaultFrontendDist;
   const frontendAssets = join(frontendDist, "assets");
   const frontendIndex = join(frontendDist, "index.html");
   const nodeEnv = options.nodeEnv ?? process.env.NODE_ENV;
+  const allowedCorsOrigins = parseCorsAllowedOrigins(
+    process.env.CORS_ALLOWED_ORIGINS,
+  );
 
   app.disable("x-powered-by");
+  if (nodeEnv === "production") app.set("trust proxy", 1);
   app.use(
     pinoHttp({
       logger,
@@ -49,7 +131,23 @@ export function createApp(options: AppOptions = {}): Express {
       },
     }),
   );
-  app.use(cors());
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    applySecurityHeaders(req, res, next, nodeEnv);
+  });
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (!crossOriginAllowed(req, allowedCorsOrigins, nodeEnv)) {
+      res.status(403).json({ error: "Cross-origin request is not allowed" });
+      return;
+    }
+    next();
+  });
+  app.use(
+    cors({
+      credentials: true,
+      maxAge: 600,
+      origin: true,
+    }),
+  );
   app.use(cookieParser());
   app.use(express.json({ limit: "12mb" }));
   app.use(express.urlencoded({ extended: true, limit: "12mb" }));

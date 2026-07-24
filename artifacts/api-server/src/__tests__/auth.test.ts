@@ -223,7 +223,9 @@ describe("private beta auth", () => {
     expect(isTreatmentRequest("чим лікувати застуду")).toBe(true);
     expect(isTreatmentRequest("яка доза для дитини")).toBe(true);
     expect(isTreatmentRequest("довідка про препарат ібупрофен")).toBe(false);
-    expect(isTreatmentRequest("порівняння ібупрофен та парацетамол")).toBe(false);
+    expect(isTreatmentRequest("порівняння ібупрофен та парацетамол")).toBe(
+      false,
+    );
   });
 
   it("keeps beta dashboard available to authenticated users", async () => {
@@ -233,6 +235,25 @@ describe("private beta auth", () => {
         cookie: session.cookie,
       });
       expect(response.status).toBe(200);
+    });
+  });
+
+  it("rate limits repeated login attempts and resets cleanly", async () => {
+    await withServer(async (baseUrl) => {
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        const rejected = await login(baseUrl, "stranger@example.com");
+        expect(rejected.status).toBe(403);
+      }
+
+      const limited = await login(baseUrl, "user@example.com");
+      expect(limited.status).toBe(429);
+      expect(limited.json).toEqual({
+        error: "Забагато спроб входу. Спробуйте пізніше.",
+      });
+
+      resetAuthSessionsForTests();
+      const allowed = await login(baseUrl, "user@example.com");
+      expect(allowed.status).toBe(200);
     });
   });
 });
