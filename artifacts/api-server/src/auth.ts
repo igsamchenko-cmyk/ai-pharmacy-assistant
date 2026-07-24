@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 import type { NextFunction, Request, Response } from "express";
 
 export type AuthProvider = "local" | "supabase" | "disabled";
@@ -96,7 +97,7 @@ export function limitLoginAttempts(
     pruneLoginAttemptWindows(now);
   }
 
-  const key = req.ip || req.socket.remoteAddress || "unknown";
+  const key = `${req.path}:${req.ip || req.socket.remoteAddress || "unknown"}`;
   const current = loginAttemptWindows.get(key);
   const window =
     current && current.resetAt > now
@@ -200,6 +201,11 @@ export function getAuthConfig(
   if (provider === "supabase" && !supabaseConfigured) {
     warnings.push(
       "Supabase provider selected but public Supabase config is incomplete.",
+    );
+  }
+  if (env.NODE_ENV === "production" && authRequired && provider === "local") {
+    warnings.push(
+      "Production local auth does not verify email ownership; use the Supabase provider.",
     );
   }
   if (
@@ -348,6 +354,165 @@ export function buildAuthDiagnostics(
     localBetaMode: config.localBetaMode,
     warnings: config.warnings,
   };
+}
+
+function createSupabaseAuthClient(env: NodeJS.ProcessEnv) {
+  const url = env.SUPABASE_URL?.trim();
+  const key = env.SUPABASE_ANON_KEY?.trim();
+  if (!url || !key) return null;
+
+  return createClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+    global: {
+      fetch(input, init = {}) {
+        return fetch(input, {
+          ...init,
+          signal: AbortSignal.timeout(10_000),
+        });
+      },
+    },
+  });
+}
+
+function verifiedUser(
+  email: string,
+  name: string | null,
+  config: AuthConfig,
+): { ok: true; user: AuthUser } | { ok: false; status: number; error: string } {
+  if (config.disabledEmails.has(email)) {
+    return { ok: false, status: 403, error: "Користувача вимкнено." };
+  }
+
+  const role = config.allowedUsers.get(email);
+  if (config.inviteOnly && !role) {
+    return { ok: false, status: 403, error: "Доступ лише за запрошенням." };
+  }
+
+  return {
+    ok: true,
+    user: {
+      email,
+      name: name?.trim() || email,
+      role: role ?? "user",
+      disabled: false,
+    },
+  };
+}
+
+export async function requestVerifiedEmailChallenge(
+  input: { email: string },
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<
+  { ok: true; accepted: true } | { ok: false; status: number; error: string }
+> {
+  const config = getAuthConfig(env);
+  const email = normalizeEmail(input.email);
+  if (!email || !email.includes("@")) {
+    return { ok: false, status: 400, error: "Некоректна електронна пошта." };
+  }
+  if (config.provider !== "supabase") {
+    return { ok: false, status: 400, error: "Вхід за кодом не налаштовано." };
+  }
+
+  // Do not reveal invite-list membership and do not contact the provider for
+  // disabled or uninvited addresses.
+  if (
+    config.disabledEmails.has(email) ||
+    (config.inviteOnly && !config.allowedUsers.has(email))
+  ) {
+    return { ok: true, accepted: true };
+  }
+
+  const client = createSupabaseAuthClient(env);
+  if (!client) {
+    return { ok: false, status: 503, error: "Сервіс входу не налаштовано." };
+  }
+
+  try {
+    const { error } = await client.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false },
+    });
+    if (error) {
+      return {
+        ok: false,
+        status: 503,
+        error: "Не вдалося надіслати код входу.",
+      };
+    }
+    return { ok: true, accepted: true };
+  } catch {
+    return {
+      ok: false,
+      status: 503,
+      error: "Сервіс входу тимчасово недоступний.",
+    };
+  }
+}
+
+export async function loginWithVerifiedEmail(
+  input: { email: string; token?: string | null },
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<
+  { ok: true; user: AuthUser } | { ok: false; status: number; error: string }
+> {
+  const config = getAuthConfig(env);
+  const email = normalizeEmail(input.email);
+  const token = input.token?.trim() ?? "";
+  if (!email || !email.includes("@") || token.length < 4) {
+    return {
+      ok: false,
+      status: 400,
+      error: "Email або одноразовий код некоректний.",
+    };
+  }
+  if (config.provider !== "supabase") {
+    return {
+      ok: false,
+      status: 400,
+      error: "Verified email provider не активний.",
+    };
+  }
+
+  const client = createSupabaseAuthClient(env);
+  if (!client) {
+    return { ok: false, status: 503, error: "Сервіс входу не налаштовано." };
+  }
+
+  try {
+    const { data, error } = await client.auth.verifyOtp({
+      email,
+      token,
+      type: "email",
+    });
+    const providerEmail = normalizeEmail(data.user?.email);
+    if (error || !providerEmail || providerEmail !== email) {
+      return {
+        ok: false,
+        status: 401,
+        error: "Код входу недійсний або прострочений.",
+      };
+    }
+
+    const metadata = data.user?.user_metadata;
+    const providerName =
+      typeof metadata?.name === "string"
+        ? metadata.name
+        : typeof metadata?.full_name === "string"
+          ? metadata.full_name
+          : null;
+    return verifiedUser(providerEmail, providerName, config);
+  } catch {
+    return {
+      ok: false,
+      status: 503,
+      error: "Сервіс входу тимчасово недоступний.",
+    };
+  }
 }
 
 export function loginLocal(

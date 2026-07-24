@@ -58,8 +58,9 @@
   },
   "dependencies": {
     "@google/genai": "^2.10.0",
-    "@workspace/catalog-index": "workspace:*",
+    "@supabase/supabase-js": "^2.110.8",
     "@workspace/api-zod": "workspace:*",
+    "@workspace/catalog-index": "workspace:*",
     "@workspace/db": "workspace:*",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

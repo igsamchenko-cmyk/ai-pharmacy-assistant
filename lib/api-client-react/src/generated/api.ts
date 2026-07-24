@@ -24,6 +24,8 @@ import type {
   AiSummaryInput,
   AnalogResult,
   AtcInfo,
+  AuthChallengeRequest,
+  AuthChallengeResponse,
   AuthLoginRequest,
   AuthLoginResponse,
   AuthLogoutResponse,
@@ -182,7 +184,7 @@ export const getLoginAuthUrl = () => {
 }
 
 /**
- * Creates a local invite-only session when local auth is enabled. When INVITE_ONLY is true, email must be present in ADMIN_EMAILS or ALLOWED_EMAILS. Supabase provider mode is reserved for deployment wiring and does not expose keys.
+ * Creates a local invite-only session in development. In Supabase mode, the submitted one-time code is verified by the identity provider and its verified email is mapped to a server-controlled role.
  * @summary Login to private beta
  */
 export const loginAuth = async (authLoginRequest: AuthLoginRequest, options?: RequestInit): Promise<AuthLoginResponse> => {
@@ -242,6 +244,77 @@ export const useLoginAuth = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getLoginAuthMutationOptions(options));
+    }
+
+export const getRequestAuthChallengeUrl = () => {
+
+
+
+
+  return `/api/auth/challenge`
+}
+
+/**
+ * Requests a one-time email code from the configured identity provider. The response is deliberately generic so invite-list membership is not disclosed.
+ * @summary Request a verified email login code
+ */
+export const requestAuthChallenge = async (authChallengeRequest: AuthChallengeRequest, options?: RequestInit): Promise<AuthChallengeResponse> => {
+
+  return customFetch<AuthChallengeResponse>(getRequestAuthChallengeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(authChallengeRequest)
+  }
+);}
+
+
+
+
+export const getRequestAuthChallengeMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestAuthChallenge>>, TError,{data: BodyType<AuthChallengeRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestAuthChallenge>>, TError,{data: BodyType<AuthChallengeRequest>}, TContext> => {
+
+const mutationKey = ['requestAuthChallenge'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestAuthChallenge>>, {data: BodyType<AuthChallengeRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  requestAuthChallenge(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestAuthChallengeMutationResult = NonNullable<Awaited<ReturnType<typeof requestAuthChallenge>>>
+    export type RequestAuthChallengeMutationBody = BodyType<AuthChallengeRequest>
+    export type RequestAuthChallengeMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Request a verified email login code
+ */
+export const useRequestAuthChallenge = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestAuthChallenge>>, TError,{data: BodyType<AuthChallengeRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestAuthChallenge>>,
+        TError,
+        {data: BodyType<AuthChallengeRequest>},
+        TContext
+      > => {
+      return useMutation(getRequestAuthChallengeMutationOptions(options));
     }
 
 export const getLogoutAuthUrl = () => {

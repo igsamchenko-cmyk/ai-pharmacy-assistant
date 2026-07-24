@@ -64,6 +64,14 @@ export interface AuthLoginRequest {
   token?: string | null;
 }
 
+export interface AuthChallengeRequest {
+  email: string;
+}
+
+export interface AuthChallengeResponse {
+  accepted: boolean;
+}
+
 export interface AuthLoginResponse {
   session: AuthSession;
 }
