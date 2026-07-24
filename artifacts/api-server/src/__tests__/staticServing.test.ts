@@ -95,4 +95,65 @@ describe("production static frontend serving", () => {
       expect(response.headers.get("cache-control")).not.toContain("immutable");
     });
   });
+
+  it("sets production browser security headers", async () => {
+    const frontendDist = await createFrontendDist();
+    const app = createApp({ nodeEnv: "production", frontendDist });
+
+    await withServer(createServer(app), async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/search`);
+      expect(response.headers.get("content-security-policy")).toContain(
+        "default-src 'self'",
+      );
+      expect(response.headers.get("strict-transport-security")).toContain(
+        "max-age=31536000",
+      );
+      expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+      expect(response.headers.get("x-frame-options")).toBe("DENY");
+      expect(response.headers.get("permissions-policy")).toContain(
+        "camera=(self)",
+      );
+    });
+  });
+
+  it("allows same-origin and configured CORS origins but blocks others", async () => {
+    process.env.CORS_ALLOWED_ORIGINS = "https://trusted.example";
+    const frontendDist = await createFrontendDist();
+    const app = createApp({ nodeEnv: "production", frontendDist });
+
+    await withServer(createServer(app), async (baseUrl) => {
+      const sameOrigin = await fetch(`${baseUrl}/api/healthz`, {
+        headers: { Origin: baseUrl },
+      });
+      expect(sameOrigin.status).toBe(200);
+      expect(sameOrigin.headers.get("access-control-allow-origin")).toBe(
+        baseUrl,
+      );
+
+      const configured = await fetch(`${baseUrl}/api/healthz`, {
+        headers: { Origin: "https://trusted.example" },
+      });
+      expect(configured.status).toBe(200);
+      expect(configured.headers.get("access-control-allow-origin")).toBe(
+        "https://trusted.example",
+      );
+      expect(configured.headers.get("access-control-allow-credentials")).toBe(
+        "true",
+      );
+
+      const blocked = await fetch(`${baseUrl}/api/healthz`, {
+        headers: { Origin: "https://untrusted.example" },
+      });
+      expect(blocked.status).toBe(403);
+      expect(blocked.headers.get("access-control-allow-origin")).toBeNull();
+    });
+  });
+
+  it("fails closed on malformed configured CORS origins", async () => {
+    process.env.CORS_ALLOWED_ORIGINS = "javascript:alert(1)";
+    const frontendDist = await createFrontendDist();
+    expect(() => createApp({ nodeEnv: "production", frontendDist })).toThrow(
+      /HTTP\(S\) origins/u,
+    );
+  });
 });
