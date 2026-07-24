@@ -25,9 +25,11 @@ const defaultFrontendDist = fileURLToPath(
 export function createApp(options: AppOptions = {}): Express {
   const app: Express = express();
   const frontendDist = options.frontendDist ?? defaultFrontendDist;
+  const frontendAssets = join(frontendDist, "assets");
   const frontendIndex = join(frontendDist, "index.html");
   const nodeEnv = options.nodeEnv ?? process.env.NODE_ENV;
 
+  app.disable("x-powered-by");
   app.use(
     pinoHttp({
       logger,
@@ -60,12 +62,26 @@ export function createApp(options: AppOptions = {}): Express {
   });
 
   if (nodeEnv === "production" && existsSync(frontendIndex)) {
-    app.use(express.static(frontendDist));
+    app.use(
+      "/assets",
+      express.static(frontendAssets, {
+        immutable: true,
+        index: false,
+        maxAge: "1y",
+      }),
+    );
+    app.use(
+      express.static(frontendDist, {
+        index: false,
+        maxAge: "1h",
+      }),
+    );
     app.use((req: Request, res: Response, next: NextFunction) => {
       if (req.method !== "GET" || req.path.startsWith("/api")) {
         next();
         return;
       }
+      res.set("Cache-Control", "no-cache");
       res.sendFile(frontendIndex);
     });
   }

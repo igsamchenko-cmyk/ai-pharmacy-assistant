@@ -8,7 +8,10 @@ import { createApp } from "../app";
 
 const originalEnv = { ...process.env };
 
-async function withServer<T>(server: Server, fn: (baseUrl: string) => Promise<T>): Promise<T> {
+async function withServer<T>(
+  server: Server,
+  fn: (baseUrl: string) => Promise<T>,
+): Promise<T> {
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address() as AddressInfo;
   try {
@@ -25,7 +28,7 @@ async function createFrontendDist(): Promise<string> {
   await mkdir(join(dir, "assets"));
   await writeFile(
     join(dir, "index.html"),
-    "<!doctype html><html><body><div id=\"root\">FarmAssist</div></body></html>",
+    '<!doctype html><html><body><div id="root">FarmAssist</div></body></html>',
   );
   await writeFile(join(dir, "assets", "app.js"), "console.log('farmassist');");
   return dir;
@@ -43,6 +46,8 @@ describe("production static frontend serving", () => {
     await withServer(createServer(app), async (baseUrl) => {
       const response = await fetch(`${baseUrl}/beta-dashboard`);
       expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toBe("no-cache");
+      expect(response.headers.get("x-powered-by")).toBeNull();
       expect(await response.text()).toContain("FarmAssist");
     });
   });
@@ -70,7 +75,24 @@ describe("production static frontend serving", () => {
     await withServer(createServer(app), async (baseUrl) => {
       const response = await fetch(`${baseUrl}/assets/app.js`);
       expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toContain(
+        "max-age=31536000",
+      );
+      expect(response.headers.get("cache-control")).toContain("immutable");
       expect(await response.text()).toContain("farmassist");
+    });
+  });
+
+  it("keeps unhashed public files on a short cache lifetime", async () => {
+    const frontendDist = await createFrontendDist();
+    await writeFile(join(frontendDist, "favicon.svg"), "<svg></svg>");
+    const app = createApp({ nodeEnv: "production", frontendDist });
+
+    await withServer(createServer(app), async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/favicon.svg`);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toContain("max-age=3600");
+      expect(response.headers.get("cache-control")).not.toContain("immutable");
     });
   });
 });
