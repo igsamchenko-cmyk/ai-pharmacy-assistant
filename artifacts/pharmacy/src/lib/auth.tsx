@@ -2,17 +2,14 @@ import {
   getGetAuthSessionQueryKey,
   useGetAuthSession,
   useLoginAuth,
+  useRequestAuthChallenge,
   useLogoutAuth,
   type AuthLoginRequest,
   type AuthRole,
   type AuthSession,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  createContext,
-  useContext,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
 const ROLE_RANK: Record<AuthRole, number> = {
   none: 0,
@@ -27,6 +24,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLocalBeta: boolean;
   hasRole(role: Exclude<AuthRole, "none">): boolean;
+  requestLoginCode(email: string): Promise<void>;
   login(input: AuthLoginRequest): Promise<void>;
   logout(): Promise<void>;
 }
@@ -42,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       staleTime: 30_000,
     },
   });
+  const challengeMutation = useRequestAuthChallenge();
   const loginMutation = useLoginAuth({
     mutation: {
       onSuccess(data) {
@@ -67,6 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLocalBeta: session?.mode === "local_beta" || session?.mode === "disabled",
     hasRole(role) {
       return ROLE_RANK[session?.role ?? "none"] >= ROLE_RANK[role];
+    },
+    async requestLoginCode(email) {
+      await challengeMutation.mutateAsync({ data: { email } });
     },
     async login(input) {
       await loginMutation.mutateAsync({ data: input });

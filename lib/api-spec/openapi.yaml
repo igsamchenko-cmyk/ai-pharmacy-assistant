@@ -51,10 +51,9 @@ paths:
       tags: [auth]
       summary: Login to private beta
       description: >-
-        Creates a local invite-only session when local auth is enabled. When
-        INVITE_ONLY is true, email must be present in ADMIN_EMAILS or
-        ALLOWED_EMAILS. Supabase provider mode is reserved for deployment
-        wiring and does not expose keys.
+        Creates a local invite-only session in development. In Supabase mode,
+        the submitted one-time code is verified by the identity provider and
+        its verified email is mapped to a server-controlled role.
       requestBody:
         required: true
         content:
@@ -76,6 +75,40 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "403":
           description: Invite-only access denied or disabled user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/challenge:
+    post:
+      operationId: requestAuthChallenge
+      tags: [auth]
+      summary: Request a verified email login code
+      description: >-
+        Requests a one-time email code from the configured identity provider.
+        The response is deliberately generic so invite-list membership is not
+        disclosed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthChallengeRequest"
+      responses:
+        "200":
+          description: Request accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthChallengeResponse"
+        "400":
+          description: Invalid challenge request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Too many challenge attempts
           content:
             application/json:
               schema:
@@ -1099,6 +1132,19 @@ components:
           type: ["string", "null"]
         token:
           type: ["string", "null"]
+    AuthChallengeRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    AuthChallengeResponse:
+      type: object
+      required: [accepted]
+      properties:
+        accepted:
+          type: boolean
     AuthLoginResponse:
       type: object
       required: [session]

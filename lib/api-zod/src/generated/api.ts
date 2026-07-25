@@ -31,7 +31,7 @@ export const GetAuthSessionResponse = zod.object({
 
 
 /**
- * Creates a local invite-only session when local auth is enabled. When INVITE_ONLY is true, email must be present in ADMIN_EMAILS or ALLOWED_EMAILS. Supabase provider mode is reserved for deployment wiring and does not expose keys.
+ * Creates a local invite-only session in development. In Supabase mode, the submitted one-time code is verified by the identity provider and its verified email is mapped to a server-controlled role.
  * @summary Login to private beta
  */
 export const LoginAuthBody = zod.object({
@@ -58,6 +58,19 @@ export const LoginAuthResponse = zod.object({
   "supabaseConfigured": zod.boolean(),
   "warnings": zod.array(zod.string())
 })
+})
+
+
+/**
+ * Requests a one-time email code from the configured identity provider. The response is deliberately generic so invite-list membership is not disclosed.
+ * @summary Request a verified email login code
+ */
+export const RequestAuthChallengeBody = zod.object({
+  "email": zod.string().email()
+})
+
+export const RequestAuthChallengeResponse = zod.object({
+  "accepted": zod.boolean()
 })
 
 

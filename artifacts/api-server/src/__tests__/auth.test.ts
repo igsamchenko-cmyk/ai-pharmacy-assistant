@@ -1,6 +1,19 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+const supabaseMocks = vi.hoisted(() => {
+  const signInWithOtp = vi.fn();
+  const verifyOtp = vi.fn();
+  const createClient = vi.fn(() => ({
+    auth: { signInWithOtp, verifyOtp },
+  }));
+  return { createClient, signInWithOtp, verifyOtp };
+});
+
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: supabaseMocks.createClient,
+}));
+
 import app from "../app";
 import { resetAuthSessionsForTests } from "../auth";
 import { isTreatmentRequest } from "../services/safety";
@@ -77,8 +90,31 @@ async function login(baseUrl: string, email: string, name = "Beta User") {
   );
 }
 
+async function requestChallenge(baseUrl: string, email: string) {
+  return api<{ accepted: boolean }>(baseUrl, "/auth/challenge", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+async function loginWithCode(baseUrl: string, email: string, token?: string) {
+  return api<{
+    session?: { role: string; authenticated: boolean };
+    error?: string;
+  }>(baseUrl, "/auth/login", {
+    method: "POST",
+    body: { email, token },
+  });
+}
+
 describe("private beta auth", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    supabaseMocks.signInWithOtp.mockResolvedValue({ data: {}, error: null });
+    supabaseMocks.verifyOtp.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { message: "Invalid OTP" },
+    });
     resetAuthSessionsForTests();
     setAuthEnv({
       AUTH_PROVIDER: "local",
@@ -164,6 +200,155 @@ describe("private beta auth", () => {
     await withServer(async (baseUrl) => {
       const response = await login(baseUrl, "stranger@example.com");
       expect(response.status).toBe(403);
+    });
+  });
+
+  it("requests a generic OTP challenge only for an invited email", async () => {
+    setAuthEnv({
+      AUTH_PROVIDER: "supabase",
+      AUTH_REQUIRED: "true",
+      INVITE_ONLY: "true",
+      ALLOWED_EMAILS: "user@example.com",
+      SUPABASE_URL: "https://project.supabase.co",
+      SUPABASE_ANON_KEY: "public-anon-key",
+    });
+
+    await withServer(async (baseUrl) => {
+      const accepted = await requestChallenge(baseUrl, "user@example.com");
+      expect(accepted.status).toBe(200);
+      expect(accepted.json).toEqual({ accepted: true });
+      expect(supabaseMocks.signInWithOtp).toHaveBeenCalledWith({
+        email: "user@example.com",
+        options: { shouldCreateUser: false },
+      });
+
+      vi.clearAllMocks();
+      const hidden = await requestChallenge(baseUrl, "stranger@example.com");
+      expect(hidden.status).toBe(200);
+      expect(hidden.json).toEqual({ accepted: true });
+      expect(supabaseMocks.createClient).not.toHaveBeenCalled();
+    });
+  });
+
+  it("fails closed without provider config and sanitizes provider failures", async () => {
+    setAuthEnv({
+      AUTH_PROVIDER: "supabase",
+      AUTH_REQUIRED: "true",
+      INVITE_ONLY: "true",
+      ALLOWED_EMAILS: "user@example.com",
+    });
+
+    await withServer(async (baseUrl) => {
+      const unconfigured = await requestChallenge(baseUrl, "user@example.com");
+      expect(unconfigured.status).toBe(503);
+      expect(JSON.stringify(unconfigured.json)).not.toContain("SUPABASE");
+
+      setAuthEnv({
+        AUTH_PROVIDER: "supabase",
+        AUTH_REQUIRED: "true",
+        INVITE_ONLY: "true",
+        ALLOWED_EMAILS: "user@example.com",
+        SUPABASE_URL: "https://project.supabase.co",
+        SUPABASE_ANON_KEY: "public-anon-key",
+      });
+      supabaseMocks.signInWithOtp.mockRejectedValue(
+        new Error("public-anon-key provider-internal-detail"),
+      );
+      const failed = await requestChallenge(baseUrl, "user@example.com");
+      expect(failed.status).toBe(503);
+      const serialized = JSON.stringify(failed.json);
+      expect(serialized).not.toContain("public-anon-key");
+    });
+  });
+
+  it("blocks email-only impersonation in Supabase mode", async () => {
+    setAuthEnv({
+      AUTH_PROVIDER: "supabase",
+      AUTH_REQUIRED: "true",
+      INVITE_ONLY: "true",
+      ALLOWED_EMAILS: "user@example.com",
+      SUPABASE_URL: "https://project.supabase.co",
+      SUPABASE_ANON_KEY: "public-anon-key",
+    });
+
+    await withServer(async (baseUrl) => {
+      const response = await loginWithCode(baseUrl, "user@example.com");
+      expect(response.status).toBe(400);
+      expect(supabaseMocks.verifyOtp).not.toHaveBeenCalled();
+    });
+  });
+
+  it("rejects a verified token that belongs to another email", async () => {
+    setAuthEnv({
+      AUTH_PROVIDER: "supabase",
+      AUTH_REQUIRED: "true",
+      INVITE_ONLY: "true",
+      ADMIN_EMAILS: "admin@example.com",
+      ALLOWED_EMAILS: "user@example.com",
+      SUPABASE_URL: "https://project.supabase.co",
+      SUPABASE_ANON_KEY: "public-anon-key",
+    });
+    supabaseMocks.verifyOtp.mockResolvedValue({
+      data: {
+        user: { email: "user@example.com", user_metadata: {} },
+        session: {},
+      },
+      error: null,
+    });
+
+    await withServer(async (baseUrl) => {
+      const response = await loginWithCode(
+        baseUrl,
+        "admin@example.com",
+        "123456",
+      );
+      expect(response.status).toBe(401);
+      expect(response.cookie).toBeNull();
+    });
+  });
+
+  it("creates a local HttpOnly session only after verified OTP and server role mapping", async () => {
+    setAuthEnv({
+      AUTH_PROVIDER: "supabase",
+      AUTH_REQUIRED: "true",
+      INVITE_ONLY: "true",
+      ALLOWED_EMAILS: "reviewer@example.com:reviewer",
+      SUPABASE_URL: "https://project.supabase.co",
+      SUPABASE_ANON_KEY: "public-anon-key",
+    });
+    supabaseMocks.verifyOtp.mockResolvedValue({
+      data: {
+        user: {
+          email: "reviewer@example.com",
+          user_metadata: { name: "Verified Reviewer" },
+        },
+        session: {},
+      },
+      error: null,
+    });
+
+    await withServer(async (baseUrl) => {
+      const session = await loginWithCode(
+        baseUrl,
+        "reviewer@example.com",
+        "123456",
+      );
+      expect(session.status).toBe(200);
+      expect(session.json.session).toMatchObject({
+        authenticated: true,
+        role: "reviewer",
+      });
+      expect(session.cookie).toContain("farmassist_session=");
+      expect(supabaseMocks.verifyOtp).toHaveBeenCalledWith({
+        email: "reviewer@example.com",
+        token: "123456",
+        type: "email",
+      });
+
+      const protectedResponse = await api(baseUrl, "/knowledge/quality", {
+        cookie: session.cookie,
+      });
+      expect(protectedResponse.status).toBe(200);
     });
   });
 

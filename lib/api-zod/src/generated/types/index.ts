@@ -11,6 +11,8 @@ export * from './aiSummaryInput';
 export * from './analogResult';
 export * from './approvedIngredientMapping';
 export * from './atcInfo';
+export * from './authChallengeRequest';
+export * from './authChallengeResponse';
 export * from './authLoginRequest';
 export * from './authLoginResponse';
 export * from './authLogoutResponse';
