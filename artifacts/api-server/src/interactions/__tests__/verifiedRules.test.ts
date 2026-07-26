@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ingredientSeeds } from "../../knowledge/dictionary/ingredients";
 import { buildInteractionRuleRegistry } from "../audit";
 import { createVerifiedInteractionEngine } from "../engine";
 import {
@@ -28,6 +29,14 @@ describe("verified interaction registry batch 1", () => {
         (rule) => evaluateInteractionRuleEligibility(rule).eligible,
       ),
     ).toBe(true);
+  });
+
+  it("uses only canonical English INNs present in the dictionary", () => {
+    const canonicalEnglish = new Set(ingredientSeeds.map((seed) => seed.english));
+    for (const rule of verifiedInteractionRules) {
+      expect(canonicalEnglish.has(rule.ingredientA)).toBe(true);
+      expect(canonicalEnglish.has(rule.ingredientB)).toBe(true);
+    }
   });
 
   it.each([
