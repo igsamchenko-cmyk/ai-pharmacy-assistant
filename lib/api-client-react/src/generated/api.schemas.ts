@@ -1107,6 +1107,281 @@ export interface AnalogResult {
   disclaimer: string;
 }
 
+export interface RegistryInteractionProductRef {
+  /** @pattern ^[A-F0-9]{32}$ */
+  productId: string;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+}
+
+export interface RegistryInteractionCheckInput {
+  /**
+     * @minItems 2
+     * @maxItems 5
+     */
+  products: RegistryInteractionProductRef[];
+}
+
+export type RegistryInteractionResolvedProductMappingStatus = typeof RegistryInteractionResolvedProductMappingStatus[keyof typeof RegistryInteractionResolvedProductMappingStatus];
+
+
+export const RegistryInteractionResolvedProductMappingStatus = {
+  approved: 'approved',
+  unmapped: 'unmapped',
+  ambiguous: 'ambiguous',
+} as const;
+
+export type RegistryInteractionResolvedProductIngredientResolution = typeof RegistryInteractionResolvedProductIngredientResolution[keyof typeof RegistryInteractionResolvedProductIngredientResolution];
+
+
+export const RegistryInteractionResolvedProductIngredientResolution = {
+  approved_exact: 'approved_exact',
+  unresolved: 'unresolved',
+} as const;
+
+export interface RegistryInteractionResolvedProduct {
+  /** @pattern ^[A-F0-9]{32}$ */
+  productId: string;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  tradeName: string;
+  /** @maxLength 2000 */
+  inn: string;
+  /** @maxLength 4000 */
+  activeIngredient: string;
+  /** @maxLength 2000 */
+  dosageForm: string;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  strength: string | null;
+  mappingStatus: RegistryInteractionResolvedProductMappingStatus;
+  ingredientResolution: RegistryInteractionResolvedProductIngredientResolution;
+  /**
+     * @maxItems 12
+     * @items.minLength 1
+     * @items.maxLength 300
+     */
+  resolvedIngredients: string[];
+  /**
+     * @maxItems 12
+     * @items.minLength 1
+     * @items.maxLength 2000
+     */
+  unresolvedIngredients: string[];
+}
+
+export interface RegistryInteractionEvidenceSource {
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  label: string;
+  /** @nullable */
+  url: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  documentReference: string | null;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  version: string | null;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  publishedAt: string | null;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  accessedAt: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  reviewedAt: string;
+}
+
+export type RegistryInteractionFindingSeverity = typeof RegistryInteractionFindingSeverity[keyof typeof RegistryInteractionFindingSeverity];
+
+
+export const RegistryInteractionFindingSeverity = {
+  contraindicated: 'contraindicated',
+  major: 'major',
+  moderate: 'moderate',
+  minor: 'minor',
+  informational: 'informational',
+  unknown: 'unknown',
+} as const;
+
+export type RegistryInteractionFindingActionCategory = typeof RegistryInteractionFindingActionCategory[keyof typeof RegistryInteractionFindingActionCategory];
+
+
+export const RegistryInteractionFindingActionCategory = {
+  avoid_combination: 'avoid_combination',
+  specialist_review: 'specialist_review',
+  monitor: 'monitor',
+  consider_alternative: 'consider_alternative',
+  informational: 'informational',
+} as const;
+
+export type RegistryInteractionFindingEvidenceLevel = typeof RegistryInteractionFindingEvidenceLevel[keyof typeof RegistryInteractionFindingEvidenceLevel];
+
+
+export const RegistryInteractionFindingEvidenceLevel = {
+  established: 'established',
+  reference: 'reference',
+  theoretical: 'theoretical',
+} as const;
+
+export interface RegistryInteractionFinding {
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  ingredientA: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  ingredientB: string;
+  severity: RegistryInteractionFindingSeverity;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  clinicalEffect: string;
+  /**
+     * @maxLength 4000
+     * @nullable
+     */
+  mechanism: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  explanation: string;
+  actionCategory: RegistryInteractionFindingActionCategory;
+  evidenceLevel: RegistryInteractionFindingEvidenceLevel;
+  source: RegistryInteractionEvidenceSource;
+}
+
+export type RegistryInteractionPairStatus = typeof RegistryInteractionPairStatus[keyof typeof RegistryInteractionPairStatus];
+
+
+export const RegistryInteractionPairStatus = {
+  verified_interaction: 'verified_interaction',
+  same_ingredient: 'same_ingredient',
+  insufficient_evidence: 'insufficient_evidence',
+  incomplete_composition: 'incomplete_composition',
+} as const;
+
+export interface RegistryInteractionPair {
+  /** @pattern ^[A-F0-9]{32}$ */
+  productAId: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  productAName: string;
+  /** @pattern ^[A-F0-9]{32}$ */
+  productBId: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  productBName: string;
+  status: RegistryInteractionPairStatus;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  message: string;
+  /** @maxItems 24 */
+  findings: RegistryInteractionFinding[];
+  /**
+     * @maxItems 12
+     * @items.minLength 1
+     * @items.maxLength 300
+     */
+  duplicateIngredients: string[];
+}
+
+export type RegistryInteractionCoverageStatus = typeof RegistryInteractionCoverageStatus[keyof typeof RegistryInteractionCoverageStatus];
+
+
+export const RegistryInteractionCoverageStatus = {
+  complete: 'complete',
+  partial: 'partial',
+  insufficient_data: 'insufficient_data',
+} as const;
+
+export interface RegistryInteractionCoverage {
+  /**
+     * @minimum 2
+     * @maximum 5
+     */
+  selectedCount: number;
+  /**
+     * @minimum 0
+     * @maximum 60
+     */
+  resolvedIngredientCount: number;
+  /**
+     * @minimum 0
+     * @maximum 60
+     */
+  unresolvedIngredientCount: number;
+  /**
+     * @minimum 0
+     * @maximum 600
+     */
+  evaluatedIngredientPairs: number;
+  /**
+     * @minimum 0
+     * @maximum 600
+     */
+  matchedApprovedPairs: number;
+  status: RegistryInteractionCoverageStatus;
+  /** @minimum 0 */
+  totalRules: number;
+  /** @minimum 0 */
+  runtimeEligibleRules: number;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  datasetVersion: string;
+}
+
+export interface RegistryInteractionResult {
+  /**
+     * @minItems 2
+     * @maxItems 5
+     */
+  products: RegistryInteractionResolvedProduct[];
+  /**
+     * @minItems 1
+     * @maxItems 10
+     */
+  pairs: RegistryInteractionPair[];
+  coverage: RegistryInteractionCoverage;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  disclaimer: string;
+}
+
 export interface InteractionCheckInput {
   drugIds: string[];
 }

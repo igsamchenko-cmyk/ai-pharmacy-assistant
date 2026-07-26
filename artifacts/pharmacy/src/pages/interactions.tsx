@@ -1,58 +1,125 @@
 import { useState } from "react";
 import {
+  getListHistoryQueryKey,
   useCheckInteractions,
   useCreateHistory,
-  getListHistoryQueryKey,
+  type RegistryInteractionFindingSeverity,
+  type RegistryInteractionPairStatus,
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  type Drug,
-  type InteractionPairRiskLevel,
-} from "@workspace/api-client-react";
+  AlertTriangle,
+  BookOpen,
+  GitCompare,
+  Info,
+  ShieldAlert,
+  ShieldCheck,
+  X,
+} from "lucide-react";
+import {
+  RegistryInteractionSearchSelect,
+  type InteractionProductSelection,
+} from "@/components/registry-interaction-search-select";
+import { GlobalDisclaimer } from "@/components/disclaimer";
+import { ReportIssueButton } from "@/components/report-issue-button";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { GlobalDisclaimer } from "@/components/disclaimer";
-import { DrugSearchSelect } from "@/components/drug-search-select";
-import { ReportIssueButton } from "@/components/report-issue-button";
-import { useQueryClient } from "@tanstack/react-query";
-import { X, GitCompare, AlertTriangle, ShieldCheck } from "lucide-react";
+
+const pairStatusLabels: Record<RegistryInteractionPairStatus, string> = {
+  verified_interaction: "Підтверджена взаємодія",
+  same_ingredient: "Однакова діюча речовина",
+  insufficient_evidence: "Недостатньо перевірених даних",
+  incomplete_composition: "Склад не зіставлено",
+};
+
+const pairStatusStyles: Record<RegistryInteractionPairStatus, string> = {
+  verified_interaction:
+    "border-red-500/30 bg-red-500/5 text-red-800 dark:text-red-200",
+  same_ingredient:
+    "border-sky-500/30 bg-sky-500/5 text-sky-800 dark:text-sky-200",
+  insufficient_evidence:
+    "border-amber-500/30 bg-amber-500/5 text-amber-900 dark:text-amber-100",
+  incomplete_composition:
+    "border-orange-500/30 bg-orange-500/5 text-orange-900 dark:text-orange-100",
+};
+
+const severityLabels: Record<RegistryInteractionFindingSeverity, string> = {
+  contraindicated: "Протипоказано",
+  major: "Клінічно значуща",
+  moderate: "Помірна",
+  minor: "Незначна",
+  informational: "Інформаційна",
+  unknown: "Недостатньо даних",
+};
+
+const actionLabels = {
+  avoid_combination: "Уникати комбінації",
+  specialist_review: "Потрібна оцінка фахівця",
+  monitor: "Потрібен моніторинг",
+  consider_alternative: "Розглянути альтернативу з лікарем",
+  informational: "Врахувати під час консультації",
+} as const;
+
+export function addInteractionSelection(
+  current: readonly InteractionProductSelection[],
+  product: InteractionProductSelection,
+): InteractionProductSelection[] {
+  if (
+    current.length >= 5 ||
+    current.some(
+      (item) =>
+        item.productId === product.productId ||
+        (item.productId === product.productId &&
+          item.registration === product.registration),
+    )
+  ) {
+    return [...current];
+  }
+  return [...current, product];
+}
 
 export default function Interactions() {
-  const [selectedDrugs, setSelectedDrugs] = useState<Drug[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<
+    InteractionProductSelection[]
+  >([]);
   const queryClient = useQueryClient();
-
   const checkInteractions = useCheckInteractions();
   const createHistory = useCreateHistory();
 
-  const handleAdd = (drug: Drug) => {
-    if (
-      selectedDrugs.length < 5 &&
-      !selectedDrugs.find((d) => d.id === drug.id)
-    ) {
-      setSelectedDrugs([...selectedDrugs, drug]);
-    }
+  const handleAdd = (product: InteractionProductSelection) => {
+    setSelectedProducts((current) => addInteractionSelection(current, product));
+    checkInteractions.reset();
   };
 
-  const handleRemove = (id: string) => {
-    setSelectedDrugs(selectedDrugs.filter((d) => d.id !== id));
+  const handleRemove = (productId: string) => {
+    setSelectedProducts((current) =>
+      current.filter((product) => product.productId !== productId),
+    );
     checkInteractions.reset();
   };
 
   const handleCheck = () => {
-    if (selectedDrugs.length < 2 || selectedDrugs.length > 5) return;
-
+    if (selectedProducts.length < 2 || selectedProducts.length > 5) return;
     checkInteractions.mutate(
-      { data: { drugIds: selectedDrugs.map((d) => d.id) } },
+      {
+        data: {
+          products: selectedProducts.map((product) => ({
+            productId: product.productId,
+            registrationNumber: product.registration,
+          })),
+        },
+      },
       {
         onSuccess: () => {
           createHistory.mutate(
             {
               data: {
                 type: "interaction",
-                title:
-                  "Перевірка взаємодій: " +
-                  selectedDrugs.map((d) => d.brandName).join(", "),
-                detail: `Перевірено ${selectedDrugs.length} препарати(ів)`,
+                title: `Перевірка взаємодій: ${selectedProducts
+                  .map((product) => product.tradeName)
+                  .join(", ")}`,
+                detail: `Перевірено ${selectedProducts.length} точні реєстрові позиції`,
               },
             },
             {
@@ -68,183 +135,253 @@ export default function Interactions() {
     );
   };
 
-  const riskColors: Record<InteractionPairRiskLevel, string> = {
-    low: "bg-green-500/10 text-green-700 border-green-200",
-    medium: "bg-amber-500/10 text-amber-700 border-amber-200",
-    high: "bg-orange-500/10 text-orange-700 border-orange-200",
-    critical: "bg-red-500/10 text-red-700 border-red-200",
-  };
-
-  const riskLabels: Record<InteractionPairRiskLevel, string> = {
-    low: "Низький ризик",
-    medium: "Середній ризик",
-    high: "Високий ризик",
-    critical: "Критичний ризик",
-  };
-
-  const selectedContext = selectedDrugs
-    .map((drug) => `${drug.id}:${drug.brandName}`)
-    .join(", ");
+  const selectedContext = selectedProducts
+    .map((product) => `${product.productId}:${product.registration}`)
+    .join(",");
 
   return (
-    <div className="space-y-6 animate-in fade-in pb-10">
+    <div className="max-w-full space-y-6 overflow-x-hidden pb-10 motion-safe:animate-in motion-safe:fade-in">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
-          <GitCompare className="w-6 h-6" />
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-primary">
+          <GitCompare className="h-6 w-6" />
           Взаємодії препаратів
         </h1>
         <p className="text-sm text-muted-foreground">
-          Додайте від 2 до 5 препаратів для довідкової перевірки сумісності.
+          Оберіть від 2 до 5 конкретних реєстрових позицій. Перевірка
+          виконується за підтвердженими діючими речовинами, а не лише за
+          торговою назвою.
         </p>
       </div>
 
       <GlobalDisclaimer />
 
       <div className="space-y-4">
-        <DrugSearchSelect
+        <RegistryInteractionSearchSelect
           onSelect={handleAdd}
-          placeholder="Введіть назву препарату для додавання..."
-          disabled={selectedDrugs.length >= 5}
-          label="Пошук препарату для перевірки взаємодій"
-          inputTestId="input-interaction-search"
-          optionTestId={(drug) => `btn-add-drug-${drug.id}`}
+          disabled={selectedProducts.length >= 5}
         />
 
-        {selectedDrugs.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {selectedDrugs.map((drug) => (
-              <Badge
-                key={drug.id}
-                variant="secondary"
-                className="px-3 py-1.5 text-sm flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+        {selectedProducts.length ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {selectedProducts.map((product) => (
+              <Card
+                key={`${product.productId}:${product.registration}`}
+                className="max-w-full overflow-hidden"
               >
-                {drug.brandName}
-                <button
-                  onClick={() => handleRemove(drug.id)}
-                  className="hover:text-destructive transition-colors"
-                  aria-label={`Прибрати ${drug.brandName}`}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </Badge>
+                <CardContent className="flex min-w-0 items-start justify-between gap-3 p-3">
+                  <div className="min-w-0 space-y-1">
+                    <p className="break-words font-semibold">
+                      {product.tradeName}
+                    </p>
+                    <p className="break-words text-xs text-muted-foreground">
+                      {[product.strength, product.form]
+                        .filter(Boolean)
+                        .join(" · ") || "Форма не вказана"}
+                    </p>
+                    <p className="break-all text-xs text-muted-foreground">
+                      {product.registration}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleRemove(product.productId)}
+                    aria-label={`Прибрати ${product.tradeName}`}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
             ))}
           </div>
-        )}
+        ) : null}
 
         <Button
-          className="w-full font-bold h-12"
-          disabled={selectedDrugs.length < 2 || checkInteractions.isPending}
+          className="min-h-12 w-full font-bold"
+          disabled={selectedProducts.length < 2 || checkInteractions.isPending}
           onClick={handleCheck}
           data-testid="btn-check-interactions"
         >
           {checkInteractions.isPending
-            ? "Перевірка..."
+            ? "Перевірка точних позицій…"
             : "Перевірити взаємодії"}
         </Button>
 
-        {checkInteractions.isError && (
-          <div className="py-4 px-4 text-sm text-destructive border border-destructive/30 rounded-lg space-y-2">
-            <p>Не вдалося перевірити взаємодії. Спробуйте ще раз.</p>
+        {checkInteractions.isError ? (
+          <div className="space-y-2 rounded-lg border border-destructive/30 px-4 py-4 text-sm text-destructive">
+            <p>
+              Не вдалося звірити точні реєстрові позиції. Дані про взаємодію не
+              показано.
+            </p>
             <ReportIssueButton
-              type="ui_bug"
-              context={`interaction-error:${selectedContext}`}
+              type="interaction_issue"
+              context={`registry-interaction-error:${selectedContext}`}
               compact
             />
           </div>
-        )}
+        ) : null}
       </div>
 
-      {checkInteractions.data && (
-        <div className="space-y-4 pt-6 animate-in slide-in-from-bottom-4 fade-in">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            Результати перевірки
-          </h2>
+      {checkInteractions.data ? (
+        <section className="space-y-4 pt-4 motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:fade-in">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-bold">Результат для кожної пари</h2>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline">
+                {checkInteractions.data.coverage.selectedCount} точні позиції
+              </Badge>
+              <Badge variant="outline">
+                {checkInteractions.data.coverage.matchedApprovedPairs}{" "}
+                підтверджених збігів
+              </Badge>
+            </div>
+          </div>
 
-          {checkInteractions.data.pairs.length === 0 ? (
-            <Card className="bg-green-500/5 border-green-500/20">
-              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-3">
-                <ShieldCheck className="w-12 h-12 text-green-500" />
-                <div>
-                  <p className="font-bold text-green-700">
-                    У демо-правилах значущих взаємодій не знайдено
-                  </p>
-                  <p className="text-sm text-green-700/80 mt-1">
-                    Це не підтверджує клінічну безпеку комбінації. Перевірте офіційні інструкції та локальні протоколи.
-                  </p>
-                </div>
-                <ReportIssueButton
-                  type="interaction_issue"
-                  context={`interaction-no-pair:${selectedContext}`}
-                  sourceSnapshot={{
-                    drugIds: selectedDrugs.map((drug) => drug.id),
-                    pairCount: 0,
-                  }}
-                  compact
-                />
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {checkInteractions.data.pairs.map((pair, idx) => (
-                <Card key={idx} className="overflow-hidden">
-                  <div className="p-4 border-b border-border bg-card/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div className="font-bold text-foreground">
-                      {pair.drugAName}{" "}
-                      <span className="text-muted-foreground mx-2">+</span>{" "}
-                      {pair.drugBName}
+          {checkInteractions.data.coverage.runtimeEligibleRules === 0 ? (
+            <div className="flex gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
+              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+              <div className="space-y-1">
+                <p className="font-semibold">
+                  Перевірений evidence registry ще потребує наповнення
+                </p>
+                <p className="text-muted-foreground">
+                  Неперевірені legacy-правила не використовуються. Для
+                  непокритих пар FarmAssist чесно показує «Недостатньо
+                  перевірених даних», а не робить висновок про сумісність.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="space-y-4">
+            {checkInteractions.data.pairs.map((pair) => (
+              <Card
+                key={`${pair.productAId}:${pair.productBId}`}
+                className={`max-w-full overflow-hidden ${pairStatusStyles[pair.status]}`}
+              >
+                <CardContent className="space-y-4 p-4 sm:p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="break-words font-bold">
+                        {pair.productAName} + {pair.productBName}
+                      </p>
+                      <p className="mt-1 text-sm">{pair.message}</p>
                     </div>
                     <Badge
                       variant="outline"
-                      className={`font-bold px-3 py-1 ${riskColors[pair.riskLevel]}`}
+                      className="whitespace-normal text-left"
                     >
-                      {riskLabels[pair.riskLevel]}
+                      {pairStatusLabels[pair.status]}
                     </Badge>
                   </div>
-                  <CardContent className="p-4 space-y-4">
-                    <div>
-                      <p className="text-sm font-bold text-foreground mb-1">
-                        Що відбувається:
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {pair.explanation}
-                      </p>
+
+                  {pair.duplicateIngredients.length ? (
+                    <div className="flex flex-wrap gap-2">
+                      {pair.duplicateIngredients.map((ingredient) => (
+                        <Badge key={ingredient} variant="secondary">
+                          {ingredient}
+                        </Badge>
+                      ))}
                     </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="bg-accent/20 p-3 rounded-lg border border-accent/30">
-                        <p className="text-xs font-bold text-accent-foreground mb-1 flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> Що перевірити:
-                        </p>
+                  ) : null}
+
+                  {pair.findings.map((finding, index) => (
+                    <div
+                      key={`${finding.ingredientA}:${finding.ingredientB}:${index}`}
+                      className="space-y-3 rounded-xl border bg-background/70 p-4"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="destructive">
+                          {severityLabels[finding.severity]}
+                        </Badge>
+                        <Badge variant="outline">{finding.evidenceLevel}</Badge>
+                        <span className="break-words text-sm font-semibold">
+                          {finding.ingredientA} + {finding.ingredientB}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">Клінічний ефект</p>
                         <p className="text-sm text-muted-foreground">
-                          {pair.whatToCheck}
+                          {finding.clinicalEffect}
                         </p>
                       </div>
-                      <div className="bg-destructive/5 p-3 rounded-lg border border-destructive/10">
-                        <p className="text-xs font-bold text-destructive mb-1 flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> Коли до лікаря:
-                        </p>
+                      <div>
+                        <p className="text-sm font-semibold">Що робити</p>
                         <p className="text-sm text-muted-foreground">
-                          {pair.whenToSeeDoctor}
+                          {actionLabels[finding.actionCategory]}
                         </p>
                       </div>
+                      <details className="rounded-lg border p-3">
+                        <summary className="cursor-pointer font-semibold">
+                          Докази й джерело
+                        </summary>
+                        <div className="mt-3 space-y-2 text-sm text-muted-foreground">
+                          <p>{finding.explanation}</p>
+                          {finding.mechanism ? (
+                            <p>Механізм: {finding.mechanism}</p>
+                          ) : null}
+                          <p>Переглянуто: {finding.source.reviewedAt}</p>
+                          {finding.source.url ? (
+                            <a
+                              className="inline-flex items-center gap-1 break-all text-primary underline"
+                              href={finding.source.url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <BookOpen className="h-4 w-4 shrink-0" />
+                              {finding.source.label}
+                            </a>
+                          ) : (
+                            <p>{finding.source.documentReference}</p>
+                          )}
+                        </div>
+                      </details>
                     </div>
-                    <ReportIssueButton
-                      type="interaction_issue"
-                      context={`interaction-pair:${pair.drugAId}:${pair.drugBId}`}
-                      sourceSnapshot={{
-                        drugAId: pair.drugAId,
-                        drugBId: pair.drugBId,
-                        riskLevel: pair.riskLevel,
-                        explanation: pair.explanation,
-                      }}
-                      compact
-                    />
-                  </CardContent>
-                </Card>
-              ))}
+                  ))}
+
+                  {pair.status !== "verified_interaction" ? (
+                    <div className="flex gap-2 text-xs text-muted-foreground">
+                      {pair.status === "same_ingredient" ? (
+                        <ShieldCheck className="h-4 w-4 shrink-0" />
+                      ) : pair.status === "insufficient_evidence" ? (
+                        <Info className="h-4 w-4 shrink-0" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                      )}
+                      <span>
+                        Не використовуйте цей статус як дозвіл на одночасне
+                        застосування.
+                      </span>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <details className="rounded-xl border p-4 text-sm">
+            <summary className="cursor-pointer font-semibold">
+              Покриття та методологія
+            </summary>
+            <div className="mt-3 space-y-1 text-muted-foreground">
+              <p>
+                Набір правил: {checkInteractions.data.coverage.datasetVersion}
+              </p>
+              <p>Усього правил: {checkInteractions.data.coverage.totalRules}</p>
+              <p>
+                Допущено safety policy:{" "}
+                {checkInteractions.data.coverage.runtimeEligibleRules}
+              </p>
+              <p>
+                Перевірено пар діючих речовин:{" "}
+                {checkInteractions.data.coverage.evaluatedIngredientPairs}
+              </p>
+              <p>{checkInteractions.data.disclaimer}</p>
             </div>
-          )}
-        </div>
-      )}
+          </details>
+        </section>
+      ) : null}
     </div>
   );
 }
