@@ -1,8 +1,8 @@
 import { SearchCatalogQueryParams } from "@workspace/api-zod";
 import { interactionRules, type RiskLevel } from "../data/interactions";
 import {
+  buildInteractionRuleRegistry,
   buildInteractionFoundationAudit,
-  migrateLegacyInteractionRules,
 } from "../interactions/audit";
 import {
   INCOMPLETE_INTERACTION_CHECK,
@@ -330,7 +330,7 @@ export async function checkRegistryInteractions(
   const resolved = catalogProducts.map((product) =>
     resolveRegistryInteractionSelection(product!),
   );
-  const rules = options.rules ?? migrateLegacyInteractionRules();
+  const rules = options.rules ?? buildInteractionRuleRegistry();
   const engineResult = createVerifiedInteractionEngine(rules).check(
     resolved.map((item) => item.selection),
   );

@@ -15,15 +15,26 @@ Current result:
 | Metric                                       | Count |
 | -------------------------------------------- | ----: |
 | Legacy candidate rules                       |   287 |
-| Unique unordered ingredient pairs            |   287 |
-| Runtime-eligible verified rules              |     0 |
-| Rules with a source URL/document reference   |     0 |
-| Rules with a source version/publication date |     0 |
-| Rules with a recorded clinical review date   |     0 |
+| Total registry rules                         |   294 |
+| Unique unordered ingredient pairs            |   294 |
+| Runtime-eligible verified rules              |     7 |
+| Rules with a source URL/document reference   |     7 |
+| Rules with a source version/publication date |     7 |
+| Rules with a recorded clinical review date   |     7 |
 | Unresolved duplicate pair keys               |     0 |
 | Explicit source conflicts                    |     0 |
 
-All 287 legacy rules remain `needs_review`. They are not evidence and are never shown as verified findings. The public interaction endpoint now uses the approved-only engine, so this missing coverage is visible as a structured `insufficient_evidence` result instead of an unsafe “no interactions found” result.
+All 287 legacy rules remain `needs_review`. They are not evidence and are never shown as verified findings. Seven separately reviewed exact-INN rules form the first runtime batch:
+
+- Warfarin + Ibuprofen;
+- Apixaban + Ibuprofen;
+- Rivaroxaban + Ibuprofen;
+- Sildenafil + Nitroglycerin;
+- Sildenafil + Isosorbide dinitrate;
+- Clarithromycin + Simvastatin;
+- Enalapril + Spironolactone.
+
+The public interaction endpoint uses the approved-only engine. Every other resolved pair remains a structured `insufficient_evidence` result instead of an unsafe “no interactions found” result. Rules are not inherited by another medicine in the same class.
 
 ## Exact registry selection contract
 
@@ -66,12 +77,12 @@ The interaction picker searches the same 16,533-product versioned browser index 
 
 The response includes a card for every selected product pair, including unsupported pairs. Long evidence details and methodology are collapsed, mobile width is bounded, and no positive green “safe” state is used for a missing rule.
 
-## Next evidence-data phase
+## Next evidence expansion phase
 
-Architecture and truthful fail-closed behavior do not create clinical coverage. To produce verified findings, a separate reviewed data PR must:
+The first reviewed batch does not provide universal clinical coverage. Every later batch must:
 
 1. select a licensed or official interaction source with a stable version;
-2. import source records keyed by exact canonical ingredient pairs;
+2. add source records keyed by exact canonical ingredient pairs;
 3. retain the original source record identifier and source document/version;
 4. record clinical review and conflict resolution;
 5. validate combination handling and directionality;
