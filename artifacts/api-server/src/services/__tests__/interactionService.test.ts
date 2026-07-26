@@ -159,6 +159,28 @@ describe("registry interaction checks", () => {
     expect(result.coverage.runtimeEligibleRules).toBe(1);
   });
 
+  it("uses the reviewed registry batch in the default runtime path", async () => {
+    const resolvedWarfarin = catalogProduct(
+      WARFARIN_ID,
+      "UA/1000/01/01",
+      "ВАРФАРИН-ТЕСТ",
+      "Warfarin",
+    );
+    const resolvedIbuprofen = catalogProduct(
+      IBUPROFEN_ID,
+      "UA/2000/01/01",
+      "ІБУПРОФЕН-ТЕСТ",
+      "Ibuprofen",
+    );
+    const result = await checkRegistryInteractions(
+      refs([resolvedWarfarin, resolvedIbuprofen]),
+      { resolveProduct: resolver([resolvedWarfarin, resolvedIbuprofen]) },
+    );
+
+    expect(result.pairs[0]?.status).toBe("verified_interaction");
+    expect(result.pairs[0]?.findings[0]?.source.label).toContain("DailyMed");
+  });
+
   it("does not activate unreviewed legacy-style medical content", async () => {
     const pending = approvedRule("Варфарин", "Ібупрофен");
     pending.reviewStatus = "needs_review";

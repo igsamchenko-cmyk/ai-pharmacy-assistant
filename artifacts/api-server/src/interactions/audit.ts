@@ -7,8 +7,10 @@ import {
   type VerifiedInteractionRule,
 } from "./model";
 import { evaluateInteractionRuleEligibility } from "./policy";
+import { verifiedInteractionRules } from "./verifiedRules";
 
-const DATASET_VERSION = "legacy-static-v0.3";
+const LEGACY_DATASET_VERSION = "legacy-static-v0.3";
+const REGISTRY_DATASET_VERSION = "interaction-registry-v1.0.0";
 
 function severityForRisk(riskLevel: RiskLevel): InteractionSeverity {
   switch (riskLevel) {
@@ -71,7 +73,7 @@ export function migrateLegacyInteractionRules(): VerifiedInteractionRule[] {
       reviewedAt: null,
       unresolvedConflict: false,
       provenance: {
-        datasetVersion: DATASET_VERSION,
+        datasetVersion: LEGACY_DATASET_VERSION,
         importedAt: null,
         origin: legacy.origin ?? "curated",
         sourceRecordId: null,
@@ -79,6 +81,10 @@ export function migrateLegacyInteractionRules(): VerifiedInteractionRule[] {
       populationContext: null,
     };
   });
+}
+
+export function buildInteractionRuleRegistry(): VerifiedInteractionRule[] {
+  return [...verifiedInteractionRules, ...migrateLegacyInteractionRules()];
 }
 
 export interface InteractionFoundationAudit {
@@ -106,7 +112,7 @@ export interface InteractionFoundationAudit {
 }
 
 export function buildInteractionFoundationAudit(
-  rules = migrateLegacyInteractionRules(),
+  rules = buildInteractionRuleRegistry(),
 ): InteractionFoundationAudit {
   const pairCounts = new Map<string, number>();
   const statusCounts: Record<string, number> = {};
@@ -148,7 +154,7 @@ export function buildInteractionFoundationAudit(
   }
 
   return {
-    datasetVersion: DATASET_VERSION,
+    datasetVersion: REGISTRY_DATASET_VERSION,
     totalRules: rules.length,
     uniquePairCount: pairCounts.size,
     runtimeEligibleCount,
