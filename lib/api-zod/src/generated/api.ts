@@ -1011,22 +1011,160 @@ export const GetDrugAnalogsResponse = zod.object({
 /**
  * @summary Check interactions between drugs
  */
+export const checkInteractionsBodyProductsItemProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const checkInteractionsBodyProductsItemRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const checkInteractionsBodyProductsMin = 2;
+export const checkInteractionsBodyProductsMax = 5;
+
+
+
 export const CheckInteractionsBody = zod.object({
-  "drugIds": zod.array(zod.string())
+  "products": zod.array(zod.object({
+  "productId": zod.string().regex(checkInteractionsBodyProductsItemProductIdRegExp),
+  "registrationNumber": zod.string().regex(checkInteractionsBodyProductsItemRegistrationNumberRegExp)
+})).min(checkInteractionsBodyProductsMin).max(checkInteractionsBodyProductsMax)
 })
 
+export const checkInteractionsResponseProductsItemProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const checkInteractionsResponseProductsItemRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const checkInteractionsResponseProductsItemTradeNameMax = 300;
+
+export const checkInteractionsResponseProductsItemInnMax = 2000;
+
+export const checkInteractionsResponseProductsItemActiveIngredientMax = 4000;
+
+export const checkInteractionsResponseProductsItemDosageFormMax = 2000;
+
+export const checkInteractionsResponseProductsItemStrengthMax = 120;
+
+export const checkInteractionsResponseProductsItemResolvedIngredientsItemMax = 300;
+
+export const checkInteractionsResponseProductsItemResolvedIngredientsMax = 12;
+
+export const checkInteractionsResponseProductsItemUnresolvedIngredientsItemMax = 2000;
+
+export const checkInteractionsResponseProductsItemUnresolvedIngredientsMax = 12;
+
+export const checkInteractionsResponseProductsMin = 2;
+export const checkInteractionsResponseProductsMax = 5;
+
+export const checkInteractionsResponsePairsItemProductAIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const checkInteractionsResponsePairsItemProductANameMax = 300;
+
+export const checkInteractionsResponsePairsItemProductBIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const checkInteractionsResponsePairsItemProductBNameMax = 300;
+
+export const checkInteractionsResponsePairsItemMessageMax = 1000;
+
+export const checkInteractionsResponsePairsItemFindingsItemIngredientAMax = 300;
+
+export const checkInteractionsResponsePairsItemFindingsItemIngredientBMax = 300;
+
+export const checkInteractionsResponsePairsItemFindingsItemClinicalEffectMax = 4000;
+
+export const checkInteractionsResponsePairsItemFindingsItemMechanismMax = 4000;
+
+export const checkInteractionsResponsePairsItemFindingsItemExplanationMax = 4000;
+
+export const checkInteractionsResponsePairsItemFindingsItemSourceLabelMax = 300;
+
+export const checkInteractionsResponsePairsItemFindingsItemSourceDocumentReferenceMax = 500;
+
+export const checkInteractionsResponsePairsItemFindingsItemSourceVersionMax = 120;
+
+export const checkInteractionsResponsePairsItemFindingsItemSourcePublishedAtMax = 40;
+
+export const checkInteractionsResponsePairsItemFindingsItemSourceAccessedAtMax = 40;
+
+export const checkInteractionsResponsePairsItemFindingsItemSourceReviewedAtMax = 40;
+
+export const checkInteractionsResponsePairsItemFindingsMax = 24;
+
+export const checkInteractionsResponsePairsItemDuplicateIngredientsItemMax = 300;
+
+export const checkInteractionsResponsePairsItemDuplicateIngredientsMax = 12;
+
+export const checkInteractionsResponsePairsMax = 10;
+
+export const checkInteractionsResponseCoverageSelectedCountMin = 2;
+export const checkInteractionsResponseCoverageSelectedCountMax = 5;
+
+export const checkInteractionsResponseCoverageResolvedIngredientCountMin = 0;
+export const checkInteractionsResponseCoverageResolvedIngredientCountMax = 60;
+
+export const checkInteractionsResponseCoverageUnresolvedIngredientCountMin = 0;
+export const checkInteractionsResponseCoverageUnresolvedIngredientCountMax = 60;
+
+export const checkInteractionsResponseCoverageEvaluatedIngredientPairsMin = 0;
+export const checkInteractionsResponseCoverageEvaluatedIngredientPairsMax = 600;
+
+export const checkInteractionsResponseCoverageMatchedApprovedPairsMin = 0;
+export const checkInteractionsResponseCoverageMatchedApprovedPairsMax = 600;
+
+export const checkInteractionsResponseCoverageTotalRulesMin = 0;
+
+export const checkInteractionsResponseCoverageRuntimeEligibleRulesMin = 0;
+
+export const checkInteractionsResponseCoverageDatasetVersionMax = 120;
+
+export const checkInteractionsResponseDisclaimerMax = 2000;
+
+
+
 export const CheckInteractionsResponse = zod.object({
+  "products": zod.array(zod.object({
+  "productId": zod.string().regex(checkInteractionsResponseProductsItemProductIdRegExp),
+  "registrationNumber": zod.string().regex(checkInteractionsResponseProductsItemRegistrationNumberRegExp),
+  "tradeName": zod.string().min(1).max(checkInteractionsResponseProductsItemTradeNameMax),
+  "inn": zod.string().max(checkInteractionsResponseProductsItemInnMax),
+  "activeIngredient": zod.string().max(checkInteractionsResponseProductsItemActiveIngredientMax),
+  "dosageForm": zod.string().max(checkInteractionsResponseProductsItemDosageFormMax),
+  "strength": zod.string().max(checkInteractionsResponseProductsItemStrengthMax).nullable(),
+  "mappingStatus": zod.enum(['approved', 'unmapped', 'ambiguous']),
+  "ingredientResolution": zod.enum(['approved_exact', 'unresolved']),
+  "resolvedIngredients": zod.array(zod.string().min(1).max(checkInteractionsResponseProductsItemResolvedIngredientsItemMax)).max(checkInteractionsResponseProductsItemResolvedIngredientsMax),
+  "unresolvedIngredients": zod.array(zod.string().min(1).max(checkInteractionsResponseProductsItemUnresolvedIngredientsItemMax)).max(checkInteractionsResponseProductsItemUnresolvedIngredientsMax)
+})).min(checkInteractionsResponseProductsMin).max(checkInteractionsResponseProductsMax),
   "pairs": zod.array(zod.object({
-  "drugAId": zod.string(),
-  "drugAName": zod.string(),
-  "drugBId": zod.string(),
-  "drugBName": zod.string(),
-  "riskLevel": zod.enum(['low', 'medium', 'high', 'critical']),
-  "explanation": zod.string(),
-  "whatToCheck": zod.string(),
-  "whenToSeeDoctor": zod.string()
-})),
-  "disclaimer": zod.string()
+  "productAId": zod.string().regex(checkInteractionsResponsePairsItemProductAIdRegExp),
+  "productAName": zod.string().min(1).max(checkInteractionsResponsePairsItemProductANameMax),
+  "productBId": zod.string().regex(checkInteractionsResponsePairsItemProductBIdRegExp),
+  "productBName": zod.string().min(1).max(checkInteractionsResponsePairsItemProductBNameMax),
+  "status": zod.enum(['verified_interaction', 'same_ingredient', 'insufficient_evidence', 'incomplete_composition']),
+  "message": zod.string().min(1).max(checkInteractionsResponsePairsItemMessageMax),
+  "findings": zod.array(zod.object({
+  "ingredientA": zod.string().min(1).max(checkInteractionsResponsePairsItemFindingsItemIngredientAMax),
+  "ingredientB": zod.string().min(1).max(checkInteractionsResponsePairsItemFindingsItemIngredientBMax),
+  "severity": zod.enum(['contraindicated', 'major', 'moderate', 'minor', 'informational', 'unknown']),
+  "clinicalEffect": zod.string().min(1).max(checkInteractionsResponsePairsItemFindingsItemClinicalEffectMax),
+  "mechanism": zod.string().max(checkInteractionsResponsePairsItemFindingsItemMechanismMax).nullable(),
+  "explanation": zod.string().min(1).max(checkInteractionsResponsePairsItemFindingsItemExplanationMax),
+  "actionCategory": zod.enum(['avoid_combination', 'specialist_review', 'monitor', 'consider_alternative', 'informational']),
+  "evidenceLevel": zod.enum(['established', 'reference', 'theoretical']),
+  "source": zod.object({
+  "label": zod.string().min(1).max(checkInteractionsResponsePairsItemFindingsItemSourceLabelMax),
+  "url": zod.string().url().nullable(),
+  "documentReference": zod.string().max(checkInteractionsResponsePairsItemFindingsItemSourceDocumentReferenceMax).nullable(),
+  "version": zod.string().max(checkInteractionsResponsePairsItemFindingsItemSourceVersionMax).nullable(),
+  "publishedAt": zod.string().max(checkInteractionsResponsePairsItemFindingsItemSourcePublishedAtMax).nullable(),
+  "accessedAt": zod.string().max(checkInteractionsResponsePairsItemFindingsItemSourceAccessedAtMax).nullable(),
+  "reviewedAt": zod.string().min(1).max(checkInteractionsResponsePairsItemFindingsItemSourceReviewedAtMax)
+})
+})).max(checkInteractionsResponsePairsItemFindingsMax),
+  "duplicateIngredients": zod.array(zod.string().min(1).max(checkInteractionsResponsePairsItemDuplicateIngredientsItemMax)).max(checkInteractionsResponsePairsItemDuplicateIngredientsMax)
+})).min(1).max(checkInteractionsResponsePairsMax),
+  "coverage": zod.object({
+  "selectedCount": zod.number().min(checkInteractionsResponseCoverageSelectedCountMin).max(checkInteractionsResponseCoverageSelectedCountMax),
+  "resolvedIngredientCount": zod.number().min(checkInteractionsResponseCoverageResolvedIngredientCountMin).max(checkInteractionsResponseCoverageResolvedIngredientCountMax),
+  "unresolvedIngredientCount": zod.number().min(checkInteractionsResponseCoverageUnresolvedIngredientCountMin).max(checkInteractionsResponseCoverageUnresolvedIngredientCountMax),
+  "evaluatedIngredientPairs": zod.number().min(checkInteractionsResponseCoverageEvaluatedIngredientPairsMin).max(checkInteractionsResponseCoverageEvaluatedIngredientPairsMax),
+  "matchedApprovedPairs": zod.number().min(checkInteractionsResponseCoverageMatchedApprovedPairsMin).max(checkInteractionsResponseCoverageMatchedApprovedPairsMax),
+  "status": zod.enum(['complete', 'partial', 'insufficient_data']),
+  "totalRules": zod.number().min(checkInteractionsResponseCoverageTotalRulesMin),
+  "runtimeEligibleRules": zod.number().min(checkInteractionsResponseCoverageRuntimeEligibleRulesMin),
+  "datasetVersion": zod.string().min(1).max(checkInteractionsResponseCoverageDatasetVersionMax)
+}),
+  "disclaimer": zod.string().min(1).max(checkInteractionsResponseDisclaimerMax)
 })
 
 

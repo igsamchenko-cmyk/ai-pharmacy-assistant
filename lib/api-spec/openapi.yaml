@@ -544,14 +544,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/InteractionCheckInput"
+              $ref: "#/components/schemas/RegistryInteractionCheckInput"
       responses:
         "200":
           description: Interaction result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InteractionResult"
+                $ref: "#/components/schemas/RegistryInteractionResult"
         "400":
           description: Bad request
           content:
@@ -2254,6 +2254,201 @@ components:
             $ref: "#/components/schemas/Drug"
         disclaimer:
           type: string
+    RegistryInteractionProductRef:
+      type: object
+      required: [productId, registrationNumber]
+      properties:
+        productId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        registrationNumber: { type: string, pattern: "^UA/\\d+/\\d+/\\d+$" }
+    RegistryInteractionCheckInput:
+      type: object
+      required: [products]
+      properties:
+        products:
+          type: array
+          minItems: 2
+          maxItems: 5
+          items:
+            $ref: "#/components/schemas/RegistryInteractionProductRef"
+    RegistryInteractionResolvedProduct:
+      type: object
+      required:
+        [
+          productId,
+          registrationNumber,
+          tradeName,
+          inn,
+          activeIngredient,
+          dosageForm,
+          strength,
+          mappingStatus,
+          ingredientResolution,
+          resolvedIngredients,
+          unresolvedIngredients,
+        ]
+      properties:
+        productId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        registrationNumber: { type: string, pattern: "^UA/\\d+/\\d+/\\d+$" }
+        tradeName: { type: string, minLength: 1, maxLength: 300 }
+        inn: { type: string, maxLength: 2000 }
+        activeIngredient: { type: string, maxLength: 4000 }
+        dosageForm: { type: string, maxLength: 2000 }
+        strength: { type: ["string", "null"], maxLength: 120 }
+        mappingStatus: { type: string, enum: [approved, unmapped, ambiguous] }
+        ingredientResolution:
+          { type: string, enum: [approved_exact, unresolved] }
+        resolvedIngredients:
+          type: array
+          maxItems: 12
+          items: { type: string, minLength: 1, maxLength: 300 }
+        unresolvedIngredients:
+          type: array
+          maxItems: 12
+          items: { type: string, minLength: 1, maxLength: 2000 }
+    RegistryInteractionEvidenceSource:
+      type: object
+      required:
+        [
+          label,
+          url,
+          documentReference,
+          version,
+          publishedAt,
+          accessedAt,
+          reviewedAt,
+        ]
+      properties:
+        label: { type: string, minLength: 1, maxLength: 300 }
+        url: { type: ["string", "null"], format: uri }
+        documentReference: { type: ["string", "null"], maxLength: 500 }
+        version: { type: ["string", "null"], maxLength: 120 }
+        publishedAt: { type: ["string", "null"], maxLength: 40 }
+        accessedAt: { type: ["string", "null"], maxLength: 40 }
+        reviewedAt: { type: string, minLength: 1, maxLength: 40 }
+    RegistryInteractionFinding:
+      type: object
+      required:
+        [
+          ingredientA,
+          ingredientB,
+          severity,
+          clinicalEffect,
+          mechanism,
+          explanation,
+          actionCategory,
+          evidenceLevel,
+          source,
+        ]
+      properties:
+        ingredientA: { type: string, minLength: 1, maxLength: 300 }
+        ingredientB: { type: string, minLength: 1, maxLength: 300 }
+        severity:
+          {
+            type: string,
+            enum:
+              [contraindicated, major, moderate, minor, informational, unknown],
+          }
+        clinicalEffect: { type: string, minLength: 1, maxLength: 4000 }
+        mechanism: { type: ["string", "null"], maxLength: 4000 }
+        explanation: { type: string, minLength: 1, maxLength: 4000 }
+        actionCategory:
+          {
+            type: string,
+            enum:
+              [
+                avoid_combination,
+                specialist_review,
+                monitor,
+                consider_alternative,
+                informational,
+              ],
+          }
+        evidenceLevel:
+          { type: string, enum: [established, reference, theoretical] }
+        source:
+          $ref: "#/components/schemas/RegistryInteractionEvidenceSource"
+    RegistryInteractionPair:
+      type: object
+      required:
+        [
+          productAId,
+          productAName,
+          productBId,
+          productBName,
+          status,
+          message,
+          findings,
+          duplicateIngredients,
+        ]
+      properties:
+        productAId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        productAName: { type: string, minLength: 1, maxLength: 300 }
+        productBId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        productBName: { type: string, minLength: 1, maxLength: 300 }
+        status:
+          {
+            type: string,
+            enum:
+              [
+                verified_interaction,
+                same_ingredient,
+                insufficient_evidence,
+                incomplete_composition,
+              ],
+          }
+        message: { type: string, minLength: 1, maxLength: 1000 }
+        findings:
+          type: array
+          maxItems: 24
+          items:
+            $ref: "#/components/schemas/RegistryInteractionFinding"
+        duplicateIngredients:
+          type: array
+          maxItems: 12
+          items: { type: string, minLength: 1, maxLength: 300 }
+    RegistryInteractionCoverage:
+      type: object
+      required:
+        [
+          selectedCount,
+          resolvedIngredientCount,
+          unresolvedIngredientCount,
+          evaluatedIngredientPairs,
+          matchedApprovedPairs,
+          status,
+          totalRules,
+          runtimeEligibleRules,
+          datasetVersion,
+        ]
+      properties:
+        selectedCount: { type: integer, minimum: 2, maximum: 5 }
+        resolvedIngredientCount: { type: integer, minimum: 0, maximum: 60 }
+        unresolvedIngredientCount: { type: integer, minimum: 0, maximum: 60 }
+        evaluatedIngredientPairs: { type: integer, minimum: 0, maximum: 600 }
+        matchedApprovedPairs: { type: integer, minimum: 0, maximum: 600 }
+        status: { type: string, enum: [complete, partial, insufficient_data] }
+        totalRules: { type: integer, minimum: 0 }
+        runtimeEligibleRules: { type: integer, minimum: 0 }
+        datasetVersion: { type: string, minLength: 1, maxLength: 120 }
+    RegistryInteractionResult:
+      type: object
+      required: [products, pairs, coverage, disclaimer]
+      properties:
+        products:
+          type: array
+          minItems: 2
+          maxItems: 5
+          items:
+            $ref: "#/components/schemas/RegistryInteractionResolvedProduct"
+        pairs:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/RegistryInteractionPair"
+        coverage:
+          $ref: "#/components/schemas/RegistryInteractionCoverage"
+        disclaimer: { type: string, minLength: 1, maxLength: 2000 }
     InteractionCheckInput:
       type: object
       required:

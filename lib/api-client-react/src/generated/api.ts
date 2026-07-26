@@ -50,8 +50,6 @@ import type {
   HistoryEntry,
   HistoryInput,
   ImportPreview,
-  InteractionCheckInput,
-  InteractionResult,
   KnowledgeRuntimeStatus,
   KnowledgeSearchParams,
   KnowledgeSearchResult,
@@ -62,6 +60,8 @@ import type {
   OcrResult,
   OcrScanInput,
   ProvenanceSourceList,
+  RegistryInteractionCheckInput,
+  RegistryInteractionResult,
   ReviewActionBody,
   ReviewActionResponse,
   ReviewQueueResponse,
@@ -1262,14 +1262,14 @@ export const getCheckInteractionsUrl = () => {
 /**
  * @summary Check interactions between drugs
  */
-export const checkInteractions = async (interactionCheckInput: InteractionCheckInput, options?: RequestInit): Promise<InteractionResult> => {
+export const checkInteractions = async (registryInteractionCheckInput: RegistryInteractionCheckInput, options?: RequestInit): Promise<RegistryInteractionResult> => {
 
-  return customFetch<InteractionResult>(getCheckInteractionsUrl(),
+  return customFetch<RegistryInteractionResult>(getCheckInteractionsUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(interactionCheckInput)
+    body: JSON.stringify(registryInteractionCheckInput)
   }
 );}
 
@@ -1277,8 +1277,8 @@ export const checkInteractions = async (interactionCheckInput: InteractionCheckI
 
 
 export const getCheckInteractionsMutationOptions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInteractions>>, TError,{data: BodyType<InteractionCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof checkInteractions>>, TError,{data: BodyType<InteractionCheckInput>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInteractions>>, TError,{data: BodyType<RegistryInteractionCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof checkInteractions>>, TError,{data: BodyType<RegistryInteractionCheckInput>}, TContext> => {
 
 const mutationKey = ['checkInteractions'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1290,7 +1290,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkInteractions>>, {data: BodyType<InteractionCheckInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof checkInteractions>>, {data: BodyType<RegistryInteractionCheckInput>}> = (props) => {
           const {data} = props ?? {};
 
           return  checkInteractions(data,requestOptions)
@@ -1304,18 +1304,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type CheckInteractionsMutationResult = NonNullable<Awaited<ReturnType<typeof checkInteractions>>>
-    export type CheckInteractionsMutationBody = BodyType<InteractionCheckInput>
+    export type CheckInteractionsMutationBody = BodyType<RegistryInteractionCheckInput>
     export type CheckInteractionsMutationError = ErrorType<ErrorResponse>
 
     /**
  * @summary Check interactions between drugs
  */
 export const useCheckInteractions = <TError = ErrorType<ErrorResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInteractions>>, TError,{data: BodyType<InteractionCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof checkInteractions>>, TError,{data: BodyType<RegistryInteractionCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof checkInteractions>>,
         TError,
-        {data: BodyType<InteractionCheckInput>},
+        {data: BodyType<RegistryInteractionCheckInput>},
         TContext
       > => {
       return useMutation(getCheckInteractionsMutationOptions(options));
