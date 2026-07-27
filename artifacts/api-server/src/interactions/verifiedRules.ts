@@ -5,6 +5,7 @@ import {
 } from "./model";
 import { verifiedInteractionRulesBatch2 } from "./verifiedRules.batch2";
 import { verifiedInteractionRulesBatch3 } from "./verifiedRules.batch3";
+import { verifiedInteractionRulesBatch4 } from "./verifiedRules.batch4";
 
 const REVIEWED_AT = "2026-07-26";
 const DATASET_VERSION = "verified-interactions-v1.0.0";
@@ -224,4 +225,5 @@ export const verifiedInteractionRules: readonly VerifiedInteractionRule[] = [
   ...verifiedInteractionRulesBatch1,
   ...verifiedInteractionRulesBatch2,
   ...verifiedInteractionRulesBatch3,
+  ...verifiedInteractionRulesBatch4,
 ];

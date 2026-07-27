@@ -9,8 +9,8 @@
   },
   "counts": {
     "potentialExactPairs": 9180,
-    "verifiedPairs": 19,
-    "needsReviewPairs": 255,
+    "verifiedPairs": 22,
+    "needsReviewPairs": 252,
     "unsupportedPairs": 8906,
     "legacyRules": 287,
     "resolvedLegacyRules": 264,
@@ -150,8 +150,8 @@
         "Прямі оральні антикоагулянти"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 3,
-      "needsReviewPairCount": 13,
+      "verifiedPairCount": 4,
+      "needsReviewPairCount": 12,
       "unsupportedPairCount": 119
     },
     {
@@ -320,8 +320,8 @@
         "НПЗЗ (коксиби)"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 0,
-      "needsReviewPairCount": 20,
+      "verifiedPairCount": 1,
+      "needsReviewPairCount": 19,
       "unsupportedPairCount": 115
     },
     {
@@ -1021,8 +1021,8 @@
         "НПЗЗ"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 0,
-      "needsReviewPairCount": 20,
+      "verifiedPairCount": 2,
+      "needsReviewPairCount": 18,
       "unsupportedPairCount": 115
     },
     {
@@ -1231,8 +1231,8 @@
         "Прямі оральні антикоагулянти"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 3,
-      "needsReviewPairCount": 13,
+      "verifiedPairCount": 4,
+      "needsReviewPairCount": 12,
       "unsupportedPairCount": 119
     },
     {
@@ -1391,8 +1391,8 @@
         "Антикоагулянти (антагоністи вітаміну K)"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 5,
-      "needsReviewPairCount": 12,
+      "verifiedPairCount": 6,
+      "needsReviewPairCount": 11,
       "unsupportedPairCount": 118
     },
     {
@@ -1591,20 +1591,6 @@
     },
     {
       "rank": 14,
-      "ingredientA": "Apixaban",
-      "ingredientB": "Naproxen",
-      "pairKey": "apixaban|naproxen",
-      "status": "needs_review",
-      "highestLegacyRisk": "critical",
-      "legacyRuleCount": 1,
-      "observedRegistryRowsA": 20,
-      "observedRegistryRowsB": null,
-      "observedRegistryRowsTotal": 20,
-      "priorityScore": 4000020,
-      "reason": "legacy_exact_pair_requires_official_source_review"
-    },
-    {
-      "rank": 15,
       "ingredientA": "Dexketoprofen",
       "ingredientB": "Rivaroxaban",
       "pairKey": "dexketoprofen|rivaroxaban",
@@ -1618,7 +1604,7 @@
       "reason": "legacy_exact_pair_requires_official_source_review"
     },
     {
-      "rank": 16,
+      "rank": 15,
       "ingredientA": "Aceclofenac",
       "ingredientB": "Rivaroxaban",
       "pairKey": "aceclofenac|rivaroxaban",
@@ -1632,7 +1618,7 @@
       "reason": "legacy_exact_pair_requires_official_source_review"
     },
     {
-      "rank": 17,
+      "rank": 16,
       "ingredientA": "Diclofenac",
       "ingredientB": "Rivaroxaban",
       "pairKey": "diclofenac|rivaroxaban",
@@ -1646,7 +1632,7 @@
       "reason": "legacy_exact_pair_requires_official_source_review"
     },
     {
-      "rank": 18,
+      "rank": 17,
       "ingredientA": "Indometacin",
       "ingredientB": "Rivaroxaban",
       "pairKey": "indometacin|rivaroxaban",
@@ -1660,7 +1646,7 @@
       "reason": "legacy_exact_pair_requires_official_source_review"
     },
     {
-      "rank": 19,
+      "rank": 18,
       "ingredientA": "Ketoprofen",
       "ingredientB": "Rivaroxaban",
       "pairKey": "ketoprofen|rivaroxaban",
@@ -1674,7 +1660,7 @@
       "reason": "legacy_exact_pair_requires_official_source_review"
     },
     {
-      "rank": 20,
+      "rank": 19,
       "ingredientA": "Ketorolac",
       "ingredientB": "Rivaroxaban",
       "pairKey": "ketorolac|rivaroxaban",
@@ -1688,7 +1674,7 @@
       "reason": "legacy_exact_pair_requires_official_source_review"
     },
     {
-      "rank": 21,
+      "rank": 20,
       "ingredientA": "Meloxicam",
       "ingredientB": "Rivaroxaban",
       "pairKey": "meloxicam|rivaroxaban",
@@ -1702,21 +1688,7 @@
       "reason": "legacy_exact_pair_requires_official_source_review"
     },
     {
-      "rank": 22,
-      "ingredientA": "Naproxen",
-      "ingredientB": "Rivaroxaban",
-      "pairKey": "naproxen|rivaroxaban",
-      "status": "needs_review",
-      "highestLegacyRisk": "critical",
-      "legacyRuleCount": 1,
-      "observedRegistryRowsA": null,
-      "observedRegistryRowsB": 18,
-      "observedRegistryRowsTotal": 18,
-      "priorityScore": 4000018,
-      "reason": "legacy_exact_pair_requires_official_source_review"
-    },
-    {
-      "rank": 23,
+      "rank": 21,
       "ingredientA": "Celecoxib",
       "ingredientB": "Dabigatran",
       "pairKey": "celecoxib|dabigatran",
@@ -1730,7 +1702,7 @@
       "reason": "legacy_exact_pair_requires_official_source_review"
     },
     {
-      "rank": 24,
+      "rank": 22,
       "ingredientA": "Celecoxib",
       "ingredientB": "Enoxaparin",
       "pairKey": "celecoxib|enoxaparin",
@@ -1744,17 +1716,45 @@
       "reason": "legacy_exact_pair_requires_official_source_review"
     },
     {
-      "rank": 25,
-      "ingredientA": "Celecoxib",
-      "ingredientB": "Warfarin",
-      "pairKey": "celecoxib|warfarin",
+      "rank": 23,
+      "ingredientA": "Dabigatran",
+      "ingredientB": "Dexketoprofen",
+      "pairKey": "dabigatran|dexketoprofen",
       "status": "needs_review",
       "highestLegacyRisk": "critical",
       "legacyRuleCount": 1,
-      "observedRegistryRowsA": 15,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 2,
+      "observedRegistryRowsTotal": 2,
+      "priorityScore": 4000002,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 24,
+      "ingredientA": "Dexketoprofen",
+      "ingredientB": "Enoxaparin",
+      "pairKey": "dexketoprofen|enoxaparin",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 2,
       "observedRegistryRowsB": null,
-      "observedRegistryRowsTotal": 15,
-      "priorityScore": 4000015,
+      "observedRegistryRowsTotal": 2,
+      "priorityScore": 4000002,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 25,
+      "ingredientA": "Dexketoprofen",
+      "ingredientB": "Warfarin",
+      "pairKey": "dexketoprofen|warfarin",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 2,
+      "observedRegistryRowsB": null,
+      "observedRegistryRowsTotal": 2,
+      "priorityScore": 4000002,
       "reason": "legacy_exact_pair_requires_official_source_review"
     }
   ]
