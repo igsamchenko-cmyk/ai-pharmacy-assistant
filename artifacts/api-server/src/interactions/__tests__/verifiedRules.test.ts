@@ -19,8 +19,8 @@ function selection(id: string, ingredient: string): InteractionSelection {
 }
 
 describe("verified interaction registry", () => {
-  it("contains nineteen unique, runtime-eligible exact-INN rules", () => {
-    expect(verifiedInteractionRules).toHaveLength(19);
+  it("contains twenty-two unique, runtime-eligible exact-INN rules", () => {
+    expect(verifiedInteractionRules).toHaveLength(22);
     expect(
       new Set(verifiedInteractionRules.map((rule) => rule.pairKey)).size,
     ).toBe(verifiedInteractionRules.length);
@@ -83,7 +83,7 @@ describe("verified interaction registry", () => {
       buildInteractionRuleRegistry(),
     ).check([
       selection("apixaban", "Apixaban"),
-      selection("naproxen", "Naproxen"),
+      selection("meloxicam", "Meloxicam"),
     ]);
 
     expect(result.findings).toEqual([]);
