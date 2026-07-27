@@ -22,6 +22,15 @@ import {
 } from "@/components/registry-interaction-search-select";
 import { GlobalDisclaimer } from "@/components/disclaimer";
 import { ReportIssueButton } from "@/components/report-issue-button";
+import {
+  interactionEvidenceLevelLabels,
+  interactionSummaryMetricLabels,
+} from "@/lib/interaction-result-copy";
+import {
+  buildInteractionResultSummary,
+  sortInteractionPairsByRisk,
+  type InteractionSummaryState,
+} from "@/lib/interaction-result-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,6 +60,19 @@ const severityLabels: Record<RegistryInteractionFindingSeverity, string> = {
   minor: "Незначна",
   informational: "Інформаційна",
   unknown: "Недостатньо даних",
+};
+
+const summaryStyles: Record<InteractionSummaryState, string> = {
+  contraindicated:
+    "border-red-600/50 bg-red-500/10 text-red-950 dark:text-red-100",
+  major: "border-red-500/40 bg-red-500/5 text-red-950 dark:text-red-100",
+  verified:
+    "border-orange-500/40 bg-orange-500/5 text-orange-950 dark:text-orange-100",
+  duplicate: "border-sky-500/40 bg-sky-500/5 text-sky-950 dark:text-sky-100",
+  incomplete:
+    "border-amber-500/40 bg-amber-500/5 text-amber-950 dark:text-amber-100",
+  insufficient:
+    "border-amber-500/40 bg-amber-500/5 text-amber-950 dark:text-amber-100",
 };
 
 const actionLabels = {
@@ -138,6 +160,12 @@ export default function Interactions() {
   const selectedContext = selectedProducts
     .map((product) => `${product.productId}:${product.registration}`)
     .join(",");
+  const resultSummary = checkInteractions.data
+    ? buildInteractionResultSummary(checkInteractions.data)
+    : null;
+  const sortedPairs = checkInteractions.data
+    ? sortInteractionPairsByRisk(checkInteractions.data.pairs)
+    : [];
 
   return (
     <div className="max-w-full space-y-6 overflow-x-hidden pb-10 motion-safe:animate-in motion-safe:fade-in">
@@ -238,6 +266,62 @@ export default function Interactions() {
             </div>
           </div>
 
+          {resultSummary ? (
+            <Card
+              className={`max-w-full overflow-hidden ${summaryStyles[resultSummary.state]}`}
+              data-testid="interaction-result-summary"
+            >
+              <CardContent className="space-y-4 p-4 sm:p-5">
+                <div className="flex min-w-0 items-start gap-3">
+                  {resultSummary.state === "contraindicated" ||
+                  resultSummary.state === "major" ? (
+                    <ShieldAlert className="mt-0.5 h-6 w-6 shrink-0" />
+                  ) : resultSummary.state === "duplicate" ? (
+                    <Info className="mt-0.5 h-6 w-6 shrink-0" />
+                  ) : (
+                    <AlertTriangle className="mt-0.5 h-6 w-6 shrink-0" />
+                  )}
+                  <div className="min-w-0 space-y-1">
+                    <h3 className="break-words text-lg font-bold">
+                      {resultSummary.title}
+                    </h3>
+                    <p className="break-words text-sm">
+                      {resultSummary.message}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <Badge variant="outline">
+                    {interactionSummaryMetricLabels.checkedPairs}:{" "}
+                    {resultSummary.pairCount}
+                  </Badge>
+                  <Badge variant="outline">
+                    {interactionSummaryMetricLabels.verified}:{" "}
+                    {resultSummary.verifiedPairCount}
+                  </Badge>
+                  {resultSummary.duplicatePairCount > 0 ? (
+                    <Badge variant="outline">
+                      {interactionSummaryMetricLabels.duplicate}:{" "}
+                      {resultSummary.duplicatePairCount}
+                    </Badge>
+                  ) : null}
+                  {resultSummary.insufficientPairCount > 0 ? (
+                    <Badge variant="outline">
+                      {interactionSummaryMetricLabels.insufficient}:{" "}
+                      {resultSummary.insufficientPairCount}
+                    </Badge>
+                  ) : null}
+                  {resultSummary.incompletePairCount > 0 ? (
+                    <Badge variant="outline">
+                      {interactionSummaryMetricLabels.incomplete}:{" "}
+                      {resultSummary.incompletePairCount}
+                    </Badge>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+
           {checkInteractions.data.coverage.runtimeEligibleRules === 0 ? (
             <div className="flex gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
               <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
@@ -255,7 +339,7 @@ export default function Interactions() {
           ) : null}
 
           <div className="space-y-4">
-            {checkInteractions.data.pairs.map((pair) => (
+            {sortedPairs.map((pair) => (
               <Card
                 key={`${pair.productAId}:${pair.productBId}`}
                 className={`max-w-full overflow-hidden ${pairStatusStyles[pair.status]}`}
@@ -295,7 +379,13 @@ export default function Interactions() {
                         <Badge variant="destructive">
                           {severityLabels[finding.severity]}
                         </Badge>
-                        <Badge variant="outline">{finding.evidenceLevel}</Badge>
+                        <Badge variant="outline">
+                          {
+                            interactionEvidenceLevelLabels[
+                              finding.evidenceLevel
+                            ]
+                          }
+                        </Badge>
                         <span className="break-words text-sm font-semibold">
                           {finding.ingredientA} + {finding.ingredientB}
                         </span>
