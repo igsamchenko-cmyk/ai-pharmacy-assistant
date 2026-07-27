@@ -1,0 +1,1761 @@
+{
+  "schemaVersion": "interaction-evidence-coverage-v1",
+  "catalog": {
+    "sourceSha256": "228b8a201491de53d85788d398143586cd20fcd461731892d5db4ab2d8f4dd96",
+    "registryRows": 16533,
+    "uniqueNormalizedInnExpressions": 1638,
+    "canonicalInnCount": 136,
+    "therapeuticClassCount": 85
+  },
+  "counts": {
+    "potentialExactPairs": 9180,
+    "verifiedPairs": 19,
+    "needsReviewPairs": 255,
+    "unsupportedPairs": 8906,
+    "legacyRules": 287,
+    "resolvedLegacyRules": 264,
+    "unresolvedLegacyRules": 23,
+    "resolvedLegacyPairCount": 264,
+    "observedFrequencyInnCount": 32
+  },
+  "statusDefinitions": {
+    "verified": {
+      "meaning": "Exact canonical INN pair has a runtime-eligible reviewed rule with allowed provenance.",
+      "clinicalConclusionAllowed": true
+    },
+    "needs_review": {
+      "meaning": "Exact canonical INN pair exists only in the legacy candidate set and requires official-source review.",
+      "clinicalConclusionAllowed": false
+    },
+    "unsupported": {
+      "meaning": "No exact reviewed rule exists; this does not mean that an interaction is absent.",
+      "clinicalConclusionAllowed": false
+    }
+  },
+  "priorityPolicy": {
+    "limit": 25,
+    "riskWeights": {
+      "critical": 4000000,
+      "high": 3000000,
+      "medium": 2000000,
+      "low": 1000000
+    },
+    "frequencyTieBreak": "observed official registry target rows when present; unknown is not zero",
+    "noAutomaticApproval": true
+  },
+  "ingredientCoverage": [
+    {
+      "canonicalInn": "Aceclofenac",
+      "therapeuticClasses": [
+        "НПЗЗ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 20,
+      "unsupportedPairCount": 115
+    },
+    {
+      "canonicalInn": "Acetylcysteine",
+      "therapeuticClasses": [
+        "Муколітики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Acetylsalicylic acid",
+      "therapeuticClasses": [
+        "НПЗЗ / антиагреганти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 4,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 131
+    },
+    {
+      "canonicalInn": "Aciclovir",
+      "therapeuticClasses": [
+        "Противірусні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Ambroxol",
+      "therapeuticClasses": [
+        "Муколітики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Amiodarone",
+      "therapeuticClasses": [
+        "Антиаритмічні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 3,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 132
+    },
+    {
+      "canonicalInn": "Amitriptyline",
+      "therapeuticClasses": [
+        "Трициклічні антидепресанти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Amlodipine",
+      "therapeuticClasses": [
+        "Блокатори кальцієвих каналів"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Amoxicillin",
+      "therapeuticClasses": [
+        "Пеніциліни"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Amoxicillin + clavulanic acid",
+      "therapeuticClasses": [
+        "Захищені пеніциліни"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Apixaban",
+      "therapeuticClasses": [
+        "Прямі оральні антикоагулянти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 3,
+      "needsReviewPairCount": 13,
+      "unsupportedPairCount": 119
+    },
+    {
+      "canonicalInn": "Ascorbic acid",
+      "therapeuticClasses": [
+        "Вітаміни"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Atorvastatin",
+      "therapeuticClasses": [
+        "Статини"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 2,
+      "unsupportedPairCount": 133
+    },
+    {
+      "canonicalInn": "Atropine",
+      "therapeuticClasses": [
+        "Антихолінергічні засоби"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Azithromycin",
+      "therapeuticClasses": [
+        "Макроліди"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 6,
+      "unsupportedPairCount": 129
+    },
+    {
+      "canonicalInn": "Betahistine",
+      "therapeuticClasses": [
+        "Протизапаморочливі"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Bisacodyl",
+      "therapeuticClasses": [
+        "Проносні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Bisoprolol",
+      "therapeuticClasses": [
+        "Бета-блокатори"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 1,
+      "unsupportedPairCount": 134
+    },
+    {
+      "canonicalInn": "Bromhexine",
+      "therapeuticClasses": [
+        "Муколітики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Budesonide",
+      "therapeuticClasses": [
+        "Інгаляційні кортикостероїди"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Candesartan",
+      "therapeuticClasses": [
+        "Блокатори рецепторів ангіотензину"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 12,
+      "unsupportedPairCount": 123
+    },
+    {
+      "canonicalInn": "Carbamazepine",
+      "therapeuticClasses": [
+        "Протиепілептичні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Carbocisteine",
+      "therapeuticClasses": [
+        "Муколітики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Carvedilol",
+      "therapeuticClasses": [
+        "Бета-блокатори"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Cefixime",
+      "therapeuticClasses": [
+        "Цефалоспорини III"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Ceftriaxone",
+      "therapeuticClasses": [
+        "Цефалоспорини III"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Cefuroxime",
+      "therapeuticClasses": [
+        "Цефалоспорини II"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Celecoxib",
+      "therapeuticClasses": [
+        "НПЗЗ (коксиби)"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 20,
+      "unsupportedPairCount": 115
+    },
+    {
+      "canonicalInn": "Cetirizine",
+      "therapeuticClasses": [
+        "Антигістамінні II покоління"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Chlorhexidine",
+      "therapeuticClasses": [
+        "Антисептики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Chloropyramine",
+      "therapeuticClasses": [
+        "Антигістамінні I покоління"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Ciprofloxacin",
+      "therapeuticClasses": [
+        "Фторхінолони"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 2,
+      "unsupportedPairCount": 133
+    },
+    {
+      "canonicalInn": "Clarithromycin",
+      "therapeuticClasses": [
+        "Макроліди"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 1,
+      "needsReviewPairCount": 4,
+      "unsupportedPairCount": 130
+    },
+    {
+      "canonicalInn": "Clopidogrel",
+      "therapeuticClasses": [
+        "Антиагреганти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 4,
+      "needsReviewPairCount": 16,
+      "unsupportedPairCount": 115
+    },
+    {
+      "canonicalInn": "Codeine",
+      "therapeuticClasses": [
+        "Опіоїдні протикашльові"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Colecalciferol",
+      "therapeuticClasses": [
+        "Вітамін D"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Cyanocobalamin",
+      "therapeuticClasses": [
+        "Вітамін B12"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Dabigatran",
+      "therapeuticClasses": [
+        "Прямі оральні антикоагулянти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 15,
+      "unsupportedPairCount": 120
+    },
+    {
+      "canonicalInn": "Dapagliflozin",
+      "therapeuticClasses": [
+        "Інгібітори SGLT2"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Desloratadine",
+      "therapeuticClasses": [
+        "Антигістамінні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Dexamethasone",
+      "therapeuticClasses": [
+        "Глюкокортикоїди"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Dexketoprofen",
+      "therapeuticClasses": [
+        "НПЗЗ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 20,
+      "unsupportedPairCount": 115
+    },
+    {
+      "canonicalInn": "Dexpanthenol",
+      "therapeuticClasses": [
+        "Репаранти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Diazepam",
+      "therapeuticClasses": [
+        "Бензодіазепіни"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Diclofenac",
+      "therapeuticClasses": [
+        "НПЗЗ",
+        "НПЗЗ (місцево)"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 1,
+      "needsReviewPairCount": 20,
+      "unsupportedPairCount": 114
+    },
+    {
+      "canonicalInn": "Digoxin",
+      "therapeuticClasses": [
+        "Серцеві глікозиди"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 1,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 134
+    },
+    {
+      "canonicalInn": "Dimetindene",
+      "therapeuticClasses": [
+        "Антигістамінні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Domperidone",
+      "therapeuticClasses": [
+        "Прокінетики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Doxycycline",
+      "therapeuticClasses": [
+        "Тетрацикліни"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Drotaverine",
+      "therapeuticClasses": [
+        "Спазмолітики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Empagliflozin",
+      "therapeuticClasses": [
+        "Інгібітори SGLT2"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Enalapril",
+      "therapeuticClasses": [
+        "Інгібітори АПФ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 1,
+      "needsReviewPairCount": 12,
+      "unsupportedPairCount": 122
+    },
+    {
+      "canonicalInn": "Enoxaparin",
+      "therapeuticClasses": [
+        "Низькомолекулярні гепарини"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 15,
+      "unsupportedPairCount": 120
+    },
+    {
+      "canonicalInn": "Epinephrine",
+      "therapeuticClasses": [
+        "Адренергічні засоби"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Escitalopram",
+      "therapeuticClasses": [
+        "Антидепресанти (СІЗЗС)"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 17,
+      "unsupportedPairCount": 118
+    },
+    {
+      "canonicalInn": "Esomeprazole",
+      "therapeuticClasses": [
+        "Інгібітори протонної помпи"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Famotidine",
+      "therapeuticClasses": [
+        "Блокатори H2-гістамінових рецепторів"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Fenspiride",
+      "therapeuticClasses": [
+        "Протизапальні (дихальні шляхи)"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Ferrous sulfate",
+      "therapeuticClasses": [
+        "Препарати заліза"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Fexofenadine",
+      "therapeuticClasses": [
+        "Антигістамінні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Fluconazole",
+      "therapeuticClasses": [
+        "Протигрибкові"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Fluoxetine",
+      "therapeuticClasses": [
+        "Антидепресанти (СІЗЗС)"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 17,
+      "unsupportedPairCount": 118
+    },
+    {
+      "canonicalInn": "Folic acid",
+      "therapeuticClasses": [
+        "Вітамін B9"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Fosfomycin",
+      "therapeuticClasses": [
+        "Уроантисептики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Furosemide",
+      "therapeuticClasses": [
+        "Петльові діуретики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 11,
+      "unsupportedPairCount": 124
+    },
+    {
+      "canonicalInn": "Gabapentin",
+      "therapeuticClasses": [
+        "Протиепілептичні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Gidazepam",
+      "therapeuticClasses": [
+        "Анксіолітики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Gliclazide",
+      "therapeuticClasses": [
+        "Похідні сульфонілсечовини"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Glimepiride",
+      "therapeuticClasses": [
+        "Похідні сульфонілсечовини"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Heparin (topical)",
+      "therapeuticClasses": [
+        "Місцеві антикоагулянти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Hydrochlorothiazide",
+      "therapeuticClasses": [
+        "Тіазидні діуретики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 11,
+      "unsupportedPairCount": 124
+    },
+    {
+      "canonicalInn": "Ibuprofen",
+      "therapeuticClasses": [
+        "Нестероїдні протизапальні засоби (НПЗЗ)"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 4,
+      "needsReviewPairCount": 19,
+      "unsupportedPairCount": 112
+    },
+    {
+      "canonicalInn": "Indapamide",
+      "therapeuticClasses": [
+        "Тіазидоподібні діуретики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 11,
+      "unsupportedPairCount": 124
+    },
+    {
+      "canonicalInn": "Indometacin",
+      "therapeuticClasses": [
+        "НПЗЗ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 20,
+      "unsupportedPairCount": 115
+    },
+    {
+      "canonicalInn": "Iron polymaltose",
+      "therapeuticClasses": [
+        "Препарати заліза"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Isosorbide dinitrate",
+      "therapeuticClasses": [
+        "Нітрати"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 1,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 134
+    },
+    {
+      "canonicalInn": "Ketoprofen",
+      "therapeuticClasses": [
+        "НПЗЗ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 20,
+      "unsupportedPairCount": 115
+    },
+    {
+      "canonicalInn": "Ketorolac",
+      "therapeuticClasses": [
+        "НПЗЗ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 20,
+      "unsupportedPairCount": 115
+    },
+    {
+      "canonicalInn": "Lactulose",
+      "therapeuticClasses": [
+        "Проносні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Levocetirizine",
+      "therapeuticClasses": [
+        "Антигістамінні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Levofloxacin",
+      "therapeuticClasses": [
+        "Фторхінолони"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 2,
+      "unsupportedPairCount": 133
+    },
+    {
+      "canonicalInn": "Levothyroxine",
+      "therapeuticClasses": [
+        "Гормони щитоподібної залози"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Lidocaine",
+      "therapeuticClasses": [
+        "Місцеві анестетики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Lisinopril",
+      "therapeuticClasses": [
+        "Інгібітори АПФ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 12,
+      "unsupportedPairCount": 123
+    },
+    {
+      "canonicalInn": "Loperamide",
+      "therapeuticClasses": [
+        "Протидіарейні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Loratadine",
+      "therapeuticClasses": [
+        "Антигістамінні II покоління"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Losartan",
+      "therapeuticClasses": [
+        "Блокатори рецепторів ангіотензину"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 12,
+      "unsupportedPairCount": 123
+    },
+    {
+      "canonicalInn": "Magnesium + pyridoxine",
+      "therapeuticClasses": [
+        "Препарати магнію"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Magnesium sulfate",
+      "therapeuticClasses": [
+        "Електроліти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Meloxicam",
+      "therapeuticClasses": [
+        "НПЗЗ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 20,
+      "unsupportedPairCount": 115
+    },
+    {
+      "canonicalInn": "Metamizole",
+      "therapeuticClasses": [
+        "Анальгетики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Metformin",
+      "therapeuticClasses": [
+        "Бігуаніди"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 1,
+      "unsupportedPairCount": 134
+    },
+    {
+      "canonicalInn": "Methylprednisolone",
+      "therapeuticClasses": [
+        "Глюкокортикоїди"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Metoclopramide",
+      "therapeuticClasses": [
+        "Прокінетики / протиблювотні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Metoprolol",
+      "therapeuticClasses": [
+        "Бета-блокатори"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Metronidazole",
+      "therapeuticClasses": [
+        "Нітроімідазоли"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Montelukast",
+      "therapeuticClasses": [
+        "Антагоністи лейкотрієнових рецепторів"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Naproxen",
+      "therapeuticClasses": [
+        "НПЗЗ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 20,
+      "unsupportedPairCount": 115
+    },
+    {
+      "canonicalInn": "Nebivolol",
+      "therapeuticClasses": [
+        "Бета-блокатори"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Nifedipine",
+      "therapeuticClasses": [
+        "Блокатори кальцієвих каналів"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Nifuroxazide",
+      "therapeuticClasses": [
+        "Кишкові антисептики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Nimesulide",
+      "therapeuticClasses": [
+        "НПЗЗ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 21,
+      "unsupportedPairCount": 114
+    },
+    {
+      "canonicalInn": "Nitroglycerin",
+      "therapeuticClasses": [
+        "Нітрати"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 1,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 134
+    },
+    {
+      "canonicalInn": "Omeprazole",
+      "therapeuticClasses": [
+        "Інгібітори протонної помпи"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 1,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 134
+    },
+    {
+      "canonicalInn": "Ondansetron",
+      "therapeuticClasses": [
+        "Протиблювотні засоби"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Oseltamivir",
+      "therapeuticClasses": [
+        "Противірусні (грип)"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Oxymetazoline",
+      "therapeuticClasses": [
+        "Деконгестанти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Pancreatin",
+      "therapeuticClasses": [
+        "Ферментні препарати"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Pantoprazole",
+      "therapeuticClasses": [
+        "Інгібітори протонної помпи"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Paracetamol",
+      "therapeuticClasses": [
+        "Анальгетики-антипіретики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Perindopril",
+      "therapeuticClasses": [
+        "Інгібітори АПФ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 12,
+      "unsupportedPairCount": 123
+    },
+    {
+      "canonicalInn": "Potassium chloride",
+      "therapeuticClasses": [
+        "Електроліти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Potassium/magnesium aspartate",
+      "therapeuticClasses": [
+        "Електроліти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Povidone-iodine",
+      "therapeuticClasses": [
+        "Антисептики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Prednisolone",
+      "therapeuticClasses": [
+        "Глюкокортикоїди"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Pregabalin",
+      "therapeuticClasses": [
+        "Протиепілептичні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Rabeprazole",
+      "therapeuticClasses": [
+        "Інгібітори протонної помпи"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Ramipril",
+      "therapeuticClasses": [
+        "Інгібітори АПФ"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 12,
+      "unsupportedPairCount": 123
+    },
+    {
+      "canonicalInn": "Rivaroxaban",
+      "therapeuticClasses": [
+        "Прямі оральні антикоагулянти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 3,
+      "needsReviewPairCount": 13,
+      "unsupportedPairCount": 119
+    },
+    {
+      "canonicalInn": "Rosuvastatin",
+      "therapeuticClasses": [
+        "Статини"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 2,
+      "unsupportedPairCount": 133
+    },
+    {
+      "canonicalInn": "Salbutamol",
+      "therapeuticClasses": [
+        "Бета2-агоністи"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Sertraline",
+      "therapeuticClasses": [
+        "Антидепресанти (СІЗЗС)"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 17,
+      "unsupportedPairCount": 118
+    },
+    {
+      "canonicalInn": "Sildenafil",
+      "therapeuticClasses": [
+        "Інгібітори ФДЕ-5"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 2,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 133
+    },
+    {
+      "canonicalInn": "Simethicone",
+      "therapeuticClasses": [
+        "Вітрогінні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Simvastatin",
+      "therapeuticClasses": [
+        "Статини"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 2,
+      "needsReviewPairCount": 1,
+      "unsupportedPairCount": 132
+    },
+    {
+      "canonicalInn": "Spironolactone",
+      "therapeuticClasses": [
+        "Калійзберігаючі діуретики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 1,
+      "needsReviewPairCount": 6,
+      "unsupportedPairCount": 128
+    },
+    {
+      "canonicalInn": "Tamsulosin",
+      "therapeuticClasses": [
+        "Альфа-адреноблокатори"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Tizanidine",
+      "therapeuticClasses": [
+        "Міорелаксанти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Tolperisone",
+      "therapeuticClasses": [
+        "Міорелаксанти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Torasemide",
+      "therapeuticClasses": [
+        "Петльові діуретики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 11,
+      "unsupportedPairCount": 124
+    },
+    {
+      "canonicalInn": "Tramadol",
+      "therapeuticClasses": [
+        "Опіоїдні анальгетики"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Ursodeoxycholic acid",
+      "therapeuticClasses": [
+        "Гепатопротектори"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Valproic acid",
+      "therapeuticClasses": [
+        "Протиепілептичні"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    },
+    {
+      "canonicalInn": "Valsartan",
+      "therapeuticClasses": [
+        "Блокатори рецепторів ангіотензину"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 12,
+      "unsupportedPairCount": 123
+    },
+    {
+      "canonicalInn": "Warfarin",
+      "therapeuticClasses": [
+        "Антикоагулянти (антагоністи вітаміну K)"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 5,
+      "needsReviewPairCount": 12,
+      "unsupportedPairCount": 118
+    },
+    {
+      "canonicalInn": "Xylometazoline",
+      "therapeuticClasses": [
+        "Деконгестанти"
+      ],
+      "potentialPartnerCount": 135,
+      "verifiedPairCount": 0,
+      "needsReviewPairCount": 0,
+      "unsupportedPairCount": 135
+    }
+  ],
+  "priorityQueue": [
+    {
+      "rank": 1,
+      "ingredientA": "Apixaban",
+      "ingredientB": "Nimesulide",
+      "pairKey": "apixaban|nimesulide",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 20,
+      "observedRegistryRowsB": 44,
+      "observedRegistryRowsTotal": 64,
+      "priorityScore": 4000064,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 2,
+      "ingredientA": "Nimesulide",
+      "ingredientB": "Rivaroxaban",
+      "pairKey": "nimesulide|rivaroxaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 44,
+      "observedRegistryRowsB": 18,
+      "observedRegistryRowsTotal": 62,
+      "priorityScore": 4000062,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 3,
+      "ingredientA": "Dabigatran",
+      "ingredientB": "Nimesulide",
+      "pairKey": "dabigatran|nimesulide",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 44,
+      "observedRegistryRowsTotal": 44,
+      "priorityScore": 4000044,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 4,
+      "ingredientA": "Enoxaparin",
+      "ingredientB": "Nimesulide",
+      "pairKey": "enoxaparin|nimesulide",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 44,
+      "observedRegistryRowsTotal": 44,
+      "priorityScore": 4000044,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 5,
+      "ingredientA": "Apixaban",
+      "ingredientB": "Celecoxib",
+      "pairKey": "apixaban|celecoxib",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 20,
+      "observedRegistryRowsB": 15,
+      "observedRegistryRowsTotal": 35,
+      "priorityScore": 4000035,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 6,
+      "ingredientA": "Celecoxib",
+      "ingredientB": "Rivaroxaban",
+      "pairKey": "celecoxib|rivaroxaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 15,
+      "observedRegistryRowsB": 18,
+      "observedRegistryRowsTotal": 33,
+      "priorityScore": 4000033,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 7,
+      "ingredientA": "Apixaban",
+      "ingredientB": "Dexketoprofen",
+      "pairKey": "apixaban|dexketoprofen",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 20,
+      "observedRegistryRowsB": 2,
+      "observedRegistryRowsTotal": 22,
+      "priorityScore": 4000022,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 8,
+      "ingredientA": "Aceclofenac",
+      "ingredientB": "Apixaban",
+      "pairKey": "aceclofenac|apixaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 20,
+      "observedRegistryRowsTotal": 20,
+      "priorityScore": 4000020,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 9,
+      "ingredientA": "Apixaban",
+      "ingredientB": "Diclofenac",
+      "pairKey": "apixaban|diclofenac",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 20,
+      "observedRegistryRowsB": null,
+      "observedRegistryRowsTotal": 20,
+      "priorityScore": 4000020,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 10,
+      "ingredientA": "Apixaban",
+      "ingredientB": "Indometacin",
+      "pairKey": "apixaban|indometacin",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 20,
+      "observedRegistryRowsB": null,
+      "observedRegistryRowsTotal": 20,
+      "priorityScore": 4000020,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 11,
+      "ingredientA": "Apixaban",
+      "ingredientB": "Ketoprofen",
+      "pairKey": "apixaban|ketoprofen",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 20,
+      "observedRegistryRowsB": null,
+      "observedRegistryRowsTotal": 20,
+      "priorityScore": 4000020,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 12,
+      "ingredientA": "Apixaban",
+      "ingredientB": "Ketorolac",
+      "pairKey": "apixaban|ketorolac",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 20,
+      "observedRegistryRowsB": null,
+      "observedRegistryRowsTotal": 20,
+      "priorityScore": 4000020,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 13,
+      "ingredientA": "Apixaban",
+      "ingredientB": "Meloxicam",
+      "pairKey": "apixaban|meloxicam",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 20,
+      "observedRegistryRowsB": null,
+      "observedRegistryRowsTotal": 20,
+      "priorityScore": 4000020,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 14,
+      "ingredientA": "Apixaban",
+      "ingredientB": "Naproxen",
+      "pairKey": "apixaban|naproxen",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 20,
+      "observedRegistryRowsB": null,
+      "observedRegistryRowsTotal": 20,
+      "priorityScore": 4000020,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 15,
+      "ingredientA": "Dexketoprofen",
+      "ingredientB": "Rivaroxaban",
+      "pairKey": "dexketoprofen|rivaroxaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 2,
+      "observedRegistryRowsB": 18,
+      "observedRegistryRowsTotal": 20,
+      "priorityScore": 4000020,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 16,
+      "ingredientA": "Aceclofenac",
+      "ingredientB": "Rivaroxaban",
+      "pairKey": "aceclofenac|rivaroxaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 18,
+      "observedRegistryRowsTotal": 18,
+      "priorityScore": 4000018,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 17,
+      "ingredientA": "Diclofenac",
+      "ingredientB": "Rivaroxaban",
+      "pairKey": "diclofenac|rivaroxaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 18,
+      "observedRegistryRowsTotal": 18,
+      "priorityScore": 4000018,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 18,
+      "ingredientA": "Indometacin",
+      "ingredientB": "Rivaroxaban",
+      "pairKey": "indometacin|rivaroxaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 18,
+      "observedRegistryRowsTotal": 18,
+      "priorityScore": 4000018,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 19,
+      "ingredientA": "Ketoprofen",
+      "ingredientB": "Rivaroxaban",
+      "pairKey": "ketoprofen|rivaroxaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 18,
+      "observedRegistryRowsTotal": 18,
+      "priorityScore": 4000018,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 20,
+      "ingredientA": "Ketorolac",
+      "ingredientB": "Rivaroxaban",
+      "pairKey": "ketorolac|rivaroxaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 18,
+      "observedRegistryRowsTotal": 18,
+      "priorityScore": 4000018,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 21,
+      "ingredientA": "Meloxicam",
+      "ingredientB": "Rivaroxaban",
+      "pairKey": "meloxicam|rivaroxaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 18,
+      "observedRegistryRowsTotal": 18,
+      "priorityScore": 4000018,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 22,
+      "ingredientA": "Naproxen",
+      "ingredientB": "Rivaroxaban",
+      "pairKey": "naproxen|rivaroxaban",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": null,
+      "observedRegistryRowsB": 18,
+      "observedRegistryRowsTotal": 18,
+      "priorityScore": 4000018,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 23,
+      "ingredientA": "Celecoxib",
+      "ingredientB": "Dabigatran",
+      "pairKey": "celecoxib|dabigatran",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 15,
+      "observedRegistryRowsB": null,
+      "observedRegistryRowsTotal": 15,
+      "priorityScore": 4000015,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 24,
+      "ingredientA": "Celecoxib",
+      "ingredientB": "Enoxaparin",
+      "pairKey": "celecoxib|enoxaparin",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 15,
+      "observedRegistryRowsB": null,
+      "observedRegistryRowsTotal": 15,
+      "priorityScore": 4000015,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    },
+    {
+      "rank": 25,
+      "ingredientA": "Celecoxib",
+      "ingredientB": "Warfarin",
+      "pairKey": "celecoxib|warfarin",
+      "status": "needs_review",
+      "highestLegacyRisk": "critical",
+      "legacyRuleCount": 1,
+      "observedRegistryRowsA": 15,
+      "observedRegistryRowsB": null,
+      "observedRegistryRowsTotal": 15,
+      "priorityScore": 4000015,
+      "reason": "legacy_exact_pair_requires_official_source_review"
+    }
+  ]
+}
