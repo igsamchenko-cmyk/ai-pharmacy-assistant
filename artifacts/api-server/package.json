@@ -51,6 +51,7 @@
     "deploy:verify": "tsx src/scripts/deploy-verify.ts",
     "knowledge:registry:catalog-db-smoke": "tsx src/scripts/knowledge-registry-catalog-db-smoke.ts",
     "knowledge:interactions:audit": "tsx src/scripts/knowledge-interactions-audit.ts",
+    "knowledge:interactions:coverage-report": "tsx src/scripts/knowledge-interactions-coverage-report.ts",
     "knowledge:national-list": "tsx src/scripts/knowledge-national-list.ts",
     "knowledge:national-list:db-smoke": "tsx src/scripts/knowledge-national-list-db-smoke.ts",
     "knowledge:instructions:report": "tsx src/scripts/knowledge-instructions-report.ts",
