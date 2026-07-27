@@ -7,7 +7,7 @@ import {
   type InteractionSelection,
 } from "../model";
 import { evaluateInteractionRuleEligibility } from "../policy";
-import { verifiedInteractionRules } from "../verifiedRules";
+import { verifiedInteractionRulesBatch3 } from "../verifiedRules.batch3";
 
 function selection(id: string, ingredient: string): InteractionSelection {
   return {
@@ -18,14 +18,21 @@ function selection(id: string, ingredient: string): InteractionSelection {
   };
 }
 
-describe("verified interaction registry", () => {
-  it("contains nineteen unique, runtime-eligible exact-INN rules", () => {
-    expect(verifiedInteractionRules).toHaveLength(19);
+function check(ingredientA: string, ingredientB: string) {
+  return createVerifiedInteractionEngine(buildInteractionRuleRegistry()).check([
+    selection("a", ingredientA),
+    selection("b", ingredientB),
+  ]);
+}
+
+describe("verified interaction registry batch 3", () => {
+  it("contains six unique, runtime-eligible exact-INN rules", () => {
+    expect(verifiedInteractionRulesBatch3).toHaveLength(6);
     expect(
-      new Set(verifiedInteractionRules.map((rule) => rule.pairKey)).size,
-    ).toBe(verifiedInteractionRules.length);
+      new Set(verifiedInteractionRulesBatch3.map((rule) => rule.pairKey)).size,
+    ).toBe(verifiedInteractionRulesBatch3.length);
     expect(
-      verifiedInteractionRules.every(
+      verifiedInteractionRulesBatch3.every(
         (rule) => evaluateInteractionRuleEligibility(rule).eligible,
       ),
     ).toBe(true);
@@ -35,26 +42,13 @@ describe("verified interaction registry", () => {
     const canonicalEnglish = new Set(
       ingredientSeeds.map((seed) => seed.english),
     );
-    for (const rule of verifiedInteractionRules) {
+    for (const rule of verifiedInteractionRulesBatch3) {
       expect(canonicalEnglish.has(rule.ingredientA)).toBe(true);
       expect(canonicalEnglish.has(rule.ingredientB)).toBe(true);
     }
   });
 
   it.each([
-    ["Warfarin", "Ibuprofen", "major"],
-    ["Apixaban", "Ibuprofen", "major"],
-    ["Rivaroxaban", "Ibuprofen", "major"],
-    ["Sildenafil", "Nitroglycerin", "contraindicated"],
-    ["Sildenafil", "Isosorbide dinitrate", "contraindicated"],
-    ["Clarithromycin", "Simvastatin", "contraindicated"],
-    ["Enalapril", "Spironolactone", "major"],
-    ["Warfarin", "Acetylsalicylic acid", "major"],
-    ["Warfarin", "Diclofenac", "major"],
-    ["Clopidogrel", "Omeprazole", "major"],
-    ["Amiodarone", "Digoxin", "major"],
-    ["Amiodarone", "Warfarin", "major"],
-    ["Amiodarone", "Simvastatin", "major"],
     ["Apixaban", "Acetylsalicylic acid", "major"],
     ["Apixaban", "Clopidogrel", "major"],
     ["Rivaroxaban", "Acetylsalicylic acid", "major"],
@@ -64,9 +58,7 @@ describe("verified interaction registry", () => {
   ])(
     "returns the reviewed finding for %s + %s",
     (ingredientA, ingredientB, severity) => {
-      const result = createVerifiedInteractionEngine(
-        buildInteractionRuleRegistry(),
-      ).check([selection("a", ingredientA), selection("b", ingredientB)]);
+      const result = check(ingredientA, ingredientB);
 
       expect(result.findings).toHaveLength(1);
       expect(result.findings[0]?.rule.pairKey).toBe(
@@ -74,35 +66,53 @@ describe("verified interaction registry", () => {
       );
       expect(result.findings[0]?.rule.severity).toBe(severity);
       expect(result.findings[0]?.rule.reviewStatus).toBe("approved");
-      expect(result.findings[0]?.rule.reviewedAt).toMatch(/^2026-07-2[67]$/);
+      expect(result.findings[0]?.rule.reviewedAt).toBe("2026-07-27");
     },
   );
 
-  it("does not expand an exact NSAID rule to another ingredient", () => {
-    const result = createVerifiedInteractionEngine(
-      buildInteractionRuleRegistry(),
-    ).check([
-      selection("apixaban", "Apixaban"),
-      selection("naproxen", "Naproxen"),
-    ]);
+  it.each([
+    ["Apixaban", "Diclofenac"],
+    ["Rivaroxaban", "Naproxen"],
+    ["Clopidogrel", "Naproxen"],
+  ])(
+    "does not expand %s rules to the unsupported exact pair with %s",
+    (ingredientA, ingredientB) => {
+      const result = check(ingredientA, ingredientB);
 
-    expect(result.findings).toEqual([]);
-    expect(result.coverage.message).toContain(
-      "не знайдено підтвердженого правила",
+      expect(result.findings).toEqual([]);
+      expect(result.coverage.message).toContain(
+        "не знайдено підтвердженого правила",
+      );
+    },
+  );
+
+  it("preserves the dosing-context caveat for aspirin plus ibuprofen", () => {
+    const rule = verifiedInteractionRulesBatch3.find(
+      (candidate) =>
+        candidate.pairKey ===
+        normalizedInteractionPairKey("Acetylsalicylic acid", "Ibuprofen"),
     );
+
+    expect(rule?.severity).toBe("moderate");
+    expect(rule?.evidenceLevel).toBe("reference");
+    expect(rule?.explanation).toContain("епізодичному застосуванні");
+    expect(rule?.populationContext).toContain("регулярно");
   });
 
   it("keeps sources complete and free of secrets or local paths", () => {
-    for (const rule of verifiedInteractionRules) {
+    for (const rule of verifiedInteractionRulesBatch3) {
       expect(rule.source.url).toMatch(/^https:\/\//);
       expect(rule.source.documentReference).toBeTruthy();
       expect(rule.source.version).toBeTruthy();
       expect(rule.source.publishedAt).toBeTruthy();
-      expect(rule.source.accessedAt).toMatch(/^2026-07-2[67]$/);
+      expect(rule.source.accessedAt).toBe("2026-07-27");
+      expect(rule.provenance.datasetVersion).toBe(
+        "verified-interactions-v1.2.0",
+      );
       expect(rule.provenance.sourceRecordId).toBe(rule.id);
     }
 
-    const serialized = JSON.stringify(verifiedInteractionRules);
+    const serialized = JSON.stringify(verifiedInteractionRulesBatch3);
     expect(serialized).not.toContain("DATABASE_URL");
     expect(serialized).not.toMatch(/[A-Z]:\\|\/home\//);
   });
