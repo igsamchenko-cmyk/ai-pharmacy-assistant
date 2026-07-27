@@ -12,8 +12,6 @@ import {
   BookOpenText,
   Columns3,
   LoaderCircle,
-  Plus,
-  Search,
   Trash2,
   X,
 } from "lucide-react";
@@ -23,14 +21,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EvidenceComparisonExperience } from "@/components/evidence-comparison-panel";
-import { Input } from "@/components/ui/input";
-import { useDebounce } from "@/hooks/use-debounce";
+import {
+  RegistryInteractionSearchSelect,
+  type InteractionProductSelection,
+} from "@/components/registry-interaction-search-select";
 import {
   comparisonProductFromRegistry,
   type ComparisonProductRef,
   useProductComparison,
 } from "@/hooks/use-product-comparison";
 import { resolveEvidenceComparison } from "@/lib/evidence-comparisons";
+import { registryProductDetailHref } from "@/lib/registry-product-route";
 import { conciseDosageForm } from "@/pages/search";
 
 const NO_DATA = "Немає даних";
@@ -82,6 +83,31 @@ export function exactComparisonInstruction(
     return null;
   }
   return instruction;
+}
+
+export function comparisonProductFromClientIndex(
+  product: InteractionProductSelection,
+): ComparisonProductRef {
+  const productId = product.productId.trim().toUpperCase();
+  const registrationNumber = product.registration.trim();
+  const inn = product.inn.trim() || null;
+  return {
+    productId,
+    registrationNumber,
+    tradeName: product.tradeName.trim(),
+    inn,
+    atcCode: null,
+    activeIngredient: inn,
+    strength: product.strength.trim() || null,
+    dosageForm: conciseDosageForm(product.form),
+    manufacturer: null,
+    nationalListStatus: "uncertain",
+    instructionAvailable: false,
+    href: registryProductDetailHref({
+      id: productId,
+      registration: { number: registrationNumber },
+    }),
+  };
 }
 
 function present(value: string | null | undefined): string {
@@ -246,30 +272,7 @@ function SelectedProduct({
 }
 
 function RegistryPicker() {
-  const [query, setQuery] = useState("");
-  const debouncedQuery = useDebounce(query.trim(), 175);
   const { addProduct, isFull, isSelected } = useProductComparison();
-  const params = useMemo(
-    () => ({
-      q: debouncedQuery,
-      type: "registry_products" as const,
-      view: "flat" as const,
-      page: 1,
-      pageSize: 25 as const,
-    }),
-    [debouncedQuery],
-  );
-  const enabled = debouncedQuery.length >= 3 && !isFull;
-  const { data, isLoading, isError } = useSearchCatalog(params, {
-    query: {
-      queryKey: getSearchCatalogQueryKey(params),
-      enabled,
-      retry: false,
-      staleTime: 60_000,
-      refetchOnWindowFocus: false,
-    },
-  });
-  const products = data?.registryProducts.items ?? [];
 
   if (isFull) {
     return (
@@ -281,67 +284,12 @@ function RegistryPicker() {
 
   return (
     <section className="space-y-3" aria-label="Додати препарат до порівняння">
-      <label htmlFor="comparison-search" className="text-sm font-semibold">
-        Знайти конкретну реєстрову позицію
-      </label>
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          id="comparison-search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Назва або реєстраційний номер"
-          className="min-h-11 pl-9"
-          data-testid="input-compare-search"
-        />
-      </div>
-      {isLoading ? (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <LoaderCircle className="h-4 w-4 animate-spin motion-reduce:animate-none" />
-          Пошук…
-        </p>
-      ) : null}
-      {isError ? (
-        <p className="text-sm text-destructive">Не вдалося завантажити результати.</p>
-      ) : null}
-      {enabled && !isLoading && !isError && products.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Реєстрових позицій не знайдено.</p>
-      ) : null}
-      <div className="grid max-w-full gap-2">
-        {products.map((product: RegistryProductResult) => {
-          const selected = isSelected(product.id);
-          return (
-            <Card key={product.id} className="max-w-full overflow-hidden">
-              <CardContent className="flex min-w-0 items-start gap-3 p-3">
-                <div className="min-w-0 flex-1">
-                  <p className="break-words font-semibold">{product.tradeName}</p>
-                  <p className="mt-1 break-words text-xs text-muted-foreground">
-                    {[product.strength, conciseDosageForm(product.dosageForm)].filter(Boolean).join(" · ")}
-                  </p>
-                  <p className="mt-1 break-words text-xs text-muted-foreground">
-                    {product.registration.number}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="shrink-0"
-                  disabled={selected}
-                  onClick={() => {
-                    addProduct(comparisonProductFromRegistry(product, conciseDosageForm(product.dosageForm)));
-                    setQuery("");
-                  }}
-                  data-testid={`btn-add-compare-${product.id}`}
-                >
-                  <Plus className="h-4 w-4" />
-                  {selected ? "Додано" : "Додати"}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <RegistryInteractionSearchSelect
+        onSelect={(product) => {
+          if (isSelected(product.productId)) return;
+          addProduct(comparisonProductFromClientIndex(product));
+        }}
+      />
     </section>
   );
 }

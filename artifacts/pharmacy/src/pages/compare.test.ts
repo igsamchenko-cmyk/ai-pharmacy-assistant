@@ -1,15 +1,24 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { DrugInstruction, RegistryProductResult } from "@workspace/api-client-react";
+import type { CatalogClientIndexProduct } from "@workspace/catalog-index";
 
 import {
   ProductComparisonGrid,
+  comparisonProductFromClientIndex,
   exactComparisonProductSearchParams,
   exactComparisonRegistryProduct,
   exactComparisonInstruction,
 } from "./compare";
 import type { ComparisonProductRef } from "@/hooks/use-product-comparison";
+
+const compareSource = readFileSync(
+  fileURLToPath(new URL("./compare.tsx", import.meta.url)),
+  "utf8",
+);
 
 function product(
   productId: string,
@@ -90,6 +99,34 @@ describe("exact registry product comparison", () => {
       pageSize: 25,
     });
   });
+
+  it("uses the local catalog picker and preserves the exact product route", () => {
+    const indexed: CatalogClientIndexProduct = {
+      productId: "ABCDEF0123456789ABCDEF0123456789",
+      registration: "UA/9201/01/01",
+      tradeName: "КСАРЕЛТО®",
+      inn: "Rivaroxaban",
+      form: "таблетки, вкриті плівковою оболонкою",
+      strength: "10 мг",
+    };
+
+    expect(comparisonProductFromClientIndex(indexed)).toMatchObject({
+      productId: indexed.productId,
+      registrationNumber: indexed.registration,
+      tradeName: indexed.tradeName,
+      inn: indexed.inn,
+      activeIngredient: indexed.inn,
+      strength: indexed.strength,
+      dosageForm: indexed.form,
+      href:
+        "/products/ABCDEF0123456789ABCDEF0123456789?registration=" +
+        "UA%2F9201%2F01%2F01",
+    });
+    expect(compareSource).toContain("<RegistryInteractionSearchSelect");
+    expect(compareSource).not.toContain('data-testid="input-compare-search"');
+    expect(compareSource).not.toContain("debouncedQuery.length >= 3");
+  });
+
   it.each(pairs)("renders an exact mobile-first registry pair", (left, right) => {
     const html = renderToStaticMarkup(
       createElement(ProductComparisonGrid, {
