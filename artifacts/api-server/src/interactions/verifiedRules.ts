@@ -3,6 +3,7 @@ import {
   type InteractionRuleSource,
   type VerifiedInteractionRule,
 } from "./model";
+import { verifiedInteractionRulesBatch2 } from "./verifiedRules.batch2";
 
 const REVIEWED_AT = "2026-07-26";
 const DATASET_VERSION = "verified-interactions-v1.0.0";
@@ -46,8 +47,7 @@ const sources = {
   },
   clarithromycin: {
     key: "official-product-information",
-    label:
-      "DailyMed: Clarithromycin Tablets — Full Prescribing Information",
+    label: "DailyMed: Clarithromycin Tablets — Full Prescribing Information",
     url: "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=88c7ded8-333c-408d-b693-a72881710f59",
     documentReference:
       "Sections 4.5 and 5.4, Lomitapide, Lovastatin, and Simvastatin",
@@ -59,8 +59,7 @@ const sources = {
     key: "official-product-information",
     label: "Enalapril Maleate 10 mg Tablets — SmPC",
     url: "https://www.medicines.org.uk/emc/product/15635/smpc",
-    documentReference:
-      "Sections 4.4 and 4.5, potassium-sparing diuretics",
+    documentReference: "Sections 4.4 and 4.5, potassium-sparing diuretics",
     version: "SmPC updated 2026-07-20",
     publishedAt: "2026-07-20",
     accessedAt: REVIEWED_AT,
@@ -82,10 +81,7 @@ function verifiedRule(id: string, input: RuleInput): VerifiedInteractionRule {
   return {
     id,
     ...input,
-    pairKey: normalizedInteractionPairKey(
-      input.ingredientA,
-      input.ingredientB,
-    ),
+    pairKey: normalizedInteractionPairKey(input.ingredientA, input.ingredientB),
     directionality: "symmetric",
     reviewStatus: "approved",
     reviewedAt: REVIEWED_AT,
@@ -99,7 +95,7 @@ function verifiedRule(id: string, input: RuleInput): VerifiedInteractionRule {
   };
 }
 
-export const verifiedInteractionRules: readonly VerifiedInteractionRule[] = [
+const verifiedInteractionRulesBatch1: readonly VerifiedInteractionRule[] = [
   verifiedRule("verified-warfarin-ibuprofen-v1", {
     ingredientA: "Warfarin",
     ingredientB: "Ibuprofen",
@@ -114,7 +110,8 @@ export const verifiedInteractionRules: readonly VerifiedInteractionRule[] = [
     actionCategory: "monitor",
     evidenceLevel: "established",
     source: sources.warfarin,
-    populationContext: "Усі пацієнти, які одночасно застосовують обидва засоби.",
+    populationContext:
+      "Усі пацієнти, які одночасно застосовують обидва засоби.",
   }),
   verifiedRule("verified-apixaban-ibuprofen-v1", {
     ingredientA: "Apixaban",
@@ -220,4 +217,9 @@ export const verifiedInteractionRules: readonly VerifiedInteractionRule[] = [
     populationContext:
       "Особлива обережність при нирковій недостатності, діабеті, зневодненні та у старшому віці.",
   }),
+];
+
+export const verifiedInteractionRules: readonly VerifiedInteractionRule[] = [
+  ...verifiedInteractionRulesBatch1,
+  ...verifiedInteractionRulesBatch2,
 ];
