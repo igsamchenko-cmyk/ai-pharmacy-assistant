@@ -19,6 +19,21 @@ interface LocalCatalogGroup {
   variants: CatalogClientIndexSearchItem[];
 }
 
+export function registeredVariantsLabel(count: number): string {
+  const absoluteCount = Math.abs(count);
+  const lastTwoDigits = absoluteCount % 100;
+  const lastDigit = absoluteCount % 10;
+  const noun =
+    lastDigit === 1 && lastTwoDigits !== 11
+      ? "зареєстрований варіант"
+      : lastDigit >= 2 &&
+          lastDigit <= 4 &&
+          (lastTwoDigits < 12 || lastTwoDigits > 14)
+        ? "зареєстровані варіанти"
+        : "зареєстрованих варіантів";
+  return `1 торгова назва · ${count} ${noun}`;
+}
+
 export function groupLocalCatalogResults(
   items: readonly CatalogClientIndexSearchItem[],
 ): LocalCatalogGroup[] {
@@ -111,8 +126,11 @@ export function LocalCatalogResults({
                     {group.tradeName}
                   </h3>
                   {group.bestRank === 0 ? <Badge>Точний збіг</Badge> : null}
-                  <Badge variant="outline">
-                    {group.variants.length} реєстрових позицій
+                  <Badge
+                    variant="outline"
+                    className="max-w-full whitespace-normal text-left"
+                  >
+                    {registeredVariantsLabel(group.variants.length)}
                   </Badge>
                 </div>
                 <p className="break-words text-sm text-muted-foreground">
@@ -120,12 +138,17 @@ export function LocalCatalogResults({
                 </p>
               </div>
               <div className="divide-y rounded-xl border">
-                {group.variants.map(({ product }) => (
+                {group.variants.map(({ product }, index) => (
                   <div
                     key={`${product.productId}:${product.registration}`}
                     className="grid min-w-0 gap-3 p-3 sm:grid-cols-[1fr_auto] sm:items-center"
                   >
                     <div className="min-w-0 space-y-2">
+                      {group.variants.length > 1 ? (
+                        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                          Реєстровий варіант {index + 1}
+                        </p>
+                      ) : null}
                       <div className="flex flex-wrap gap-2">
                         {product.strength ? (
                           <Badge variant="secondary">{product.strength}</Badge>
@@ -140,6 +163,7 @@ export function LocalCatalogResults({
                         ) : null}
                       </div>
                       <p className="break-all text-xs text-muted-foreground">
+                        <span className="font-medium">Реєстрація:</span>{" "}
                         {product.registration}
                       </p>
                     </div>

@@ -16,6 +16,7 @@ import {
 import {
   LocalCatalogResults,
   groupLocalCatalogResults,
+  registeredVariantsLabel,
 } from "@/components/local-catalog-results";
 import {
   CATALOG_CLIENT_INDEX_REFRESH_DELAY_MS,
@@ -116,6 +117,37 @@ describe("catalog client index", () => {
     const groups = groupLocalCatalogResults(exactBrand.items);
     expect(groups[0]?.tradeName).toBe("ЕНАП®");
     expect(groups[0]?.variants).toHaveLength(2);
+  });
+
+  it("explains same-brand registry variants consistently across the catalog", () => {
+    expect(registeredVariantsLabel(1)).toBe(
+      "1 торгова назва · 1 зареєстрований варіант",
+    );
+    expect(registeredVariantsLabel(2)).toBe(
+      "1 торгова назва · 2 зареєстровані варіанти",
+    );
+    expect(registeredVariantsLabel(5)).toBe(
+      "1 торгова назва · 5 зареєстрованих варіантів",
+    );
+    expect(registeredVariantsLabel(21)).toBe(
+      "1 торгова назва · 21 зареєстрований варіант",
+    );
+
+    const result = searchCatalogClientIndex(
+      compileCatalogClientIndex(payload(representativeProducts)),
+      "Енап",
+    );
+    const html = renderToStaticMarkup(
+      createElement(
+        Router,
+        { hook: () => ["/search", () => undefined] },
+        createElement(LocalCatalogResults, { result }),
+      ),
+    );
+    expect(html).toContain("1 торгова назва · 2 зареєстровані варіанти");
+    expect(html).toContain("Реєстровий варіант 1");
+    expect(html).toContain("Реєстровий варіант 2");
+    expect(html).toContain("Реєстрація:");
   });
 
   it("supports deterministic punctuation, prefix, registration and transliteration search", () => {
