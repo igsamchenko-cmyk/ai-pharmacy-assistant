@@ -15,6 +15,16 @@
       "id": "ibuprofen-naproxen-acute-pain",
       "comparatorInnKeys": ["ібупрофен", "напроксен"],
       "indicationIds": ["acute-postoperative-dental-pain"]
+    },
+    {
+      "id": "paracetamol-ibuprofen-acute-dental-pain",
+      "comparatorInnKeys": ["парацетамол", "ібупрофен"],
+      "indicationIds": ["acute-postoperative-dental-pain"]
+    },
+    {
+      "id": "amlodipine-lisinopril-high-risk-hypertension",
+      "comparatorInnKeys": ["амлодипін", "лізиноприл"],
+      "indicationIds": ["high-risk-primary-hypertension"]
     }
   ]
 }

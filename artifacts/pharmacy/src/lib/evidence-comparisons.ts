@@ -96,7 +96,7 @@ export interface EvidenceComparisonResolution {
   comparison: ClinicalEvidenceComparison | null;
   message: string;
 }
-export const EVIDENCE_REVIEWED_AT = "2026-07-19";
+export const EVIDENCE_REVIEWED_AT = "2026-07-27";
 
 const INGREDIENT_LEVEL_APPLICABILITY: EvidenceApplicability = {
   compositionMatch: "exact",
@@ -354,6 +354,186 @@ export const EVIDENCE_REGISTRY: readonly ClinicalEvidenceComparison[] = [
         url: "https://www.fda.gov/drugs/postmarket-drug-safety-information-patients-and-providers/nonsteroidal-anti-inflammatory-drugs-nsaids",
         design: "Регуляторна інформація про class safety risks",
         published: "Актуальна сторінка",
+      },
+    ],
+  },
+  {
+    id: "paracetamol-ibuprofen-acute-dental-pain",
+    comparators: [
+      {
+        exactInnAliases: ["парацетамол", "paracetamol", "acetaminophen"],
+        compositionKind: "monotherapy",
+        therapeuticClassKey: "N02BE",
+      },
+      {
+        exactInnAliases: ["ібупрофен", "ibuprofen"],
+        compositionKind: "monotherapy",
+        therapeuticClassKey: "M01AE",
+      },
+    ],
+    therapeuticClassKeys: ["N02BE", "M01AE"],
+    title: "Парацетамол та ібупрофен при гострому стоматологічному болю",
+    indication: {
+      id: "acute-postoperative-dental-pain",
+      label: "Гострий післяопераційний стоматологічний біль",
+      description:
+        "Короткочасне полегшення болю після видалення зуба. Результати не переносяться автоматично на хронічний біль, гарячку або інші причини болю.",
+      population:
+        "Переважно підлітки та дорослі з помірним або сильним болем після видалення зубів.",
+      outcomes: [
+        { id: "pain-relief", label: "Полегшення болю" },
+        { id: "analgesia-onset", label: "Початок аналгезії" },
+        { id: "rescue-medication", label: "Потреба в додатковому знеболенні" },
+        { id: "adverse-events", label: "Небажані явища" },
+      ],
+    },
+    alternatives:
+      "Так, обидва препарати можуть застосовуватися для короткочасного стоматологічного болю, але мають різні протипоказання та профілі ризику. Це не означає автоматичну взаємозамінність доз.",
+    effectivenessOutcomes: [
+      "Прямі рандомізовані дослідження в моделі післяопераційного стоматологічного болю порівнювали монопрепарати парацетамолу й ібупрофену.",
+      "Систематичний огляд досліджень після видалення третіх молярів вказує на вищу аналгетичну ефективність ібупрофену порівняно з парацетамолом у цій вузькій моделі.",
+      "Окреме дослідження швидкодіючої форми парацетамолу показало швидший початок ефекту, ніж конкретна liquid-filled форма ібупрофену; результат залежить від форми й не доводить загальної переваги парацетамолу.",
+    ],
+    keyRisks: [
+      "Надлишкова сумарна доза парацетамолу, зокрема з кількох комбінованих продуктів, може спричинити тяжке ураження печінки.",
+      "Ібупрофен як NSAID має ризики шлунково-кишкової кровотечі, ниркового ушкодження, затримки рідини та серцево-судинних подій.",
+      "Короткі single-dose trials недостатні для надійного порівняння рідкісних серйозних небажаних явищ.",
+    ],
+    comparisonType:
+      "Прямі рандомізовані single-dose дослідження та систематичний огляд у моделі стоматологічного болю; class-level safety evidence.",
+    directness: "mixed",
+    confidence: "moderate",
+    confidenceRationale:
+      "Помірна для короткочасного полегшення саме післяопераційного стоматологічного болю; низька для інших причин болю, тривалого застосування та рідкісних ризиків.",
+    neutralConclusion:
+      "Для короткочасного стоматологічного болю обидва препарати мають доказову ефективність. У середньому ібупрофен часто забезпечує сильніше полегшення, але конкретний вибір залежить від протипоказань, форми, дози та ризиків пацієнта.",
+    insufficientData:
+      "Недостатньо даних, щоб переносити цей висновок на хронічний біль, інші клінічні показання або вважати дози взаємозамінними.",
+    applicability: INGREDIENT_LEVEL_APPLICABILITY,
+    reviewedAt: EVIDENCE_REVIEWED_AT,
+    sources: [
+      {
+        title:
+          "Multicenter clinical trial of ibuprofen and acetaminophen in postoperative dental pain",
+        url: "https://pubmed.ncbi.nlm.nih.gov/2205641/",
+        design: "Пряме multicenter single-dose клінічне дослідження",
+        published: "1990",
+      },
+      {
+        title:
+          "Meta-analysis of single-dose ibuprofen versus non-opioid analgesics after third molar surgery",
+        url: "https://pubmed.ncbi.nlm.nih.gov/33919715/",
+        design: "Систематичний огляд і meta-analysis",
+        published: "2021",
+      },
+      {
+        title:
+          "Clinical validation of fast-acting acetaminophen versus ibuprofen in dental pain",
+        url: "https://pubmed.ncbi.nlm.nih.gov/38505928/",
+        design:
+          "Пряме рандомізоване подвійно сліпе active- and placebo-controlled дослідження",
+        published: "2024",
+      },
+      {
+        title: "ADA acute dental pain management guideline",
+        url: "https://www.ada.org/resources/research/science/evidence-based-dental-research/pain-management-guideline",
+        design: "Evidence-based клінічна настанова",
+        published: "2024",
+      },
+      {
+        title: "FDA: Acetaminophen safe use",
+        url: "https://www.fda.gov/drugs/safe-use-over-counter-pain-relievers-and-fever-reducers/acetaminophen",
+        design: "Регуляторна інформація про safety risks",
+        published: "Актуальна сторінка",
+      },
+    ],
+  },
+  {
+    id: "amlodipine-lisinopril-high-risk-hypertension",
+    comparators: [
+      {
+        exactInnAliases: ["амлодипін", "amlodipine"],
+        compositionKind: "monotherapy",
+        therapeuticClassKey: "C08CA",
+      },
+      {
+        exactInnAliases: ["лізиноприл", "lisinopril"],
+        compositionKind: "monotherapy",
+        therapeuticClassKey: "C09AA",
+      },
+    ],
+    therapeuticClassKeys: ["C08CA", "C09AA"],
+    title:
+      "Амлодипін та лізиноприл при артеріальній гіпертензії високого ризику",
+    indication: {
+      id: "high-risk-primary-hypertension",
+      label: "Артеріальна гіпертензія з додатковим серцево-судинним ризиком",
+      description:
+        "Початкова антигіпертензивна стратегія у дорослих із гіпертензією та щонайменше одним додатковим фактором коронарного ризику. Результати ALLHAT не переносяться автоматично на молодих пацієнтів низького ризику, вагітність або протеїнуричну CKD.",
+      population:
+        "Переважно дорослі віком від 55 років з артеріальною гіпертензією та додатковим фактором коронарного ризику.",
+      outcomes: [
+        {
+          id: "fatal-chd-nonfatal-mi",
+          label: "Фатальна CHD або нефатальний інфаркт",
+        },
+        { id: "stroke", label: "Інсульт" },
+        { id: "heart-failure", label: "Серцева недостатність" },
+        { id: "all-cause-mortality", label: "Загальна смертність" },
+      ],
+    },
+    alternatives:
+      "Так, ACE inhibitor і long-acting dihydropyridine CCB є рекомендованими класами початкової терапії для відповідних дорослих. Вибір залежить від супутніх станів, переносимості, віку та плану комбінованої терапії.",
+    effectivenessOutcomes: [
+      "У великому рандомізованому ALLHAT стратегії на основі амлодипіну та лізиноприлу не відрізнялися за первинним outcome фатальної CHD або нефатального інфаркту; дослідження було спроєктоване з chlorthalidone як основним comparator.",
+      "ALLHAT виявив відмінності за частиною secondary outcomes і підгруп, тому результат не підтримує універсальну перевагу одного з цих двох препаратів.",
+      "WHO відносить ACE inhibitors/ARBs і long-acting dihydropyridine CCBs до рекомендованих класів початкової терапії гіпертензії.",
+    ],
+    keyRisks: [
+      "Амлодипін часто пов'язаний із периферичними набряками; інші ризики залежать від дози та супутніх станів.",
+      "Лізиноприл потребує врахування функції нирок і калію та має class risks кашлю, гіперкаліємії й рідкісного ангіоневротичного набряку.",
+      "Вагітність, протеїнурична CKD та окремі супутні стани потребують іншої оцінки й не охоплені цим висновком.",
+    ],
+    comparisonType:
+      "Пряме велике randomized strategy trial із клінічними outcomes плюс evidence-based guideline на рівні класів.",
+    directness: "direct",
+    confidence: "moderate",
+    confidenceRationale:
+      "Помірна для старших пацієнтів високого ризику в межах ALLHAT; нижча для інших популяцій та прямої dose-matched монотерапії без додаткових засобів.",
+    neutralConclusion:
+      "Амлодипін і лізиноприл є реальними антигіпертензивними альтернативами для частини пацієнтів, але ALLHAT не доводить універсальної переваги одного над іншим. Вибір має враховувати супутні захворювання й різні профілі ризику.",
+    insufficientData:
+      "Недостатньо даних, щоб застосовувати цей висновок до вагітності, молодих пацієнтів низького ризику, протеїнуричної CKD або автоматичної заміни доз.",
+    applicability: INGREDIENT_LEVEL_APPLICABILITY,
+    reviewedAt: EVIDENCE_REVIEWED_AT,
+    sources: [
+      {
+        title:
+          "ALLHAT: major outcomes with amlodipine or lisinopril versus diuretic",
+        url: "https://pubmed.ncbi.nlm.nih.gov/12479763/",
+        design:
+          "Велике randomized double-blind active-controlled outcomes trial",
+        published: "2002",
+      },
+      {
+        title:
+          "ALLHAT stroke outcomes with chlorthalidone, amlodipine or lisinopril",
+        url: "https://pubmed.ncbi.nlm.nih.gov/25455006/",
+        design: "Prespecified і long-term outcome analysis",
+        published: "2014",
+      },
+      {
+        title:
+          "WHO guideline for pharmacological treatment of hypertension in adults",
+        url: "https://www.who.int/publications/i/item/9789240033986",
+        design: "Evidence-based глобальна клінічна настанова",
+        published: "2021",
+      },
+      {
+        title: "NICE hypertension in adults: diagnosis and management",
+        url: "https://www.nice.org.uk/guidance/ng136/chapter/recommendations",
+        design: "Evidence-based клінічна настанова",
+        published: "Оновлено 2026",
       },
     ],
   },
