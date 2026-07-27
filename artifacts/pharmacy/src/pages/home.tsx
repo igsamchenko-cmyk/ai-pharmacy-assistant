@@ -63,8 +63,8 @@ export default function Home() {
     {
       href: "/hospital",
       icon: Stethoscope,
-      title: "Швидкий режим",
-      desc: "Пошук біля пацієнта",
+      title: "Швидкий доступ",
+      desc: "Обране, історія та основні дії",
     },
     {
       href: "/interactions",

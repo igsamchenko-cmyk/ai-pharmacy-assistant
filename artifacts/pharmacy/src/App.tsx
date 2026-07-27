@@ -18,7 +18,7 @@ const DrugDetail = lazy(() => import("@/pages/drug-detail"));
 const Analogs = lazy(() => import("@/pages/analogs"));
 const Interactions = lazy(() => import("@/pages/interactions"));
 const Compare = lazy(() => import("@/pages/compare"));
-const Hospital = lazy(() => import("@/pages/hospital"));
+const QuickAccess = lazy(() => import("@/pages/quick-access"));
 const AiReference = lazy(() => import("@/pages/ai-reference"));
 const Scan = lazy(() => import("@/pages/scan"));
 const History = lazy(() => import("@/pages/history"));
@@ -39,7 +39,7 @@ const ProtectedDrugDetail = () => <ProtectedRoute component={DrugDetail} />;
 const ProtectedAnalogs = () => <ProtectedRoute component={Analogs} />;
 const ProtectedInteractions = () => <ProtectedRoute component={Interactions} />;
 const ProtectedCompare = () => <ProtectedRoute component={Compare} />;
-const ProtectedHospital = () => <ProtectedRoute component={Hospital} />;
+const ProtectedQuickAccess = () => <ProtectedRoute component={QuickAccess} />;
 const ProtectedAiReference = () => <ProtectedRoute component={AiReference} />;
 const ProtectedScan = () => <ProtectedRoute component={Scan} />;
 const ProtectedHistory = () => <ProtectedRoute component={History} />;
@@ -96,7 +96,7 @@ function Router() {
             <Route path="/analogs/:id" component={ProtectedAnalogs} />
             <Route path="/interactions" component={ProtectedInteractions} />
             <Route path="/compare" component={ProtectedCompare} />
-            <Route path="/hospital" component={ProtectedHospital} />
+            <Route path="/hospital" component={ProtectedQuickAccess} />
             <Route path="/ai" component={ProtectedAiReference} />
             <Route path="/scan" component={ProtectedScan} />
             <Route path="/history" component={ProtectedHistory} />
