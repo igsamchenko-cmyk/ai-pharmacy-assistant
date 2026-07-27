@@ -40,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/", icon: Home, label: "Головна" },
     { href: "/search", icon: Search, label: "Пошук" },
-    { href: "/hospital", icon: Stethoscope, label: "Швидкий" },
+    { href: "/hospital", icon: Stethoscope, label: "Швидкий доступ" },
     { href: "/interactions", icon: GitCompare, label: "Взаємодії" },
     { href: "/compare", icon: Columns3, label: "Порівняння" },
     { href: "/ai", icon: Sparkles, label: "AI" },
@@ -55,7 +55,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     navByHref.get("/search")!,
     navByHref.get("/interactions")!,
     navByHref.get("/compare")!,
-    navByHref.get("/hospital")!,
+    { ...navByHref.get("/hospital")!, label: "Доступ" },
     { href: "/review", icon: ClipboardList, label: "Рев'ю" },
     { href: "/data-quality", icon: Database, label: "Дані" },
     { href: "/beta-dashboard", icon: FlaskConical, label: "Beta" },
