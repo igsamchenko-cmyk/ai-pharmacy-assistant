@@ -55,11 +55,25 @@ const cases = [
     left: product("E1", "НУРОФЕН", "ібупрофен", "M01AE01"),
     right: product("F1", "НАПРОКСЕН", "напроксен", "M01AE02"),
   },
+  {
+    id: "paracetamol-ibuprofen-acute-dental-pain",
+    indicationId: "acute-postoperative-dental-pain",
+    directness: "mixed",
+    left: product("71", "ПАРАЦЕТАМОЛ", "парацетамол", "N02BE01"),
+    right: product("72", "НУРОФЕН", "ібупрофен", "M01AE01"),
+  },
+  {
+    id: "amlodipine-lisinopril-high-risk-hypertension",
+    indicationId: "high-risk-primary-hypertension",
+    directness: "direct",
+    left: product("73", "АМЛОДИПІН", "амлодипін", "C08CA01"),
+    right: product("74", "ЛІЗИНОПРИЛ", "лізиноприл", "C09AA03"),
+  },
 ] as const;
 
 describe("generic evidence registry and resolver", () => {
-  it("uses the three reviewed records as generic INN/indication registry entries", () => {
-    expect(EVIDENCE_REGISTRY).toHaveLength(3);
+  it("uses reviewed records as generic INN/indication registry entries", () => {
+    expect(EVIDENCE_REGISTRY).toHaveLength(5);
     expect(EVIDENCE_REGISTRY.map((item) => item.id)).toEqual(
       cases.map((item) => item.id),
     );
