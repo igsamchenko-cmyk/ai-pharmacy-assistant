@@ -11,6 +11,7 @@ on:
         options:
           - deploy
           - inspect
+          - enable-auto-deploy
 
 permissions:
   contents: read
@@ -137,3 +138,51 @@ jobs:
               (.deploy.updatedAt // "-")
             ] | @tsv)
           ' <<<"$deploys_json"
+
+  enable_auto_deploy:
+    name: Enable Render Auto-Deploy
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'enable-auto-deploy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: production
+      url: https://farmassist-private-beta.onrender.com
+    steps:
+      - name: Enable and verify Auto-Deploy
+        shell: bash
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$RENDER_API_KEY"
+          test -n "$RENDER_DEPLOY_HOOK_URL"
+
+          hook_path="${RENDER_DEPLOY_HOOK_URL%%\?*}"
+          service_id="${hook_path##*/}"
+          case "$service_id" in
+            srv-[a-z0-9]*) ;;
+            *)
+              echo "::error::Could not derive a Render service ID from the deploy hook."
+              exit 1
+              ;;
+          esac
+
+          service_json="$(curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --request PATCH \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --header "Authorization: Bearer ${RENDER_API_KEY}" \
+            --data '{"autoDeploy":"yes"}' \
+            "https://api.render.com/v1/services/${service_id}")"
+
+          auto_deploy="$(jq -r '.autoDeploy // "unknown"' <<<"$service_json")"
+          if [[ "$auto_deploy" != "yes" ]]; then
+            echo "::error::Render did not confirm Auto-Deploy as enabled."
+            exit 1
+          fi
+
+          echo "Render Auto-Deploy is enabled for the production service."
