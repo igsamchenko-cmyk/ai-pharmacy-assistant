@@ -1,0 +1,70 @@
+name: Deploy FarmAssist to Render
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Trigger Render production deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: production
+      url: https://farmassist-private-beta.onrender.com
+    steps:
+      - name: Validate deploy hook configuration
+        shell: bash
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$RENDER_DEPLOY_HOOK_URL"
+          case "$RENDER_DEPLOY_HOOK_URL" in
+            https://api.render.com/deploy/*) ;;
+            *)
+              echo "::error::RENDER_DEPLOY_HOOK_URL is not a Render deploy hook."
+              exit 1
+              ;;
+          esac
+
+      - name: Deploy exact commit to Render
+        shell: bash
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          separator="?"
+          if [[ "$RENDER_DEPLOY_HOOK_URL" == *"?"* ]]; then
+            separator="&"
+          fi
+
+          http_status="$(curl \
+            --silent \
+            --show-error \
+            --output "$RUNNER_TEMP/render-deploy-response.json" \
+            --write-out "%{http_code}" \
+            --request POST \
+            "${RENDER_DEPLOY_HOOK_URL}${separator}ref=${GITHUB_SHA}")"
+
+          case "$http_status" in
+            200)
+              echo "Render accepted deployment for commit ${GITHUB_SHA}."
+              ;;
+            202)
+              echo "Render queued deployment for commit ${GITHUB_SHA}."
+              ;;
+            *)
+              echo "::error::Render deploy hook returned HTTP ${http_status}."
+              exit 1
+              ;;
+          esac
