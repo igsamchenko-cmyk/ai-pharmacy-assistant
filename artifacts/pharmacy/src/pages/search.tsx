@@ -1481,25 +1481,27 @@ export default function SearchPage() {
   const debouncedManufacturer = useDebounce(manufacturer, 200);
   const debouncedForm = useDebounce(form, 200);
   const debouncedStrength = useDebounce(strength, 200);
+  const localQuery = q.trim();
   const serverOnlyFilters =
     Boolean(manufacturer.trim()) ||
     mappingStatus !== "all" ||
     nationalListStatus !== "all" ||
     registrationStatus !== "all";
-  const requiresServerCatalog = serverOnlyFilters || type === "ingredients";
+  const browsingAllIngredients = type === "ingredients" && !localQuery;
+  const requiresServerCatalog = serverOnlyFilters || browsingAllIngredients;
   const shouldUseLocalCatalog =
     clientCatalog.status === "ready" && !requiresServerCatalog;
   const serverSearchEnabled = shouldUseServerCatalogSearch(
     clientCatalog.status,
     requiresServerCatalog,
     effectiveQ,
-    type === "ingredients",
+    browsingAllIngredients,
   );
-  const localQuery = q.trim();
   const localResult = useMemo(
     () =>
       clientCatalog.search(localQuery, {
         limit: 100,
+        scope: type,
         form: debouncedForm,
         strength: debouncedStrength,
         compositionType,
@@ -2115,7 +2117,10 @@ export default function SearchPage() {
             Введіть щонайменше 3 символи.
           </div>
         ) : (
-          <LocalCatalogResults result={localResult} />
+          <LocalCatalogResults
+            result={localResult}
+            mode={type === "ingredients" ? "ingredients" : "catalog"}
+          />
         )
       ) : viewState === "loading" ? (
         <SearchLoadingSkeletons />

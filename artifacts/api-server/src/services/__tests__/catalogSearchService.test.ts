@@ -881,6 +881,10 @@ describe("catalog search service", () => {
 
     expect(pageSql).toContain("p.inn");
     expect(pageSql).toContain("p.active_ingredient");
+    expect(pageSql).toContain("LOWER(p.inn) LIKE ANY");
+    expect(pageSql).toContain("LOWER(p.active_ingredient) LIKE ANY");
+    expect(pageSql).not.toContain("TRANSLATE(");
+    expect(pageSql).not.toContain("catalog_keys");
     expect(pageSql).not.toContain("search_manufacturer");
     expect(pageSql).not.toContain("LOWER(p.registration_number) LIKE");
   });

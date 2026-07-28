@@ -119,6 +119,31 @@ describe("catalog client index", () => {
     expect(groups[0]?.variants).toHaveLength(2);
   });
 
+  it("searches the ingredient scope locally without trade-name false positives", () => {
+    const index = compileCatalogClientIndex(
+      payload(
+        [
+          ...representativeProducts,
+          product(7, "ІБУПРОФЕН ФАРМА", "Other ingredient", "200 мг"),
+          product(8, "НУРОФЕН", "Ibuprofen", "200 мг"),
+        ],
+        HASH_A,
+        [["Ібупрофен", "Ibuprofen"]],
+      ),
+    );
+    const result = searchCatalogClientIndex(index, "Ібупрофен", {
+      scope: "ingredients",
+    });
+
+    expect(result.items.map((item) => item.product.tradeName)).toContain(
+      "НУРОФЕН",
+    );
+    expect(result.items.map((item) => item.product.tradeName)).not.toContain(
+      "ІБУПРОФЕН ФАРМА",
+    );
+    expect(result.items[0]?.matchedBy).toMatch(/^(inn_|source_alias)/u);
+  });
+
   it("explains same-brand registry variants consistently across the catalog", () => {
     expect(registeredVariantsLabel(1)).toBe(
       "1 торгова назва · 1 зареєстрований варіант",
@@ -455,6 +480,11 @@ describe("catalog client index", () => {
           ? `UA/${10_000 + run}/01/01`
           : `ПРЕПАРАТ ${String(10_000 + run).padStart(5, "0")}`;
       durations.push(searchCatalogClientIndex(compiled, query).durationMs);
+      durations.push(
+        searchCatalogClientIndex(compiled, `Ingredient ${10_000 + run}`, {
+          scope: "ingredients",
+        }).durationMs,
+      );
     }
     durations.sort((left, right) => left - right);
     const p95 =

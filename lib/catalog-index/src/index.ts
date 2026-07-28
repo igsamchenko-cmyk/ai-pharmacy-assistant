@@ -86,6 +86,7 @@ export interface CatalogClientIndexSearchOptions {
   form?: string;
   strength?: string;
   compositionType?: "all" | "monotherapy" | "combination";
+  scope?: CatalogClientIndexSearchScope;
 }
 
 export interface CatalogClientIndexSearchItem {
@@ -93,6 +94,11 @@ export interface CatalogClientIndexSearchItem {
   rank: number;
   matchedBy: CatalogClientIndexMatchKind;
 }
+
+export type CatalogClientIndexSearchScope =
+  | "all"
+  | "ingredients"
+  | "registry_products";
 
 export interface CatalogClientIndexSearchResult {
   query: string;
@@ -324,30 +330,44 @@ function matchRank(
   product: PreparedCatalogProduct,
   queryKey: string,
   queryLatinKey: string,
+  scope: CatalogClientIndexSearchScope,
 ): { rank: number; matchedBy: CatalogClientIndexMatchKind } | null {
-  if (product.tradeKey === queryKey)
-    return { rank: 0, matchedBy: "trade_exact" };
-  if (product.registrationKey === queryKey)
-    return { rank: 1, matchedBy: "registration_exact" };
-  if (product.productKey === queryKey)
-    return { rank: 1, matchedBy: "product_exact" };
-  if (product.tradeKey.startsWith(queryKey))
-    return { rank: 2, matchedBy: "trade_prefix" };
-  if (product.innKey === queryKey) return { rank: 3, matchedBy: "inn_exact" };
+  if (scope !== "ingredients") {
+    if (product.tradeKey === queryKey)
+      return { rank: 0, matchedBy: "trade_exact" };
+    if (product.registrationKey === queryKey)
+      return { rank: 1, matchedBy: "registration_exact" };
+    if (product.productKey === queryKey)
+      return { rank: 1, matchedBy: "product_exact" };
+    if (product.tradeKey.startsWith(queryKey))
+      return { rank: 2, matchedBy: "trade_prefix" };
+  }
+  if (product.innKey === queryKey)
+    return { rank: scope === "ingredients" ? 0 : 3, matchedBy: "inn_exact" };
   if (product.innKey.startsWith(queryKey))
-    return { rank: 4, matchedBy: "inn_prefix" };
-  if (product.tradeLatinKey === queryLatinKey)
-    return { rank: 5, matchedBy: "trade_transliteration_exact" };
-  if (product.tradeLatinKey.startsWith(queryLatinKey))
-    return { rank: 6, matchedBy: "trade_transliteration_prefix" };
+    return { rank: scope === "ingredients" ? 1 : 4, matchedBy: "inn_prefix" };
+  if (scope !== "ingredients") {
+    if (product.tradeLatinKey === queryLatinKey)
+      return { rank: 5, matchedBy: "trade_transliteration_exact" };
+    if (product.tradeLatinKey.startsWith(queryLatinKey))
+      return { rank: 6, matchedBy: "trade_transliteration_prefix" };
+  }
   if (product.innLatinKey === queryLatinKey)
-    return { rank: 7, matchedBy: "inn_transliteration_exact" };
+    return {
+      rank: scope === "ingredients" ? 2 : 7,
+      matchedBy: "inn_transliteration_exact",
+    };
   if (product.innLatinKey.startsWith(queryLatinKey))
-    return { rank: 8, matchedBy: "inn_transliteration_prefix" };
-  if (product.formKey.startsWith(queryKey))
-    return { rank: 11, matchedBy: "form_prefix" };
-  if (product.strengthKey.startsWith(queryKey))
-    return { rank: 12, matchedBy: "strength_prefix" };
+    return {
+      rank: scope === "ingredients" ? 3 : 8,
+      matchedBy: "inn_transliteration_prefix",
+    };
+  if (scope !== "ingredients") {
+    if (product.formKey.startsWith(queryKey))
+      return { rank: 11, matchedBy: "form_prefix" };
+    if (product.strengthKey.startsWith(queryKey))
+      return { rank: 12, matchedBy: "strength_prefix" };
+  }
   return null;
 }
 
@@ -390,6 +410,7 @@ export function searchCatalogClientIndex(
   const formKey = normalizeCatalogIndexText(options.form ?? "");
   const strengthKey = normalizeCatalogIndexText(options.strength ?? "");
   const compositionType = options.compositionType ?? "all";
+  const scope = options.scope ?? "all";
   const limit = Math.max(
     1,
     Math.min(options.limit ?? CATALOG_CLIENT_INDEX_DEFAULT_LIMIT, 250),
@@ -407,7 +428,7 @@ export function searchCatalogClientIndex(
     if (strengthKey && !product.strengthKey.startsWith(strengthKey)) continue;
     if (compositionType === "combination" && !product.combination) continue;
     if (compositionType === "monotherapy" && product.combination) continue;
-    const match = matchRank(product, queryKey, queryLatinKey);
+    const match = matchRank(product, queryKey, queryLatinKey, scope);
     if (match) {
       matches.push({ product, ...match });
       continue;
@@ -415,7 +436,12 @@ export function searchCatalogClientIndex(
     if (aliasTargetInnLatinKey === product.innLatinKey) {
       matches.push({
         product,
-        rank: product.tradeLatinKey === aliasTargetInnLatinKey ? 9 : 10,
+        rank:
+          scope === "ingredients"
+            ? 4
+            : product.tradeLatinKey === aliasTargetInnLatinKey
+              ? 9
+              : 10,
         matchedBy: "source_alias",
       });
     }

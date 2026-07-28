@@ -42,9 +42,15 @@ export function uniqueInteractionOptions(
 export function RegistryInteractionSearchSelect({
   onSelect,
   disabled = false,
+  label = "Знайти конкретну реєстрову позицію",
+  placeholder = "Назва, МНН або реєстраційний номер",
+  inputTestId = "input-interaction-search",
 }: {
   onSelect: (product: InteractionProductSelection) => void;
   disabled?: boolean;
+  label?: string;
+  placeholder?: string;
+  inputTestId?: string;
 }) {
   const [query, setQuery] = useState("");
   const clientCatalog = useCatalogClientIndex();
@@ -67,7 +73,11 @@ export function RegistryInteractionSearchSelect({
     },
   });
   const localResult = useMemo(
-    () => clientCatalog.search(query.trim(), { limit: 25 }),
+    () =>
+      clientCatalog.search(query.trim(), {
+        limit: 25,
+        scope: "registry_products",
+      }),
     [clientCatalog, query],
   );
   const options = useMemo(
@@ -95,11 +105,8 @@ export function RegistryInteractionSearchSelect({
   return (
     <div className="relative max-w-full space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <label
-          htmlFor="interaction-product-search"
-          className="text-sm font-semibold"
-        >
-          Знайти конкретну реєстрову позицію
+        <label htmlFor={inputTestId} className="text-sm font-semibold">
+          {label}
         </label>
         <Badge variant={localReady ? "secondary" : "outline"} className="gap-1">
           <Database className="h-3.5 w-3.5" />
@@ -113,14 +120,14 @@ export function RegistryInteractionSearchSelect({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          id="interaction-product-search"
+          id={inputTestId}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           disabled={disabled}
-          placeholder="Назва, МНН або реєстраційний номер"
+          placeholder={placeholder}
           className="min-h-12 max-w-full pl-9"
           autoComplete="off"
-          data-testid="input-interaction-search"
+          data-testid={inputTestId}
         />
       </div>
       {showResults ? (
