@@ -17,7 +17,7 @@ import {
   GitCompare,
   Columns3,
   Stethoscope,
-  Sparkles,
+  ClipboardCheck,
   Scan,
   Clock,
   Pill,
@@ -30,7 +30,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DEMO_LABEL } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { drugRefHref, useFavorites, useRecentlyViewed } from "@/hooks/use-favorites";
+import {
+  drugRefHref,
+  useFavorites,
+  useRecentlyViewed,
+} from "@/hooks/use-favorites";
 
 export const REGISTRY_CATALOG_HREF = "/search?type=registry_products";
 
@@ -55,16 +59,16 @@ export default function Home() {
 
   const menuItems = [
     {
+      href: "/dispense",
+      icon: ClipboardCheck,
+      title: "Перевірка відпуску",
+      desc: "Реєстр, інструкція та професійний чеклист",
+    },
+    {
       href: "/search",
       icon: Search,
       title: "Пошук",
       desc: "Знайти препарат за назвою чи МНН",
-    },
-    {
-      href: "/hospital",
-      icon: Stethoscope,
-      title: "Швидкий доступ",
-      desc: "Обране, історія та основні дії",
     },
     {
       href: "/interactions",
@@ -79,28 +83,16 @@ export default function Home() {
       desc: "Зіставити препарати поруч",
     },
     {
-      href: "/ai",
-      icon: Sparkles,
-      title: "AI-довідка",
-      desc: "Швидка інформація про препарат",
-    },
-    {
       href: "/scan",
       icon: Scan,
       title: "Скан упаковки",
       desc: "Розпізнати препарат по фото",
     },
     {
-      href: "/favorites",
-      icon: Star,
-      title: "Обране",
-      desc: "Збережені препарати у цьому браузері",
-    },
-    {
-      href: "/history",
-      icon: Clock,
-      title: "Історія",
-      desc: "Останні 20 переглянутих препаратів",
+      href: "/hospital",
+      icon: Stethoscope,
+      title: "Швидкий доступ",
+      desc: "Обране, історія та основні дії",
     },
   ];
 
@@ -152,10 +144,7 @@ export default function Home() {
         variant="outline"
         className="min-h-12 h-auto w-full justify-start whitespace-normal px-4 py-3 text-left"
       >
-        <Link
-          href={REGISTRY_CATALOG_HREF}
-          data-testid="link-registry-catalog"
-        >
+        <Link href={REGISTRY_CATALOG_HREF} data-testid="link-registry-catalog">
           <Database className="h-5 w-5 shrink-0 text-primary" />
           <span className="min-w-0 flex-1 break-words">
             Каталог препаратів

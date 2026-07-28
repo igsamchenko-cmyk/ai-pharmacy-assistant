@@ -1,15 +1,21 @@
 import { Router, type IRouter } from "express";
 import {
+  CheckProductDispensingCategoryQueryParams,
+  CheckProductDispensingCategoryResponse,
+  CheckProductSeriesRestrictionsQueryParams,
+  CheckProductSeriesRestrictionsResponse,
   GetCatalogClientIndexResponse,
   GetDrugInstructionParams,
   GetDrugInstructionResponse,
   SearchCatalogQueryParams,
   SearchCatalogResponse,
 } from "@workspace/api-zod";
+import { checkDispensingCategory } from "../knowledge/dispensingCategories/catalog";
 import { requireRole } from "../auth";
 import { getOfficialInstructionForProduct } from "../services/officialInstructionService";
 import { loadCatalogClientIndex } from "../services/catalogClientIndexService";
 import { searchCatalog } from "../services/catalogSearchService";
+import { checkSeriesRestrictions } from "../knowledge/seriesRestrictions/catalog";
 
 const PAGE_SIZE_QUERY_KEYS = [
   "groupPageSize",
@@ -95,5 +101,50 @@ router.get(
     }
   },
 );
+
+router.get("/catalog/dispensing-category", async (req, res): Promise<void> => {
+  const parsed = CheckProductDispensingCategoryQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid product or registration number",
+    });
+    return;
+  }
+
+  try {
+    const result = checkDispensingCategory(
+      parsed.data.productId,
+      parsed.data.registrationNumber,
+    );
+    res.json(CheckProductDispensingCategoryResponse.parse(result));
+  } catch {
+    res.status(503).json({
+      error: "Verified DRLZ dispensing-category snapshot is unavailable",
+    });
+  }
+});
+
+router.get("/catalog/series-restrictions", async (req, res): Promise<void> => {
+  const parsed = CheckProductSeriesRestrictionsQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid product, registration number or series",
+    });
+    return;
+  }
+
+  try {
+    const result = checkSeriesRestrictions(
+      parsed.data.productId,
+      parsed.data.registrationNumber,
+      parsed.data.series,
+    );
+    res.json(CheckProductSeriesRestrictionsResponse.parse(result));
+  } catch {
+    res.status(503).json({
+      error: "Verified DLS quality-document snapshot is unavailable",
+    });
+  }
+});
 
 export default router;

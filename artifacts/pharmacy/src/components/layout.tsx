@@ -13,6 +13,7 @@ import {
   Info,
   Database,
   ClipboardList,
+  ClipboardCheck,
   FlaskConical,
   Moon,
   Sun,
@@ -39,26 +40,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/", icon: Home, label: "Головна" },
+    { href: "/dispense", icon: ClipboardCheck, label: "Перевірка відпуску" },
     { href: "/search", icon: Search, label: "Пошук" },
-    { href: "/hospital", icon: Stethoscope, label: "Швидкий доступ" },
     { href: "/interactions", icon: GitCompare, label: "Взаємодії" },
     { href: "/compare", icon: Columns3, label: "Порівняння" },
-    { href: "/ai", icon: Sparkles, label: "AI" },
     { href: "/scan", icon: Scan, label: "Скан" },
+  ];
+  const secondaryNavItems = [
+    { href: "/hospital", icon: Stethoscope, label: "Швидкий доступ" },
+    { href: "/ai", icon: Sparkles, label: "AI-довідка" },
     { href: "/favorites", icon: Heart, label: "Обране" },
     { href: "/history", icon: Clock, label: "Історія" },
   ];
 
-  // Bottom bar on phones keeps the closed-beta daily workflow one tap away.
+  // Bottom bar on phones keeps the daily dispensing workflow one tap away.
   const navByHref = new Map(navItems.map((item) => [item.href, item]));
   const mobileNavItems = [
+    navByHref.get("/dispense")!,
     navByHref.get("/search")!,
     navByHref.get("/interactions")!,
     navByHref.get("/compare")!,
-    { ...navByHref.get("/hospital")!, label: "Доступ" },
-    { href: "/review", icon: ClipboardList, label: "Рев'ю" },
-    { href: "/data-quality", icon: Database, label: "Дані" },
-    { href: "/beta-dashboard", icon: FlaskConical, label: "Beta" },
+    navByHref.get("/scan")!,
   ];
 
   return (
@@ -124,6 +126,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
         <div className={DESKTOP_SIDEBAR_FOOTER_CLASS}>
+          {secondaryNavItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-colors text-sm font-medium ${location === item.href ? "bg-primary text-primary-foreground" : "hover:bg-accent text-foreground"}`}
+              data-testid={`nav-${item.href.replace("/", "")}`}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </Link>
+          ))}
           <Link
             href="/beta-dashboard"
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-medium ${location === "/beta-dashboard" ? "bg-primary text-primary-foreground" : "hover:bg-accent text-foreground"}`}

@@ -55,7 +55,9 @@
     "knowledge:national-list": "tsx src/scripts/knowledge-national-list.ts",
     "knowledge:national-list:db-smoke": "tsx src/scripts/knowledge-national-list-db-smoke.ts",
     "knowledge:instructions:report": "tsx src/scripts/knowledge-instructions-report.ts",
-    "knowledge:instructions:coverage-report": "tsx src/scripts/knowledge-instructions-coverage-report.ts"
+    "knowledge:instructions:coverage-report": "tsx src/scripts/knowledge-instructions-coverage-report.ts",
+    "knowledge:series-restrictions": "tsx src/scripts/knowledge-series-restrictions.ts",
+    "knowledge:dispensing-categories": "tsx src/scripts/knowledge-dispensing-categories.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",

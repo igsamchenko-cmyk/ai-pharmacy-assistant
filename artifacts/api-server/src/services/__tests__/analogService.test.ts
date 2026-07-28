@@ -6,20 +6,17 @@ describe("analogService.findAnalogs", () => {
     expect(findAnalogs("does-not-exist")).toBeUndefined();
   });
 
-  it("groups full analogs sharing INN and dosage", () => {
+  it("does not call a differently described dosage form a full match", () => {
     const result = findAnalogs("paracetamol-500");
     expect(result).toBeDefined();
-    // Панадол shares INN Парацетамол and 500 мг -> full analog.
-    expect(result?.full.some((d) => d.id === "panadol-500")).toBe(true);
+    expect(result?.full.some((d) => d.id === "panadol-500")).toBe(false);
+    expect(result?.partial.some((d) => d.id === "panadol-500")).toBe(true);
   });
 
-  it("classifies different-INN, same-group drugs as therapeutic alternatives", () => {
+  it("does not suggest different-INN drugs as therapeutic replacements", () => {
     const result = findAnalogs("ibuprofen-200");
     expect(result).toBeDefined();
-    // Diclofenac is a different INN but the same NSAID group.
-    expect(result?.therapeutic.some((d) => d.id === "diclofenac-50")).toBe(
-      true,
-    );
+    expect(result?.therapeutic).toEqual([]);
     // The base drug is never listed among its own analogs.
     const allIds = [
       ...(result?.full ?? []),
@@ -34,7 +31,7 @@ describe("analogService.findAnalogs", () => {
     expect(result).toBeDefined();
     const fullIds = (result?.full ?? []).map((d) => d.id);
     const partialIds = (result?.partial ?? []).map((d) => d.id);
-    // Any same-INN paracetamol whose base form differs (e.g. syrup/suspension)
+    // Any same-INN paracetamol whose exact form differs (e.g. syrup/suspension)
     // must not appear among full analogs.
     const sameInnDifferentForm = [
       ...(result?.full ?? []),
