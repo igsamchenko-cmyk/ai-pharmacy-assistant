@@ -5,6 +5,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Render operation to run
+        required: true
+        default: deploy
+        type: choice
+        options:
+          - deploy
+          - inspect
 
 permissions:
   contents: read
@@ -16,6 +25,7 @@ concurrency:
 jobs:
   deploy:
     name: Trigger Render production deploy
+    if: github.event_name == 'push' || inputs.operation == 'deploy'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment:
@@ -68,3 +78,52 @@ jobs:
               exit 1
               ;;
           esac
+
+  inspect:
+    name: Inspect Render production deploys
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'inspect'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: production
+      url: https://farmassist-private-beta.onrender.com
+    steps:
+      - name: Read sanitized deployment state
+        shell: bash
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$RENDER_API_KEY"
+          test -n "$RENDER_DEPLOY_HOOK_URL"
+
+          hook_path="${RENDER_DEPLOY_HOOK_URL%%\?*}"
+          service_id="${hook_path##*/}"
+          case "$service_id" in
+            srv-[a-z0-9]*) ;;
+            *)
+              echo "::error::Could not derive a Render service ID from the deploy hook."
+              exit 1
+              ;;
+          esac
+
+          deploys_json="$(curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --header "Accept: application/json" \
+            --header "Authorization: Bearer ${RENDER_API_KEY}" \
+            "https://api.render.com/v1/services/${service_id}/deploys?limit=20")"
+
+          jq -r '
+            (["DEPLOY_ID", "STATUS", "COMMIT", "TRIGGER", "CREATED_AT", "UPDATED_AT"] | @tsv),
+            (.[] | [
+              .deploy.id,
+              .deploy.status,
+              (.deploy.commit.id // "-"),
+              (.deploy.trigger // "-"),
+              (.deploy.createdAt // "-"),
+              (.deploy.updatedAt // "-")
+            ] | @tsv)
+          ' <<<"$deploys_json"
