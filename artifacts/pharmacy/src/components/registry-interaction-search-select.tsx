@@ -131,7 +131,7 @@ export function RegistryInteractionSearchSelect({
         />
       </div>
       {showResults ? (
-        <Card className="absolute z-20 mt-1 max-h-80 w-full max-w-full overflow-y-auto shadow-xl">
+        <Card className="relative z-20 mt-1 max-h-80 w-full max-w-full overflow-y-auto shadow-xl">
           <CardContent className="space-y-1 p-2">
             {loading ? (
               <p className="p-4 text-center text-sm text-muted-foreground">

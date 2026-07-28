@@ -58,6 +58,15 @@ describe("registry interaction selection", () => {
     expect(pickerSource).toContain("enabled: fallbackEnabled");
   });
 
+  it("keeps the registry results in document flow so parent overflow cannot clip them", () => {
+    expect(pickerSource).toContain(
+      'className="relative z-20 mt-1 max-h-80 w-full max-w-full overflow-y-auto shadow-xl"',
+    );
+    expect(pickerSource).not.toContain(
+      'className="absolute z-20 mt-1 max-h-80',
+    );
+  });
+
   it("submits exact productId plus registration and renders every evidence state", () => {
     expect(pageSource).toContain("productId: product.productId");
     expect(pageSource).toContain("registrationNumber: product.registration");
