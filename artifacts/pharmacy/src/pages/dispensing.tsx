@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   getCheckProductDispensingCategoryQueryKey,
   getSearchCatalogQueryKey,
@@ -22,16 +22,17 @@ import {
   LoaderCircle,
   OctagonX,
   RotateCcw,
-  Search,
   ShieldAlert,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { SeriesRestrictionCheckPanel } from "@/components/series-restriction-check";
-import { useDebounce } from "@/hooks/use-debounce";
+import {
+  RegistryInteractionSearchSelect,
+  type InteractionProductSelection,
+} from "@/components/registry-interaction-search-select";
 import {
   buildDispensingAssessment,
   type DispensingAssessment,
@@ -344,33 +345,54 @@ function ManualChecklist({
 }
 
 export default function Dispensing() {
-  const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<RegistryProductResult | null>(null);
+  const [pendingProduct, setPendingProduct] =
+    useState<InteractionProductSelection | null>(null);
   const [manualChecks, setManualChecks] = useState<boolean[]>(
     MANUAL_DISPENSING_STEPS.map(() => false),
   );
   const [seriesDraft, setSeriesDraft] = useState("");
   const [submittedSeries, setSubmittedSeries] = useState("");
-  const effectiveQuery = useDebounce(query.trim(), 200);
-  const params = useMemo(
+  const exactProductParams = useMemo(
     () => ({
-      q: effectiveQuery,
+      q: pendingProduct?.registration ?? "UA/0/0/0",
+      productId: pendingProduct?.productId ?? "0".repeat(32),
       type: "registry_products" as const,
       view: "flat" as const,
       page: 1,
       pageSize: 25 as const,
     }),
-    [effectiveQuery],
+    [pendingProduct],
   );
-  const enabled = effectiveQuery.length >= 3;
-  const search = useSearchCatalog(params, {
+  const exactProductQuery = useSearchCatalog(exactProductParams, {
     query: {
-      enabled,
-      queryKey: getSearchCatalogQueryKey(params),
+      enabled: Boolean(pendingProduct),
+      queryKey: getSearchCatalogQueryKey(exactProductParams),
       retry: 1,
+      staleTime: 60_000,
+      refetchOnWindowFocus: false,
     },
   });
-  const results = search.data?.registryProducts.items ?? [];
+  const resolvedPendingProduct = pendingProduct
+    ? exactProductQuery.data?.registryProducts.items.find(
+        (product) =>
+          product.id === pendingProduct.productId &&
+          product.registration.number === pendingProduct.registration,
+      )
+    : null;
+  const exactResolutionFailed = Boolean(
+    pendingProduct &&
+    !exactProductQuery.isLoading &&
+    !exactProductQuery.isFetching &&
+    (exactProductQuery.isError ||
+      (exactProductQuery.data && !resolvedPendingProduct)),
+  );
+
+  useEffect(() => {
+    if (!resolvedPendingProduct) return;
+    setSelected(resolvedPendingProduct);
+    setPendingProduct(null);
+  }, [resolvedPendingProduct]);
   const dispensingCategoryParams = useMemo(
     () => ({
       productId: selected?.id ?? "0".repeat(32),
@@ -414,8 +436,8 @@ export default function Dispensing() {
       : seriesCheck.data
     : undefined;
 
-  const selectProduct = (product: RegistryProductResult) => {
-    setSelected(product);
+  const selectProduct = (product: InteractionProductSelection) => {
+    setPendingProduct(product);
     setManualChecks(MANUAL_DISPENSING_STEPS.map(() => false));
     setSeriesDraft("");
     setSubmittedSeries("");
@@ -423,7 +445,7 @@ export default function Dispensing() {
 
   const reset = () => {
     setSelected(null);
-    setQuery("");
+    setPendingProduct(null);
     setManualChecks(MANUAL_DISPENSING_STEPS.map(() => false));
     setSeriesDraft("");
     setSubmittedSeries("");
@@ -467,82 +489,49 @@ export default function Dispensing() {
               обирайте препарат лише за схожою назвою.
             </AlertDescription>
           </Alert>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Наприклад: Енап або UA/1234/01/01"
-              className="min-h-14 pl-11 text-base"
-              autoComplete="off"
-              aria-label="Пошук реєстрової позиції для відпуску"
-              data-testid="dispensing-search-input"
-            />
-          </div>
-
-          {query.trim().length > 0 && query.trim().length < 3 ? (
-            <p className="text-sm text-muted-foreground">
-              Введіть щонайменше 3 символи.
-            </p>
-          ) : null}
-          {enabled && search.isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-              <LoaderCircle className="h-5 w-5 animate-spin" /> Пошук у реєстрі…
-            </div>
-          ) : null}
-          {enabled && search.isError ? (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Реєстр недоступний</AlertTitle>
-              <AlertDescription>
-                Не продовжуйте автоматичну перевірку. Скористайтеся офіційним
-                ДРЛЗ.
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          {search.data?.warnings.map((warning) => (
-            <p
-              key={warning}
-              className="text-sm text-amber-700 dark:text-amber-300"
-            >
-              {warning}
-            </p>
-          ))}
-          {enabled && !search.isLoading && !search.isError ? (
-            <div className="space-y-2" data-testid="dispensing-search-results">
-              {results.length ? (
-                results.map((product) => (
-                  <button
-                    key={`${product.id}:${product.registration.number}`}
-                    type="button"
-                    onClick={() => selectProduct(product)}
-                    className="grid w-full gap-2 rounded-xl border bg-card p-4 text-left transition-colors hover:border-primary/50 hover:bg-accent/30"
-                  >
-                    <span className="break-words font-bold">
-                      {product.tradeName}
+          <RegistryInteractionSearchSelect
+            onSelect={selectProduct}
+            disabled={Boolean(pendingProduct)}
+            label="Знайти позицію для перевірки відпуску"
+            placeholder="Наприклад: Енап, ібупрофен або UA/1234/01/01"
+            inputTestId="dispensing-search-input"
+          />
+          {pendingProduct ? (
+            <Card data-testid="dispensing-exact-resolution">
+              <CardContent className="space-y-3 p-4">
+                {exactResolutionFailed ? (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Точну позицію не підтверджено</AlertTitle>
+                    <AlertDescription>
+                      Не продовжуйте перевірку відпуску без повної картки ДРЛЗ.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <div className="flex items-center gap-3 text-sm">
+                    <LoaderCircle className="h-5 w-5 animate-spin text-primary" />
+                    <span>
+                      Завантажуємо регуляторну картку:{" "}
+                      {pendingProduct.tradeName}
                     </span>
-                    <span className="break-words text-sm text-muted-foreground">
-                      {product.inn ||
-                        product.activeIngredient ||
-                        "Склад не зазначено"}
-                    </span>
-                    <span className="break-words text-xs text-muted-foreground">
-                      {[product.strength, conciseDosageForm(product.dosageForm)]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                    <span className="break-all text-xs font-medium">
-                      {product.registration.number} ·{" "}
-                      {conciseManufacturerText(product.manufacturers)}
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <p className="py-8 text-center text-sm text-muted-foreground">
-                  Точної реєстрової позиції не знайдено.
-                </p>
-              )}
-            </div>
+                  </div>
+                )}
+                {exactResolutionFailed ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void exactProductQuery.refetch()}
+                    >
+                      Повторити
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={reset}>
+                      Обрати інший препарат
+                    </Button>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
           ) : null}
         </section>
       ) : (

@@ -52,9 +52,9 @@ describe("registry interaction selection", () => {
     expect(pickerSource).toContain(
       'clientCatalog.status === "error" && debouncedQuery.length > 0',
     );
-    expect(pickerSource).toContain(
-      "clientCatalog.search(query.trim(), { limit: 25 })",
-    );
+    expect(pickerSource).toContain("clientCatalog.search(query.trim(), {");
+    expect(pickerSource).toContain("limit: 25");
+    expect(pickerSource).toContain('scope: "registry_products"');
     expect(pickerSource).toContain("enabled: fallbackEnabled");
   });
 

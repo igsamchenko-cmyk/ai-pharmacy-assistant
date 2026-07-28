@@ -63,10 +63,13 @@ export function groupLocalCatalogResults(
 
 export function LocalCatalogResults({
   result,
+  mode = "catalog",
 }: {
   result: CatalogClientIndexSearchResult;
+  mode?: "catalog" | "ingredients";
 }) {
   const groups = groupLocalCatalogResults(result.items);
+  const ingredientMode = mode === "ingredients";
   if (!result.query.trim()) {
     return (
       <div
@@ -74,7 +77,11 @@ export function LocalCatalogResults({
         data-testid="local-catalog-empty-query"
       >
         <Search className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="font-semibold">Почніть вводити назву препарату або МНН</p>
+        <p className="font-semibold">
+          {ingredientMode
+            ? "Почніть вводити назву діючої речовини"
+            : "Почніть вводити назву препарату або МНН"}
+        </p>
         <p className="text-sm text-muted-foreground">
           Пошук виконується локально без очікування сервера.
         </p>
@@ -90,7 +97,9 @@ export function LocalCatalogResults({
         <Search className="mx-auto h-8 w-8 text-muted-foreground" />
         <p className="font-semibold">Нічого не знайдено</p>
         <p className="text-sm text-muted-foreground">
-          Спробуйте повну торгову назву, МНН або реєстраційний номер.
+          {ingredientMode
+            ? "Спробуйте українську, латинську або міжнародну назву МНН."
+            : "Спробуйте повну торгову назву, МНН або реєстраційний номер."}
         </p>
       </div>
     );
@@ -102,9 +111,14 @@ export function LocalCatalogResults({
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-lg font-semibold">Зареєстровані препарати</h2>
+          <h2 className="text-lg font-semibold">
+            {ingredientMode
+              ? "Препарати та їхні діючі речовини"
+              : "Зареєстровані препарати"}
+          </h2>
           <p className="text-xs text-muted-foreground">
-            Знайдено {result.total.toLocaleString("uk-UA")} позицій
+            {ingredientMode ? "За збігом МНН · " : "Знайдено "}
+            {result.total.toLocaleString("uk-UA")} позицій
           </p>
         </div>
         <Badge variant="secondary" className="gap-1">

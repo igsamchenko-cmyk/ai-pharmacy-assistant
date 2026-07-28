@@ -50,7 +50,9 @@ describe("catalog index readiness fallback", () => {
     expect(shouldUseServerCatalogSearch("loading", false, "")).toBe(false);
     expect(shouldUseServerCatalogSearch("error", false, "")).toBe(true);
     expect(shouldUseServerCatalogSearch("ready", false, "", true)).toBe(true);
-    expect(shouldUseServerCatalogSearch("ready", false, "Ібупрофен", true)).toBe(true);
+    expect(
+      shouldUseServerCatalogSearch("ready", false, "Ібупрофен", false),
+    ).toBe(false);
   });
 
   it("replaces the catalog skeleton as soon as a fallback response exists", () => {
@@ -128,22 +130,32 @@ describe("registry catalog UI", () => {
   });
 
   it("builds the pasted query synchronously for an immediate request", () => {
-    expect(applyPastedQuery("UA//01", 3, 3, "1234/01")).toBe(
-      "UA/1234/01/01",
-    );
+    expect(applyPastedQuery("UA//01", 3, 3, "1234/01")).toBe("UA/1234/01/01");
     expect(applyPastedQuery("Метформін", 0, 9, "Омепразол")).toBe("Омепразол");
   });
 
   it("hides placeholder and stale responses while the query changes", () => {
-    expect(shouldDisplayCatalogResponse("Метформін", "Метформін", false)).toBe(true);
-    expect(shouldDisplayCatalogResponse("Омепразол", "Метформін", false)).toBe(false);
-    expect(shouldDisplayCatalogResponse("Метформін", "Метформін", true)).toBe(false);
+    expect(shouldDisplayCatalogResponse("Метформін", "Метформін", false)).toBe(
+      true,
+    );
+    expect(shouldDisplayCatalogResponse("Омепразол", "Метформін", false)).toBe(
+      false,
+    );
+    expect(shouldDisplayCatalogResponse("Метформін", "Метформін", true)).toBe(
+      false,
+    );
     expect(shouldDisplayCatalogResponse("Іб", "Іб", false)).toBe(false);
   });
   it("keeps rendered results visible while a valid query updates", () => {
-    expect(shouldPreserveCatalogResults("Омепразол", true, true, false)).toBe(true);
-    expect(shouldPreserveCatalogResults("Омепразол", true, false, true)).toBe(true);
-    expect(shouldPreserveCatalogResults("Омепразол", false, true, false)).toBe(false);
+    expect(shouldPreserveCatalogResults("Омепразол", true, true, false)).toBe(
+      true,
+    );
+    expect(shouldPreserveCatalogResults("Омепразол", true, false, true)).toBe(
+      true,
+    );
+    expect(shouldPreserveCatalogResults("Омепразол", false, true, false)).toBe(
+      false,
+    );
     expect(shouldPreserveCatalogResults("Іб", true, true, false)).toBe(false);
   });
 
@@ -156,7 +168,12 @@ describe("registry catalog UI", () => {
       catalogTotal: 16_533,
       ingredients: [],
       registryProducts: {
-        items: [], total: 0, page: 1, pageSize: 25, totalPages: 0, hasNext: false,
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 25,
+        totalPages: 0,
+        hasNext: false,
       },
       registryGroups: null,
       warnings: [],
@@ -196,16 +213,25 @@ describe("registry catalog UI", () => {
         "таблетки, вкриті плівковою оболонкою, по 8 таблеток у блістері",
       ),
     ).toBe("таблетки, вкриті плівковою оболонкою");
-    expect(
-      conciseDosageForm("капсули тверді; по 10 капсул у блістері"),
-    ).toBe("капсули тверді");
+    expect(conciseDosageForm("капсули тверді; по 10 капсул у блістері")).toBe(
+      "капсули тверді",
+    );
     const representativeForms = [
       ["розчин для ін'єкцій, по 2 мл в ампулі", "розчин для ін'єкцій"],
       ["капсули тверді, по 10 капсул у блістері", "капсули тверді"],
-      ["порошок для орального розчину, по 5 г у саше", "порошок для орального розчину"],
-      ["крем для зовнішнього застосування, по 30 г у тубі", "крем для зовнішнього застосування"],
+      [
+        "порошок для орального розчину, по 5 г у саше",
+        "порошок для орального розчину",
+      ],
+      [
+        "крем для зовнішнього застосування, по 30 г у тубі",
+        "крем для зовнішнього застосування",
+      ],
       ["мазь очна, по 5 г у тубі", "мазь очна"],
-      ["супозиторії ректальні, по 5 супозиторіїв у стрипі", "супозиторії ректальні"],
+      [
+        "супозиторії ректальні, по 5 супозиторіїв у стрипі",
+        "супозиторії ректальні",
+      ],
       ["спрей назальний, по 10 мл у флаконі", "спрей назальний"],
       [
         "розчин оральний 20 мг/мл по 240 мл у флаконі; по 1 флакону у картонній коробці",
@@ -237,14 +263,16 @@ describe("registry catalog UI", () => {
       ]),
     ).toEqual(["таблетки"]);
 
-    const html = renderToStaticMarkup(createElement(RegistryProductCard, {
-      product: {
-        ...product,
-        dosageForm: "таблетки in bulk; по 5000 таблеток у пакетах",
-      },
-      query: "Нурофен",
-      showReportIssue: false,
-    }));
+    const html = renderToStaticMarkup(
+      createElement(RegistryProductCard, {
+        product: {
+          ...product,
+          dosageForm: "таблетки in bulk; по 5000 таблеток у пакетах",
+        },
+        query: "Нурофен",
+        showReportIssue: false,
+      }),
+    );
     expect(html).toContain("таблетки, 200 мг");
     expect(html).not.toContain("in bulk");
     expect(html).not.toContain("5000");
@@ -256,7 +284,9 @@ describe("registry catalog UI", () => {
 
     const html = renderToStaticMarkup(createElement(SearchLoadingSkeletons));
     expect(html).toContain('data-testid="search-skeletons"');
-    expect((html.match(/data-testid="search-skeleton-card"/g) ?? [])).toHaveLength(3);
+    expect(
+      html.match(/data-testid="search-skeleton-card"/g) ?? [],
+    ).toHaveLength(3);
     expect(html).toContain("grid-cols-2");
     expect(html).toContain("max-w-full");
     expect(html).toContain("motion-reduce:animate-none");
@@ -282,7 +312,11 @@ describe("registry catalog UI", () => {
   });
   it("renders a mobile-safe registry card with production fields", () => {
     const html = renderToStaticMarkup(
-      createElement(RegistryProductCard, { product, query: "Нурофен", showReportIssue: false }),
+      createElement(RegistryProductCard, {
+        product,
+        query: "Нурофен",
+        showReportIssue: false,
+      }),
     );
     expect(html).toContain("Нурофен");
     expect(html).toContain("Ібупрофен");
@@ -304,7 +338,9 @@ describe("registry catalog UI", () => {
     expect(html).toContain(`data-testid="dosage-chip-${product.id}"`);
     expect(html).toContain(`data-testid="form-badge-${product.id}"`);
     expect(html).toContain(`data-testid="product-actions-${product.id}"`);
-    expect(html).toContain(`data-testid="registry-technical-details-${product.id}"`);
+    expect(html).toContain(
+      `data-testid="registry-technical-details-${product.id}"`,
+    );
     expect(html).toContain(registryProductDetailHref(product));
     expect(html).toContain('href="/interactions"');
     expect(html).toContain('href="/compare"');
@@ -330,35 +366,40 @@ describe("registry catalog UI", () => {
       productId: "3100C9CB2A81D315C2258CC00032ED38",
       registrationNumber: "UA/13699/01/01",
     },
-  ])("routes $tradeName to the exact registry product instruction", ({
-    tradeName,
-    productId,
-    registrationNumber,
-  }) => {
-    const exactProduct = {
-      ...product,
-      id: productId,
-      tradeName,
-      registration: {
-        ...product.registration,
-        number: registrationNumber,
-      },
-    };
-    const html = renderToStaticMarkup(createElement(RegistryProductCard, {
-      product: exactProduct,
-      query: tradeName,
-      showReportIssue: false,
-    }));
-    expect(html).toContain(`href="/instructions/${productId}"`);
-    expect(html).toContain(`data-testid="instruction-discovery-${productId}"`);
-  });
+  ])(
+    "routes $tradeName to the exact registry product instruction",
+    ({ tradeName, productId, registrationNumber }) => {
+      const exactProduct = {
+        ...product,
+        id: productId,
+        tradeName,
+        registration: {
+          ...product.registration,
+          number: registrationNumber,
+        },
+      };
+      const html = renderToStaticMarkup(
+        createElement(RegistryProductCard, {
+          product: exactProduct,
+          query: tradeName,
+          showReportIssue: false,
+        }),
+      );
+      expect(html).toContain(`href="/instructions/${productId}"`);
+      expect(html).toContain(
+        `data-testid="instruction-discovery-${productId}"`,
+      );
+    },
+  );
 
   it("does not offer another product's instruction when exact binding is absent", () => {
-    const html = renderToStaticMarkup(createElement(RegistryProductCard, {
-      product: { ...product, instructionAvailable: false },
-      query: "",
-      showReportIssue: false,
-    }));
+    const html = renderToStaticMarkup(
+      createElement(RegistryProductCard, {
+        product: { ...product, instructionAvailable: false },
+        query: "",
+        showReportIssue: false,
+      }),
+    );
     expect(html).not.toContain(`/instructions/${product.id}`);
     expect(html).not.toContain("Інструкція");
     expect(html).not.toContain("Є інструкція");
@@ -382,55 +423,63 @@ describe("registry catalog UI", () => {
       }),
     );
 
-    expect(html).toContain('АТ &quot;Лубнифарм&quot;, Україна');
+    expect(html).toContain("АТ &quot;Лубнифарм&quot;, Україна");
     expect(html).not.toMatch(/in bulk|пакування|контроль|випуск серій/iu);
   });
 
   it("shows an explicit National List verdict for every registry position", () => {
-    const ingredientOnly = renderToStaticMarkup(createElement(RegistryProductCard, {
-      product: { ...product, nationalListStatus: "ingredient_only" },
-      query: "",
-      showReportIssue: false,
-    }));
+    const ingredientOnly = renderToStaticMarkup(
+      createElement(RegistryProductCard, {
+        product: { ...product, nationalListStatus: "ingredient_only" },
+        query: "",
+        showReportIssue: false,
+      }),
+    );
     expect(ingredientOnly).toContain(
       "Не у Нацпереліку як конкретна реєстрова позиція",
     );
     expect(ingredientOnly).not.toContain('data-testid="national-list-exact"');
 
-    const uncertain = renderToStaticMarkup(createElement(RegistryProductCard, {
-      product: { ...product, nationalListStatus: "uncertain" },
-      query: "",
-      showReportIssue: false,
-    }));
+    const uncertain = renderToStaticMarkup(
+      createElement(RegistryProductCard, {
+        product: { ...product, nationalListStatus: "uncertain" },
+        query: "",
+        showReportIssue: false,
+      }),
+    );
     expect(uncertain).toContain("Статус Нацпереліку не визначено");
     expect(uncertain).not.toContain('data-testid="national-list-exact"');
 
-    const notListed = renderToStaticMarkup(createElement(RegistryProductCard, {
-      product: {
-        ...product,
-        nationalListStatus: "not_listed",
-        nationalListMatchReason:
-          "No matching INN or fixed combination exists in the active release.",
-      },
-      query: "",
-      showReportIssue: false,
-    }));
+    const notListed = renderToStaticMarkup(
+      createElement(RegistryProductCard, {
+        product: {
+          ...product,
+          nationalListStatus: "not_listed",
+          nationalListMatchReason:
+            "No matching INN or fixed combination exists in the active release.",
+        },
+        query: "",
+        showReportIssue: false,
+      }),
+    );
     expect(notListed).toContain("Не у Нацпереліку");
     expect(notListed).not.toContain(
       "No matching INN or fixed combination exists in the active release.",
     );
 
-    const unavailable = renderToStaticMarkup(createElement(RegistryProductCard, {
-      product: {
-        ...product,
-        nationalListStatus: "not_applicable",
-        nationalListRelease: null,
-        nationalListSource: null,
-        nationalListMatchDetails: null,
-      },
-      query: "",
-      showReportIssue: false,
-    }));
+    const unavailable = renderToStaticMarkup(
+      createElement(RegistryProductCard, {
+        product: {
+          ...product,
+          nationalListStatus: "not_applicable",
+          nationalListRelease: null,
+          nationalListSource: null,
+          nationalListMatchDetails: null,
+        },
+        query: "",
+        showReportIssue: false,
+      }),
+    );
     expect(unavailable).toContain("Статус недоступний");
     expect(unavailable).toContain(
       "Не визначено — активний Нацперелік недоступний",
@@ -442,7 +491,11 @@ describe("registry catalog UI", () => {
   it("clearly labels a product without an approved mapping", () => {
     const html = renderToStaticMarkup(
       createElement(RegistryProductCard, {
-        product: { ...product, mappingStatus: "unmapped", approvedMapping: null },
+        product: {
+          ...product,
+          mappingStatus: "unmapped",
+          approvedMapping: null,
+        },
         query: "",
         showReportIssue: false,
       }),
@@ -475,125 +528,180 @@ describe("registry catalog UI", () => {
     ["Енап", "ЕНАП®", "Еналаприл", "Еналаприл-Тева"],
     ["Нурофен", "НУРОФЕН™", "Ібупрофен", "Ібупрофен-Дарниця"],
     ["Еліквіс", "ЕЛІКВІС", "Апіксабан", "Апіксабан"],
-    ["Амоксиклав", "АМОКСИКЛАВ®", "Амоксицилін + клавуланова кислота", "Аугментин"],
+    [
+      "Амоксиклав",
+      "АМОКСИКЛАВ®",
+      "Амоксицилін + клавуланова кислота",
+      "Аугментин",
+    ],
     ["Ксарелто", "КСАРЕЛТО", "Ривароксабан", "Ривароксабан-Тева"],
-  ])("prioritizes the exact %s brand and keeps related INN products collapsed", (
-    query, registryTradeName, inn, relatedTradeName,
-  ) => {
-    const summary = {
-      totalRegistryPositions: 3, uniqueTradeNames: 2, uniqueStrengths: 2,
-      uniqueDosageForms: 2, uniqueManufacturers: 1, monotherapyCount: 3,
-      combinationCount: 0, unknownCompositionCount: 0,
-      approvedMappedCount: 3, unmappedCount: 0,
-    };
-    const brandProduct = {
-      ...product,
-      id: "exact-" + normalizeExactTradeName(query),
-      tradeName: registryTradeName,
-      inn,
-      activeIngredient: inn,
-      strength: "5 мг",
-      dosageForm: "таблетки",
-      manufacturers: [{ name: "KRKA", country: "Словенія" }],
-    };
-    const secondBrandProduct = {
-      ...brandProduct,
-      id: brandProduct.id + "-10",
-      strength: "10 мг",
-      dosageForm: "таблетки пролонгованої дії",
-      registration: { ...brandProduct.registration, number: "UA/5678/01/02" },
-    };
-    const catalog = {
-      summary,
-      groups: {
-        items: [{
-          key: "composition-" + normalizeExactTradeName(inn),
-          displayName: inn,
-          officialCompositions: [inn],
-          compositionType: inn.includes("+") ? "combination" : "monotherapy",
-          mappingStatus: "approved",
-          summary,
-          source: { key: "state_registry", label: "State registry" },
-          tradeNames: {
-            items: [{
-              key: "trade-exact-" + normalizeExactTradeName(query),
-              tradeName: registryTradeName,
-              normalizedTradeName: normalizeExactTradeName(registryTradeName),
-              summary: { ...summary, totalRegistryPositions: 2, uniqueTradeNames: 1 },
-              forms: [
-                "таблетки in bulk; по 5000 таблеток у пакетах",
-                "таблетки пролонгованої дії, по 8 таблеток у блістері",
-              ],
-              strengths: ["5 мг", "10 мг"],
-              manufacturers: ["KRKA"],
-              variants: {
-                items: [brandProduct, secondBrandProduct],
-                total: 2, page: 1, pageSize: 25, totalPages: 1, hasNext: false,
+  ])(
+    "prioritizes the exact %s brand and keeps related INN products collapsed",
+    (query, registryTradeName, inn, relatedTradeName) => {
+      const summary = {
+        totalRegistryPositions: 3,
+        uniqueTradeNames: 2,
+        uniqueStrengths: 2,
+        uniqueDosageForms: 2,
+        uniqueManufacturers: 1,
+        monotherapyCount: 3,
+        combinationCount: 0,
+        unknownCompositionCount: 0,
+        approvedMappedCount: 3,
+        unmappedCount: 0,
+      };
+      const brandProduct = {
+        ...product,
+        id: "exact-" + normalizeExactTradeName(query),
+        tradeName: registryTradeName,
+        inn,
+        activeIngredient: inn,
+        strength: "5 мг",
+        dosageForm: "таблетки",
+        manufacturers: [{ name: "KRKA", country: "Словенія" }],
+      };
+      const secondBrandProduct = {
+        ...brandProduct,
+        id: brandProduct.id + "-10",
+        strength: "10 мг",
+        dosageForm: "таблетки пролонгованої дії",
+        registration: { ...brandProduct.registration, number: "UA/5678/01/02" },
+      };
+      const catalog = {
+        summary,
+        groups: {
+          items: [
+            {
+              key: "composition-" + normalizeExactTradeName(inn),
+              displayName: inn,
+              officialCompositions: [inn],
+              compositionType: inn.includes("+")
+                ? "combination"
+                : "monotherapy",
+              mappingStatus: "approved",
+              summary,
+              source: { key: "state_registry", label: "State registry" },
+              tradeNames: {
+                items: [
+                  {
+                    key: "trade-exact-" + normalizeExactTradeName(query),
+                    tradeName: registryTradeName,
+                    normalizedTradeName:
+                      normalizeExactTradeName(registryTradeName),
+                    summary: {
+                      ...summary,
+                      totalRegistryPositions: 2,
+                      uniqueTradeNames: 1,
+                    },
+                    forms: [
+                      "таблетки in bulk; по 5000 таблеток у пакетах",
+                      "таблетки пролонгованої дії, по 8 таблеток у блістері",
+                    ],
+                    strengths: ["5 мг", "10 мг"],
+                    manufacturers: ["KRKA"],
+                    variants: {
+                      items: [brandProduct, secondBrandProduct],
+                      total: 2,
+                      page: 1,
+                      pageSize: 25,
+                      totalPages: 1,
+                      hasNext: false,
+                    },
+                  },
+                  {
+                    key:
+                      "trade-related-" +
+                      normalizeExactTradeName(relatedTradeName),
+                    tradeName: relatedTradeName,
+                    normalizedTradeName:
+                      normalizeExactTradeName(relatedTradeName),
+                    summary: {
+                      ...summary,
+                      totalRegistryPositions: 1,
+                      uniqueTradeNames: 1,
+                    },
+                    forms: ["таблетки"],
+                    strengths: ["5 мг"],
+                    manufacturers: ["Інший виробник"],
+                    variants: null,
+                  },
+                ],
+                total: 2,
+                page: 1,
+                pageSize: 10,
+                totalPages: 1,
+                hasNext: false,
               },
-            }, {
-              key: "trade-related-" + normalizeExactTradeName(relatedTradeName),
-              tradeName: relatedTradeName,
-              normalizedTradeName: normalizeExactTradeName(relatedTradeName),
-              summary: { ...summary, totalRegistryPositions: 1, uniqueTradeNames: 1 },
-              forms: ["таблетки"],
-              strengths: ["5 мг"],
-              manufacturers: ["Інший виробник"],
-              variants: null,
-            }],
-            total: 2, page: 1, pageSize: 10, totalPages: 1, hasNext: false,
-          },
-        }],
-        total: 1, page: 1, pageSize: 10, totalPages: 1, hasNext: false,
-      },
-      appliedFilters: {
-        query, tradeName: null, manufacturer: null, form: null, strength: null,
-        compositionType: "all", mappingStatus: "all", nationalListStatus: "all",
-        registrationStatus: null,
-      },
-      bounded: true,
-    } as NonNullable<CatalogSearchResponse["registryGroups"]>;
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 10,
+          totalPages: 1,
+          hasNext: false,
+        },
+        appliedFilters: {
+          query,
+          tradeName: null,
+          manufacturer: null,
+          form: null,
+          strength: null,
+          compositionType: "all",
+          mappingStatus: "all",
+          nationalListStatus: "all",
+          registrationStatus: null,
+        },
+        bounded: true,
+      } as NonNullable<CatalogSearchResponse["registryGroups"]>;
 
-    expect(isExactTradeNameQuery(query, registryTradeName)).toBe(true);
-    expect(findExactTradeNameMatches(catalog, query)).toHaveLength(1);
-    const html = renderToStaticMarkup(createElement(GroupedRegistryResults, {
-      catalog,
-      query,
-      isFetching: false,
-      isVariantFetching: false,
-      isVariantError: false,
-      selectedTradeNameKey: "trade-exact-" + normalizeExactTradeName(query),
-      onRetryVariants: () => undefined,
-      onSelectTrade: () => undefined,
-      onGroupPage: () => undefined,
-      onTradePage: () => undefined,
-      onVariantPage: () => undefined,
-    }));
+      expect(isExactTradeNameQuery(query, registryTradeName)).toBe(true);
+      expect(findExactTradeNameMatches(catalog, query)).toHaveLength(1);
+      const html = renderToStaticMarkup(
+        createElement(GroupedRegistryResults, {
+          catalog,
+          query,
+          isFetching: false,
+          isVariantFetching: false,
+          isVariantError: false,
+          selectedTradeNameKey: "trade-exact-" + normalizeExactTradeName(query),
+          onRetryVariants: () => undefined,
+          onSelectTrade: () => undefined,
+          onGroupPage: () => undefined,
+          onTradePage: () => undefined,
+          onVariantPage: () => undefined,
+        }),
+      );
 
-    expect(html).toContain('data-testid="exact-brand-results"');
-    expect(html).toContain("Точний збіг за торговою назвою");
-    expect(html).toContain("Діюча речовина:");
-    expect(html).toContain(inn);
-    expect(html).toContain('data-testid="brand-strength-chips"');
-    expect(html).toContain("5 мг");
-    expect(html).toContain("10 мг");
-    expect(html).toContain('data-testid="brand-form-badges"');
-    expect(html).toContain('data-testid="product-actions-');
-    expect(html).toContain('href="/interactions"');
-    expect(html).toContain('href="/compare"');
-    expect(html).toContain("таблетки пролонгованої дії");
-    expect(html).not.toContain("in bulk");
-    expect(html).not.toContain("по 5000");
-    expect(html).not.toContain("по 8 таблеток");
-    expect(html).toContain("KRKA");
-    expect(html).toContain("Конкретні реєстрові позиції");
-    expect(html).toContain('data-testid="brand-alternatives"');
-    expect(html).toContain("Інші препарати з " + inn);
-    expect(html.indexOf(registryTradeName)).toBeLessThan(html.indexOf(relatedTradeName));
-    expect(html).toContain("/instructions/" + brandProduct.id);
-    expect(html).toContain('data-testid="instruction-action-' + brandProduct.id + '"');
-    expect(html).not.toContain("<details open=");
-    expect(html).not.toContain("overflow-x-auto");
-  });
+      expect(html).toContain('data-testid="exact-brand-results"');
+      expect(html).toContain("Точний збіг за торговою назвою");
+      expect(html).toContain("Діюча речовина:");
+      expect(html).toContain(inn);
+      expect(html).toContain('data-testid="brand-strength-chips"');
+      expect(html).toContain("5 мг");
+      expect(html).toContain("10 мг");
+      expect(html).toContain('data-testid="brand-form-badges"');
+      expect(html).toContain('data-testid="product-actions-');
+      expect(html).toContain('href="/interactions"');
+      expect(html).toContain('href="/compare"');
+      expect(html).toContain("таблетки пролонгованої дії");
+      expect(html).not.toContain("in bulk");
+      expect(html).not.toContain("по 5000");
+      expect(html).not.toContain("по 8 таблеток");
+      expect(html).toContain("KRKA");
+      expect(html).toContain("Конкретні реєстрові позиції");
+      expect(html).toContain('data-testid="brand-alternatives"');
+      expect(html).toContain("Інші препарати з " + inn);
+      expect(html.indexOf(registryTradeName)).toBeLessThan(
+        html.indexOf(relatedTradeName),
+      );
+      expect(html).toContain("/instructions/" + brandProduct.id);
+      expect(html).toContain(
+        'data-testid="instruction-action-' + brandProduct.id + '"',
+      );
+      expect(html).not.toContain("<details open=");
+      expect(html).not.toContain("overflow-x-auto");
+    },
+  );
 
   it("normalizes registered marks, punctuation, spacing, and case deterministically", () => {
     expect(normalizeExactTradeName("  ЕНАП®  ")).toBe("енап");
@@ -606,7 +714,9 @@ describe("registry catalog UI", () => {
   it("does not refetch embedded exact variants or keep the primary spinner active", () => {
     expect(shouldAutoLoadExactTradeVariants(true, null)).toBe(false);
     expect(shouldAutoLoadExactTradeVariants(false, null)).toBe(true);
-    expect(shouldAutoLoadExactTradeVariants(false, "trade-selected")).toBe(false);
+    expect(shouldAutoLoadExactTradeVariants(false, "trade-selected")).toBe(
+      false,
+    );
     expect(shouldShowPrimarySearchSpinner(false, false, true)).toBe(false);
     expect(shouldShowPrimarySearchSpinner(false, true, false)).toBe(true);
     expect(shouldShowPrimarySearchSpinner(true, false, false)).toBe(true);
@@ -626,54 +736,58 @@ describe("registry catalog UI", () => {
         unmappedCount: 182,
       },
       groups: {
-        items: [{
-          key: "composition-amlodipine",
-          displayName: "Amlodipine",
-          officialCompositions: ["Amlodipine"],
-          compositionType: "monotherapy",
-          mappingStatus: "mixed",
-          summary: {
-            totalRegistryPositions: 302,
-            uniqueTradeNames: 18,
-            uniqueStrengths: 6,
-            uniqueDosageForms: 3,
-            uniqueManufacturers: 12,
-            monotherapyCount: 302,
-            combinationCount: 0,
-            unknownCompositionCount: 0,
-            approvedMappedCount: 120,
-            unmappedCount: 182,
+        items: [
+          {
+            key: "composition-amlodipine",
+            displayName: "Amlodipine",
+            officialCompositions: ["Amlodipine"],
+            compositionType: "monotherapy",
+            mappingStatus: "mixed",
+            summary: {
+              totalRegistryPositions: 302,
+              uniqueTradeNames: 18,
+              uniqueStrengths: 6,
+              uniqueDosageForms: 3,
+              uniqueManufacturers: 12,
+              monotherapyCount: 302,
+              combinationCount: 0,
+              unknownCompositionCount: 0,
+              approvedMappedCount: 120,
+              unmappedCount: 182,
+            },
+            source: { key: "state_registry", label: "State registry" },
+            tradeNames: {
+              items: [
+                {
+                  key: "trade-amlodipine-pharma",
+                  tradeName: "Amlodipine Pharma",
+                  normalizedTradeName: "amlodipine pharma",
+                  summary: {
+                    totalRegistryPositions: 24,
+                    uniqueTradeNames: 1,
+                    uniqueStrengths: 2,
+                    uniqueDosageForms: 1,
+                    uniqueManufacturers: 2,
+                    monotherapyCount: 24,
+                    combinationCount: 0,
+                    unknownCompositionCount: 0,
+                    approvedMappedCount: 12,
+                    unmappedCount: 12,
+                  },
+                  forms: ["tablets"],
+                  strengths: ["5 mg", "10 mg"],
+                  manufacturers: ["Example Pharma"],
+                  variants: null,
+                },
+              ],
+              total: 1,
+              page: 1,
+              pageSize: 10,
+              totalPages: 1,
+              hasNext: false,
+            },
           },
-          source: { key: "state_registry", label: "State registry" },
-          tradeNames: {
-            items: [{
-              key: "trade-amlodipine-pharma",
-              tradeName: "Amlodipine Pharma",
-              normalizedTradeName: "amlodipine pharma",
-              summary: {
-                totalRegistryPositions: 24,
-                uniqueTradeNames: 1,
-                uniqueStrengths: 2,
-                uniqueDosageForms: 1,
-                uniqueManufacturers: 2,
-                monotherapyCount: 24,
-                combinationCount: 0,
-                unknownCompositionCount: 0,
-                approvedMappedCount: 12,
-                unmappedCount: 12,
-              },
-              forms: ["tablets"],
-              strengths: ["5 mg", "10 mg"],
-              manufacturers: ["Example Pharma"],
-              variants: null,
-            }],
-            total: 1,
-            page: 1,
-            pageSize: 10,
-            totalPages: 1,
-            hasNext: false,
-          },
-        }],
+        ],
         total: 1,
         page: 1,
         pageSize: 10,
@@ -693,21 +807,23 @@ describe("registry catalog UI", () => {
       },
       bounded: true,
     };
-    const html = renderToStaticMarkup(createElement(GroupedRegistryResults, {
-      catalog,
-      query: "Amlodipine",
-      isFetching: false,
-      onSelectTrade: () => undefined,
-      onGroupPage: () => undefined,
-      onTradePage: () => undefined,
-      onVariantPage: () => undefined,
-    }));
+    const html = renderToStaticMarkup(
+      createElement(GroupedRegistryResults, {
+        catalog,
+        query: "Amlodipine",
+        isFetching: false,
+        onSelectTrade: () => undefined,
+        onGroupPage: () => undefined,
+        onTradePage: () => undefined,
+        onVariantPage: () => undefined,
+      }),
+    );
 
     expect(html).toContain('data-testid="grouped-registry-results"');
     expect(html).toContain("302");
     expect(html).toContain("Amlodipine");
     expect(html).toContain("Amlodipine Pharma");
-    expect(html).toContain("aria-expanded=\"false\"");
+    expect(html).toContain('aria-expanded="false"');
     expect(html).not.toContain("postgresql://");
 
     const group = catalog.groups.items[0];
@@ -716,23 +832,27 @@ describe("registry catalog UI", () => {
       ...catalog,
       groups: {
         ...catalog.groups,
-        items: [{
-          ...group,
-          tradeNames: {
-            ...group.tradeNames,
-            items: [{
-              ...trade,
-              variants: {
-                items: [product],
-                total: 1,
-                page: 1,
-                pageSize: 10,
-                totalPages: 1,
-                hasNext: false,
-              },
-            }],
+        items: [
+          {
+            ...group,
+            tradeNames: {
+              ...group.tradeNames,
+              items: [
+                {
+                  ...trade,
+                  variants: {
+                    items: [product],
+                    total: 1,
+                    page: 1,
+                    pageSize: 10,
+                    totalPages: 1,
+                    hasNext: false,
+                  },
+                },
+              ],
+            },
           },
-        }],
+        ],
       },
     };
     const merged = mergeCatalogVariantPage(
@@ -742,45 +862,55 @@ describe("registry catalog UI", () => {
       trade.key,
     );
     expect(catalog.groups.items[0].tradeNames.items[0].variants).toBeNull();
-    expect(
-      merged?.groups.items[0].tradeNames.items[0].variants?.items,
-    ).toEqual([product]);
+    expect(merged?.groups.items[0].tradeNames.items[0].variants?.items).toEqual(
+      [product],
+    );
 
-    const expandedHtml = renderToStaticMarkup(createElement(GroupedRegistryResults, {
-      catalog: variantCatalog,
-      query: "Amlodipine",
-      isFetching: false,
-      isVariantFetching: false,
-      isVariantError: false,
-      selectedTradeNameKey: trade.key,
-      onRetryVariants: () => undefined,
-      onSelectTrade: () => undefined,
-      onGroupPage: () => undefined,
-      onTradePage: () => undefined,
-      onVariantPage: () => undefined,
-    }));
-    expect(expandedHtml).toContain('data-testid="instruction-badge-trade-trade-amlodipine-pharma"');
-    expect(expandedHtml).toContain(`data-testid="instruction-action-${product.id}"`);
+    const expandedHtml = renderToStaticMarkup(
+      createElement(GroupedRegistryResults, {
+        catalog: variantCatalog,
+        query: "Amlodipine",
+        isFetching: false,
+        isVariantFetching: false,
+        isVariantError: false,
+        selectedTradeNameKey: trade.key,
+        onRetryVariants: () => undefined,
+        onSelectTrade: () => undefined,
+        onGroupPage: () => undefined,
+        onTradePage: () => undefined,
+        onVariantPage: () => undefined,
+      }),
+    );
+    expect(expandedHtml).toContain(
+      'data-testid="instruction-badge-trade-trade-amlodipine-pharma"',
+    );
+    expect(expandedHtml).toContain(
+      `data-testid="instruction-action-${product.id}"`,
+    );
     expect(expandedHtml).toContain(`/instructions/${product.id}`);
     expect(expandedHtml).toContain("Є інструкція");
     expect(expandedHtml).toContain("min-w-0");
     expect(expandedHtml).not.toContain("overflow-x-auto");
 
-    const loadingHtml = renderToStaticMarkup(createElement(GroupedRegistryResults, {
-      catalog,
-      query: "Amlodipine",
-      isFetching: true,
-      isVariantFetching: true,
-      isVariantError: false,
-      selectedTradeNameKey: trade.key,
-      onRetryVariants: () => undefined,
-      onSelectTrade: () => undefined,
-      onGroupPage: () => undefined,
-      onTradePage: () => undefined,
-      onVariantPage: () => undefined,
-    }));
+    const loadingHtml = renderToStaticMarkup(
+      createElement(GroupedRegistryResults, {
+        catalog,
+        query: "Amlodipine",
+        isFetching: true,
+        isVariantFetching: true,
+        isVariantError: false,
+        selectedTradeNameKey: trade.key,
+        onRetryVariants: () => undefined,
+        onSelectTrade: () => undefined,
+        onGroupPage: () => undefined,
+        onTradePage: () => undefined,
+        onVariantPage: () => undefined,
+      }),
+    );
     expect(loadingHtml).toContain('data-testid="variant-loading"');
-    expect(loadingHtml).not.toContain('data-testid="registry-product-registry-1"');
+    expect(loadingHtml).not.toContain(
+      'data-testid="registry-product-registry-1"',
+    );
   });
 
   it("retries one network or server failure but never retries client errors", () => {

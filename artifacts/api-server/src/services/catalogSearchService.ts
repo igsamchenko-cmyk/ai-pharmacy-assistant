@@ -642,20 +642,29 @@ function buildProductFilter(input: CatalogSearchInput, exactTradeOnly = false) {
     const combinationTerms = catalogCompositionSearchTerms(query);
 
     if (input.type === "ingredients") {
-      const ingredientKeys = [
+      const resolvedIngredient = resolveSourceBackedDictionaryQuery(query);
+      const ingredientTerms = [
         ...new Set(
-          [...catalogAliasQueryKeys(query), normalized].filter(Boolean),
+          [
+            query,
+            resolvedIngredient?.name,
+            resolvedIngredient?.ingredient.inn,
+            resolvedIngredient?.ingredient.latin,
+            resolvedIngredient?.ingredient.english,
+          ]
+            .map((value) => value?.trim().toLocaleLowerCase("uk-UA") ?? "")
+            .filter(Boolean),
         ),
       ];
-      const exactRef = add(ingredientKeys);
+      const exactRef = add(ingredientTerms);
       const prefixRef = add(
-        ingredientKeys.map((value) => `${escapeLike(value)}%`),
+        ingredientTerms.map((value) => `${escapeLike(value)}%`),
       );
       const containsRef = add(
-        ingredientKeys.map((value) => `%${escapeLike(value)}%`),
+        ingredientTerms.map((value) => `%${escapeLike(value)}%`),
       );
-      const innKey = catalogSearchKeySql("p.inn");
-      const activeKey = catalogSearchKeySql("p.active_ingredient");
+      const innKey = "LOWER(p.inn)";
+      const activeKey = "LOWER(p.active_ingredient)";
       const exactIngredient = `(
         ${innKey} = ANY(${exactRef}::text[])
         OR ${activeKey} = ANY(${exactRef}::text[])
