@@ -899,6 +899,167 @@ export const GetDrugInstructionResponse = zod.object({
 
 
 /**
+ * Resolves the official DRLZ dispensing-conditions field by exact product identifier and registration number. Package-dependent, conflicting, missing and stale evidence deliberately require manual review.
+ * @summary Resolve Rx/OTC conditions for one exact registry product
+ */
+export const checkProductDispensingCategoryQueryProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const checkProductDispensingCategoryQueryRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+
+
+export const CheckProductDispensingCategoryQueryParams = zod.object({
+  "productId": zod.coerce.string().regex(checkProductDispensingCategoryQueryProductIdRegExp),
+  "registrationNumber": zod.coerce.string().regex(checkProductDispensingCategoryQueryRegistrationNumberRegExp)
+})
+
+export const checkProductDispensingCategoryResponseProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const checkProductDispensingCategoryResponseRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const checkProductDispensingCategoryResponseSummaryMax = 1000;
+
+export const checkProductDispensingCategoryResponseConditionsItemMax = 1000;
+
+export const checkProductDispensingCategoryResponseConditionsMax = 20;
+
+export const checkProductDispensingCategoryResponseSourceTitleMax = 300;
+
+export const checkProductDispensingCategoryResponseSourceOfficialRowCountMax = 250000;
+
+export const checkProductDispensingCategoryResponseSourceRecordCountMax = 250000;
+
+export const checkProductDispensingCategoryResponseSourceSha256RegExp = new RegExp('^[a-f0-9]{64}$');
+export const checkProductDispensingCategoryResponseSourceLegalBasisTitleMax = 500;
+
+export const checkProductDispensingCategoryResponseSourceLegalBasisRevisionDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
+export const CheckProductDispensingCategoryResponse = zod.object({
+  "version": zod.enum(['1.0']),
+  "productId": zod.string().regex(checkProductDispensingCategoryResponseProductIdRegExp),
+  "registrationNumber": zod.string().regex(checkProductDispensingCategoryResponseRegistrationNumberRegExp),
+  "status": zod.enum(['otc', 'prescription', 'conditional', 'unknown', 'conflict', 'not_found']),
+  "action": zod.enum(['otc_with_professional_checks', 'prescription_required', 'verify_exact_package', 'manual_review']),
+  "matchStatus": zod.enum(['product_and_registration', 'registration', 'not_found']),
+  "summary": zod.string().min(1).max(checkProductDispensingCategoryResponseSummaryMax),
+  "conditions": zod.array(zod.string().min(1).max(checkProductDispensingCategoryResponseConditionsItemMax)).max(checkProductDispensingCategoryResponseConditionsMax),
+  "packageDependent": zod.boolean(),
+  "restrictedSetting": zod.boolean(),
+  "source": zod.object({
+  "title": zod.string().min(1).max(checkProductDispensingCategoryResponseSourceTitleMax),
+  "url": zod.string().url(),
+  "checkedAt": zod.coerce.date(),
+  "generatedAt": zod.coerce.date(),
+  "complete": zod.boolean(),
+  "officialRowCount": zod.number().min(1).max(checkProductDispensingCategoryResponseSourceOfficialRowCountMax),
+  "recordCount": zod.number().min(1).max(checkProductDispensingCategoryResponseSourceRecordCountMax),
+  "sha256": zod.string().regex(checkProductDispensingCategoryResponseSourceSha256RegExp),
+  "freshness": zod.enum(['current', 'stale', 'incomplete']),
+  "legalBasisTitle": zod.string().min(1).max(checkProductDispensingCategoryResponseSourceLegalBasisTitleMax),
+  "legalBasisUrl": zod.string().url(),
+  "legalBasisRevisionDate": zod.string().regex(checkProductDispensingCategoryResponseSourceLegalBasisRevisionDateRegExp)
+})
+})
+
+
+/**
+ * Checks a versioned local snapshot of the official Ukrainian quality-document registry by exact registration number and exact series. A no-match result is deliberately not an authorization to dispense.
+ * @summary Check official quality restrictions for one exact medicine series
+ */
+export const checkProductSeriesRestrictionsQueryProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const checkProductSeriesRestrictionsQueryRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const checkProductSeriesRestrictionsQuerySeriesMax = 80;
+
+
+export const checkProductSeriesRestrictionsQuerySeriesRegExp = new RegExp('^[^\\r\\n]+$');
+
+
+export const CheckProductSeriesRestrictionsQueryParams = zod.object({
+  "productId": zod.coerce.string().regex(checkProductSeriesRestrictionsQueryProductIdRegExp),
+  "registrationNumber": zod.coerce.string().regex(checkProductSeriesRestrictionsQueryRegistrationNumberRegExp),
+  "series": zod.coerce.string().min(1).max(checkProductSeriesRestrictionsQuerySeriesMax).regex(checkProductSeriesRestrictionsQuerySeriesRegExp)
+})
+
+export const checkProductSeriesRestrictionsResponseProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const checkProductSeriesRestrictionsResponseRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const checkProductSeriesRestrictionsResponseSeriesMax = 80;
+
+export const checkProductSeriesRestrictionsResponseSummaryMax = 1000;
+
+export const checkProductSeriesRestrictionsResponseOtherSeriesEventCountMin = 0;
+export const checkProductSeriesRestrictionsResponseOtherSeriesEventCountMax = 250000;
+
+export const checkProductSeriesRestrictionsResponseEventsItemDocumentDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const checkProductSeriesRestrictionsResponseEventsItemDocumentNumberMax = 180;
+
+export const checkProductSeriesRestrictionsResponseEventsItemRegistrationNumberMax = 120;
+
+export const checkProductSeriesRestrictionsResponseEventsItemMedicineNameMax = 500;
+
+export const checkProductSeriesRestrictionsResponseEventsItemDosageFormMax = 4000;
+
+export const checkProductSeriesRestrictionsResponseEventsItemSeriesRawMax = 1000;
+
+export const checkProductSeriesRestrictionsResponseEventsItemSeriesValuesItemMax = 160;
+
+export const checkProductSeriesRestrictionsResponseEventsItemSeriesValuesMax = 100;
+
+export const checkProductSeriesRestrictionsResponseEventsItemManufacturerMax = 4000;
+
+export const checkProductSeriesRestrictionsResponseEventsItemCountryMax = 500;
+
+export const checkProductSeriesRestrictionsResponseEventsItemAdditionalInfoMax = 8000;
+
+export const checkProductSeriesRestrictionsResponseEventsMax = 50;
+
+export const checkProductSeriesRestrictionsResponseSourceTitleMax = 300;
+
+export const checkProductSeriesRestrictionsResponseSourceLatestDocumentDateOneRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const checkProductSeriesRestrictionsResponseSourceCoverageStartDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const checkProductSeriesRestrictionsResponseSourceRecordCountMin = 0;
+export const checkProductSeriesRestrictionsResponseSourceRecordCountMax = 250000;
+
+export const checkProductSeriesRestrictionsResponseSourceSha256RegExp = new RegExp('^[a-f0-9]{64}$');
+
+
+export const CheckProductSeriesRestrictionsResponse = zod.object({
+  "version": zod.enum(['1.0']),
+  "productId": zod.string().regex(checkProductSeriesRestrictionsResponseProductIdRegExp),
+  "registrationNumber": zod.string().regex(checkProductSeriesRestrictionsResponseRegistrationNumberRegExp),
+  "series": zod.string().min(1).max(checkProductSeriesRestrictionsResponseSeriesMax),
+  "status": zod.enum(['blocked', 'restored', 'no_match', 'needs_review']),
+  "action": zod.enum(['stop', 'manual_review']),
+  "summary": zod.string().min(1).max(checkProductSeriesRestrictionsResponseSummaryMax),
+  "matchedAllSeries": zod.boolean(),
+  "matchedUnspecifiedSeries": zod.boolean(),
+  "otherSeriesEventCount": zod.number().min(checkProductSeriesRestrictionsResponseOtherSeriesEventCountMin).max(checkProductSeriesRestrictionsResponseOtherSeriesEventCountMax),
+  "events": zod.array(zod.object({
+  "documentDate": zod.string().regex(checkProductSeriesRestrictionsResponseEventsItemDocumentDateRegExp),
+  "documentNumber": zod.string().min(1).max(checkProductSeriesRestrictionsResponseEventsItemDocumentNumberMax),
+  "eventType": zod.enum(['temporary_ban', 'permanent_ban', 'restore_temporary', 'restore_permanent', 'partial_cancellation', 'supplement']),
+  "registrationNumber": zod.string().max(checkProductSeriesRestrictionsResponseEventsItemRegistrationNumberMax).nullable(),
+  "medicineName": zod.string().min(1).max(checkProductSeriesRestrictionsResponseEventsItemMedicineNameMax),
+  "dosageForm": zod.string().max(checkProductSeriesRestrictionsResponseEventsItemDosageFormMax),
+  "seriesRaw": zod.string().min(1).max(checkProductSeriesRestrictionsResponseEventsItemSeriesRawMax),
+  "seriesValues": zod.array(zod.string().min(1).max(checkProductSeriesRestrictionsResponseEventsItemSeriesValuesItemMax)).max(checkProductSeriesRestrictionsResponseEventsItemSeriesValuesMax),
+  "allSeries": zod.boolean(),
+  "seriesUnspecified": zod.boolean(),
+  "manufacturer": zod.string().max(checkProductSeriesRestrictionsResponseEventsItemManufacturerMax),
+  "country": zod.string().max(checkProductSeriesRestrictionsResponseEventsItemCountryMax),
+  "additionalInfo": zod.string().max(checkProductSeriesRestrictionsResponseEventsItemAdditionalInfoMax)
+})).max(checkProductSeriesRestrictionsResponseEventsMax),
+  "source": zod.object({
+  "title": zod.string().min(1).max(checkProductSeriesRestrictionsResponseSourceTitleMax),
+  "url": zod.string().url(),
+  "generatedAt": zod.coerce.date(),
+  "latestDocumentDate": zod.union([zod.string().regex(checkProductSeriesRestrictionsResponseSourceLatestDocumentDateOneRegExp),zod.null()]),
+  "coverageStartDate": zod.string().regex(checkProductSeriesRestrictionsResponseSourceCoverageStartDateRegExp),
+  "complete": zod.boolean(),
+  "recordCount": zod.number().min(checkProductSeriesRestrictionsResponseSourceRecordCountMin).max(checkProductSeriesRestrictionsResponseSourceRecordCountMax),
+  "sha256": zod.string().regex(checkProductSeriesRestrictionsResponseSourceSha256RegExp),
+  "freshness": zod.enum(['current', 'stale', 'incomplete'])
+})
+})
+
+
+/**
  * Aggregate statistics about the demo drug database.
  * @summary Drug database statistics
  */

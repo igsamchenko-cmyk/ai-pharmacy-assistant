@@ -13,6 +13,7 @@ import { ProtectedRoute } from "@/components/protected-route";
 
 const Home = lazy(() => import("@/pages/home"));
 const LoginPage = lazy(() => import("@/pages/login"));
+const Dispensing = lazy(() => import("@/pages/dispensing"));
 const SearchPage = lazy(() => import("@/pages/search"));
 const DrugDetail = lazy(() => import("@/pages/drug-detail"));
 const Analogs = lazy(() => import("@/pages/analogs"));
@@ -34,6 +35,7 @@ const RegistryProductDetail = lazy(
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient();
+const ProtectedDispensing = () => <ProtectedRoute component={Dispensing} />;
 const ProtectedSearch = () => <ProtectedRoute component={SearchPage} />;
 const ProtectedDrugDetail = () => <ProtectedRoute component={DrugDetail} />;
 const ProtectedAnalogs = () => <ProtectedRoute component={Analogs} />;
@@ -83,6 +85,7 @@ function Router() {
             <Route path="/" component={Home} />
             <Route path="/login" component={LoginPage} />
             <Route path="/access-denied" component={AccessDeniedRoute} />
+            <Route path="/dispense" component={ProtectedDispensing} />
             <Route path="/search" component={ProtectedSearch} />
             <Route
               path="/instructions/:productId"

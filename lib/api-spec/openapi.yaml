@@ -473,6 +473,96 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /catalog/dispensing-category:
+    get:
+      operationId: checkProductDispensingCategory
+      tags: [drugs]
+      summary: Resolve Rx/OTC conditions for one exact registry product
+      description: >-
+        Resolves the official DRLZ dispensing-conditions field by exact product
+        identifier and registration number. Package-dependent, conflicting,
+        missing and stale evidence deliberately require manual review.
+      parameters:
+        - name: productId
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-F0-9]{32}$"
+        - name: registrationNumber
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: "^UA/\\d+/\\d+/\\d+$"
+      responses:
+        "200":
+          description: Exact-product dispensing category assessment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DispensingCategoryCheck"
+        "400":
+          description: Invalid product or registration identifier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Verified local DRLZ dispensing-category snapshot is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /catalog/series-restrictions:
+    get:
+      operationId: checkProductSeriesRestrictions
+      tags: [drugs]
+      summary: Check official quality restrictions for one exact medicine series
+      description: >-
+        Checks a versioned local snapshot of the official Ukrainian quality-document
+        registry by exact registration number and exact series. A no-match result is
+        deliberately not an authorization to dispense.
+      parameters:
+        - name: productId
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-F0-9]{32}$"
+        - name: registrationNumber
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: "^UA/\\d+/\\d+/\\d+$"
+        - name: series
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 80
+            pattern: "^[^\\r\\n]+$"
+      responses:
+        "200":
+          description: Exact series restriction assessment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeriesRestrictionCheck"
+        "400":
+          description: Invalid product, registration or series identifier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Verified local DLS snapshot is unavailable or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /drugs/stats:
     get:
       operationId: getDrugStats
@@ -1287,7 +1377,14 @@ components:
                 type: string
         searchQuality:
           type: object
-          required: [totalQueries, hitRatePct, topResultAccuracyPct, missesCount, warnings]
+          required:
+            [
+              totalQueries,
+              hitRatePct,
+              topResultAccuracyPct,
+              missesCount,
+              warnings,
+            ]
           properties:
             totalQueries:
               type: integer
@@ -1303,7 +1400,8 @@ components:
                 type: string
         realWorld:
           type: object
-          required: [total, passed, missed, recommendedAdditions, hitRatePct, warnings]
+          required:
+            [total, passed, missed, recommendedAdditions, hitRatePct, warnings]
           properties:
             total:
               type: integer
@@ -1409,7 +1507,8 @@ components:
               nullable: true
         runtime:
           type: object
-          required: [mode, dbConfigured, dbAvailable, staticFallbackEnabled, warnings]
+          required:
+            [mode, dbConfigured, dbAvailable, staticFallbackEnabled, warnings]
           properties:
             mode:
               type: string
@@ -1426,7 +1525,15 @@ components:
                 type: string
         dataQuality:
           type: object
-          required: [mappingsCount, sourceCoveragePct, atcCoveragePct, conflicts, ok, warnings]
+          required:
+            [
+              mappingsCount,
+              sourceCoveragePct,
+              atcCoveragePct,
+              conflicts,
+              ok,
+              warnings,
+            ]
           properties:
             mappingsCount:
               type: integer
@@ -1786,17 +1893,32 @@ components:
         url: { type: string }
     NationalListMatchDetails:
       type: object
-      required: [officialName, ingredients, dosageForms, routes, strengths, ingredientMatch, formMatch, routeMatch, strengthMatch]
+      required:
+        [
+          officialName,
+          ingredients,
+          dosageForms,
+          routes,
+          strengths,
+          ingredientMatch,
+          formMatch,
+          routeMatch,
+          strengthMatch,
+        ]
       properties:
         officialName: { type: string }
         ingredients: { type: array, maxItems: 12, items: { type: string } }
         dosageForms: { type: array, maxItems: 20, items: { type: string } }
         routes: { type: array, maxItems: 12, items: { type: string } }
         strengths: { type: array, maxItems: 30, items: { type: string } }
-        ingredientMatch: { type: string, enum: [match, mismatch, unknown, not_applicable] }
-        formMatch: { type: string, enum: [match, mismatch, unknown, not_applicable] }
-        routeMatch: { type: string, enum: [match, mismatch, unknown, not_applicable] }
-        strengthMatch: { type: string, enum: [match, mismatch, unknown, not_applicable] }
+        ingredientMatch:
+          { type: string, enum: [match, mismatch, unknown, not_applicable] }
+        formMatch:
+          { type: string, enum: [match, mismatch, unknown, not_applicable] }
+        routeMatch:
+          { type: string, enum: [match, mismatch, unknown, not_applicable] }
+        strengthMatch:
+          { type: string, enum: [match, mismatch, unknown, not_applicable] }
     ApprovedIngredientMapping:
       type: object
       required: [ingredientId, inn, latin, english, atcCode]
@@ -1937,7 +2059,18 @@ components:
           description: Validated exact-registration DRLZ document URL, when published
     DrugInstructionSections:
       type: object
-      required: [indications, contraindications, adverseReactions, interactions, specialWarnings, pregnancyAndLactation, administration, overdose, storage]
+      required:
+        [
+          indications,
+          contraindications,
+          adverseReactions,
+          interactions,
+          specialWarnings,
+          pregnancyAndLactation,
+          administration,
+          overdose,
+          storage,
+        ]
       properties:
         indications: { type: ["string", "null"], maxLength: 60000 }
         contraindications: { type: ["string", "null"], maxLength: 60000 }
@@ -1950,7 +2083,19 @@ components:
         storage: { type: ["string", "null"], maxLength: 60000 }
     DrugInstructionSource:
       type: object
-      required: [url, documentId, documentDate, checkedAt, documentHash, contentLength, parserVersion, datasetTitle, datasetUrl, license]
+      required:
+        [
+          url,
+          documentId,
+          documentDate,
+          checkedAt,
+          documentHash,
+          contentLength,
+          parserVersion,
+          datasetTitle,
+          datasetUrl,
+          license,
+        ]
       properties:
         url: { type: string, format: uri, maxLength: 1000 }
         documentId: { type: string, pattern: "^[A-F0-9]{32}$" }
@@ -1964,7 +2109,14 @@ components:
         license: { type: string, minLength: 1 }
     DrugInstructionProvenance:
       type: object
-      required: [sourceAllowed, registrationMatched, contentLocationMatched, availableSectionCount, coveragePct]
+      required:
+        [
+          sourceAllowed,
+          registrationMatched,
+          contentLocationMatched,
+          availableSectionCount,
+          coveragePct,
+        ]
       properties:
         sourceAllowed: { type: boolean }
         registrationMatched: { type: boolean }
@@ -1973,7 +2125,26 @@ components:
         coveragePct: { type: integer, minimum: 0, maximum: 100 }
     DrugInstruction:
       type: object
-      required: [version, registryProductId, registrationNumber, tradeName, inn, activeIngredient, dosageForm, strength, manufacturer, manufacturerCountry, registrationStartDate, registrationEndDate, status, sections, source, provenance, warnings]
+      required:
+        [
+          version,
+          registryProductId,
+          registrationNumber,
+          tradeName,
+          inn,
+          activeIngredient,
+          dosageForm,
+          strength,
+          manufacturer,
+          manufacturerCountry,
+          registrationStartDate,
+          registrationEndDate,
+          status,
+          sections,
+          source,
+          provenance,
+          warnings,
+        ]
       properties:
         version: { type: string, enum: ["1.0"] }
         registryProductId: { type: string, pattern: "^[A-F0-9]{32}$" }
@@ -1987,7 +2158,11 @@ components:
         manufacturerCountry: { type: string, minLength: 1, maxLength: 120 }
         registrationStartDate: { type: string, minLength: 1, maxLength: 40 }
         registrationEndDate: { type: string, minLength: 1, maxLength: 40 }
-        status: { type: string, enum: [available, partial, unavailable, needs_review] }
+        status:
+          {
+            type: string,
+            enum: [available, partial, unavailable, needs_review],
+          }
         sections: { $ref: "#/components/schemas/DrugInstructionSections" }
         source: { $ref: "#/components/schemas/DrugInstructionSource" }
         provenance: { $ref: "#/components/schemas/DrugInstructionProvenance" }
@@ -1995,9 +2170,201 @@ components:
           type: array
           maxItems: 20
           items: { type: string, pattern: "^[a-z0-9:_-]{1,80}$" }
+    DispensingCategorySource:
+      type: object
+      required:
+        [
+          title,
+          url,
+          checkedAt,
+          generatedAt,
+          complete,
+          officialRowCount,
+          recordCount,
+          sha256,
+          freshness,
+          legalBasisTitle,
+          legalBasisUrl,
+          legalBasisRevisionDate,
+        ]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 300 }
+        url: { type: string, format: uri }
+        checkedAt: { type: string, format: date-time }
+        generatedAt: { type: string, format: date-time }
+        complete: { type: boolean }
+        officialRowCount: { type: integer, minimum: 1, maximum: 250000 }
+        recordCount: { type: integer, minimum: 1, maximum: 250000 }
+        sha256: { type: string, pattern: "^[a-f0-9]{64}$" }
+        freshness: { type: string, enum: [current, stale, incomplete] }
+        legalBasisTitle: { type: string, minLength: 1, maxLength: 500 }
+        legalBasisUrl: { type: string, format: uri }
+        legalBasisRevisionDate:
+          { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+    DispensingCategoryCheck:
+      type: object
+      required:
+        [
+          version,
+          productId,
+          registrationNumber,
+          status,
+          action,
+          matchStatus,
+          summary,
+          conditions,
+          packageDependent,
+          restrictedSetting,
+          source,
+        ]
+      properties:
+        version: { type: string, enum: ["1.0"] }
+        productId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        registrationNumber: { type: string, pattern: "^UA/\\d+/\\d+/\\d+$" }
+        status:
+          type: string
+          enum: [otc, prescription, conditional, unknown, conflict, not_found]
+        action:
+          type: string
+          enum:
+            [
+              otc_with_professional_checks,
+              prescription_required,
+              verify_exact_package,
+              manual_review,
+            ]
+        matchStatus:
+          type: string
+          enum: [product_and_registration, registration, not_found]
+        summary: { type: string, minLength: 1, maxLength: 1000 }
+        conditions:
+          type: array
+          maxItems: 20
+          items: { type: string, minLength: 1, maxLength: 1000 }
+        packageDependent: { type: boolean }
+        restrictedSetting: { type: boolean }
+        source: { $ref: "#/components/schemas/DispensingCategorySource" }
+    SeriesRestrictionEvent:
+      type: object
+      required:
+        [
+          documentDate,
+          documentNumber,
+          eventType,
+          registrationNumber,
+          medicineName,
+          dosageForm,
+          seriesRaw,
+          seriesValues,
+          allSeries,
+          seriesUnspecified,
+          manufacturer,
+          country,
+          additionalInfo,
+        ]
+      properties:
+        documentDate: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        documentNumber: { type: string, minLength: 1, maxLength: 180 }
+        eventType:
+          type: string
+          enum:
+            [
+              temporary_ban,
+              permanent_ban,
+              restore_temporary,
+              restore_permanent,
+              partial_cancellation,
+              supplement,
+            ]
+        registrationNumber: { type: ["string", "null"], maxLength: 120 }
+        medicineName: { type: string, minLength: 1, maxLength: 500 }
+        dosageForm: { type: string, maxLength: 4000 }
+        seriesRaw: { type: string, minLength: 1, maxLength: 1000 }
+        seriesValues:
+          type: array
+          maxItems: 100
+          items: { type: string, minLength: 1, maxLength: 160 }
+        allSeries: { type: boolean }
+        seriesUnspecified: { type: boolean }
+        manufacturer: { type: string, maxLength: 4000 }
+        country: { type: string, maxLength: 500 }
+        additionalInfo: { type: string, maxLength: 8000 }
+    SeriesRestrictionSource:
+      type: object
+      required:
+        [
+          title,
+          url,
+          generatedAt,
+          latestDocumentDate,
+          coverageStartDate,
+          complete,
+          recordCount,
+          sha256,
+          freshness,
+        ]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 300 }
+        url: { type: string, format: uri }
+        generatedAt: { type: string, format: date-time }
+        latestDocumentDate:
+          oneOf:
+            - { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+            - { type: "null" }
+        coverageStartDate: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        complete: { type: boolean }
+        recordCount: { type: integer, minimum: 0, maximum: 250000 }
+        sha256: { type: string, pattern: "^[a-f0-9]{64}$" }
+        freshness: { type: string, enum: [current, stale, incomplete] }
+    SeriesRestrictionCheck:
+      type: object
+      required:
+        [
+          version,
+          productId,
+          registrationNumber,
+          series,
+          status,
+          action,
+          summary,
+          matchedAllSeries,
+          matchedUnspecifiedSeries,
+          otherSeriesEventCount,
+          events,
+          source,
+        ]
+      properties:
+        version: { type: string, enum: ["1.0"] }
+        productId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        registrationNumber: { type: string, pattern: "^UA/\\d+/\\d+/\\d+$" }
+        series: { type: string, minLength: 1, maxLength: 80 }
+        status:
+          { type: string, enum: [blocked, restored, no_match, needs_review] }
+        action: { type: string, enum: [stop, manual_review] }
+        summary: { type: string, minLength: 1, maxLength: 1000 }
+        matchedAllSeries: { type: boolean }
+        matchedUnspecifiedSeries: { type: boolean }
+        otherSeriesEventCount: { type: integer, minimum: 0, maximum: 250000 }
+        events:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/SeriesRestrictionEvent" }
+        source: { $ref: "#/components/schemas/SeriesRestrictionSource" }
     CatalogGroupingSummary:
       type: object
-      required: [totalRegistryPositions, uniqueTradeNames, uniqueStrengths, uniqueDosageForms, uniqueManufacturers, monotherapyCount, combinationCount, unknownCompositionCount, approvedMappedCount, unmappedCount]
+      required:
+        [
+          totalRegistryPositions,
+          uniqueTradeNames,
+          uniqueStrengths,
+          uniqueDosageForms,
+          uniqueManufacturers,
+          monotherapyCount,
+          combinationCount,
+          unknownCompositionCount,
+          approvedMappedCount,
+          unmappedCount,
+        ]
       properties:
         totalRegistryPositions: { type: integer, minimum: 0 }
         uniqueTradeNames: { type: integer, minimum: 0 }
@@ -2011,7 +2378,16 @@ components:
         unmappedCount: { type: integer, minimum: 0 }
     RegistryVariantPage:
       type: object
-      required: [items, total, totalRegistryPositions, page, pageSize, totalPages, hasNext]
+      required:
+        [
+          items,
+          total,
+          totalRegistryPositions,
+          page,
+          pageSize,
+          totalPages,
+          hasNext,
+        ]
       properties:
         items:
           type: array
@@ -2026,7 +2402,17 @@ components:
         hasNext: { type: boolean }
     CatalogTradeNameGroup:
       type: object
-      required: [key, tradeName, normalizedTradeName, summary, forms, strengths, manufacturers, variants]
+      required:
+        [
+          key,
+          tradeName,
+          normalizedTradeName,
+          summary,
+          forms,
+          strengths,
+          manufacturers,
+          variants,
+        ]
       properties:
         key: { type: string }
         tradeName: { type: string }
@@ -2043,7 +2429,12 @@ components:
       type: object
       required: [items, total, page, pageSize, totalPages, hasNext]
       properties:
-        items: { type: array, maxItems: 25, items: { $ref: "#/components/schemas/CatalogTradeNameGroup" } }
+        items:
+          {
+            type: array,
+            maxItems: 25,
+            items: { $ref: "#/components/schemas/CatalogTradeNameGroup" },
+          }
         total: { type: integer, minimum: 0 }
         page: { type: integer, minimum: 1 }
         pageSize: { type: integer, enum: [10, 25] }
@@ -2051,13 +2442,26 @@ components:
         hasNext: { type: boolean }
     CatalogCompositionGroup:
       type: object
-      required: [key, displayName, officialCompositions, compositionType, mappingStatus, summary, source, tradeNames]
+      required:
+        [
+          key,
+          displayName,
+          officialCompositions,
+          compositionType,
+          mappingStatus,
+          summary,
+          source,
+          tradeNames,
+        ]
       properties:
         key: { type: string }
         displayName: { type: string }
-        officialCompositions: { type: array, maxItems: 20, items: { type: string } }
-        compositionType: { type: string, enum: [monotherapy, combination, unknown] }
-        mappingStatus: { type: string, enum: [approved, unmapped, mixed, ambiguous] }
+        officialCompositions:
+          { type: array, maxItems: 20, items: { type: string } }
+        compositionType:
+          { type: string, enum: [monotherapy, combination, unknown] }
+        mappingStatus:
+          { type: string, enum: [approved, unmapped, mixed, ambiguous] }
         summary: { $ref: "#/components/schemas/CatalogGroupingSummary" }
         source: { $ref: "#/components/schemas/CatalogSource" }
         tradeNames: { $ref: "#/components/schemas/CatalogTradeNameGroupPage" }
@@ -2065,7 +2469,12 @@ components:
       type: object
       required: [items, total, page, pageSize, totalPages, hasNext]
       properties:
-        items: { type: array, maxItems: 25, items: { $ref: "#/components/schemas/CatalogCompositionGroup" } }
+        items:
+          {
+            type: array,
+            maxItems: 25,
+            items: { $ref: "#/components/schemas/CatalogCompositionGroup" },
+          }
         total: { type: integer, minimum: 0 }
         page: { type: integer, minimum: 1 }
         pageSize: { type: integer, enum: [10, 25] }
@@ -2073,16 +2482,32 @@ components:
         hasNext: { type: boolean }
     CatalogAppliedFilters:
       type: object
-      required: [query, tradeName, manufacturer, form, strength, compositionType, mappingStatus, nationalListStatus, registrationStatus]
+      required:
+        [
+          query,
+          tradeName,
+          manufacturer,
+          form,
+          strength,
+          compositionType,
+          mappingStatus,
+          nationalListStatus,
+          registrationStatus,
+        ]
       properties:
         query: { type: string }
         tradeName: { type: ["string", "null"] }
         manufacturer: { type: ["string", "null"] }
         form: { type: ["string", "null"] }
         strength: { type: ["string", "null"] }
-        compositionType: { type: string, enum: [all, monotherapy, combination, unknown] }
+        compositionType:
+          { type: string, enum: [all, monotherapy, combination, unknown] }
         mappingStatus: { type: string, enum: [all, approved, unmapped] }
-        nationalListStatus: { type: string, enum: [all, exact, ingredient_only, uncertain, not_listed] }
+        nationalListStatus:
+          {
+            type: string,
+            enum: [all, exact, ingredient_only, uncertain, not_listed],
+          }
         registrationStatus: { type: ["string", "null"] }
     GroupedRegistryCatalog:
       type: object
@@ -2131,7 +2556,15 @@ components:
     CatalogClientIndexResponse:
       type: object
       required:
-        [version, snapshotHash, generatedAt, productCount, aliasCount, rows, aliases]
+        [
+          version,
+          snapshotHash,
+          generatedAt,
+          productCount,
+          aliasCount,
+          rows,
+          aliases,
+        ]
       properties:
         version:
           type: integer

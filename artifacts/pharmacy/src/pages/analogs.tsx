@@ -6,8 +6,7 @@ import { useParams, Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertTriangle, ChevronRight, Pill } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, ChevronRight, Pill } from "lucide-react";
 import { type Drug } from "@workspace/api-client-react";
 
 export default function Analogs() {
@@ -50,7 +49,7 @@ export default function Analogs() {
     if (drugs.length === 0) {
       return (
         <p className="text-sm text-muted-foreground italic px-2">
-          Аналогів у цій групі не знайдено.
+          Варіантів у цій групі не знайдено.
         </p>
       );
     }
@@ -103,7 +102,7 @@ export default function Analogs() {
         </Link>
 
         <h1 className="text-2xl font-bold text-foreground">
-          Аналоги препарату
+          Варіанти з тим самим МНН
         </h1>
         <div className="mt-4 p-4 bg-accent/20 border border-accent/30 rounded-xl flex items-center gap-3">
           <Pill className="w-6 h-6 text-primary shrink-0" />
@@ -119,9 +118,9 @@ export default function Analogs() {
       <div className="space-y-4">
         <h2 className="text-lg font-bold flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-green-500 shrink-0" />
-          Повні аналоги
+          Точний збіг параметрів
           <span className="text-xs font-normal text-muted-foreground ml-2">
-            (збіг МНН, форми та дози)
+            (однакові МНН, повна форма та дозування)
           </span>
         </h2>
         {renderDrugList(result.full)}
@@ -130,30 +129,12 @@ export default function Analogs() {
       <div className="space-y-4">
         <h2 className="text-lg font-bold flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
-          Часткові аналоги
+          Варіанти з відмінностями
           <span className="text-xs font-normal text-muted-foreground ml-2">
-            (інша форма або доза)
+            (те саме МНН, але інша форма або дозування)
           </span>
         </h2>
         {renderDrugList(result.partial)}
-      </div>
-
-      <div className="space-y-4">
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-blue-500 shrink-0" />
-          Терапевтичні альтернативи
-          <span className="text-xs font-normal text-muted-foreground ml-2">
-            (схожа дія)
-          </span>
-        </h2>
-        <Alert className="bg-destructive/5 border-destructive/20 text-destructive-foreground">
-          <AlertTriangle className="h-4 w-4 text-destructive" />
-          <AlertDescription className="text-sm ml-2">
-            Заміна на терапевтичну альтернативу вимагає консультації лікаря або
-            кваліфікованого рішення фармацевта!
-          </AlertDescription>
-        </Alert>
-        {renderDrugList(result.therapeutic)}
       </div>
 
       <div className="mt-8 text-xs text-muted-foreground bg-muted/30 p-4 rounded-lg italic text-center">

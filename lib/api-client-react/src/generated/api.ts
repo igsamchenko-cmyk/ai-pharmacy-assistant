@@ -35,11 +35,14 @@ import type {
   BetaDashboardStatus,
   CatalogClientIndexResponse,
   CatalogSearchResponse,
+  CheckProductDispensingCategoryParams,
+  CheckProductSeriesRestrictionsParams,
   CompareInput,
   CompareResult,
   DataQualityReport,
   DataSourcesResponse,
   DiagnosticsPanelData,
+  DispensingCategoryCheck,
   Drug,
   DrugInstruction,
   DrugStats,
@@ -67,7 +70,8 @@ import type {
   ReviewQueueResponse,
   ReviewStats,
   SearchCatalogParams,
-  SearchDrugsParams
+  SearchDrugsParams,
+  SeriesRestrictionCheck
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1007,6 +1011,176 @@ export function useGetDrugInstruction<TData = Awaited<ReturnType<typeof getDrugI
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDrugInstructionQueryOptions(productId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCheckProductDispensingCategoryUrl = (params: CheckProductDispensingCategoryParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/catalog/dispensing-category?${stringifiedParams}` : `/api/catalog/dispensing-category`
+}
+
+/**
+ * Resolves the official DRLZ dispensing-conditions field by exact product identifier and registration number. Package-dependent, conflicting, missing and stale evidence deliberately require manual review.
+ * @summary Resolve Rx/OTC conditions for one exact registry product
+ */
+export const checkProductDispensingCategory = async (params: CheckProductDispensingCategoryParams, options?: RequestInit): Promise<DispensingCategoryCheck> => {
+
+  return customFetch<DispensingCategoryCheck>(getCheckProductDispensingCategoryUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getCheckProductDispensingCategoryQueryKey = (params?: CheckProductDispensingCategoryParams,) => {
+    return [
+    `/api/catalog/dispensing-category`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getCheckProductDispensingCategoryQueryOptions = <TData = Awaited<ReturnType<typeof checkProductDispensingCategory>>, TError = ErrorType<ErrorResponse>>(params: CheckProductDispensingCategoryParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkProductDispensingCategory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCheckProductDispensingCategoryQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof checkProductDispensingCategory>>> = ({ signal }) => checkProductDispensingCategory(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof checkProductDispensingCategory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type CheckProductDispensingCategoryQueryResult = NonNullable<Awaited<ReturnType<typeof checkProductDispensingCategory>>>
+export type CheckProductDispensingCategoryQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Resolve Rx/OTC conditions for one exact registry product
+ */
+
+export function useCheckProductDispensingCategory<TData = Awaited<ReturnType<typeof checkProductDispensingCategory>>, TError = ErrorType<ErrorResponse>>(
+ params: CheckProductDispensingCategoryParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkProductDispensingCategory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getCheckProductDispensingCategoryQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCheckProductSeriesRestrictionsUrl = (params: CheckProductSeriesRestrictionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/catalog/series-restrictions?${stringifiedParams}` : `/api/catalog/series-restrictions`
+}
+
+/**
+ * Checks a versioned local snapshot of the official Ukrainian quality-document registry by exact registration number and exact series. A no-match result is deliberately not an authorization to dispense.
+ * @summary Check official quality restrictions for one exact medicine series
+ */
+export const checkProductSeriesRestrictions = async (params: CheckProductSeriesRestrictionsParams, options?: RequestInit): Promise<SeriesRestrictionCheck> => {
+
+  return customFetch<SeriesRestrictionCheck>(getCheckProductSeriesRestrictionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getCheckProductSeriesRestrictionsQueryKey = (params?: CheckProductSeriesRestrictionsParams,) => {
+    return [
+    `/api/catalog/series-restrictions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getCheckProductSeriesRestrictionsQueryOptions = <TData = Awaited<ReturnType<typeof checkProductSeriesRestrictions>>, TError = ErrorType<ErrorResponse>>(params: CheckProductSeriesRestrictionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkProductSeriesRestrictions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCheckProductSeriesRestrictionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof checkProductSeriesRestrictions>>> = ({ signal }) => checkProductSeriesRestrictions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof checkProductSeriesRestrictions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type CheckProductSeriesRestrictionsQueryResult = NonNullable<Awaited<ReturnType<typeof checkProductSeriesRestrictions>>>
+export type CheckProductSeriesRestrictionsQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Check official quality restrictions for one exact medicine series
+ */
+
+export function useCheckProductSeriesRestrictions<TData = Awaited<ReturnType<typeof checkProductSeriesRestrictions>>, TError = ErrorType<ErrorResponse>>(
+ params: CheckProductSeriesRestrictionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkProductSeriesRestrictions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getCheckProductSeriesRestrictionsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

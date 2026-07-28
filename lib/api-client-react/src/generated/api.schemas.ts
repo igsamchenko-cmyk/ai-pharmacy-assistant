@@ -797,6 +797,251 @@ export interface DrugInstruction {
   warnings: string[];
 }
 
+export type DispensingCategorySourceFreshness = typeof DispensingCategorySourceFreshness[keyof typeof DispensingCategorySourceFreshness];
+
+
+export const DispensingCategorySourceFreshness = {
+  current: 'current',
+  stale: 'stale',
+  incomplete: 'incomplete',
+} as const;
+
+export interface DispensingCategorySource {
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  title: string;
+  url: string;
+  checkedAt: string;
+  generatedAt: string;
+  complete: boolean;
+  /**
+     * @minimum 1
+     * @maximum 250000
+     */
+  officialRowCount: number;
+  /**
+     * @minimum 1
+     * @maximum 250000
+     */
+  recordCount: number;
+  /** @pattern ^[a-f0-9]{64}$ */
+  sha256: string;
+  freshness: DispensingCategorySourceFreshness;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  legalBasisTitle: string;
+  legalBasisUrl: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  legalBasisRevisionDate: string;
+}
+
+export type DispensingCategoryCheckVersion = typeof DispensingCategoryCheckVersion[keyof typeof DispensingCategoryCheckVersion];
+
+
+export const DispensingCategoryCheckVersion = {
+  '10': '1.0',
+} as const;
+
+export type DispensingCategoryCheckStatus = typeof DispensingCategoryCheckStatus[keyof typeof DispensingCategoryCheckStatus];
+
+
+export const DispensingCategoryCheckStatus = {
+  otc: 'otc',
+  prescription: 'prescription',
+  conditional: 'conditional',
+  unknown: 'unknown',
+  conflict: 'conflict',
+  not_found: 'not_found',
+} as const;
+
+export type DispensingCategoryCheckAction = typeof DispensingCategoryCheckAction[keyof typeof DispensingCategoryCheckAction];
+
+
+export const DispensingCategoryCheckAction = {
+  otc_with_professional_checks: 'otc_with_professional_checks',
+  prescription_required: 'prescription_required',
+  verify_exact_package: 'verify_exact_package',
+  manual_review: 'manual_review',
+} as const;
+
+export type DispensingCategoryCheckMatchStatus = typeof DispensingCategoryCheckMatchStatus[keyof typeof DispensingCategoryCheckMatchStatus];
+
+
+export const DispensingCategoryCheckMatchStatus = {
+  product_and_registration: 'product_and_registration',
+  registration: 'registration',
+  not_found: 'not_found',
+} as const;
+
+export interface DispensingCategoryCheck {
+  version: DispensingCategoryCheckVersion;
+  /** @pattern ^[A-F0-9]{32}$ */
+  productId: string;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  status: DispensingCategoryCheckStatus;
+  action: DispensingCategoryCheckAction;
+  matchStatus: DispensingCategoryCheckMatchStatus;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  summary: string;
+  /**
+     * @maxItems 20
+     * @items.minLength 1
+     * @items.maxLength 1000
+     */
+  conditions: string[];
+  packageDependent: boolean;
+  restrictedSetting: boolean;
+  source: DispensingCategorySource;
+}
+
+export type SeriesRestrictionEventEventType = typeof SeriesRestrictionEventEventType[keyof typeof SeriesRestrictionEventEventType];
+
+
+export const SeriesRestrictionEventEventType = {
+  temporary_ban: 'temporary_ban',
+  permanent_ban: 'permanent_ban',
+  restore_temporary: 'restore_temporary',
+  restore_permanent: 'restore_permanent',
+  partial_cancellation: 'partial_cancellation',
+  supplement: 'supplement',
+} as const;
+
+export interface SeriesRestrictionEvent {
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  documentDate: string;
+  /**
+     * @minLength 1
+     * @maxLength 180
+     */
+  documentNumber: string;
+  eventType: SeriesRestrictionEventEventType;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  registrationNumber: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  medicineName: string;
+  /** @maxLength 4000 */
+  dosageForm: string;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  seriesRaw: string;
+  /**
+     * @maxItems 100
+     * @items.minLength 1
+     * @items.maxLength 160
+     */
+  seriesValues: string[];
+  allSeries: boolean;
+  seriesUnspecified: boolean;
+  /** @maxLength 4000 */
+  manufacturer: string;
+  /** @maxLength 500 */
+  country: string;
+  /** @maxLength 8000 */
+  additionalInfo: string;
+}
+
+export type SeriesRestrictionSourceFreshness = typeof SeriesRestrictionSourceFreshness[keyof typeof SeriesRestrictionSourceFreshness];
+
+
+export const SeriesRestrictionSourceFreshness = {
+  current: 'current',
+  stale: 'stale',
+  incomplete: 'incomplete',
+} as const;
+
+export interface SeriesRestrictionSource {
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  title: string;
+  url: string;
+  generatedAt: string;
+  latestDocumentDate: string | null;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  coverageStartDate: string;
+  complete: boolean;
+  /**
+     * @minimum 0
+     * @maximum 250000
+     */
+  recordCount: number;
+  /** @pattern ^[a-f0-9]{64}$ */
+  sha256: string;
+  freshness: SeriesRestrictionSourceFreshness;
+}
+
+export type SeriesRestrictionCheckVersion = typeof SeriesRestrictionCheckVersion[keyof typeof SeriesRestrictionCheckVersion];
+
+
+export const SeriesRestrictionCheckVersion = {
+  '10': '1.0',
+} as const;
+
+export type SeriesRestrictionCheckStatus = typeof SeriesRestrictionCheckStatus[keyof typeof SeriesRestrictionCheckStatus];
+
+
+export const SeriesRestrictionCheckStatus = {
+  blocked: 'blocked',
+  restored: 'restored',
+  no_match: 'no_match',
+  needs_review: 'needs_review',
+} as const;
+
+export type SeriesRestrictionCheckAction = typeof SeriesRestrictionCheckAction[keyof typeof SeriesRestrictionCheckAction];
+
+
+export const SeriesRestrictionCheckAction = {
+  stop: 'stop',
+  manual_review: 'manual_review',
+} as const;
+
+export interface SeriesRestrictionCheck {
+  version: SeriesRestrictionCheckVersion;
+  /** @pattern ^[A-F0-9]{32}$ */
+  productId: string;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  series: string;
+  status: SeriesRestrictionCheckStatus;
+  action: SeriesRestrictionCheckAction;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  summary: string;
+  matchedAllSeries: boolean;
+  matchedUnspecifiedSeries: boolean;
+  /**
+     * @minimum 0
+     * @maximum 250000
+     */
+  otherSeriesEventCount: number;
+  /** @maxItems 50 */
+  events: SeriesRestrictionEvent[];
+  source: SeriesRestrictionSource;
+}
+
 export interface CatalogGroupingSummary {
   /** @minimum 0 */
   totalRegistryPositions: number;
@@ -2295,6 +2540,34 @@ export const SearchCatalogVariantPageSize = {
   NUMBER_10: 10,
   NUMBER_25: 25,
 } as const;
+
+export type CheckProductDispensingCategoryParams = {
+/**
+ * @pattern ^[A-F0-9]{32}$
+ */
+productId: string;
+/**
+ * @pattern ^UA/\d+/\d+/\d+$
+ */
+registrationNumber: string;
+};
+
+export type CheckProductSeriesRestrictionsParams = {
+/**
+ * @pattern ^[A-F0-9]{32}$
+ */
+productId: string;
+/**
+ * @pattern ^UA/\d+/\d+/\d+$
+ */
+registrationNumber: string;
+/**
+ * @minLength 1
+ * @maxLength 80
+ * @pattern ^[^\r\n]+$
+ */
+series: string;
+};
 
 export type GetExternalDrugReferenceParams = {
 drugId?: string;
