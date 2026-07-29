@@ -19,8 +19,8 @@ function selection(id: string, ingredient: string): InteractionSelection {
 }
 
 describe("verified interaction registry", () => {
-  it("contains twenty-seven unique, runtime-eligible exact-INN rules", () => {
-    expect(verifiedInteractionRules).toHaveLength(27);
+  it("contains thirty-three unique, runtime-eligible exact-INN rules", () => {
+    expect(verifiedInteractionRules).toHaveLength(33);
     expect(
       new Set(verifiedInteractionRules.map((rule) => rule.pairKey)).size,
     ).toBe(verifiedInteractionRules.length);

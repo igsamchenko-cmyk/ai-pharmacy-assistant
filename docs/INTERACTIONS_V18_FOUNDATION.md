@@ -15,22 +15,31 @@ Current result:
 | Metric                                       | Count |
 | -------------------------------------------- | ----: |
 | Legacy candidate rules                       |   287 |
-| Total registry rules                         |   314 |
-| Unique unordered ingredient pairs            |   314 |
-| Runtime-eligible verified rules              |    27 |
-| Rules with a source URL/document reference   |    27 |
-| Rules with a source version/publication date |    27 |
-| Rules with a recorded clinical review date   |    27 |
+| Total registry rules                         |   320 |
+| Unique unordered ingredient pairs            |   320 |
+| Runtime-eligible verified rules              |    33 |
+| Rules with a source URL/document reference   |    33 |
+| Rules with a source version/publication date |    33 |
+| Rules with a recorded clinical review date   |    33 |
 | Unresolved duplicate pair keys               |     0 |
 | Explicit source conflicts                    |     0 |
 
-All 287 legacy rules remain `needs_review`. They are not evidence and are never shown as verified findings. Twenty-seven separately reviewed exact-INN rules are runtime eligible. The first four batches cover anticoagulant/antiplatelet, NSAID, nitrate, antiarrhythmic, statin and potassium-related pairs. Batch 5 adds these five exact pairs:
+All 287 legacy rules remain `needs_review`. They are not evidence and are never shown as verified findings. Thirty-three separately reviewed exact-INN rules are runtime eligible. The first four batches cover anticoagulant/antiplatelet, NSAID, nitrate, antiarrhythmic, statin and potassium-related pairs. Batch 5 adds these five exact pairs:
 
 - Tizanidine + Ciprofloxacin;
 - Clopidogrel + Esomeprazole;
 - Simvastatin + Amlodipine;
 - Apixaban + Carbamazepine;
 - Rivaroxaban + Carbamazepine.
+
+Batch 6 adds these six exact pairs:
+
+- Clarithromycin + Digoxin;
+- Clarithromycin + Warfarin;
+- Fluconazole + Warfarin;
+- Fluconazole + Celecoxib;
+- Sildenafil + Amlodipine;
+- Azithromycin + Warfarin.
 
 The public interaction endpoint uses the approved-only engine. Every other resolved pair remains a structured `insufficient_evidence` result instead of an unsafe “no interactions found” result. Rules are not inherited by another medicine in the same class.
 
@@ -77,7 +86,7 @@ The response includes a card for every selected product pair, including unsuppor
 
 ## Next evidence expansion phase
 
-The 27 reviewed rules do not provide universal clinical coverage. Every later batch must:
+The 33 reviewed rules do not provide universal clinical coverage. Every later batch must:
 
 1. select a licensed or official interaction source with a stable version;
 2. add source records keyed by exact canonical ingredient pairs;

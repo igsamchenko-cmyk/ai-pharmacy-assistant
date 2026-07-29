@@ -43,7 +43,7 @@ describe("interaction evidence coverage report", () => {
         report.counts.needsReviewPairs +
         report.counts.unsupportedPairs,
     ).toBe(report.counts.potentialExactPairs);
-    expect(report.counts.verifiedPairs).toBe(27);
+    expect(report.counts.verifiedPairs).toBe(33);
     expect(report.counts.legacyRules).toBe(287);
     expect(report.ingredientCoverage).toHaveLength(136);
     expect(
