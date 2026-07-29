@@ -7,6 +7,14 @@
 
 ### Added
 
+- Expanded the approved-only interaction registry from 22 to 27 exact-INN
+  pairs using versioned official product information. Added tizanidine +
+  ciprofloxacin, clopidogrel + esomeprazole, simvastatin + amlodipine,
+  apixaban + carbamazepine and rivaroxaban + carbamazepine without class
+  inference or automatic legacy-rule approval.
+- The interaction page now always discloses incomplete evidence coverage and
+  shows the runtime-eligible versus total rule count instead of hiding the
+  limitation whenever at least one verified rule exists.
 - Expanded official instruction coverage from 10 to 50 exact registry products
   across 50 INNs: 46 full and 4 explicitly partial snapshots, with 100%
   registration provenance, unique document bindings and zero blockers.

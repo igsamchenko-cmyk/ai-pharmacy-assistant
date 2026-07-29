@@ -19,8 +19,8 @@ function selection(id: string, ingredient: string): InteractionSelection {
 }
 
 describe("verified interaction registry", () => {
-  it("contains twenty-two unique, runtime-eligible exact-INN rules", () => {
-    expect(verifiedInteractionRules).toHaveLength(22);
+  it("contains twenty-seven unique, runtime-eligible exact-INN rules", () => {
+    expect(verifiedInteractionRules).toHaveLength(27);
     expect(
       new Set(verifiedInteractionRules.map((rule) => rule.pairKey)).size,
     ).toBe(verifiedInteractionRules.length);
@@ -74,7 +74,9 @@ describe("verified interaction registry", () => {
       );
       expect(result.findings[0]?.rule.severity).toBe(severity);
       expect(result.findings[0]?.rule.reviewStatus).toBe("approved");
-      expect(result.findings[0]?.rule.reviewedAt).toMatch(/^2026-07-2[67]$/);
+      expect(result.findings[0]?.rule.reviewedAt).toMatch(
+        /^2026-07-(26|27|29)$/,
+      );
     },
   );
 
@@ -98,7 +100,7 @@ describe("verified interaction registry", () => {
       expect(rule.source.documentReference).toBeTruthy();
       expect(rule.source.version).toBeTruthy();
       expect(rule.source.publishedAt).toBeTruthy();
-      expect(rule.source.accessedAt).toMatch(/^2026-07-2[67]$/);
+      expect(rule.source.accessedAt).toMatch(/^2026-07-(26|27|29)$/);
       expect(rule.provenance.sourceRecordId).toBe(rule.id);
     }
 

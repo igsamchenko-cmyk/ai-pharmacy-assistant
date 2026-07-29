@@ -322,17 +322,21 @@ export default function Interactions() {
             </Card>
           ) : null}
 
-          {checkInteractions.data.coverage.runtimeEligibleRules === 0 ? (
+          {checkInteractions.data.coverage.runtimeEligibleRules <
+          checkInteractions.data.coverage.totalRules ? (
             <div className="flex gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
               <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div className="space-y-1">
                 <p className="font-semibold">
-                  Перевірений evidence registry ще потребує наповнення
+                  Доказове покриття взаємодій обмежене
                 </p>
                 <p className="text-muted-foreground">
+                  До перевірки допущено{" "}
+                  {checkInteractions.data.coverage.runtimeEligibleRules} із{" "}
+                  {checkInteractions.data.coverage.totalRules} правил.
                   Неперевірені legacy-правила не використовуються. Для
-                  непокритих пар FarmAssist чесно показує «Недостатньо
-                  перевірених даних», а не робить висновок про сумісність.
+                  непокритих пар FarmAssist показує «Недостатньо перевірених
+                  даних», а не робить висновок про сумісність.
                 </p>
               </div>
             </div>

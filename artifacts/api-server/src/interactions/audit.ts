@@ -10,7 +10,7 @@ import { evaluateInteractionRuleEligibility } from "./policy";
 import { verifiedInteractionRules } from "./verifiedRules";
 
 const LEGACY_DATASET_VERSION = "legacy-static-v0.3";
-const REGISTRY_DATASET_VERSION = "interaction-registry-v1.3.0";
+const REGISTRY_DATASET_VERSION = "interaction-registry-v1.4.0";
 
 function severityForRisk(riskLevel: RiskLevel): InteractionSeverity {
   switch (riskLevel) {

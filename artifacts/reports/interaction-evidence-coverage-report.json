@@ -9,9 +9,9 @@
   },
   "counts": {
     "potentialExactPairs": 9180,
-    "verifiedPairs": 22,
+    "verifiedPairs": 27,
     "needsReviewPairs": 252,
-    "unsupportedPairs": 8906,
+    "unsupportedPairs": 8901,
     "legacyRules": 287,
     "resolvedLegacyRules": 264,
     "unresolvedLegacyRules": 23,
@@ -120,9 +120,9 @@
         "Блокатори кальцієвих каналів"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 0,
+      "verifiedPairCount": 1,
       "needsReviewPairCount": 0,
-      "unsupportedPairCount": 135
+      "unsupportedPairCount": 134
     },
     {
       "canonicalInn": "Amoxicillin",
@@ -150,9 +150,9 @@
         "Прямі оральні антикоагулянти"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 4,
+      "verifiedPairCount": 5,
       "needsReviewPairCount": 12,
-      "unsupportedPairCount": 119
+      "unsupportedPairCount": 118
     },
     {
       "canonicalInn": "Ascorbic acid",
@@ -260,9 +260,9 @@
         "Протиепілептичні"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 0,
+      "verifiedPairCount": 2,
       "needsReviewPairCount": 0,
-      "unsupportedPairCount": 135
+      "unsupportedPairCount": 133
     },
     {
       "canonicalInn": "Carbocisteine",
@@ -360,9 +360,9 @@
         "Фторхінолони"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 0,
+      "verifiedPairCount": 1,
       "needsReviewPairCount": 2,
-      "unsupportedPairCount": 133
+      "unsupportedPairCount": 132
     },
     {
       "canonicalInn": "Clarithromycin",
@@ -380,9 +380,9 @@
         "Антиагреганти"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 4,
+      "verifiedPairCount": 5,
       "needsReviewPairCount": 16,
-      "unsupportedPairCount": 115
+      "unsupportedPairCount": 114
     },
     {
       "canonicalInn": "Codeine",
@@ -601,9 +601,9 @@
         "Інгібітори протонної помпи"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 0,
+      "verifiedPairCount": 1,
       "needsReviewPairCount": 0,
-      "unsupportedPairCount": 135
+      "unsupportedPairCount": 134
     },
     {
       "canonicalInn": "Famotidine",
@@ -1231,9 +1231,9 @@
         "Прямі оральні антикоагулянти"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 4,
+      "verifiedPairCount": 5,
       "needsReviewPairCount": 12,
-      "unsupportedPairCount": 119
+      "unsupportedPairCount": 118
     },
     {
       "canonicalInn": "Rosuvastatin",
@@ -1291,9 +1291,9 @@
         "Статини"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 2,
+      "verifiedPairCount": 3,
       "needsReviewPairCount": 1,
-      "unsupportedPairCount": 132
+      "unsupportedPairCount": 131
     },
     {
       "canonicalInn": "Spironolactone",
@@ -1321,9 +1321,9 @@
         "Міорелаксанти"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 0,
+      "verifiedPairCount": 1,
       "needsReviewPairCount": 0,
-      "unsupportedPairCount": 135
+      "unsupportedPairCount": 134
     },
     {
       "canonicalInn": "Tolperisone",
