@@ -783,6 +783,168 @@ export const GetCatalogClientIndexResponse = zod.object({
 
 
 /**
+ * Resolves one exact product identifier and registration number, then aggregates independently bounded registry, National List, instruction, Rx/OTC, interaction and series-check source states. A failed or missing source stays explicit and never becomes a positive dispensing conclusion.
+ * @summary Get one exact professional registry-product profile
+ */
+export const getProfessionalProductProfileQueryProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getProfessionalProductProfileQueryRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+
+
+export const GetProfessionalProductProfileQueryParams = zod.object({
+  "productId": zod.coerce.string().regex(getProfessionalProductProfileQueryProductIdRegExp),
+  "registrationNumber": zod.coerce.string().regex(getProfessionalProductProfileQueryRegistrationNumberRegExp)
+})
+
+
+export const getProfessionalProductProfileResponseProductNationalListMatchDetailsOneIngredientsMax = 12;
+
+export const getProfessionalProductProfileResponseProductNationalListMatchDetailsOneDosageFormsMax = 20;
+
+export const getProfessionalProductProfileResponseProductNationalListMatchDetailsOneRoutesMax = 12;
+
+export const getProfessionalProductProfileResponseProductNationalListMatchDetailsOneStrengthsMax = 30;
+
+export const getProfessionalProductProfileResponseDispensingCategoryOneProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getProfessionalProductProfileResponseDispensingCategoryOneRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProfessionalProductProfileResponseDispensingCategoryOneSummaryMax = 1000;
+
+export const getProfessionalProductProfileResponseDispensingCategoryOneConditionsItemMax = 1000;
+
+export const getProfessionalProductProfileResponseDispensingCategoryOneConditionsMax = 20;
+
+export const getProfessionalProductProfileResponseDispensingCategoryOneSourceTitleMax = 300;
+
+export const getProfessionalProductProfileResponseDispensingCategoryOneSourceOfficialRowCountMax = 250000;
+
+export const getProfessionalProductProfileResponseDispensingCategoryOneSourceRecordCountMax = 250000;
+
+export const getProfessionalProductProfileResponseDispensingCategoryOneSourceSha256RegExp = new RegExp('^[a-f0-9]{64}$');
+export const getProfessionalProductProfileResponseDispensingCategoryOneSourceLegalBasisTitleMax = 500;
+
+export const getProfessionalProductProfileResponseDispensingCategoryOneSourceLegalBasisRevisionDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getProfessionalProductProfileResponseCoverageConnectedSourcesMin = 0;
+export const getProfessionalProductProfileResponseCoverageConnectedSourcesMax = 8;
+
+export const getProfessionalProductProfileResponseCoverageSourcesItemLabelMax = 300;
+
+export const getProfessionalProductProfileResponseCoverageSourcesItemDetailMax = 1000;
+
+export const getProfessionalProductProfileResponseCoverageSourcesItemSourceUrlOneMax = 1000;
+
+export const getProfessionalProductProfileResponseCoverageSourcesMin = 8;
+export const getProfessionalProductProfileResponseCoverageSourcesMax = 8;
+
+export const getProfessionalProductProfileResponseWarningsItemRegExp = new RegExp('^[a-z0-9:_-]{1,80}$');
+export const getProfessionalProductProfileResponseWarningsMax = 20;
+
+
+
+export const GetProfessionalProductProfileResponse = zod.object({
+  "version": zod.enum(['1.0']),
+  "product": zod.object({
+  "resultType": zod.enum(['registry_product']),
+  "id": zod.string(),
+  "tradeName": zod.string(),
+  "inn": zod.string(),
+  "activeIngredient": zod.string(),
+  "atcCode": zod.string().nullable(),
+  "dosageForm": zod.string(),
+  "strength": zod.string().nullable(),
+  "manufacturers": zod.array(zod.object({
+  "name": zod.string(),
+  "country": zod.string().nullable()
+})),
+  "registration": zod.object({
+  "number": zod.string(),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "status": zod.enum(['active', 'terminated', 'unknown'])
+}),
+  "source": zod.object({
+  "key": zod.string(),
+  "label": zod.string()
+}),
+  "mappingStatus": zod.enum(['approved', 'unmapped', 'ambiguous']),
+  "approvedMapping": zod.union([zod.object({
+  "ingredientId": zod.string(),
+  "inn": zod.string(),
+  "latin": zod.string(),
+  "english": zod.string(),
+  "atcCode": zod.string().nullable()
+}),zod.null()]),
+  "sourceRecordCount": zod.number().min(1),
+  "nationalListStatus": zod.enum(['exact', 'ingredient_only', 'uncertain', 'not_listed', 'not_applicable']),
+  "nationalListRelease": zod.string().nullable(),
+  "nationalListMatchReason": zod.string(),
+  "nationalListSection": zod.string().nullable(),
+  "nationalListSource": zod.union([zod.object({
+  "title": zod.string(),
+  "actNumber": zod.string(),
+  "actDate": zod.string(),
+  "revisionDate": zod.string(),
+  "effectiveDate": zod.string(),
+  "url": zod.string()
+}),zod.null()]),
+  "nationalListCheckedAt": zod.string().nullable(),
+  "nationalListMatchDetails": zod.union([zod.object({
+  "officialName": zod.string(),
+  "ingredients": zod.array(zod.string()).max(getProfessionalProductProfileResponseProductNationalListMatchDetailsOneIngredientsMax),
+  "dosageForms": zod.array(zod.string()).max(getProfessionalProductProfileResponseProductNationalListMatchDetailsOneDosageFormsMax),
+  "routes": zod.array(zod.string()).max(getProfessionalProductProfileResponseProductNationalListMatchDetailsOneRoutesMax),
+  "strengths": zod.array(zod.string()).max(getProfessionalProductProfileResponseProductNationalListMatchDetailsOneStrengthsMax),
+  "ingredientMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "formMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "routeMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "strengthMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable'])
+}),zod.null()]),
+  "instructionAvailable": zod.boolean().describe('Whether a committed snapshot or exact-product official DRLZ document is available'),
+  "instructionSourceStatus": zod.enum(['structured', 'official_document', 'not_published', 'invalid_source']).optional().describe('Exact-product DRLZ source state; no registration fallback is used'),
+  "officialInstructionDocumentUrl": zod.string().url().nullish().describe('Validated exact-registration DRLZ document URL, when published')
+}),
+  "dispensingCategory": zod.union([zod.object({
+  "version": zod.enum(['1.0']),
+  "productId": zod.string().regex(getProfessionalProductProfileResponseDispensingCategoryOneProductIdRegExp),
+  "registrationNumber": zod.string().regex(getProfessionalProductProfileResponseDispensingCategoryOneRegistrationNumberRegExp),
+  "status": zod.enum(['otc', 'prescription', 'conditional', 'unknown', 'conflict', 'not_found']),
+  "action": zod.enum(['otc_with_professional_checks', 'prescription_required', 'verify_exact_package', 'manual_review']),
+  "matchStatus": zod.enum(['product_and_registration', 'registration', 'not_found']),
+  "summary": zod.string().min(1).max(getProfessionalProductProfileResponseDispensingCategoryOneSummaryMax),
+  "conditions": zod.array(zod.string().min(1).max(getProfessionalProductProfileResponseDispensingCategoryOneConditionsItemMax)).max(getProfessionalProductProfileResponseDispensingCategoryOneConditionsMax),
+  "packageDependent": zod.boolean(),
+  "restrictedSetting": zod.boolean(),
+  "source": zod.object({
+  "title": zod.string().min(1).max(getProfessionalProductProfileResponseDispensingCategoryOneSourceTitleMax),
+  "url": zod.string().url(),
+  "checkedAt": zod.coerce.date(),
+  "generatedAt": zod.coerce.date(),
+  "complete": zod.boolean(),
+  "officialRowCount": zod.number().min(1).max(getProfessionalProductProfileResponseDispensingCategoryOneSourceOfficialRowCountMax),
+  "recordCount": zod.number().min(1).max(getProfessionalProductProfileResponseDispensingCategoryOneSourceRecordCountMax),
+  "sha256": zod.string().regex(getProfessionalProductProfileResponseDispensingCategoryOneSourceSha256RegExp),
+  "freshness": zod.enum(['current', 'stale', 'incomplete']),
+  "legalBasisTitle": zod.string().min(1).max(getProfessionalProductProfileResponseDispensingCategoryOneSourceLegalBasisTitleMax),
+  "legalBasisUrl": zod.string().url(),
+  "legalBasisRevisionDate": zod.string().regex(getProfessionalProductProfileResponseDispensingCategoryOneSourceLegalBasisRevisionDateRegExp)
+})
+}),zod.null()]),
+  "coverage": zod.object({
+  "connectedSources": zod.number().min(getProfessionalProductProfileResponseCoverageConnectedSourcesMin).max(getProfessionalProductProfileResponseCoverageConnectedSourcesMax),
+  "totalSources": zod.literal(8),
+  "complete": zod.boolean(),
+  "sources": zod.array(zod.object({
+  "key": zod.enum(['registry', 'national_list', 'dispensing_category', 'instruction', 'reimbursement', 'price', 'interactions', 'series_restrictions']),
+  "label": zod.string().min(1).max(getProfessionalProductProfileResponseCoverageSourcesItemLabelMax),
+  "status": zod.enum(['ready', 'attention', 'requires_input', 'not_connected', 'unavailable']),
+  "detail": zod.string().min(1).max(getProfessionalProductProfileResponseCoverageSourcesItemDetailMax),
+  "sourceUrl": zod.union([zod.string().url().max(getProfessionalProductProfileResponseCoverageSourcesItemSourceUrlOneMax),zod.null()]),
+  "checkedAt": zod.union([zod.coerce.date(),zod.null()])
+})).min(getProfessionalProductProfileResponseCoverageSourcesMin).max(getProfessionalProductProfileResponseCoverageSourcesMax)
+}),
+  "warnings": zod.array(zod.string().regex(getProfessionalProductProfileResponseWarningsItemRegExp)).max(getProfessionalProductProfileResponseWarningsMax)
+})
+
+
+/**
  * Lazily returns a bounded structured snapshot parsed from the official Ukrainian registry document for this exact registry product. Missing sections remain null. The response contains no generated clinical text, secrets, raw environment values or server filesystem paths.
  * @summary Get a structured official instruction for one registry product
  */

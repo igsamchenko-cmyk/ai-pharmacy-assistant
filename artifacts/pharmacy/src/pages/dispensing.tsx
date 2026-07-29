@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  getCheckProductDispensingCategoryQueryKey,
-  getSearchCatalogQueryKey,
   getCheckProductSeriesRestrictionsQueryKey,
-  useCheckProductDispensingCategory,
+  getGetProfessionalProductProfileQueryKey,
   useCheckProductSeriesRestrictions,
-  useSearchCatalog,
+  useGetProfessionalProductProfile,
   type DispensingCategoryCheck,
+  type ProfessionalProductProfile,
   type RegistryProductResult,
   type SeriesRestrictionCheck,
 } from "@workspace/api-client-react";
@@ -83,6 +82,60 @@ function formatCheckedAt(value?: string | null): string | null {
   return new Intl.DateTimeFormat("uk-UA", { dateStyle: "medium" }).format(date);
 }
 
+const PROFILE_SOURCE_LABELS: Record<
+  ProfessionalProductProfile["coverage"]["sources"][number]["status"],
+  string
+> = {
+  ready: "Підтверджено",
+  attention: "Потребує уваги",
+  requires_input: "Потрібні дані",
+  not_connected: "Не підключено",
+  unavailable: "Недоступно",
+};
+
+export function ProfessionalProfileCoveragePanel({
+  profile,
+}: {
+  profile: ProfessionalProductProfile;
+}) {
+  return (
+    <Card data-testid="professional-profile-coverage">
+      <CardHeader className="space-y-2 p-4 pb-2 sm:p-5 sm:pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-xl">Єдиний профіль джерел</CardTitle>
+          <Badge variant="outline">
+            Підключено {profile.coverage.connectedSources}/
+            {profile.coverage.totalSources}
+          </Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Кожен статус прив'язаний до точної реєстрової позиції. Неповне
+          покриття не є дозволом на відпуск.
+        </p>
+      </CardHeader>
+      <CardContent className="grid gap-2 p-4 pt-2 sm:grid-cols-2 sm:p-5 sm:pt-2">
+        {profile.coverage.sources.map((item) => (
+          <div
+            key={item.key}
+            className="flex min-h-12 items-center justify-between gap-3 rounded-xl border bg-background/60 px-3 py-2"
+            data-testid={"profile-source-" + item.key}
+          >
+            <span className="min-w-0 break-words text-sm font-medium">
+              {item.label}
+            </span>
+            <Badge
+              variant={item.status === "ready" ? "default" : "secondary"}
+              className="shrink-0"
+            >
+              {PROFILE_SOURCE_LABELS[item.status]}
+            </Badge>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function DispensingAssessmentPanel({
   product,
   seriesRestriction,
@@ -120,7 +173,8 @@ export function DispensingAssessmentPanel({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xl font-bold">Регуляторна картка</h2>
         <Badge variant="outline" data-testid="connected-source-count">
-          Джерела: {assessment.connectedCount}/{assessment.checks.length}
+          Активні перевірки: {assessment.connectedCount}/
+          {assessment.checks.length}
         </Badge>
       </div>
 
@@ -345,7 +399,9 @@ function ManualChecklist({
 }
 
 export default function Dispensing() {
-  const [selected, setSelected] = useState<RegistryProductResult | null>(null);
+  const [selectedProfile, setSelectedProfile] =
+    useState<ProfessionalProductProfile | null>(null);
+  const selected = selectedProfile?.product ?? null;
   const [pendingProduct, setPendingProduct] =
     useState<InteractionProductSelection | null>(null);
   const [manualChecks, setManualChecks] = useState<boolean[]>(
@@ -353,68 +409,51 @@ export default function Dispensing() {
   );
   const [seriesDraft, setSeriesDraft] = useState("");
   const [submittedSeries, setSubmittedSeries] = useState("");
-  const exactProductParams = useMemo(
+  const profileParams = useMemo(
     () => ({
-      q: pendingProduct?.registration ?? "UA/0/0/0",
       productId: pendingProduct?.productId ?? "0".repeat(32),
-      type: "registry_products" as const,
-      view: "flat" as const,
-      page: 1,
-      pageSize: 25 as const,
+      registrationNumber: pendingProduct?.registration ?? "UA/0/0/0",
     }),
     [pendingProduct],
   );
-  const exactProductQuery = useSearchCatalog(exactProductParams, {
+  const profileQuery = useGetProfessionalProductProfile(profileParams, {
     query: {
       enabled: Boolean(pendingProduct),
-      queryKey: getSearchCatalogQueryKey(exactProductParams),
+      queryKey: getGetProfessionalProductProfileQueryKey(profileParams),
       retry: 1,
       staleTime: 60_000,
       refetchOnWindowFocus: false,
     },
   });
-  const resolvedPendingProduct = pendingProduct
-    ? exactProductQuery.data?.registryProducts.items.find(
-        (product) =>
-          product.id === pendingProduct.productId &&
-          product.registration.number === pendingProduct.registration,
-      )
-    : null;
+  const profileIdentityMismatch = Boolean(
+    pendingProduct &&
+    profileQuery.data &&
+    (profileQuery.data.product.id !== pendingProduct.productId ||
+      profileQuery.data.product.registration.number !==
+        pendingProduct.registration),
+  );
   const exactResolutionFailed = Boolean(
     pendingProduct &&
-    !exactProductQuery.isLoading &&
-    !exactProductQuery.isFetching &&
-    (exactProductQuery.isError ||
-      (exactProductQuery.data && !resolvedPendingProduct)),
+    !profileQuery.isLoading &&
+    !profileQuery.isFetching &&
+    (profileQuery.isError || profileIdentityMismatch),
   );
 
   useEffect(() => {
-    if (!resolvedPendingProduct) return;
-    setSelected(resolvedPendingProduct);
+    if (!pendingProduct || !profileQuery.data) return;
+    if (
+      profileQuery.data.product.id !== pendingProduct.productId ||
+      profileQuery.data.product.registration.number !==
+        pendingProduct.registration
+    ) {
+      return;
+    }
+    setSelectedProfile(profileQuery.data);
     setPendingProduct(null);
-  }, [resolvedPendingProduct]);
-  const dispensingCategoryParams = useMemo(
-    () => ({
-      productId: selected?.id ?? "0".repeat(32),
-      registrationNumber: selected?.registration.number ?? "UA/0/0/0",
-    }),
-    [selected],
-  );
-  const dispensingCategoryCheck = useCheckProductDispensingCategory(
-    dispensingCategoryParams,
-    {
-      query: {
-        enabled: Boolean(selected),
-        queryKey: getCheckProductDispensingCategoryQueryKey(
-          dispensingCategoryParams,
-        ),
-        retry: false,
-      },
-    },
-  );
-  const dispensingCategoryAssessment = dispensingCategoryCheck.isError
-    ? null
-    : dispensingCategoryCheck.data;
+  }, [pendingProduct, profileQuery.data]);
+
+  const dispensingCategoryAssessment =
+    selectedProfile?.dispensingCategory ?? null;
   const seriesParams = useMemo(
     () => ({
       productId: selected?.id ?? "0".repeat(32),
@@ -444,7 +483,7 @@ export default function Dispensing() {
   };
 
   const reset = () => {
-    setSelected(null);
+    setSelectedProfile(null);
     setPendingProduct(null);
     setManualChecks(MANUAL_DISPENSING_STEPS.map(() => false));
     setSeriesDraft("");
@@ -471,9 +510,9 @@ export default function Dispensing() {
             <ClipboardCheck className="h-7 w-7 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Перевірка відпуску</h1>
+            <h1 className="text-3xl font-bold">Відпуск за 30 секунд</h1>
             <p className="text-muted-foreground">
-              Професійний чекпойнт для точної реєстрової позиції.
+              Один професійний профіль точної реєстрової позиції.
             </p>
           </div>
         </div>
@@ -511,7 +550,7 @@ export default function Dispensing() {
                   <div className="flex items-center gap-3 text-sm">
                     <LoaderCircle className="h-5 w-5 animate-spin text-primary" />
                     <span>
-                      Завантажуємо регуляторну картку:{" "}
+                      Завантажуємо професійний профіль:{" "}
                       {pendingProduct.tradeName}
                     </span>
                   </div>
@@ -521,7 +560,7 @@ export default function Dispensing() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => void exactProductQuery.refetch()}
+                      onClick={() => void profileQuery.refetch()}
                     >
                       Повторити
                     </Button>
@@ -542,6 +581,9 @@ export default function Dispensing() {
             </Button>
           </div>
           <ProductSummary product={selected} />
+          {selectedProfile ? (
+            <ProfessionalProfileCoveragePanel profile={selectedProfile} />
+          ) : null}
           <SeriesRestrictionCheckPanel
             product={selected}
             draftSeries={seriesDraft}

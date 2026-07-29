@@ -18,7 +18,6 @@ import {
   Columns3,
   Stethoscope,
   ClipboardCheck,
-  Scan,
   Clock,
   Pill,
   Star,
@@ -61,8 +60,8 @@ export default function Home() {
     {
       href: "/dispense",
       icon: ClipboardCheck,
-      title: "Перевірка відпуску",
-      desc: "Реєстр, інструкція та професійний чеклист",
+      title: "Відпуск за 30 секунд",
+      desc: "Єдиний профіль точної реєстрової позиції",
     },
     {
       href: "/search",
@@ -81,12 +80,6 @@ export default function Home() {
       icon: Columns3,
       title: "Порівняння",
       desc: "Зіставити препарати поруч",
-    },
-    {
-      href: "/scan",
-      icon: Scan,
-      title: "Скан упаковки",
-      desc: "Розпізнати препарат по фото",
     },
     {
       href: "/hospital",

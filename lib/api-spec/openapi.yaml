@@ -431,6 +431,54 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /catalog/professional-profile:
+    get:
+      operationId: getProfessionalProductProfile
+      tags: [drugs]
+      summary: Get one exact professional registry-product profile
+      description: >-
+        Resolves one exact product identifier and registration number, then
+        aggregates independently bounded registry, National List, instruction,
+        Rx/OTC, interaction and series-check source states. A failed or missing
+        source stays explicit and never becomes a positive dispensing conclusion.
+      parameters:
+        - name: productId
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-F0-9]{32}$"
+        - name: registrationNumber
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^UA/\d+/\d+/\d+$'
+      responses:
+        "200":
+          description: Exact professional product profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfessionalProductProfile"
+        "400":
+          description: Invalid product identifier or registration number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Exact product and registration pair was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: The exact production registry profile is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /catalog/products/{productId}/instruction:
     get:
       operationId: getDrugInstruction
@@ -2057,6 +2105,63 @@ components:
           type: ["string", "null"]
           format: uri
           description: Validated exact-registration DRLZ document URL, when published
+    ProfessionalProfileSource:
+      type: object
+      required: [key, label, status, detail, sourceUrl, checkedAt]
+      properties:
+        key:
+          type: string
+          enum:
+            [
+              registry,
+              national_list,
+              dispensing_category,
+              instruction,
+              reimbursement,
+              price,
+              interactions,
+              series_restrictions,
+            ]
+        label: { type: string, minLength: 1, maxLength: 300 }
+        status:
+          type: string
+          enum: [ready, attention, requires_input, not_connected, unavailable]
+        detail: { type: string, minLength: 1, maxLength: 1000 }
+        sourceUrl:
+          oneOf:
+            - { type: string, format: uri, maxLength: 1000 }
+            - { type: "null" }
+        checkedAt:
+          oneOf:
+            - { type: string, format: date-time }
+            - { type: "null" }
+    ProfessionalProfileCoverage:
+      type: object
+      required: [connectedSources, totalSources, complete, sources]
+      properties:
+        connectedSources: { type: integer, minimum: 0, maximum: 8 }
+        totalSources: { type: integer, enum: [8] }
+        complete: { type: boolean }
+        sources:
+          type: array
+          minItems: 8
+          maxItems: 8
+          items: { $ref: "#/components/schemas/ProfessionalProfileSource" }
+    ProfessionalProductProfile:
+      type: object
+      required: [version, product, dispensingCategory, coverage, warnings]
+      properties:
+        version: { type: string, enum: ["1.0"] }
+        product: { $ref: "#/components/schemas/RegistryProductResult" }
+        dispensingCategory:
+          oneOf:
+            - { $ref: "#/components/schemas/DispensingCategoryCheck" }
+            - { type: "null" }
+        coverage: { $ref: "#/components/schemas/ProfessionalProfileCoverage" }
+        warnings:
+          type: array
+          maxItems: 20
+          items: { type: string, pattern: "^[a-z0-9:_-]{1,80}$" }
     DrugInstructionSections:
       type: object
       required:
