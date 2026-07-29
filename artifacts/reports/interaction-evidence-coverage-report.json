@@ -9,9 +9,9 @@
   },
   "counts": {
     "potentialExactPairs": 9180,
-    "verifiedPairs": 27,
+    "verifiedPairs": 33,
     "needsReviewPairs": 252,
-    "unsupportedPairs": 8901,
+    "unsupportedPairs": 8895,
     "legacyRules": 287,
     "resolvedLegacyRules": 264,
     "unresolvedLegacyRules": 23,
@@ -120,9 +120,9 @@
         "Блокатори кальцієвих каналів"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 1,
+      "verifiedPairCount": 2,
       "needsReviewPairCount": 0,
-      "unsupportedPairCount": 134
+      "unsupportedPairCount": 133
     },
     {
       "canonicalInn": "Amoxicillin",
@@ -190,9 +190,9 @@
         "Макроліди"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 0,
+      "verifiedPairCount": 1,
       "needsReviewPairCount": 6,
-      "unsupportedPairCount": 129
+      "unsupportedPairCount": 128
     },
     {
       "canonicalInn": "Betahistine",
@@ -320,9 +320,9 @@
         "НПЗЗ (коксиби)"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 1,
+      "verifiedPairCount": 2,
       "needsReviewPairCount": 19,
-      "unsupportedPairCount": 115
+      "unsupportedPairCount": 114
     },
     {
       "canonicalInn": "Cetirizine",
@@ -370,9 +370,9 @@
         "Макроліди"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 1,
+      "verifiedPairCount": 3,
       "needsReviewPairCount": 4,
-      "unsupportedPairCount": 130
+      "unsupportedPairCount": 128
     },
     {
       "canonicalInn": "Clopidogrel",
@@ -501,9 +501,9 @@
         "Серцеві глікозиди"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 1,
+      "verifiedPairCount": 2,
       "needsReviewPairCount": 0,
-      "unsupportedPairCount": 134
+      "unsupportedPairCount": 133
     },
     {
       "canonicalInn": "Dimetindene",
@@ -651,9 +651,9 @@
         "Протигрибкові"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 0,
+      "verifiedPairCount": 2,
       "needsReviewPairCount": 0,
-      "unsupportedPairCount": 135
+      "unsupportedPairCount": 133
     },
     {
       "canonicalInn": "Fluoxetine",
@@ -1271,9 +1271,9 @@
         "Інгібітори ФДЕ-5"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 2,
+      "verifiedPairCount": 3,
       "needsReviewPairCount": 0,
-      "unsupportedPairCount": 133
+      "unsupportedPairCount": 132
     },
     {
       "canonicalInn": "Simethicone",
@@ -1391,9 +1391,9 @@
         "Антикоагулянти (антагоністи вітаміну K)"
       ],
       "potentialPartnerCount": 135,
-      "verifiedPairCount": 6,
+      "verifiedPairCount": 9,
       "needsReviewPairCount": 11,
-      "unsupportedPairCount": 118
+      "unsupportedPairCount": 115
     },
     {
       "canonicalInn": "Xylometazoline",

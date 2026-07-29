@@ -7,6 +7,12 @@
 
 ### Added
 
+- Expanded the approved-only interaction registry from 27 to 33 exact-INN
+  pairs using current official product information. Added clarithromycin +
+  digoxin, clarithromycin + warfarin, fluconazole + warfarin, fluconazole +
+  celecoxib, sildenafil + amlodipine and azithromycin + warfarin. Quantitative
+  study limits and mixed azithromycin evidence remain explicit, with no class
+  inference or independent dose-change instruction.
 - Expanded the approved-only interaction registry from 22 to 27 exact-INN
   pairs using versioned official product information. Added tizanidine +
   ciprofloxacin, clopidogrel + esomeprazole, simvastatin + amlodipine,

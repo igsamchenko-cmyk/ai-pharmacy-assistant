@@ -1,6 +1,6 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../app";
 import { clearSeriesRestrictionCache } from "../knowledge/seriesRestrictions/catalog";
 
@@ -37,10 +37,13 @@ function checkUrl(
 describe("series restriction API", () => {
   afterEach(() => {
     process.env = { ...originalEnv };
+    vi.useRealTimers();
     clearSeriesRestrictionCache();
   });
 
   it("returns a bounded exact-series stop signal from the verified DLS snapshot", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-28T08:00:00.000Z"));
     process.env.AUTH_REQUIRED = "false";
     const app = createApp({ nodeEnv: "test" });
     await withServer(createServer(app), async (baseUrl) => {
