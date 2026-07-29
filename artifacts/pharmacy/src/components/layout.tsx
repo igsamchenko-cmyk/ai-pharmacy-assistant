@@ -7,7 +7,6 @@ import {
   Columns3,
   Stethoscope,
   Sparkles,
-  Scan,
   Clock,
   Heart,
   Info,
@@ -40,11 +39,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/", icon: Home, label: "Головна" },
-    { href: "/dispense", icon: ClipboardCheck, label: "Перевірка відпуску" },
+    { href: "/dispense", icon: ClipboardCheck, label: "Відпуск за 30 секунд" },
     { href: "/search", icon: Search, label: "Пошук" },
     { href: "/interactions", icon: GitCompare, label: "Взаємодії" },
     { href: "/compare", icon: Columns3, label: "Порівняння" },
-    { href: "/scan", icon: Scan, label: "Скан" },
   ];
   const secondaryNavItems = [
     { href: "/hospital", icon: Stethoscope, label: "Швидкий доступ" },
@@ -60,7 +58,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     navByHref.get("/search")!,
     navByHref.get("/interactions")!,
     navByHref.get("/compare")!,
-    navByHref.get("/scan")!,
   ];
 
   return (

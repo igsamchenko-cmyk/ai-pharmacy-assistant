@@ -49,6 +49,7 @@ import type {
   ErrorResponse,
   ExternalDrugReference,
   GetExternalDrugReferenceParams,
+  GetProfessionalProductProfileParams,
   HealthStatus,
   HistoryEntry,
   HistoryInput,
@@ -62,6 +63,7 @@ import type {
   NormalizeResult,
   OcrResult,
   OcrScanInput,
+  ProfessionalProductProfile,
   ProvenanceSourceList,
   RegistryInteractionCheckInput,
   RegistryInteractionResult,
@@ -933,6 +935,91 @@ export function useGetCatalogClientIndex<TData = Awaited<ReturnType<typeof getCa
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetCatalogClientIndexQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetProfessionalProductProfileUrl = (params: GetProfessionalProductProfileParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/catalog/professional-profile?${stringifiedParams}` : `/api/catalog/professional-profile`
+}
+
+/**
+ * Resolves one exact product identifier and registration number, then aggregates independently bounded registry, National List, instruction, Rx/OTC, interaction and series-check source states. A failed or missing source stays explicit and never becomes a positive dispensing conclusion.
+ * @summary Get one exact professional registry-product profile
+ */
+export const getProfessionalProductProfile = async (params: GetProfessionalProductProfileParams, options?: RequestInit): Promise<ProfessionalProductProfile> => {
+
+  return customFetch<ProfessionalProductProfile>(getGetProfessionalProductProfileUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProfessionalProductProfileQueryKey = (params?: GetProfessionalProductProfileParams,) => {
+    return [
+    `/api/catalog/professional-profile`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetProfessionalProductProfileQueryOptions = <TData = Awaited<ReturnType<typeof getProfessionalProductProfile>>, TError = ErrorType<ErrorResponse>>(params: GetProfessionalProductProfileParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfessionalProductProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProfessionalProductProfileQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfessionalProductProfile>>> = ({ signal }) => getProfessionalProductProfile(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfessionalProductProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProfessionalProductProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getProfessionalProductProfile>>>
+export type GetProfessionalProductProfileQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Get one exact professional registry-product profile
+ */
+
+export function useGetProfessionalProductProfile<TData = Awaited<ReturnType<typeof getProfessionalProductProfile>>, TError = ErrorType<ErrorResponse>>(
+ params: GetProfessionalProductProfileParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfessionalProductProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProfessionalProductProfileQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -7,6 +7,8 @@ import {
   GetCatalogClientIndexResponse,
   GetDrugInstructionParams,
   GetDrugInstructionResponse,
+  GetProfessionalProductProfileQueryParams,
+  GetProfessionalProductProfileResponse,
   SearchCatalogQueryParams,
   SearchCatalogResponse,
 } from "@workspace/api-zod";
@@ -15,6 +17,7 @@ import { requireRole } from "../auth";
 import { getOfficialInstructionForProduct } from "../services/officialInstructionService";
 import { loadCatalogClientIndex } from "../services/catalogClientIndexService";
 import { searchCatalog } from "../services/catalogSearchService";
+import { loadProfessionalProductProfile } from "../services/professionalProductProfileService";
 import { checkSeriesRestrictions } from "../knowledge/seriesRestrictions/catalog";
 
 const PAGE_SIZE_QUERY_KEYS = [
@@ -72,6 +75,33 @@ router.get("/catalog/search", async (req, res): Promise<void> => {
 
   const result = await searchCatalog(parsed.data);
   res.json(SearchCatalogResponse.parse(result));
+});
+
+router.get("/catalog/professional-profile", async (req, res): Promise<void> => {
+  const parsed = GetProfessionalProductProfileQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: "Invalid product identifier or registration number",
+    });
+    return;
+  }
+
+  const result = await loadProfessionalProductProfile(
+    parsed.data.productId,
+    parsed.data.registrationNumber,
+  );
+  if (result.status === "not_found") {
+    res.status(404).json({ error: "Exact registry product was not found" });
+    return;
+  }
+  if (result.status === "unavailable") {
+    res.status(503).json({
+      error: "Exact production registry profile is unavailable",
+    });
+    return;
+  }
+
+  res.json(GetProfessionalProductProfileResponse.parse(result.profile));
 });
 
 router.get(

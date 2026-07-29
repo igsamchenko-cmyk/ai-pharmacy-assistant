@@ -7,6 +7,12 @@
 
 ### Added
 
+- Added one fail-closed professional product profile endpoint and connected it
+  to the «Відпуск за 30 секунд» workspace. One exact registry identity now
+  exposes eight independent source states; missing reimbursement and price
+  feeds remain explicitly `not_connected`, while interactions and series
+  restrictions require their own input.
+
 - Expanded the approved-only interaction registry from 27 to 33 exact-INN
   pairs using current official product information. Added clarithromycin +
   digoxin, clarithromycin + warfarin, fluconazole + warfarin, fluconazole +
