@@ -624,6 +624,225 @@ export interface RegistryProductResult {
   officialInstructionDocumentUrl?: string | null;
 }
 
+export type ReimbursementPackageCandidateSection = typeof ReimbursementPackageCandidateSection[keyof typeof ReimbursementPackageCandidateSection];
+
+
+export const ReimbursementPackageCandidateSection = {
+  standard_medicines: 'standard_medicines',
+  insulin: 'insulin',
+  combination_medicines: 'combination_medicines',
+} as const;
+
+export interface ReimbursementPackageCandidate {
+  /** @pattern ^nszu-[a-f0-9]{24}$ */
+  packageKey: string;
+  section: ReimbursementPackageCandidateSection;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  inn: string;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  tradeName: string;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  dosageForm: string;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  strength: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  packageQuantity: string;
+  /** @maxLength 100 */
+  atcCode: string;
+  /** @pattern ^\d+(\.\d{1,2})?$ */
+  copayUah: string;
+  /**
+     * @minimum 3
+     * @maximum 82
+     */
+  sourcePage: number;
+  /**
+     * @minimum 1
+     * @maximum 10000
+     */
+  sourceRow: number;
+}
+
+export interface PriceCatalogPackageCandidate {
+  /** @pattern ^UA-\d{9}-\d{9}-\d{9}$ */
+  catalogId: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  registrationNumber: string;
+  /** @maxLength 20000 */
+  inn: string;
+  /**
+     * @minLength 1
+     * @maxLength 5000
+     */
+  tradeName: string;
+  /** @maxLength 5000 */
+  dosageForm: string;
+  /** @maxLength 20000 */
+  strength: string;
+  /** @maxLength 5000 */
+  packageDescription: string;
+  declaredPriceUah: string | null;
+  maximumRetailPriceUah: string | null;
+  /**
+     * @minimum 6
+     * @maximum 250000
+     */
+  sourceRow: number;
+}
+
+export type ReimbursementCheckVersion = typeof ReimbursementCheckVersion[keyof typeof ReimbursementCheckVersion];
+
+
+export const ReimbursementCheckVersion = {
+  '10': '1.0',
+} as const;
+
+export type ReimbursementCheckStatus = typeof ReimbursementCheckStatus[keyof typeof ReimbursementCheckStatus];
+
+
+export const ReimbursementCheckStatus = {
+  listed: 'listed',
+  requires_package: 'requires_package',
+  not_listed: 'not_listed',
+} as const;
+
+export type ReimbursementCheckSourceFreshness = typeof ReimbursementCheckSourceFreshness[keyof typeof ReimbursementCheckSourceFreshness];
+
+
+export const ReimbursementCheckSourceFreshness = {
+  current: 'current',
+  stale: 'stale',
+  incomplete: 'incomplete',
+} as const;
+
+export type ReimbursementCheckSource = {
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  title: string;
+  /** @maxLength 1000 */
+  url: string;
+  checkedAt: string;
+  releaseDate: string;
+  /**
+     * @minimum 1
+     * @maximum 10000
+     */
+  recordCount: number;
+  /** @pattern ^[a-f0-9]{64}$ */
+  sha256: string;
+  freshness: ReimbursementCheckSourceFreshness;
+  /**
+     * @maxItems 100
+     * @items.minLength 1
+     * @items.maxLength 300
+     */
+  warnings: string[];
+};
+
+export interface ReimbursementCheck {
+  version: ReimbursementCheckVersion;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  status: ReimbursementCheckStatus;
+  selected: ReimbursementPackageCandidate | null;
+  /** @maxItems 20 */
+  candidates: ReimbursementPackageCandidate[];
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  summary: string;
+  source: ReimbursementCheckSource;
+}
+
+export type PriceCatalogCheckVersion = typeof PriceCatalogCheckVersion[keyof typeof PriceCatalogCheckVersion];
+
+
+export const PriceCatalogCheckVersion = {
+  '10': '1.0',
+} as const;
+
+export type PriceCatalogCheckStatus = typeof PriceCatalogCheckStatus[keyof typeof PriceCatalogCheckStatus];
+
+
+export const PriceCatalogCheckStatus = {
+  priced: 'priced',
+  requires_package: 'requires_package',
+  not_in_catalog: 'not_in_catalog',
+} as const;
+
+export type PriceCatalogCheckSourceFreshness = typeof PriceCatalogCheckSourceFreshness[keyof typeof PriceCatalogCheckSourceFreshness];
+
+
+export const PriceCatalogCheckSourceFreshness = {
+  current: 'current',
+  stale: 'stale',
+  incomplete: 'incomplete',
+} as const;
+
+export type PriceCatalogCheckSource = {
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  title: string;
+  /** @maxLength 1000 */
+  url: string;
+  checkedAt: string;
+  releaseDate: string;
+  /**
+     * @minimum 1
+     * @maximum 250000
+     */
+  recordCount: number;
+  /** @pattern ^[a-f0-9]{64}$ */
+  sha256: string;
+  freshness: PriceCatalogCheckSourceFreshness;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  scopeNote: string;
+};
+
+export interface PriceCatalogCheck {
+  version: PriceCatalogCheckVersion;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  status: PriceCatalogCheckStatus;
+  selected: PriceCatalogPackageCandidate | null;
+  /** @maxItems 20 */
+  candidates: PriceCatalogPackageCandidate[];
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  summary: string;
+  source: PriceCatalogCheckSource;
+}
+
 export type ProfessionalProfileSourceKey = typeof ProfessionalProfileSourceKey[keyof typeof ProfessionalProfileSourceKey];
 
 
@@ -804,6 +1023,8 @@ export interface ProfessionalProductProfile {
   version: ProfessionalProductProfileVersion;
   product: RegistryProductResult;
   dispensingCategory: DispensingCategoryCheck | null;
+  reimbursement: ReimbursementCheck | null;
+  price: PriceCatalogCheck | null;
   coverage: ProfessionalProfileCoverage;
   /**
      * @maxItems 20
@@ -2633,6 +2854,14 @@ productId: string;
  * @pattern ^UA/\d+/\d+/\d+$
  */
 registrationNumber: string;
+/**
+ * @pattern ^nszu-[a-f0-9]{24}$
+ */
+reimbursementPackageKey?: string;
+/**
+ * @pattern ^UA-\d{9}-\d{9}-\d{9}$
+ */
+priceCatalogId?: string;
 };
 
 export type CheckProductDispensingCategoryParams = {

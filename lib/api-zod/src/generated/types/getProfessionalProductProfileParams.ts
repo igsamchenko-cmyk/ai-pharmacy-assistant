@@ -15,4 +15,12 @@ productId: string;
  * @pattern ^UA/\d+/\d+/\d+$
  */
 registrationNumber: string;
+/**
+ * @pattern ^nszu-[a-f0-9]{24}$
+ */
+reimbursementPackageKey?: string;
+/**
+ * @pattern ^UA-\d{9}-\d{9}-\d{9}$
+ */
+priceCatalogId?: string;
 };

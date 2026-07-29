@@ -10,6 +10,14 @@ import {
   type DispensingCategoryCheckResult,
 } from "../knowledge/dispensingCategories/catalog";
 import { buildInteractionFoundationAudit } from "../interactions/audit";
+import {
+  checkPriceCatalog,
+  type PriceCatalogCheckResult,
+} from "../knowledge/priceCatalog/catalog";
+import {
+  checkReimbursement,
+  type ReimbursementCheckResult,
+} from "../knowledge/reimbursement/catalog";
 import { searchCatalog } from "./catalogSearchService";
 
 type ProfessionalProductProfileOutput = z.output<
@@ -32,6 +40,14 @@ export interface ProfessionalProductProfileDependencies {
     productId: string,
     registrationNumber: string,
   ): DispensingCategoryCheckResult | Promise<DispensingCategoryCheckResult>;
+  checkReimbursement(
+    registrationNumber: string,
+    selectedPackageKey?: string | null,
+  ): ReimbursementCheckResult | Promise<ReimbursementCheckResult>;
+  checkPriceCatalog(
+    registrationNumber: string,
+    selectedCatalogId?: string | null,
+  ): PriceCatalogCheckResult | Promise<PriceCatalogCheckResult>;
 }
 
 export type ProfessionalProductProfileLoadResult =
@@ -57,10 +73,45 @@ function safeUrl(value: string | null | undefined): string | null {
   }
 }
 
-function safeDate(value: string | null | undefined): Date | null {
+function safeDate(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function requiredDate(value: string): Date {
+  const date = safeDate(value);
+  if (!date) throw new Error("Official source contains an invalid date");
+  return date;
+}
+
+function reimbursementOutput(
+  result: ReimbursementCheckResult,
+): NonNullable<ProfessionalProductProfileOutput["reimbursement"]> {
+  return {
+    ...result,
+    source: {
+      ...result.source,
+      checkedAt: requiredDate(result.source.checkedAt),
+      releaseDate: requiredDate(result.source.releaseDate),
+    },
+  };
+}
+
+function priceOutput(
+  result: PriceCatalogCheckResult,
+): NonNullable<ProfessionalProductProfileOutput["price"]> {
+  return {
+    ...result,
+    source: {
+      ...result.source,
+      checkedAt: requiredDate(result.source.checkedAt),
+      releaseDate: requiredDate(result.source.releaseDate),
+    },
+  };
 }
 
 function source(
@@ -99,6 +150,8 @@ async function resolveExactProduct(
 const defaultDependencies: ProfessionalProductProfileDependencies = {
   resolveExactProduct,
   checkDispensingCategory,
+  checkReimbursement,
+  checkPriceCatalog,
 };
 
 function registrySource(
@@ -195,25 +248,89 @@ function dispensingSource(
   });
 }
 
-function staticSource(
-  key: "reimbursement" | "price",
-  label: string,
-  detail: string,
+function reimbursementSource(
+  result: ProfessionalProductProfileOutput["reimbursement"],
 ): ProfessionalProfileSourceInput {
+  if (!result) {
+    return source({
+      key: "reimbursement",
+      label: "Реімбурсація «Доступні ліки»",
+      status: "unavailable",
+      detail:
+        "Перевірений локальний знімок НСЗУ недоступний. Не робіть висновок про участь препарату в програмі.",
+      sourceUrl: null,
+      checkedAt: null,
+    });
+  }
+  const current = result.source.freshness === "current";
   return source({
-    key,
-    label,
-    status: "not_connected",
-    detail,
-    sourceUrl: null,
-    checkedAt: null,
+    key: "reimbursement",
+    label: "Реімбурсація «Доступні ліки»",
+    status: current
+      ? result.status === "requires_package"
+        ? "requires_input"
+        : "ready"
+      : "attention",
+    detail: result.summary,
+    sourceUrl: result.source.url,
+    checkedAt: safeDate(result.source.checkedAt),
   });
 }
 
+function priceSource(
+  result: ProfessionalProductProfileOutput["price"],
+  reimbursement: ProfessionalProductProfileOutput["reimbursement"],
+): ProfessionalProfileSourceInput {
+  if (!result) {
+    return source({
+      key: "price",
+      label: "Національний каталог цін",
+      status: "unavailable",
+      detail:
+        "Перевірений локальний знімок Національного каталогу цін недоступний. Ціновий висновок неможливий.",
+      sourceUrl: null,
+      checkedAt: null,
+    });
+  }
+  if (
+    reimbursement?.status === "listed" &&
+    reimbursement.selected &&
+    reimbursement.source.freshness === "current"
+  ) {
+    return source({
+      key: "price",
+      label: "Національний каталог цін",
+      status: "ready",
+      detail:
+        "Не застосовується до обраної реімбурсованої упаковки: для неї використовуйте суму доплати з чинного переліку НСЗУ.",
+      sourceUrl: result.source.url,
+      checkedAt: safeDate(result.source.checkedAt),
+    });
+  }
+  const current = result.source.freshness === "current";
+  return source({
+    key: "price",
+    label: "Національний каталог цін",
+    status: current
+      ? result.status === "requires_package"
+        ? "requires_input"
+        : "ready"
+      : "attention",
+    detail: result.summary,
+    sourceUrl: result.source.url,
+    checkedAt: safeDate(result.source.checkedAt),
+  });
+}
+
+export interface ProfessionalProfilePackageSelection {
+  reimbursementPackageKey?: string | null;
+  priceCatalogId?: string | null;
+}
 export async function loadProfessionalProductProfile(
   productId: string,
   registrationNumber: string,
   dependencies: ProfessionalProductProfileDependencies = defaultDependencies,
+  selection: ProfessionalProfilePackageSelection = {},
 ): Promise<ProfessionalProductProfileLoadResult> {
   let resolution: ExactProductResolution;
   try {
@@ -246,21 +363,37 @@ export async function loadProfessionalProductProfile(
     dispensingCategory = null;
   }
 
+  let reimbursement: ProfessionalProductProfileOutput["reimbursement"];
+  try {
+    reimbursement = reimbursementOutput(
+      await dependencies.checkReimbursement(
+        registrationNumber,
+        selection.reimbursementPackageKey,
+      ),
+    );
+  } catch {
+    reimbursement = null;
+  }
+
+  let price: ProfessionalProductProfileOutput["price"];
+  try {
+    price = priceOutput(
+      await dependencies.checkPriceCatalog(
+        registrationNumber,
+        selection.priceCatalogId,
+      ),
+    );
+  } catch {
+    price = null;
+  }
+
   const sources: ProfessionalProfileSourceInput[] = [
     registrySource(product),
     nationalListSource(product),
     dispensingSource(dispensingCategory),
     instructionSource(product),
-    staticSource(
-      "reimbursement",
-      "Реімбурсація «Доступні ліки»",
-      "Офіційне джерело реімбурсації ще не підключено. Відсутність даних не означає, що препарат не підлягає відшкодуванню.",
-    ),
-    staticSource(
-      "price",
-      "Гранична та референтна ціна",
-      "Офіційний каталог цін ще не підключено. Не використовуйте цю картку для цінового висновку.",
-    ),
+    reimbursementSource(reimbursement),
+    priceSource(price, reimbursement),
     source({
       key: "interactions",
       label: "Перевірені взаємодії",
@@ -287,10 +420,40 @@ export async function loadProfessionalProductProfile(
   const connectedSources = sources.filter(
     (item) => item.status !== "not_connected" && item.status !== "unavailable",
   ).length;
-  const warnings = new Set<string>([
-    "reimbursement_source_not_connected",
-    "price_source_not_connected",
-  ]);
+  const warnings = new Set<string>();
+  if (!reimbursement) {
+    warnings.add("reimbursement_source_unavailable");
+  } else {
+    if (reimbursement.status === "requires_package") {
+      warnings.add("reimbursement_package_required");
+    }
+    if (reimbursement.source.freshness !== "current") {
+      warnings.add("reimbursement_source_stale");
+    }
+    if (reimbursement.source.warnings.length) {
+      warnings.add("reimbursement_source_count_mismatch");
+    }
+  }
+  if (!price) {
+    warnings.add("price_source_unavailable");
+  } else {
+    if (price.status === "requires_package") {
+      warnings.add("price_package_required");
+    }
+    if (
+      price.status === "not_in_catalog" &&
+      !(
+        reimbursement?.status === "listed" &&
+        reimbursement.selected &&
+        reimbursement.source.freshness === "current"
+      )
+    ) {
+      warnings.add("price_not_in_catalog");
+    }
+    if (price.source.freshness !== "current") {
+      warnings.add("price_source_stale");
+    }
+  }
   if (product.registration.status !== "active") {
     warnings.add("registration_not_active");
   }
@@ -320,6 +483,8 @@ export async function loadProfessionalProductProfile(
       version: "1.0",
       product,
       dispensingCategory,
+      reimbursement,
+      price,
       coverage: {
         connectedSources,
         totalSources: 8,

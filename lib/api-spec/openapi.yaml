@@ -454,6 +454,18 @@ paths:
           schema:
             type: string
             pattern: '^UA/\d+/\d+/\d+$'
+        - name: reimbursementPackageKey
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: "^nszu-[a-f0-9]{24}$"
+        - name: priceCatalogId
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: '^UA-\d{9}-\d{9}-\d{9}$'
       responses:
         "200":
           description: Exact professional product profile
@@ -2105,6 +2117,168 @@ components:
           type: ["string", "null"]
           format: uri
           description: Validated exact-registration DRLZ document URL, when published
+    ReimbursementPackageCandidate:
+      type: object
+      required:
+        [
+          packageKey,
+          section,
+          registrationNumber,
+          inn,
+          tradeName,
+          dosageForm,
+          strength,
+          packageQuantity,
+          atcCode,
+          copayUah,
+          sourcePage,
+          sourceRow,
+        ]
+      properties:
+        packageKey: { type: string, pattern: "^nszu-[a-f0-9]{24}$" }
+        section:
+          type: string
+          enum: [standard_medicines, insulin, combination_medicines]
+        registrationNumber: { type: string, pattern: '^UA/\d+/\d+/\d+$' }
+        inn: { type: string, minLength: 1, maxLength: 1000 }
+        tradeName: { type: string, minLength: 1, maxLength: 1000 }
+        dosageForm: { type: string, minLength: 1, maxLength: 1000 }
+        strength: { type: string, minLength: 1, maxLength: 1000 }
+        packageQuantity: { type: string, minLength: 1, maxLength: 300 }
+        atcCode: { type: string, maxLength: 100 }
+        copayUah: { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+        sourcePage: { type: integer, minimum: 3, maximum: 82 }
+        sourceRow: { type: integer, minimum: 1, maximum: 10000 }
+    PriceCatalogPackageCandidate:
+      type: object
+      required:
+        [
+          catalogId,
+          registrationNumber,
+          inn,
+          tradeName,
+          dosageForm,
+          strength,
+          packageDescription,
+          declaredPriceUah,
+          maximumRetailPriceUah,
+          sourceRow,
+        ]
+      properties:
+        catalogId: { type: string, pattern: '^UA-\d{9}-\d{9}-\d{9}$' }
+        registrationNumber: { type: string, minLength: 1, maxLength: 100 }
+        inn: { type: string, maxLength: 20000 }
+        tradeName: { type: string, minLength: 1, maxLength: 5000 }
+        dosageForm: { type: string, maxLength: 5000 }
+        strength: { type: string, maxLength: 20000 }
+        packageDescription: { type: string, maxLength: 5000 }
+        declaredPriceUah:
+          oneOf:
+            - { type: string, pattern: '^\d+(\.\d{1,3})?$' }
+            - { type: "null" }
+        maximumRetailPriceUah:
+          oneOf:
+            - { type: string, pattern: '^\d+(\.\d{1,3})?$' }
+            - { type: "null" }
+        sourceRow: { type: integer, minimum: 6, maximum: 250000 }
+    ReimbursementCheck:
+      type: object
+      required:
+        [
+          version,
+          registrationNumber,
+          status,
+          selected,
+          candidates,
+          summary,
+          source,
+        ]
+      properties:
+        version: { type: string, enum: ["1.0"] }
+        registrationNumber: { type: string, pattern: '^UA/\d+/\d+/\d+$' }
+        status: { type: string, enum: [listed, requires_package, not_listed] }
+        selected:
+          oneOf:
+            - { $ref: "#/components/schemas/ReimbursementPackageCandidate" }
+            - { type: "null" }
+        candidates:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/ReimbursementPackageCandidate" }
+        summary: { type: string, minLength: 1, maxLength: 1000 }
+        source:
+          type: object
+          required:
+            [
+              title,
+              url,
+              checkedAt,
+              releaseDate,
+              recordCount,
+              sha256,
+              freshness,
+              warnings,
+            ]
+          properties:
+            title: { type: string, minLength: 1, maxLength: 300 }
+            url: { type: string, format: uri, maxLength: 1000 }
+            checkedAt: { type: string, format: date-time }
+            releaseDate: { type: string, format: date }
+            recordCount: { type: integer, minimum: 1, maximum: 10000 }
+            sha256: { type: string, pattern: "^[a-f0-9]{64}$" }
+            freshness: { type: string, enum: [current, stale, incomplete] }
+            warnings:
+              type: array
+              maxItems: 100
+              items: { type: string, minLength: 1, maxLength: 300 }
+    PriceCatalogCheck:
+      type: object
+      required:
+        [
+          version,
+          registrationNumber,
+          status,
+          selected,
+          candidates,
+          summary,
+          source,
+        ]
+      properties:
+        version: { type: string, enum: ["1.0"] }
+        registrationNumber: { type: string, pattern: '^UA/\d+/\d+/\d+$' }
+        status:
+          { type: string, enum: [priced, requires_package, not_in_catalog] }
+        selected:
+          oneOf:
+            - { $ref: "#/components/schemas/PriceCatalogPackageCandidate" }
+            - { type: "null" }
+        candidates:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/PriceCatalogPackageCandidate" }
+        summary: { type: string, minLength: 1, maxLength: 1000 }
+        source:
+          type: object
+          required:
+            [
+              title,
+              url,
+              checkedAt,
+              releaseDate,
+              recordCount,
+              sha256,
+              freshness,
+              scopeNote,
+            ]
+          properties:
+            title: { type: string, minLength: 1, maxLength: 300 }
+            url: { type: string, format: uri, maxLength: 1000 }
+            checkedAt: { type: string, format: date-time }
+            releaseDate: { type: string, format: date }
+            recordCount: { type: integer, minimum: 1, maximum: 250000 }
+            sha256: { type: string, pattern: "^[a-f0-9]{64}$" }
+            freshness: { type: string, enum: [current, stale, incomplete] }
+            scopeNote: { type: string, minLength: 1, maxLength: 1000 }
     ProfessionalProfileSource:
       type: object
       required: [key, label, status, detail, sourceUrl, checkedAt]
@@ -2149,13 +2323,30 @@ components:
           items: { $ref: "#/components/schemas/ProfessionalProfileSource" }
     ProfessionalProductProfile:
       type: object
-      required: [version, product, dispensingCategory, coverage, warnings]
+      required:
+        [
+          version,
+          product,
+          dispensingCategory,
+          reimbursement,
+          price,
+          coverage,
+          warnings,
+        ]
       properties:
         version: { type: string, enum: ["1.0"] }
         product: { $ref: "#/components/schemas/RegistryProductResult" }
         dispensingCategory:
           oneOf:
             - { $ref: "#/components/schemas/DispensingCategoryCheck" }
+            - { type: "null" }
+        reimbursement:
+          oneOf:
+            - { $ref: "#/components/schemas/ReimbursementCheck" }
+            - { type: "null" }
+        price:
+          oneOf:
+            - { $ref: "#/components/schemas/PriceCatalogCheck" }
             - { type: "null" }
         coverage: { $ref: "#/components/schemas/ProfessionalProfileCoverage" }
         warnings:

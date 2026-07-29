@@ -2,7 +2,10 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { ProfessionalProductProfile } from "@workspace/api-client-react";
-import { ProfessionalProfileCoveragePanel } from "./dispensing";
+import {
+  OfficialProgramsPanel,
+  ProfessionalProfileCoveragePanel,
+} from "./dispensing";
 
 const profile: ProfessionalProductProfile = {
   version: "1.0",
@@ -47,8 +50,57 @@ const profile: ProfessionalProductProfile = {
     officialInstructionDocumentUrl: null,
   },
   dispensingCategory: null,
+  reimbursement: {
+    version: "1.0",
+    registrationNumber: "UA/10001/01/01",
+    status: "listed",
+    selected: {
+      packageKey: "nszu-aaaaaaaaaaaaaaaaaaaaaaaa",
+      section: "standard_medicines",
+      registrationNumber: "UA/10001/01/01",
+      inn: "Еналаприл",
+      tradeName: "ЕНАП",
+      dosageForm: "таблетки",
+      strength: "10 мг",
+      packageQuantity: "20 таблеток",
+      atcCode: "C09AA02",
+      copayUah: "0.00",
+      sourcePage: 3,
+      sourceRow: 1,
+    },
+    candidates: [],
+    summary: "Упаковка включена до програми «Доступні ліки».",
+    source: {
+      title: "Перелік лікарських засобів, які підлягають реімбурсації",
+      url: "https://backend.nszu.gov.ua/reimbursement.pdf",
+      checkedAt: "2026-07-29T00:00:00.000Z",
+      releaseDate: "2026-07-17",
+      recordCount: 1007,
+      sha256: "b".repeat(64),
+      freshness: "current",
+      warnings: [],
+    },
+  },
+  price: {
+    version: "1.0",
+    registrationNumber: "UA/10001/01/01",
+    status: "not_in_catalog",
+    selected: null,
+    candidates: [],
+    summary: "Реєстраційного номера немає в поточному каталозі цін.",
+    source: {
+      title: "Національний каталог цін",
+      url: "https://moz.gov.ua/uk/nacionalnij-katalog-cin",
+      checkedAt: "2026-07-29T00:00:00.000Z",
+      releaseDate: "2026-07-01",
+      recordCount: 11060,
+      sha256: "c".repeat(64),
+      freshness: "current",
+      scopeNote: "Реімбурсовані препарати не входять до каталогу.",
+    },
+  },
   coverage: {
-    connectedSources: 6,
+    connectedSources: 8,
     totalSources: 8,
     complete: false,
     sources: [
@@ -87,16 +139,16 @@ const profile: ProfessionalProductProfile = {
       {
         key: "reimbursement",
         label: "Доступні ліки",
-        status: "not_connected",
-        detail: "Джерело не підключено.",
+        status: "ready",
+        detail: "Офіційний знімок підключено.",
         sourceUrl: null,
         checkedAt: null,
       },
       {
         key: "price",
         label: "Гранична ціна",
-        status: "not_connected",
-        detail: "Джерело не підключено.",
+        status: "ready",
+        detail: "Офіційний знімок підключено.",
         sourceUrl: null,
         checkedAt: null,
       },
@@ -118,10 +170,7 @@ const profile: ProfessionalProductProfile = {
       },
     ],
   },
-  warnings: [
-    "reimbursement_source_not_connected",
-    "price_source_not_connected",
-  ],
+  warnings: [],
 };
 
 describe("professional profile coverage panel", () => {
@@ -131,14 +180,49 @@ describe("professional profile coverage panel", () => {
     );
 
     expect(html).toContain("Єдиний профіль джерел");
-    expect(html).toContain("Підключено 6/");
+    expect(html).toContain("Підключено 8/");
     expect(html).toContain("8");
     expect(html).toContain("Державна реєстрація");
     expect(html).toContain("Доступні ліки");
     expect(html).toContain("Гранична ціна");
-    expect(html).toContain("Не підключено");
+    expect(html).toContain("Підтверджено");
     expect(html).toContain("Потрібні дані");
     expect(html).toContain("Неповне покриття не є дозволом на відпуск");
     expect(html).not.toContain("Безпечно");
+  });
+});
+describe("official programs panel", () => {
+  it("shows exact NSZU reimbursement and explains the price-catalog scope", () => {
+    const html = renderToStaticMarkup(
+      createElement(OfficialProgramsPanel, { profile }),
+    );
+
+    expect(html).toContain("Офіційні програми та ціни");
+    expect(html).toContain("«Доступні ліки»");
+    expect(html).toContain("Безоплатно");
+    expect(html).toContain("Національний каталог цін");
+    expect(html).toContain("суму доплати НСЗУ");
+    expect(html).not.toContain("Джерело не підключено");
+  });
+
+  it("does not present a stale NSZU row as a current positive result", () => {
+    const staleReimbursement = profile.reimbursement
+      ? {
+          ...profile.reimbursement,
+          source: {
+            ...profile.reimbursement.source,
+            freshness: "stale" as const,
+          },
+        }
+      : null;
+    const html = renderToStaticMarkup(
+      createElement(OfficialProgramsPanel, {
+        profile: { ...profile, reimbursement: staleReimbursement },
+      }),
+    );
+
+    expect(html).toContain("Дані застарілі");
+    expect(html).toContain("Не використовуйте цей статус для відпуску");
+    expect(html).not.toContain(">Включено<");
   });
 });

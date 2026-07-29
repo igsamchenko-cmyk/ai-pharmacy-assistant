@@ -57,7 +57,9 @@
     "knowledge:instructions:report": "tsx src/scripts/knowledge-instructions-report.ts",
     "knowledge:instructions:coverage-report": "tsx src/scripts/knowledge-instructions-coverage-report.ts",
     "knowledge:series-restrictions": "tsx src/scripts/knowledge-series-restrictions.ts",
-    "knowledge:dispensing-categories": "tsx src/scripts/knowledge-dispensing-categories.ts"
+    "knowledge:dispensing-categories": "tsx src/scripts/knowledge-dispensing-categories.ts",
+    "knowledge:price-catalog": "tsx src/scripts/knowledge-price-catalog.ts",
+    "knowledge:reimbursement": "tsx src/scripts/knowledge-reimbursement.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",
@@ -81,7 +83,9 @@
     "@types/node": "catalog:",
     "esbuild": "0.27.3",
     "esbuild-plugin-pino": "^2.3.3",
+    "pdfjs-dist": "6.1.200",
     "pino-pretty": "^13.1.3",
+    "read-excel-file": "9.3.5",
     "thread-stream": "3.1.0",
     "tsx": "catalog:"
   }

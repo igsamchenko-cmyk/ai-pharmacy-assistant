@@ -788,11 +788,15 @@ export const GetCatalogClientIndexResponse = zod.object({
  */
 export const getProfessionalProductProfileQueryProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
 export const getProfessionalProductProfileQueryRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProfessionalProductProfileQueryReimbursementPackageKeyRegExp = new RegExp('^nszu-[a-f0-9]{24}$');
+export const getProfessionalProductProfileQueryPriceCatalogIdRegExp = new RegExp('^UA-\\d{9}-\\d{9}-\\d{9}$');
 
 
 export const GetProfessionalProductProfileQueryParams = zod.object({
   "productId": zod.coerce.string().regex(getProfessionalProductProfileQueryProductIdRegExp),
-  "registrationNumber": zod.coerce.string().regex(getProfessionalProductProfileQueryRegistrationNumberRegExp)
+  "registrationNumber": zod.coerce.string().regex(getProfessionalProductProfileQueryRegistrationNumberRegExp),
+  "reimbursementPackageKey": zod.coerce.string().regex(getProfessionalProductProfileQueryReimbursementPackageKeyRegExp).optional(),
+  "priceCatalogId": zod.coerce.string().regex(getProfessionalProductProfileQueryPriceCatalogIdRegExp).optional()
 })
 
 
@@ -822,6 +826,112 @@ export const getProfessionalProductProfileResponseDispensingCategoryOneSourceSha
 export const getProfessionalProductProfileResponseDispensingCategoryOneSourceLegalBasisTitleMax = 500;
 
 export const getProfessionalProductProfileResponseDispensingCategoryOneSourceLegalBasisRevisionDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getProfessionalProductProfileResponseReimbursementOneRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOnePackageKeyRegExp = new RegExp('^nszu-[a-f0-9]{24}$');
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOneRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOneInnMax = 1000;
+
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOneTradeNameMax = 1000;
+
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOneDosageFormMax = 1000;
+
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOneStrengthMax = 1000;
+
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOnePackageQuantityMax = 300;
+
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOneAtcCodeMax = 100;
+
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOneCopayUahRegExp = new RegExp('^\\d+(\\.\\d{1,2})?$');
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOneSourcePageMin = 3;
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOneSourcePageMax = 82;
+
+export const getProfessionalProductProfileResponseReimbursementOneSelectedOneSourceRowMax = 10000;
+
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemPackageKeyRegExp = new RegExp('^nszu-[a-f0-9]{24}$');
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemInnMax = 1000;
+
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemTradeNameMax = 1000;
+
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemDosageFormMax = 1000;
+
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemStrengthMax = 1000;
+
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemPackageQuantityMax = 300;
+
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemAtcCodeMax = 100;
+
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemCopayUahRegExp = new RegExp('^\\d+(\\.\\d{1,2})?$');
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemSourcePageMin = 3;
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemSourcePageMax = 82;
+
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesItemSourceRowMax = 10000;
+
+export const getProfessionalProductProfileResponseReimbursementOneCandidatesMax = 20;
+
+export const getProfessionalProductProfileResponseReimbursementOneSummaryMax = 1000;
+
+export const getProfessionalProductProfileResponseReimbursementOneSourceTitleMax = 300;
+
+export const getProfessionalProductProfileResponseReimbursementOneSourceUrlMax = 1000;
+
+export const getProfessionalProductProfileResponseReimbursementOneSourceRecordCountMax = 10000;
+
+export const getProfessionalProductProfileResponseReimbursementOneSourceSha256RegExp = new RegExp('^[a-f0-9]{64}$');
+export const getProfessionalProductProfileResponseReimbursementOneSourceWarningsItemMax = 300;
+
+export const getProfessionalProductProfileResponseReimbursementOneSourceWarningsMax = 100;
+
+export const getProfessionalProductProfileResponsePriceOneRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProfessionalProductProfileResponsePriceOneSelectedOneCatalogIdRegExp = new RegExp('^UA-\\d{9}-\\d{9}-\\d{9}$');
+export const getProfessionalProductProfileResponsePriceOneSelectedOneRegistrationNumberMax = 100;
+
+export const getProfessionalProductProfileResponsePriceOneSelectedOneInnMax = 20000;
+
+export const getProfessionalProductProfileResponsePriceOneSelectedOneTradeNameMax = 5000;
+
+export const getProfessionalProductProfileResponsePriceOneSelectedOneDosageFormMax = 5000;
+
+export const getProfessionalProductProfileResponsePriceOneSelectedOneStrengthMax = 20000;
+
+export const getProfessionalProductProfileResponsePriceOneSelectedOnePackageDescriptionMax = 5000;
+
+export const getProfessionalProductProfileResponsePriceOneSelectedOneDeclaredPriceUahOneRegExp = new RegExp('^\\d+(\\.\\d{1,3})?$');
+export const getProfessionalProductProfileResponsePriceOneSelectedOneMaximumRetailPriceUahOneRegExp = new RegExp('^\\d+(\\.\\d{1,3})?$');
+export const getProfessionalProductProfileResponsePriceOneSelectedOneSourceRowMin = 6;
+export const getProfessionalProductProfileResponsePriceOneSelectedOneSourceRowMax = 250000;
+
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemCatalogIdRegExp = new RegExp('^UA-\\d{9}-\\d{9}-\\d{9}$');
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemRegistrationNumberMax = 100;
+
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemInnMax = 20000;
+
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemTradeNameMax = 5000;
+
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemDosageFormMax = 5000;
+
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemStrengthMax = 20000;
+
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemPackageDescriptionMax = 5000;
+
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemDeclaredPriceUahOneRegExp = new RegExp('^\\d+(\\.\\d{1,3})?$');
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemMaximumRetailPriceUahOneRegExp = new RegExp('^\\d+(\\.\\d{1,3})?$');
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemSourceRowMin = 6;
+export const getProfessionalProductProfileResponsePriceOneCandidatesItemSourceRowMax = 250000;
+
+export const getProfessionalProductProfileResponsePriceOneCandidatesMax = 20;
+
+export const getProfessionalProductProfileResponsePriceOneSummaryMax = 1000;
+
+export const getProfessionalProductProfileResponsePriceOneSourceTitleMax = 300;
+
+export const getProfessionalProductProfileResponsePriceOneSourceUrlMax = 1000;
+
+export const getProfessionalProductProfileResponsePriceOneSourceRecordCountMax = 250000;
+
+export const getProfessionalProductProfileResponsePriceOneSourceSha256RegExp = new RegExp('^[a-f0-9]{64}$');
+export const getProfessionalProductProfileResponsePriceOneSourceScopeNoteMax = 1000;
+
 export const getProfessionalProductProfileResponseCoverageConnectedSourcesMin = 0;
 export const getProfessionalProductProfileResponseCoverageConnectedSourcesMax = 8;
 
@@ -925,6 +1035,90 @@ export const GetProfessionalProductProfileResponse = zod.object({
   "legalBasisTitle": zod.string().min(1).max(getProfessionalProductProfileResponseDispensingCategoryOneSourceLegalBasisTitleMax),
   "legalBasisUrl": zod.string().url(),
   "legalBasisRevisionDate": zod.string().regex(getProfessionalProductProfileResponseDispensingCategoryOneSourceLegalBasisRevisionDateRegExp)
+})
+}),zod.null()]),
+  "reimbursement": zod.union([zod.object({
+  "version": zod.enum(['1.0']),
+  "registrationNumber": zod.string().regex(getProfessionalProductProfileResponseReimbursementOneRegistrationNumberRegExp),
+  "status": zod.enum(['listed', 'requires_package', 'not_listed']),
+  "selected": zod.union([zod.object({
+  "packageKey": zod.string().regex(getProfessionalProductProfileResponseReimbursementOneSelectedOnePackageKeyRegExp),
+  "section": zod.enum(['standard_medicines', 'insulin', 'combination_medicines']),
+  "registrationNumber": zod.string().regex(getProfessionalProductProfileResponseReimbursementOneSelectedOneRegistrationNumberRegExp),
+  "inn": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneSelectedOneInnMax),
+  "tradeName": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneSelectedOneTradeNameMax),
+  "dosageForm": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneSelectedOneDosageFormMax),
+  "strength": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneSelectedOneStrengthMax),
+  "packageQuantity": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneSelectedOnePackageQuantityMax),
+  "atcCode": zod.string().max(getProfessionalProductProfileResponseReimbursementOneSelectedOneAtcCodeMax),
+  "copayUah": zod.string().regex(getProfessionalProductProfileResponseReimbursementOneSelectedOneCopayUahRegExp),
+  "sourcePage": zod.number().min(getProfessionalProductProfileResponseReimbursementOneSelectedOneSourcePageMin).max(getProfessionalProductProfileResponseReimbursementOneSelectedOneSourcePageMax),
+  "sourceRow": zod.number().min(1).max(getProfessionalProductProfileResponseReimbursementOneSelectedOneSourceRowMax)
+}),zod.null()]),
+  "candidates": zod.array(zod.object({
+  "packageKey": zod.string().regex(getProfessionalProductProfileResponseReimbursementOneCandidatesItemPackageKeyRegExp),
+  "section": zod.enum(['standard_medicines', 'insulin', 'combination_medicines']),
+  "registrationNumber": zod.string().regex(getProfessionalProductProfileResponseReimbursementOneCandidatesItemRegistrationNumberRegExp),
+  "inn": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneCandidatesItemInnMax),
+  "tradeName": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneCandidatesItemTradeNameMax),
+  "dosageForm": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneCandidatesItemDosageFormMax),
+  "strength": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneCandidatesItemStrengthMax),
+  "packageQuantity": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneCandidatesItemPackageQuantityMax),
+  "atcCode": zod.string().max(getProfessionalProductProfileResponseReimbursementOneCandidatesItemAtcCodeMax),
+  "copayUah": zod.string().regex(getProfessionalProductProfileResponseReimbursementOneCandidatesItemCopayUahRegExp),
+  "sourcePage": zod.number().min(getProfessionalProductProfileResponseReimbursementOneCandidatesItemSourcePageMin).max(getProfessionalProductProfileResponseReimbursementOneCandidatesItemSourcePageMax),
+  "sourceRow": zod.number().min(1).max(getProfessionalProductProfileResponseReimbursementOneCandidatesItemSourceRowMax)
+})).max(getProfessionalProductProfileResponseReimbursementOneCandidatesMax),
+  "summary": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneSummaryMax),
+  "source": zod.object({
+  "title": zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneSourceTitleMax),
+  "url": zod.string().url().max(getProfessionalProductProfileResponseReimbursementOneSourceUrlMax),
+  "checkedAt": zod.coerce.date(),
+  "releaseDate": zod.coerce.date(),
+  "recordCount": zod.number().min(1).max(getProfessionalProductProfileResponseReimbursementOneSourceRecordCountMax),
+  "sha256": zod.string().regex(getProfessionalProductProfileResponseReimbursementOneSourceSha256RegExp),
+  "freshness": zod.enum(['current', 'stale', 'incomplete']),
+  "warnings": zod.array(zod.string().min(1).max(getProfessionalProductProfileResponseReimbursementOneSourceWarningsItemMax)).max(getProfessionalProductProfileResponseReimbursementOneSourceWarningsMax)
+})
+}),zod.null()]),
+  "price": zod.union([zod.object({
+  "version": zod.enum(['1.0']),
+  "registrationNumber": zod.string().regex(getProfessionalProductProfileResponsePriceOneRegistrationNumberRegExp),
+  "status": zod.enum(['priced', 'requires_package', 'not_in_catalog']),
+  "selected": zod.union([zod.object({
+  "catalogId": zod.string().regex(getProfessionalProductProfileResponsePriceOneSelectedOneCatalogIdRegExp),
+  "registrationNumber": zod.string().min(1).max(getProfessionalProductProfileResponsePriceOneSelectedOneRegistrationNumberMax),
+  "inn": zod.string().max(getProfessionalProductProfileResponsePriceOneSelectedOneInnMax),
+  "tradeName": zod.string().min(1).max(getProfessionalProductProfileResponsePriceOneSelectedOneTradeNameMax),
+  "dosageForm": zod.string().max(getProfessionalProductProfileResponsePriceOneSelectedOneDosageFormMax),
+  "strength": zod.string().max(getProfessionalProductProfileResponsePriceOneSelectedOneStrengthMax),
+  "packageDescription": zod.string().max(getProfessionalProductProfileResponsePriceOneSelectedOnePackageDescriptionMax),
+  "declaredPriceUah": zod.union([zod.string().regex(getProfessionalProductProfileResponsePriceOneSelectedOneDeclaredPriceUahOneRegExp),zod.null()]),
+  "maximumRetailPriceUah": zod.union([zod.string().regex(getProfessionalProductProfileResponsePriceOneSelectedOneMaximumRetailPriceUahOneRegExp),zod.null()]),
+  "sourceRow": zod.number().min(getProfessionalProductProfileResponsePriceOneSelectedOneSourceRowMin).max(getProfessionalProductProfileResponsePriceOneSelectedOneSourceRowMax)
+}),zod.null()]),
+  "candidates": zod.array(zod.object({
+  "catalogId": zod.string().regex(getProfessionalProductProfileResponsePriceOneCandidatesItemCatalogIdRegExp),
+  "registrationNumber": zod.string().min(1).max(getProfessionalProductProfileResponsePriceOneCandidatesItemRegistrationNumberMax),
+  "inn": zod.string().max(getProfessionalProductProfileResponsePriceOneCandidatesItemInnMax),
+  "tradeName": zod.string().min(1).max(getProfessionalProductProfileResponsePriceOneCandidatesItemTradeNameMax),
+  "dosageForm": zod.string().max(getProfessionalProductProfileResponsePriceOneCandidatesItemDosageFormMax),
+  "strength": zod.string().max(getProfessionalProductProfileResponsePriceOneCandidatesItemStrengthMax),
+  "packageDescription": zod.string().max(getProfessionalProductProfileResponsePriceOneCandidatesItemPackageDescriptionMax),
+  "declaredPriceUah": zod.union([zod.string().regex(getProfessionalProductProfileResponsePriceOneCandidatesItemDeclaredPriceUahOneRegExp),zod.null()]),
+  "maximumRetailPriceUah": zod.union([zod.string().regex(getProfessionalProductProfileResponsePriceOneCandidatesItemMaximumRetailPriceUahOneRegExp),zod.null()]),
+  "sourceRow": zod.number().min(getProfessionalProductProfileResponsePriceOneCandidatesItemSourceRowMin).max(getProfessionalProductProfileResponsePriceOneCandidatesItemSourceRowMax)
+})).max(getProfessionalProductProfileResponsePriceOneCandidatesMax),
+  "summary": zod.string().min(1).max(getProfessionalProductProfileResponsePriceOneSummaryMax),
+  "source": zod.object({
+  "title": zod.string().min(1).max(getProfessionalProductProfileResponsePriceOneSourceTitleMax),
+  "url": zod.string().url().max(getProfessionalProductProfileResponsePriceOneSourceUrlMax),
+  "checkedAt": zod.coerce.date(),
+  "releaseDate": zod.coerce.date(),
+  "recordCount": zod.number().min(1).max(getProfessionalProductProfileResponsePriceOneSourceRecordCountMax),
+  "sha256": zod.string().regex(getProfessionalProductProfileResponsePriceOneSourceSha256RegExp),
+  "freshness": zod.enum(['current', 'stale', 'incomplete']),
+  "scopeNote": zod.string().min(1).max(getProfessionalProductProfileResponsePriceOneSourceScopeNoteMax)
 })
 }),zod.null()]),
   "coverage": zod.object({
