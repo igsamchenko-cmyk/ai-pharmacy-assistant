@@ -21,20 +21,20 @@ describe("legacy interaction foundation migration", () => {
 
   it("reports the current provenance gaps deterministically", () => {
     const report = buildInteractionFoundationAudit();
-    expect(report.datasetVersion).toBe("interaction-registry-v1.3.0");
-    expect(report.totalRules).toBe(309);
-    expect(report.uniquePairCount).toBe(309);
-    expect(report.runtimeEligibleCount).toBe(22);
+    expect(report.datasetVersion).toBe("interaction-registry-v1.4.0");
+    expect(report.totalRules).toBe(314);
+    expect(report.uniquePairCount).toBe(314);
+    expect(report.runtimeEligibleCount).toBe(27);
     expect(report.duplicatePairKeys).toEqual([]);
     expect(report.unresolvedConflicts).toBe(0);
-    expect(report.statusCounts.approved).toBe(22);
+    expect(report.statusCounts.approved).toBe(27);
     expect(report.statusCounts.needs_review).toBe(287);
-    expect(report.provenanceCoverage.mechanism).toBe(93);
-    expect(report.directionalityCounts.symmetric).toBe(309);
-    expect(report.therapeuticGroupCoverage.classifiedRules).toBe(22);
+    expect(report.provenanceCoverage.mechanism).toBe(98);
+    expect(report.directionalityCounts.symmetric).toBe(314);
+    expect(report.therapeuticGroupCoverage.classifiedRules).toBe(27);
     expect(report.therapeuticGroupCoverage.unclassifiedRules).toBe(287);
-    expect(report.provenanceCoverage.sourceVersionOrDate).toBe(22);
-    expect(report.provenanceCoverage.reviewedAt).toBe(22);
+    expect(report.provenanceCoverage.sourceVersionOrDate).toBe(27);
+    expect(report.provenanceCoverage.reviewedAt).toBe(27);
     expect(report.eligibilityBlockers.not_approved).toBe(287);
   });
 

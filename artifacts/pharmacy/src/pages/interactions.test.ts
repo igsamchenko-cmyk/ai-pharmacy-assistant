@@ -81,6 +81,15 @@ describe("registry interaction selection", () => {
     expect(pageSource).toContain("не робить висновок про сумісність");
   });
 
+  it("shows limited evidence coverage even when some rules are eligible", () => {
+    expect(pageSource).toContain(
+      "checkInteractions.data.coverage.runtimeEligibleRules <",
+    );
+    expect(pageSource).toContain("Доказове покриття взаємодій обмежене");
+    expect(pageSource).toContain("checkInteractions.data.coverage.totalRules");
+    expect(pageSource).not.toContain("runtimeEligibleRules === 0");
+  });
+
   it("keeps the mobile layout bounded without horizontal scrolling", () => {
     expect(pageSource).toContain("overflow-x-hidden");
     expect(pickerSource).toContain("max-w-full");
