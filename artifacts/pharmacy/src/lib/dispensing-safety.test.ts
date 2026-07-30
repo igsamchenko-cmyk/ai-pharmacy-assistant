@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import type {
   DispensingCategoryCheck,
   RegistryProductResult,
-  SeriesRestrictionCheck,
 } from "@workspace/api-client-react";
 import { DispensingAssessmentPanel } from "@/pages/dispensing";
 import {
@@ -147,18 +146,6 @@ function officialProgramsFixture(): DispensingOfficialPrograms {
   };
 }
 
-function clearSeriesFixture(): SeriesRestrictionCheck {
-  return {
-    status: "no_match",
-    summary: "Точного збігу за реєстраційним номером і серією не знайдено.",
-    source: {
-      title: "Реєстр документів щодо якості лікарських засобів",
-      url: "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
-      generatedAt: "2026-07-29T00:00:00.000Z",
-      freshness: "current",
-    },
-  } as SeriesRestrictionCheck;
-}
 describe("dispensing safety assessment", () => {
   it("never marks dispensing complete while critical regulatory sources are disconnected", () => {
     const assessment = buildDispensingAssessment(productFixture());
@@ -170,16 +157,12 @@ describe("dispensing safety assessment", () => {
     expect(assessment.checks.find((check) => check.id === "rx-otc")?.tone).toBe(
       "attention",
     );
-    expect(
-      assessment.checks.find((check) => check.id === "series-restrictions")
-        ?.detail,
-    ).toContain("не означає відсутність заборони");
+    expect(assessment.checks).toHaveLength(6);
   });
 
   it("shows a verified exact-product OTC result without claiming full dispensing approval", () => {
     const assessment = buildDispensingAssessment(
       productFixture(),
-      undefined,
       dispensingCategoryFixture(),
     );
     const check = assessment.checks.find((item) => item.id === "rx-otc");
@@ -196,7 +179,6 @@ describe("dispensing safety assessment", () => {
     const programs = officialProgramsFixture();
     const assessment = buildDispensingAssessment(
       productFixture(),
-      undefined,
       dispensingCategoryFixture(),
       programs,
     );
@@ -223,14 +205,13 @@ describe("dispensing safety assessment", () => {
   it("advances to manual review only after every automatic regulatory check resolves", () => {
     const assessment = buildDispensingAssessment(
       productFixture(),
-      clearSeriesFixture(),
       dispensingCategoryFixture(),
       officialProgramsFixture(),
     );
 
     expect(assessment.decision).toBe("manual_review");
-    expect(assessment.decisionLabel).toContain("завершіть ручний контроль");
-    expect(assessment.decisionDetail).toContain("Це не дозвіл на відпуск");
+    expect(assessment.decisionLabel).toContain("професійний контроль");
+    expect(assessment.decisionDetail).toContain("Регуляторному радарі");
   });
 
   it("keeps stale official-program data in an incomplete state", () => {
@@ -246,7 +227,6 @@ describe("dispensing safety assessment", () => {
       : null;
     const assessment = buildDispensingAssessment(
       productFixture(),
-      clearSeriesFixture(),
       dispensingCategoryFixture(),
       programs,
     );
@@ -268,11 +248,7 @@ describe("dispensing safety assessment", () => {
       packageDependent: true,
       summary: "Категорія залежить від розміру або виду упаковки.",
     });
-    const assessment = buildDispensingAssessment(
-      productFixture(),
-      undefined,
-      conditional,
-    );
+    const assessment = buildDispensingAssessment(productFixture(), conditional);
     const check = assessment.checks.find((item) => item.id === "rx-otc");
 
     expect(check).toMatchObject({
@@ -298,27 +274,6 @@ describe("dispensing safety assessment", () => {
     expect(assessment.decisionLabel).toContain("не підтверджено");
   });
 
-  it("blocks dispensing when the exact series assessment contains a ban", () => {
-    const restriction = {
-      status: "blocked",
-      summary: "Знайдено чинну заборону для точної серії.",
-      source: {
-        title: "Реєстр документів щодо якості лікарських засобів",
-        url: "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
-        generatedAt: "2026-07-27T20:16:46.102Z",
-        freshness: "current",
-      },
-    } as SeriesRestrictionCheck;
-
-    const assessment = buildDispensingAssessment(productFixture(), restriction);
-
-    expect(assessment.decision).toBe("blocked");
-    expect(assessment.decisionDetail).toContain("точної серії");
-    expect(
-      assessment.checks.find((check) => check.id === "series-restrictions")
-        ?.tone,
-    ).toBe("blocked");
-  });
   it("renders evidence states and a direct exact-product instruction action", () => {
     const product = productFixture();
     const html = renderToStaticMarkup(
@@ -333,6 +288,9 @@ describe("dispensing safety assessment", () => {
     expect(html).toContain("Без рецепта — точний запис ДРЛЗ");
     expect(html).toContain("Джерело не підключено");
     expect(html).toContain(`/instructions/${product.id}`);
+    expect(html).toContain("Заборони й поновлення");
+    expect(html).toContain("/regulatory-radar?q=UA%2F10001%2F01%2F01");
+    expect(html).not.toContain("Введіть серію");
     expect(html).not.toContain("Відпуск дозволено");
   });
 });

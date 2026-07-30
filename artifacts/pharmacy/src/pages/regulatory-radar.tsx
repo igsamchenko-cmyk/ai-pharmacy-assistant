@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   Ban,
@@ -25,7 +25,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type EventFilter = "all" | RegulatoryEvent["severity"];
+type EventFilter =
+  | "all"
+  | "new"
+  | "temporary_ban"
+  | "permanent_ban"
+  | "restored"
+  | "review";
+
+const SEEN_EVENTS_STORAGE_KEY = "farmassist:regulatory-radar:seen-events:v1";
 
 const STATUS_PRESENTATION: Record<
   RegulatorySource["status"],
@@ -52,24 +60,77 @@ const STATUS_PRESENTATION: Record<
 };
 
 const FILTERS: Array<{ key: EventFilter; label: string }> = [
+  { key: "new", label: "Нові" },
   { key: "all", label: "Усі" },
-  { key: "critical", label: "Заборони" },
-  { key: "review", label: "Потребують перегляду" },
-  { key: "info", label: "Поновлення" },
+  { key: "temporary_ban", label: "Тимчасові" },
+  { key: "permanent_ban", label: "Постійні" },
+  { key: "restored", label: "Поновлення" },
+  { key: "review", label: "Інші зміни" },
 ];
 
 function normalized(value: string): string {
   return value.normalize("NFKC").toLocaleLowerCase("uk-UA").trim();
 }
 
+function initialRadarQuery(): string {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("q")?.trim() ?? "";
+}
+
+function readSeenEventIds(): Set<string> | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(SEEN_EVENTS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? new Set(
+          parsed.filter((value): value is string => typeof value === "string"),
+        )
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSeenEventIds(ids: Set<string>): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      SEEN_EVENTS_STORAGE_KEY,
+      JSON.stringify([...ids].slice(-200)),
+    );
+  } catch {
+    // The journal still works when browser storage is unavailable.
+  }
+}
+
+function matchesEventFilter(
+  event: RegulatoryEvent,
+  filter: EventFilter,
+  newEventIds: ReadonlySet<string>,
+): boolean {
+  if (filter === "all") return true;
+  if (filter === "new") return newEventIds.has(event.id);
+  if (filter === "temporary_ban") return event.type === "temporary_ban";
+  if (filter === "permanent_ban") return event.type === "permanent_ban";
+  if (filter === "restored") {
+    return (
+      event.type === "restore_temporary" || event.type === "restore_permanent"
+    );
+  }
+  return event.severity === "review";
+}
+
 export function filterRegulatoryEvents(
   events: RegulatoryEvent[],
   query: string,
   filter: EventFilter,
+  newEventIds: ReadonlySet<string> = new Set(),
 ): RegulatoryEvent[] {
   const needle = normalized(query);
   return events.filter((event) => {
-    if (filter !== "all" && event.severity !== filter) return false;
+    if (!matchesEventFilter(event, filter, newEventIds)) return false;
     if (!needle) return true;
     return normalized(
       [
@@ -82,7 +143,6 @@ export function filterRegulatoryEvents(
     ).includes(needle);
   });
 }
-
 function formatDate(value: string | null): string {
   if (!value) return "—";
   return new Intl.DateTimeFormat("uk-UA", {
@@ -172,7 +232,13 @@ function SourceCard({ source }: { source: RegulatorySource }) {
   );
 }
 
-function EventCard({ event }: { event: RegulatoryEvent }) {
+function EventCard({
+  event,
+  isNew,
+}: {
+  event: RegulatoryEvent;
+  isNew: boolean;
+}) {
   const presentation =
     event.severity === "critical"
       ? {
@@ -208,6 +274,7 @@ function EventCard({ event }: { event: RegulatoryEvent }) {
             <Badge variant="outline" className={presentation.badge}>
               {event.label}
             </Badge>
+            {isNew ? <Badge>Нове</Badge> : null}
             <span className="text-xs text-muted-foreground">
               {formatDate(event.date)}
             </span>
@@ -273,8 +340,10 @@ function LoadingState() {
 }
 
 export default function RegulatoryRadarPage() {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialRadarQuery);
   const [filter, setFilter] = useState<EventFilter>("all");
+  const [seenEventIds, setSeenEventIds] = useState<Set<string>>(new Set());
+  const [seenStateReady, setSeenStateReady] = useState(false);
   const radar = useGetRegulatoryRadar({
     query: {
       queryKey: getGetRegulatoryRadarQueryKey(),
@@ -282,10 +351,47 @@ export default function RegulatoryRadarPage() {
       refetchOnWindowFocus: false,
     },
   });
-  const events = useMemo(
-    () => filterRegulatoryEvents(radar.data?.events ?? [], query, filter),
-    [radar.data?.events, query, filter],
+
+  useEffect(() => {
+    if (!radar.data || seenStateReady) return;
+    const stored = readSeenEventIds();
+    const baseline =
+      stored ?? new Set(radar.data.events.map((event) => event.id));
+    if (stored === null) writeSeenEventIds(baseline);
+    setSeenEventIds(baseline);
+    setSeenStateReady(true);
+  }, [radar.data, seenStateReady]);
+
+  const newEventIds = useMemo(
+    () =>
+      new Set(
+        (radar.data?.events ?? [])
+          .filter((event) => seenStateReady && !seenEventIds.has(event.id))
+          .map((event) => event.id),
+      ),
+    [radar.data?.events, seenEventIds, seenStateReady],
   );
+  const events = useMemo(
+    () =>
+      filterRegulatoryEvents(
+        radar.data?.events ?? [],
+        query,
+        filter,
+        newEventIds,
+      ),
+    [radar.data?.events, query, filter, newEventIds],
+  );
+  const seriesSource = radar.data?.sources.find(
+    (source) => source.key === "series_restrictions",
+  );
+
+  const markAllEventsSeen = () => {
+    const next = new Set(seenEventIds);
+    for (const event of radar.data?.events ?? []) next.add(event.id);
+    writeSeenEventIds(next);
+    setSeenEventIds(next);
+    if (filter === "new") setFilter("all");
+  };
 
   return (
     <div className="space-y-7" data-testid="regulatory-radar-page">
@@ -312,7 +418,7 @@ export default function RegulatoryRadarPage() {
           <RefreshCw
             className={`mr-2 h-4 w-4 ${radar.isFetching ? "animate-spin" : ""}`}
           />
-          Оновити
+          Перечитати довідник
         </Button>
       </header>
 
@@ -428,6 +534,59 @@ export default function RegulatoryRadarPage() {
               </p>
             </div>
 
+            {seriesSource ? (
+              <Card
+                className={
+                  seriesSource.status === "current"
+                    ? "border-emerald-500/30 bg-emerald-500/5"
+                    : "border-amber-500/30 bg-amber-500/5"
+                }
+                data-testid="radar-series-update-status"
+              >
+                <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex gap-3">
+                    <BellRing className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold">Оновлення Держлікслужби</p>
+                        <Badge
+                          variant="outline"
+                          className={
+                            STATUS_PRESENTATION[seriesSource.status].className
+                          }
+                        >
+                          {STATUS_PRESENTATION[seriesSource.status].label}
+                        </Badge>
+                        {newEventIds.size > 0 ? (
+                          <Badge>{newEventIds.size} нових</Badge>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Знімок перевірено {formatDate(seriesSource.checkedAt)} ·
+                        останнє розпорядження{" "}
+                        {formatDate(seriesSource.latestChangeDate)}.
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Щоденна автоматична перевірка виявляє зміни. У довіднику
+                        вони з'являються після валідації та контрольованого
+                        оновлення перевіреного знімка.
+                      </p>
+                    </div>
+                  </div>
+                  {newEventIds.size > 0 ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={markAllEventsSeen}
+                    >
+                      Позначити переглянутими
+                    </Button>
+                  ) : null}
+                </CardContent>
+              </Card>
+            ) : null}
+
             <Card>
               <CardContent className="space-y-3 p-4">
                 <div className="relative">
@@ -453,6 +612,7 @@ export default function RegulatoryRadarPage() {
                       className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${filter === item.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-accent"}`}
                     >
                       {item.label}
+                      {item.key === "new" ? ` · ${newEventIds.size}` : ""}
                     </button>
                   ))}
                 </div>
@@ -460,43 +620,66 @@ export default function RegulatoryRadarPage() {
             </Card>
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-xl border border-destructive/25 bg-destructive/5 p-3">
+              <button
+                type="button"
+                onClick={() => setFilter("temporary_ban")}
+                aria-pressed={filter === "temporary_ban"}
+                className="rounded-xl border border-destructive/25 bg-destructive/5 p-3 text-left transition-colors hover:bg-destructive/10"
+              >
                 <span className="text-xs text-muted-foreground">
                   Тимчасові заборони
                 </span>
                 <strong className="mt-1 block text-xl">
                   {radar.data.summary.eventCounts.temporaryBan}
                 </strong>
-              </div>
-              <div className="rounded-xl border border-destructive/25 bg-destructive/5 p-3">
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilter("permanent_ban")}
+                aria-pressed={filter === "permanent_ban"}
+                className="rounded-xl border border-destructive/25 bg-destructive/5 p-3 text-left transition-colors hover:bg-destructive/10"
+              >
                 <span className="text-xs text-muted-foreground">
                   Постійні заборони
                 </span>
                 <strong className="mt-1 block text-xl">
                   {radar.data.summary.eventCounts.permanentBan}
                 </strong>
-              </div>
-              <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3">
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilter("restored")}
+                aria-pressed={filter === "restored"}
+                className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3 text-left transition-colors hover:bg-emerald-500/10"
+              >
                 <span className="text-xs text-muted-foreground">
                   Поновлення
                 </span>
                 <strong className="mt-1 block text-xl">
                   {radar.data.summary.eventCounts.restored}
                 </strong>
-              </div>
-              <div className="rounded-xl border bg-muted/30 p-3">
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilter("review")}
+                aria-pressed={filter === "review"}
+                className="rounded-xl border bg-muted/30 p-3 text-left transition-colors hover:bg-muted/60"
+              >
                 <span className="text-xs text-muted-foreground">
                   Інші зміни
                 </span>
                 <strong className="mt-1 block text-xl">
                   {radar.data.summary.eventCounts.other}
                 </strong>
-              </div>
+              </button>
             </div>
-
             <div className="space-y-3">
               {events.map((event) => (
-                <EventCard key={event.id} event={event} />
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  isNew={newEventIds.has(event.id)}
+                />
               ))}
               {events.length === 0 ? (
                 <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">

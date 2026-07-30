@@ -1,18 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  getCheckProductSeriesRestrictionsQueryKey,
   getGetProfessionalProductProfileQueryKey,
   getProfessionalProductProfile,
-  useCheckProductSeriesRestrictions,
   useGetProfessionalProductProfile,
   type DispensingCategoryCheck,
   type ProfessionalProductProfile,
   type RegistryProductResult,
-  type SeriesRestrictionCheck,
 } from "@workspace/api-client-react";
 import {
   AlertTriangle,
   Banknote,
+  BellRing,
   BookOpenText,
   CheckCircle2,
   CircleHelp,
@@ -29,7 +27,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SeriesRestrictionCheckPanel } from "@/components/series-restriction-check";
 import {
   RegistryInteractionSearchSelect,
   type InteractionProductSelection,
@@ -97,47 +94,17 @@ const PROFILE_SOURCE_LABELS: Record<
 
 export function ProfessionalProfileCoveragePanel({
   profile,
-  seriesRestriction,
 }: {
   profile: ProfessionalProductProfile;
-  seriesRestriction?: SeriesRestrictionCheck | null;
 }) {
-  const sources = profile.coverage.sources.map((item) => {
-    if (item.key !== "series_restrictions" || seriesRestriction === undefined) {
-      return item;
-    }
-    if (seriesRestriction === null) {
-      return {
-        ...item,
-        status: "unavailable" as const,
-        detail:
-          "Перевірка серії недоступна. Звірте офіційний реєстр Держлікслужби вручну.",
-      };
-    }
-    const current = seriesRestriction.source.freshness === "current";
-    const needsAttention =
-      !current ||
-      seriesRestriction.status === "blocked" ||
-      seriesRestriction.status === "needs_review";
-    return {
-      ...item,
-      status: needsAttention ? ("attention" as const) : ("ready" as const),
-      detail: seriesRestriction.summary,
-      sourceUrl: seriesRestriction.source.url,
-      checkedAt: seriesRestriction.source.generatedAt,
-    };
-  });
-  const connectedSources = sources.filter(
-    (item) => item.status !== "not_connected" && item.status !== "unavailable",
-  ).length;
-
   return (
     <Card data-testid="professional-profile-coverage">
       <CardHeader className="space-y-2 p-4 pb-2 sm:p-5 sm:pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-xl">Єдиний профіль джерел</CardTitle>
           <Badge variant="outline">
-            Підключено {connectedSources}/{profile.coverage.totalSources}
+            Підключено {profile.coverage.connectedSources}/
+            {profile.coverage.totalSources}
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -146,7 +113,7 @@ export function ProfessionalProfileCoveragePanel({
         </p>
       </CardHeader>
       <CardContent className="grid gap-2 p-4 pt-2 sm:grid-cols-2 sm:p-5 sm:pt-2">
-        {sources.map((item) => (
+        {profile.coverage.sources.map((item) => (
           <div
             key={item.key}
             className="flex min-h-12 items-center justify-between gap-3 rounded-xl border bg-background/60 px-3 py-2"
@@ -167,7 +134,6 @@ export function ProfessionalProfileCoveragePanel({
     </Card>
   );
 }
-
 function formatUah(value: string | null | undefined): string {
   if (value === null || value === undefined || value === "") {
     return "Не оприлюднено";
@@ -463,18 +429,15 @@ export function OfficialProgramsPanel({
 
 export function DispensingAssessmentPanel({
   product,
-  seriesRestriction,
   dispensingCategory,
   officialPrograms,
 }: {
   product: RegistryProductResult;
-  seriesRestriction?: SeriesRestrictionCheck | null;
   dispensingCategory?: DispensingCategoryCheck | null;
   officialPrograms?: ProfessionalProductProfile | null;
 }) {
   const assessment = buildDispensingAssessment(
     product,
-    seriesRestriction,
     dispensingCategory,
     officialPrograms ?? undefined,
   );
@@ -563,7 +526,7 @@ export function DispensingAssessmentPanel({
         })}
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <Button
           asChild
           variant="outline"
@@ -615,6 +578,18 @@ export function DispensingAssessmentPanel({
           <a href="/interactions">
             <GitCompare className="h-4 w-4" />
             Перевірити взаємодії
+          </a>
+        </Button>
+        <Button
+          asChild
+          variant="outline"
+          className="min-h-11 whitespace-normal"
+        >
+          <a
+            href={`/regulatory-radar?q=${encodeURIComponent(product.registration.number)}`}
+          >
+            <BellRing className="h-4 w-4" />
+            Заборони й поновлення
           </a>
         </Button>
       </div>
@@ -747,8 +722,7 @@ export default function Dispensing() {
   const [manualChecks, setManualChecks] = useState<boolean[]>(
     MANUAL_DISPENSING_STEPS.map(() => false),
   );
-  const [seriesDraft, setSeriesDraft] = useState("");
-  const [submittedSeries, setSubmittedSeries] = useState("");
+
   const profileParams = useMemo(
     () => ({
       productId: pendingProduct?.productId ?? "0".repeat(32),
@@ -794,33 +768,10 @@ export default function Dispensing() {
 
   const dispensingCategoryAssessment =
     selectedProfile?.dispensingCategory ?? null;
-  const seriesParams = useMemo(
-    () => ({
-      productId: selected?.id ?? "0".repeat(32),
-      registrationNumber: selected?.registration.number ?? "UA/0/0/0",
-      series: submittedSeries || "_",
-    }),
-    [selected, submittedSeries],
-  );
-  const seriesCheck = useCheckProductSeriesRestrictions(seriesParams, {
-    query: {
-      enabled: Boolean(selected && submittedSeries),
-      queryKey: getCheckProductSeriesRestrictionsQueryKey(seriesParams),
-      retry: false,
-    },
-  });
-  const seriesAssessment = submittedSeries
-    ? seriesCheck.isError
-      ? null
-      : seriesCheck.data
-    : undefined;
-
   const selectProduct = (product: InteractionProductSelection) => {
     setPendingProduct(product);
     setOfficialPackageError(null);
     setManualChecks(MANUAL_DISPENSING_STEPS.map(() => false));
-    setSeriesDraft("");
-    setSubmittedSeries("");
   };
 
   const reset = () => {
@@ -829,20 +780,6 @@ export default function Dispensing() {
     setOfficialPackageLoading(false);
     setOfficialPackageError(null);
     setManualChecks(MANUAL_DISPENSING_STEPS.map(() => false));
-    setSeriesDraft("");
-    setSubmittedSeries("");
-  };
-
-  const changeSeries = (value: string) => {
-    setSeriesDraft(value);
-    setSubmittedSeries("");
-  };
-
-  const submitSeries = () => {
-    const normalized = seriesDraft.trim();
-    if (!normalized) return;
-    if (normalized === submittedSeries) void seriesCheck.refetch();
-    else setSubmittedSeries(normalized);
   };
 
   const resolveOfficialPackage = async (selection: {
@@ -887,9 +824,9 @@ export default function Dispensing() {
             <ClipboardCheck className="h-7 w-7 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Відпуск за 30 секунд</h1>
+            <h1 className="text-3xl font-bold">Оперативний довідник</h1>
             <p className="text-muted-foreground">
-              Один професійний профіль точної реєстрової позиції.
+              Реєстрові, регуляторні та цінові дані точної позиції.
             </p>
           </div>
         </div>
@@ -899,7 +836,7 @@ export default function Dispensing() {
         <section className="space-y-4">
           <Alert className="border-primary/30 bg-primary/5">
             <Database className="h-4 w-4" />
-            <AlertTitle>Почніть з точної упаковки</AlertTitle>
+            <AlertTitle>Почніть з точної реєстрової позиції</AlertTitle>
             <AlertDescription>
               Введіть торгову назву, МНН або повний реєстраційний номер. Не
               обирайте препарат лише за схожою назвою.
@@ -908,7 +845,7 @@ export default function Dispensing() {
           <RegistryInteractionSearchSelect
             onSelect={selectProduct}
             disabled={Boolean(pendingProduct)}
-            label="Знайти позицію для перевірки відпуску"
+            label="Знайти препарат у довіднику"
             placeholder="Наприклад: Енап, ібупрофен або UA/1234/01/01"
             inputTestId="dispensing-search-input"
           />
@@ -920,7 +857,7 @@ export default function Dispensing() {
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Точну позицію не підтверджено</AlertTitle>
                     <AlertDescription>
-                      Не продовжуйте перевірку відпуску без повної картки ДРЛЗ.
+                      Не використовуйте неповну картку як оперативну довідку.
                     </AlertDescription>
                   </Alert>
                 ) : (
@@ -973,28 +910,11 @@ export default function Dispensing() {
               }
             />
           ) : null}
-          <SeriesRestrictionCheckPanel
-            product={selected}
-            draftSeries={seriesDraft}
-            submittedSeries={submittedSeries}
-            result={seriesCheck.data}
-            isLoading={seriesCheck.isLoading || seriesCheck.isFetching}
-            isError={seriesCheck.isError}
-            onDraftSeriesChange={changeSeries}
-            onSubmit={submitSeries}
-          />
           <DispensingAssessmentPanel
             product={selected}
-            seriesRestriction={seriesAssessment}
             dispensingCategory={dispensingCategoryAssessment}
             officialPrograms={selectedProfile}
           />
-          {selectedProfile ? (
-            <ProfessionalProfileCoveragePanel
-              profile={selectedProfile}
-              seriesRestriction={seriesAssessment}
-            />
-          ) : null}
           <ManualChecklist
             checked={manualChecks}
             onChange={(index, value) =>

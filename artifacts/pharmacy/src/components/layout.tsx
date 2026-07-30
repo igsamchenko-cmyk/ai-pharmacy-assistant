@@ -40,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/", icon: Home, label: "Головна" },
-    { href: "/dispense", icon: ClipboardCheck, label: "Відпуск за 30 секунд" },
+    { href: "/dispense", icon: ClipboardCheck, label: "Оперативний довідник" },
     { href: "/regulatory-radar", icon: BellRing, label: "Регуляторний радар" },
     { href: "/search", icon: Search, label: "Пошук" },
     { href: "/interactions", icon: GitCompare, label: "Взаємодії" },

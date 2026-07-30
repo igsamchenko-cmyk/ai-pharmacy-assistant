@@ -31,6 +31,20 @@ const events: RegulatoryEvent[] = [
     manufacturer: "Інший виробник",
     sourceUrl: "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
   },
+  {
+    id: "permanent",
+    date: "2026-07-22T00:00:00.000Z",
+    documentNumber: "779-001.1/002.0/17-26",
+    type: "permanent_ban",
+    severity: "critical",
+    label: "Постійна заборона",
+    registrationNumber: "UA/77777/01/01",
+    medicineName: "ТРЕТІЙ ПРЕПАРАТ",
+    dosageForm: "розчин",
+    series: "QW700",
+    manufacturer: "Третій виробник",
+    sourceUrl: "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
+  },
 ];
 
 describe("regulatory radar event filtering", () => {
@@ -41,10 +55,21 @@ describe("regulatory radar event filtering", () => {
     ]);
   });
 
-  it("combines text and severity filters", () => {
-    expect(filterRegulatoryEvents(events, "препарат", "critical")).toEqual([
-      events[0],
+  it("separates temporary, permanent and restored decisions", () => {
+    expect(filterRegulatoryEvents(events, "препарат", "temporary_ban")).toEqual(
+      [events[0]],
+    );
+    expect(filterRegulatoryEvents(events, "препарат", "permanent_ban")).toEqual(
+      [events[2]],
+    );
+    expect(filterRegulatoryEvents(events, "препарат", "restored")).toEqual([
+      events[1],
     ]);
-    expect(filterRegulatoryEvents(events, "AB123", "info")).toEqual([]);
+  });
+
+  it("shows only unseen events in the new filter", () => {
+    expect(
+      filterRegulatoryEvents(events, "", "new", new Set(["restore"])),
+    ).toEqual([events[1]]);
   });
 });
