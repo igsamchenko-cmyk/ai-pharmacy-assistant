@@ -26,6 +26,19 @@ export const PriceCatalogRecordSchema = z.object({
 
 export type PriceCatalogRecord = z.infer<typeof PriceCatalogRecordSchema>;
 
+export function canonicalPriceCatalogStrength(value: string): string {
+  return normalizeCatalogText(value)
+    .split(/\s*;\s*/u)
+    .map((variant) =>
+      variant
+        .split(/\s*\+\s*/u)
+        .map(normalizeCatalogText)
+        .sort()
+        .join(" + "),
+    )
+    .join(" ; ");
+}
+
 export function priceCatalogRecordsHash(records: PriceCatalogRecord[]): string {
   return createHash("sha256")
     .update(
@@ -36,7 +49,7 @@ export function priceCatalogRecordsHash(records: PriceCatalogRecord[]): string {
           record.inn,
           record.tradeName,
           record.dosageForm,
-          record.strength,
+          canonicalPriceCatalogStrength(record.strength),
           record.packageDescription,
           record.manufacturer,
           record.registrationHolder,

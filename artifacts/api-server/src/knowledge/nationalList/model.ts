@@ -9,8 +9,8 @@ export const NATIONAL_LIST_ACT_DATE = "2009-03-25";
 export const NATIONAL_LIST_REVISION_DATE = "2025-10-10";
 export const NATIONAL_LIST_EFFECTIVE_DATE = "2025-10-10";
 export const NATIONAL_LIST_EXPECTED_DOCUMENT_HASH =
-  "483ce7c0319e72294762fdec7032de64271ee263dea8f3b9dc9197ffe0faaa75";
-export const NATIONAL_LIST_PARSER_VERSION = "national-list-html-v2";
+  "1b2223cb242ee6bc78d0075cffb46c76e3727733d99fb5704146cf649c2d94f0";
+export const NATIONAL_LIST_PARSER_VERSION = "national-list-html-v3";
 export const NATIONAL_LIST_RESOLVER_VERSION = "national-list-resolver-v2";
 
 export const NATIONAL_LIST_MATCH_STATUSES = [

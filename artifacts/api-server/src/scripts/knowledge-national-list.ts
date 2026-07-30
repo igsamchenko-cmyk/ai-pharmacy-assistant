@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname } from "node:path";
 import { resolveDataFilePath } from "../lib/dataPath";
 import {
   activateNationalListRelease,
@@ -41,7 +41,10 @@ const representativeProducts: NationalListProductInput[] = [
   { registryId: "unlisted-combination", inn: "Paracetamol + Ibuprofen", activeIngredient: "500 mg + 200 mg", dosageForm: "таблетки" },
 ];
 
-function buildReport(snapshot: NationalListSnapshot) {
+function buildReport(
+  snapshot: NationalListSnapshot,
+  previous?: NationalListSnapshot,
+) {
   const gate = evaluateNationalListActivation(snapshot);
   const matches = representativeProducts.map((product) => ({
     id: product.registryId,
@@ -57,7 +60,7 @@ function buildReport(snapshot: NationalListSnapshot) {
     source: snapshot.source,
     counts: snapshot.counts,
     parserErrors: snapshot.errors,
-    diff: diffNationalListSnapshots(snapshot),
+    diff: diffNationalListSnapshots(snapshot, previous),
     activationGate: gate,
     matchReport: { total: matches.length, distribution, matches },
     dryRun: !hasFlag("--commit"),
@@ -85,19 +88,23 @@ async function main(): Promise<void> {
     return;
   }
 
-  const snapshot = hasFlag("--download")
+  const baseline = loadSnapshot();
+  const downloaded = hasFlag("--download");
+  const snapshot = downloaded
     ? await downloadAndParseNationalList()
-    : loadSnapshot();
+    : baseline;
   if (hasFlag("--write-snapshot")) {
     if (!hasFlag("--download")) throw new Error("Snapshot writing requires --download.");
     const gate = evaluateNationalListActivation(snapshot);
     if (!gate.ready) throw new Error(`Snapshot writing blocked: ${gate.blockers.join(" ")}`);
-    const destination = resolve(process.cwd(), SNAPSHOT_PATH);
+    const destination = resolveDataFilePath(SNAPSHOT_PATH, {
+      moduleUrl: import.meta.url,
+    });
     mkdirSync(dirname(destination), { recursive: true });
     writeFileSync(destination, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
   }
 
-  const report = buildReport(snapshot);
+  const report = buildReport(snapshot, downloaded ? baseline : undefined);
   if (!commit) {
     const output = hasFlag("--source-report")
       ? {

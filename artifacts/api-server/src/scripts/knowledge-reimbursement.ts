@@ -6,6 +6,7 @@ import {
   parseReimbursementPdf,
   writeReimbursementSnapshot,
 } from "../knowledge/reimbursement/importer";
+import { resolveDataFilePath } from "../lib/dataPath";
 
 function argument(name: string): string | undefined {
   const prefix = `--${name}=`;
@@ -15,7 +16,9 @@ function argument(name: string): string | undefined {
 }
 
 const output = argument("out")
-  ? resolve(process.cwd(), argument("out") as string)
+  ? resolveDataFilePath(argument("out") as string, {
+      moduleUrl: import.meta.url,
+    })
   : fileURLToPath(
       new URL(
         "../../../../data/reimbursement/ua-nszu-2026-07-17.json",

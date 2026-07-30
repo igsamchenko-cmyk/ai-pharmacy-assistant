@@ -194,6 +194,18 @@ async function importRange(
   };
 }
 
+export function seriesRestrictionRecordIdentity(
+  record: SeriesRestrictionRecord,
+): string {
+  return JSON.stringify([
+    record.documentDate,
+    record.documentNumber,
+    record.eventType,
+    record.registrationNumber,
+    record.seriesRaw,
+  ]);
+}
+
 function recordKey(record: SeriesRestrictionRecord): string {
   return JSON.stringify([
     record.documentDate,
@@ -267,11 +279,97 @@ export async function importSeriesRestrictions(
   });
 }
 
+export function seriesRestrictionOverlapStart(
+  snapshot: SeriesRestrictionSnapshot,
+  overlapDays = 45,
+): string {
+  const latest = snapshot.source.latestDocumentDate;
+  if (!latest) return snapshot.source.coverageStartDate;
+  const date = new Date(`${latest}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() - Math.max(1, overlapDays));
+  return date.toISOString().slice(0, 10);
+}
+
+export function mergeSeriesRestrictionSnapshots(
+  previous: SeriesRestrictionSnapshot,
+  refresh: SeriesRestrictionSnapshot,
+): SeriesRestrictionSnapshot {
+  const refreshByIdentity = new Map<string, SeriesRestrictionRecord[]>();
+  for (const record of refresh.records) {
+    const identity = seriesRestrictionRecordIdentity(record);
+    const group = refreshByIdentity.get(identity) ?? [];
+    group.push(record);
+    refreshByIdentity.set(identity, group);
+  }
+  const mergedRecords = previous.records.map((record) => {
+    const identity = seriesRestrictionRecordIdentity(record);
+    const replacements = refreshByIdentity.get(identity);
+    const replacement = replacements?.shift();
+    if (replacements && replacements.length === 0) {
+      refreshByIdentity.delete(identity);
+    }
+    return replacement ?? record;
+  });
+  for (const records of refreshByIdentity.values()) {
+    mergedRecords.push(...records);
+  }
+  const records = mergedRecords
+    .sort(
+      (left, right) =>
+        left.documentDate.localeCompare(right.documentDate) ||
+        left.documentNumber.localeCompare(right.documentNumber, "uk-UA", {
+          numeric: true,
+        }) ||
+        (left.registrationNumber ?? "").localeCompare(
+          right.registrationNumber ?? "",
+        ) ||
+        left.seriesRaw.localeCompare(right.seriesRaw, "uk-UA", {
+          numeric: true,
+        }),
+    )
+    .map((record, sourceOrder) => ({ ...record, sourceOrder }));
+  const sha256 = createHash("sha256")
+    .update(JSON.stringify(records))
+    .digest("hex");
+
+  return SeriesRestrictionSnapshotSchema.parse({
+    ...refresh,
+    source: {
+      ...refresh.source,
+      coverageStartDate: previous.source.coverageStartDate,
+      latestDocumentDate:
+        records.at(-1)?.documentDate ??
+        previous.source.latestDocumentDate,
+      complete: previous.source.complete && refresh.source.complete,
+      recordCount: records.length,
+      sha256,
+    },
+    records,
+    warnings: [...new Set([...previous.warnings, ...refresh.warnings])],
+  });
+}
+
 export async function writeSeriesRestrictionSnapshot(
   outputPath = resolve(process.cwd(), "data/series-restrictions/ua-dls.json"),
-  options: { from?: string; to?: string } = {},
+  options: {
+    from?: string;
+    to?: string;
+    previousSnapshot?: SeriesRestrictionSnapshot;
+    overlapDays?: number;
+  } = {},
 ): Promise<SeriesRestrictionSnapshot> {
-  const snapshot = await importSeriesRestrictions(options);
+  const from =
+    options.from ??
+    (options.previousSnapshot
+      ? seriesRestrictionOverlapStart(
+          options.previousSnapshot,
+          options.overlapDays,
+        )
+      : undefined);
+  const refresh = await importSeriesRestrictions({ from, to: options.to });
+  const snapshot = options.previousSnapshot
+    ? mergeSeriesRestrictionSnapshots(options.previousSnapshot, refresh)
+    : refresh;
   await mkdir(dirname(outputPath), { recursive: true });
   await writeFile(outputPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
   return snapshot;

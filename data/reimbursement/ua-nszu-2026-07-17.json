@@ -1,26 +1,26 @@
 {
   "schemaVersion": "ua-nszu-reimbursement-v1",
-  "generatedAt": "2026-07-29T19:58:35.847Z",
+  "generatedAt": "2026-07-30T16:50:05.531Z",
   "source": {
     "title": "Перелік лікарських засобів, які підлягають реімбурсації",
     "publisher": "Національна служба здоров'я України",
     "announcementUrl": "https://moz.gov.ua/uk/najmasshtabnishe-rozshirennya-dostupnih-likiv-do-programi-dodali-she-260-torgovelnih-nazv-likarskih-zasobiv-dlya-likuvannya-sercevo-sudinnih-i-cerebrovaskulyarnih-zahvoryuvan",
     "documentUrl": "https://backend.nszu.gov.ua/storage/application/26/07/17/frQ9Y5u4749wdh2MgAlOVpCal9fJtf9utTFWmCku.pdf",
     "releaseDate": "2026-07-17",
-    "checkedAt": "2026-07-29T19:58:35.847Z",
-    "contentLength": 1287893,
-    "sha256": "c3e12b946bd21dff380098f1f3990325a1cc8561bee43c05868832563a9fe1d9",
-    "recordsSha256": "557a601ecd3bba05fcb4e7559083be85564d71537f77b057ce35e29c4f95f511",
+    "checkedAt": "2026-07-30T16:50:05.531Z",
+    "contentLength": 1290245,
+    "sha256": "66d9890e582456941a2b136651dfc998b95c74f33b5025e14a2f21004ef49ce1",
+    "recordsSha256": "ad9bfa6c7ff0d9d6bc20440c0338360141e1f6e0f64d9cc946279d208beddb2a",
     "pageCount": 85,
-    "recordCount": 1007,
+    "recordCount": 1009,
     "sectionCounts": {
-      "standard_medicines": 771,
+      "standard_medicines": 772,
       "insulin": 58,
-      "combination_medicines": 178
+      "combination_medicines": 179
     },
     "medicalDevicePositionCount": 36,
     "publishedSummaryPositionCount": 1038,
-    "parsedDocumentPositionCount": 1043,
+    "parsedDocumentPositionCount": 1045,
     "complete": true
   },
   "records": [
@@ -1738,7 +1738,7 @@
       "registrationNumber": "UA/4401/01/02",
       "inn": "Бісопролол (Bisoprolol)",
       "tradeName": "БІСОПРОЛОЛ САНДОЗ®",
-      "dosageForm": "плівковою оболонкою",
+      "dosageForm": "таблетки, вкриті плівковою оболонкою",
       "strength": "10",
       "packageQuantity": "90",
       "atcCode": "C07AB07",
@@ -10735,7 +10735,21 @@
       "sourceRow": 765
     },
     {
-      "packageKey": "nszu-f8ea5004da24900ff593ef97",
+      "packageKey": "nszu-22da4d002b0e87797e33e4e3",
+      "section": "standard_medicines",
+      "registrationNumber": "UA/18418/01/01",
+      "inn": "Цилостазол (Cilostazol)",
+      "tradeName": "КЛАУДІЕКС",
+      "dosageForm": "таблетки",
+      "strength": "100",
+      "packageQuantity": "28",
+      "atcCode": "B01AC23",
+      "copayUah": "0.00",
+      "sourcePage": 53,
+      "sourceRow": 766
+    },
+    {
+      "packageKey": "nszu-043f62673cad07e2e2dbd9e7",
       "section": "standard_medicines",
       "registrationNumber": "UA/13437/01/01",
       "inn": "Цилостазол (Cilostazol)",
@@ -10745,11 +10759,11 @@
       "packageQuantity": "60",
       "atcCode": "B01AC23",
       "copayUah": "0.00",
-      "sourcePage": 53,
-      "sourceRow": 766
+      "sourcePage": 54,
+      "sourceRow": 767
     },
     {
-      "packageKey": "nszu-ee7610dd3e202882d672b9bf",
+      "packageKey": "nszu-926e0b12305074c72fc8ffc7",
       "section": "standard_medicines",
       "registrationNumber": "UA/13438/01/01",
       "inn": "Цилостазол (Cilostazol)",
@@ -10760,26 +10774,12 @@
       "atcCode": "B01AC23",
       "copayUah": "0.00",
       "sourcePage": 54,
-      "sourceRow": 767
-    },
-    {
-      "packageKey": "nszu-afde6e2bdc619a8479865a2b",
-      "section": "standard_medicines",
-      "registrationNumber": "UA/18192/01/01",
-      "inn": "Ципрофлоксацин (Ciprofloxacin)",
-      "tradeName": "ФЛОКСИМЕД",
-      "dosageForm": "краплі очні та вушні, розчин",
-      "strength": "3",
-      "packageQuantity": "5",
-      "atcCode": "S03AA07",
-      "copayUah": "84.09",
-      "sourcePage": 54,
       "sourceRow": 768
     },
     {
-      "packageKey": "nszu-0a1a248798c53f3a0f04b60f",
+      "packageKey": "nszu-0b4009adcffe1a77e366fc74",
       "section": "standard_medicines",
-      "registrationNumber": "UA/16547/01/01",
+      "registrationNumber": "UA/18192/01/01",
       "inn": "Ципрофлоксацин (Ciprofloxacin)",
       "tradeName": "ФЛОКСИМЕД",
       "dosageForm": "краплі очні та вушні, розчин",
@@ -10791,7 +10791,21 @@
       "sourceRow": 769
     },
     {
-      "packageKey": "nszu-03642f6ed1b064bdb9490498",
+      "packageKey": "nszu-8fa21ad5236134f4f9e0c867",
+      "section": "standard_medicines",
+      "registrationNumber": "UA/16547/01/01",
+      "inn": "Ципрофлоксацин (Ciprofloxacin)",
+      "tradeName": "ФЛОКСИМЕД",
+      "dosageForm": "краплі очні та вушні, розчин",
+      "strength": "3",
+      "packageQuantity": "5",
+      "atcCode": "S03AA07",
+      "copayUah": "84.09",
+      "sourcePage": 54,
+      "sourceRow": 770
+    },
+    {
+      "packageKey": "nszu-a6f4e305a104724209053588",
       "section": "standard_medicines",
       "registrationNumber": "UA/14617/01/01",
       "inn": "Ципрофлоксацин (Ciprofloxacin)",
@@ -10802,10 +10816,10 @@
       "atcCode": "S03AA07",
       "copayUah": "49.05",
       "sourcePage": 54,
-      "sourceRow": 770
+      "sourceRow": 771
     },
     {
-      "packageKey": "nszu-3114d399e229b5a7c46735bf",
+      "packageKey": "nszu-06cfdc23b7602b9be6c5b55f",
       "section": "standard_medicines",
       "registrationNumber": "UA/3385/02/01",
       "inn": "Ципрофлоксацин (Ciprofloxacin)",
@@ -10816,20 +10830,6 @@
       "atcCode": "S03AA07",
       "copayUah": "0.00",
       "sourcePage": 54,
-      "sourceRow": 771
-    },
-    {
-      "packageKey": "nszu-dce8c5839be30309212d5990",
-      "section": "insulin",
-      "registrationNumber": "UA/4862/01/01",
-      "inn": "Інсулін аспарт (Insulin aspart)",
-      "tradeName": "НОВОМІКС® 30 ФЛЕКСПЕН®",
-      "dosageForm": "в багатодозовій",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
-      "atcCode": "A10AD05",
-      "copayUah": "0.00",
-      "sourcePage": 55,
       "sourceRow": 772
     },
     {
@@ -10842,12 +10842,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AD05",
-      "copayUah": "54.97",
+      "copayUah": "0.00",
       "sourcePage": 55,
       "sourceRow": 773
     },
     {
-      "packageKey": "nszu-154b36572c5df6e04f56b6c2",
+      "packageKey": "nszu-053c32e3b560e1457492b46e",
+      "section": "insulin",
+      "registrationNumber": "UA/4862/01/01",
+      "inn": "Інсулін аспарт (Insulin aspart)",
+      "tradeName": "НОВОМІКС® 30 ФЛЕКСПЕН®",
+      "dosageForm": "в багатодозовій",
+      "strength": "100 МО/мл",
+      "packageQuantity": "300",
+      "atcCode": "A10AD05",
+      "copayUah": "54.97",
+      "sourcePage": 55,
+      "sourceRow": 774
+    },
+    {
+      "packageKey": "nszu-41ffb11c727cae2f9986813e",
       "section": "insulin",
       "registrationNumber": "UA/4863/01/01",
       "inn": "Інсулін аспарт (Insulin aspart)",
@@ -10858,10 +10872,10 @@
       "atcCode": "A10AB05",
       "copayUah": "0.00",
       "sourcePage": 55,
-      "sourceRow": 774
+      "sourceRow": 775
     },
     {
-      "packageKey": "nszu-fd031b3c53f4c04c6679f83b",
+      "packageKey": "nszu-1950bc8504ad6308dc45e389",
       "section": "insulin",
       "registrationNumber": "UA/4863/01/01",
       "inn": "Інсулін аспарт (Insulin aspart)",
@@ -10871,20 +10885,6 @@
       "packageQuantity": "300",
       "atcCode": "A10AB05",
       "copayUah": "40.53",
-      "sourcePage": 56,
-      "sourceRow": 775
-    },
-    {
-      "packageKey": "nszu-eb09e65bee6e851b6d0e85f0",
-      "section": "insulin",
-      "registrationNumber": "UA/15749/01/01",
-      "inn": "Інсулін гларгін (Insulin glargine)",
-      "tradeName": "АЙЛАР®",
-      "dosageForm": "розчин для ін'єкцій, картридж",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
-      "atcCode": "A10AE04",
-      "copayUah": "0.00",
       "sourcePage": 56,
       "sourceRow": 776
     },
@@ -10898,21 +10898,21 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AE04",
-      "copayUah": "57.83",
+      "copayUah": "0.00",
       "sourcePage": 56,
       "sourceRow": 777
     },
     {
-      "packageKey": "nszu-2d93fbffa63e811e63f1bde1",
+      "packageKey": "nszu-c934ba9b1fea1e9ab8bc90c8",
       "section": "insulin",
-      "registrationNumber": "UA/8106/01/01",
+      "registrationNumber": "UA/15749/01/01",
       "inn": "Інсулін гларгін (Insulin glargine)",
-      "tradeName": "ЛАНТУС® СОЛОСТАР®",
-      "dosageForm": "розчин для ін'єкцій, шприц-ручка",
+      "tradeName": "АЙЛАР®",
+      "dosageForm": "розчин для ін'єкцій, картридж",
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AE04",
-      "copayUah": "0.00",
+      "copayUah": "57.83",
       "sourcePage": 56,
       "sourceRow": 778
     },
@@ -10926,21 +10926,21 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AE04",
-      "copayUah": "61.97",
+      "copayUah": "0.00",
       "sourcePage": 56,
       "sourceRow": 779
     },
     {
-      "packageKey": "nszu-994d01245241b604a21ea308",
+      "packageKey": "nszu-ce6da0ba4e1ccdf3bf905f57",
       "section": "insulin",
-      "registrationNumber": "UA/14720/01/01",
+      "registrationNumber": "UA/8106/01/01",
       "inn": "Інсулін гларгін (Insulin glargine)",
-      "tradeName": "ТОЖЕО СОЛОСТАР",
+      "tradeName": "ЛАНТУС® СОЛОСТАР®",
       "dosageForm": "розчин для ін'єкцій, шприц-ручка",
       "strength": "100 МО/мл",
-      "packageQuantity": "450",
+      "packageQuantity": "300",
       "atcCode": "A10AE04",
-      "copayUah": "0.00",
+      "copayUah": "61.97",
       "sourcePage": 56,
       "sourceRow": 780
     },
@@ -10954,12 +10954,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "450",
       "atcCode": "A10AE04",
-      "copayUah": "93.05",
+      "copayUah": "0.00",
       "sourcePage": 56,
       "sourceRow": 781
     },
     {
-      "packageKey": "nszu-25839449e97fbc2f129e7962",
+      "packageKey": "nszu-49a07414b9f262faeab436dc",
+      "section": "insulin",
+      "registrationNumber": "UA/14720/01/01",
+      "inn": "Інсулін гларгін (Insulin glargine)",
+      "tradeName": "ТОЖЕО СОЛОСТАР",
+      "dosageForm": "розчин для ін'єкцій, шприц-ручка",
+      "strength": "100 МО/мл",
+      "packageQuantity": "450",
+      "atcCode": "A10AE04",
+      "copayUah": "93.05",
+      "sourcePage": 56,
+      "sourceRow": 782
+    },
+    {
+      "packageKey": "nszu-627ea4c75837c0618b316eb9",
       "section": "insulin",
       "registrationNumber": "UA/16775/01/01",
       "inn": "Інсулін гларгін та ліксисенатид (Insulin glargine and lixisenatide)",
@@ -10970,10 +10984,10 @@
       "atcCode": "A10AE54",
       "copayUah": "0.00",
       "sourcePage": 56,
-      "sourceRow": 782
+      "sourceRow": 783
     },
     {
-      "packageKey": "nszu-627ea4c75837c0618b316eb9",
+      "packageKey": "nszu-91cd8f329c60c519de522068",
       "section": "insulin",
       "registrationNumber": "UA/16775/01/01",
       "inn": "Інсулін гларгін та ліксисенатид (Insulin glargine and lixisenatide)",
@@ -10984,10 +10998,10 @@
       "atcCode": "A10AE54",
       "copayUah": "181.33",
       "sourcePage": 56,
-      "sourceRow": 783
+      "sourceRow": 784
     },
     {
-      "packageKey": "nszu-7bd31e7152d494fc4df6ef9f",
+      "packageKey": "nszu-cd4f292c73d4eb72a2717dbb",
       "section": "insulin",
       "registrationNumber": "UA/16774/01/01",
       "inn": "Інсулін гларгін та ліксисенатид (Insulin glargine and lixisenatide)",
@@ -10996,20 +11010,6 @@
       "strength": "містить: 100",
       "packageQuantity": "300",
       "atcCode": "A10AE54",
-      "copayUah": "0.00",
-      "sourcePage": 57,
-      "sourceRow": 784
-    },
-    {
-      "packageKey": "nszu-8968866637c31ece913980a5",
-      "section": "insulin",
-      "registrationNumber": "UA/10240/01/01",
-      "inn": "Інсулін глюлізин (Insulin glulisine)",
-      "tradeName": "ЕПАЙДРА®",
-      "dosageForm": "розчин для ін'єкцій, шприц- ручка",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
-      "atcCode": "A10AB06",
       "copayUah": "0.00",
       "sourcePage": 57,
       "sourceRow": 785
@@ -11024,21 +11024,21 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AB06",
-      "copayUah": "36.61",
+      "copayUah": "0.00",
       "sourcePage": 57,
       "sourceRow": 786
     },
     {
-      "packageKey": "nszu-32d30ad7051c43f049f86dc2",
+      "packageKey": "nszu-f352700556b67b17f515c4a7",
       "section": "insulin",
-      "registrationNumber": "UA/14264/01/01",
-      "inn": "Інсулін деглюдек (Insulin degludec)",
-      "tradeName": "ТРЕСІБА® ФЛЕКСТАЧ®",
-      "dosageForm": "який міститься у багатодозовій одноразовій шприц-ручці, по 5",
+      "registrationNumber": "UA/10240/01/01",
+      "inn": "Інсулін глюлізин (Insulin glulisine)",
+      "tradeName": "ЕПАЙДРА®",
+      "dosageForm": "розчин для ін'єкцій, шприц- ручка",
       "strength": "100 МО/мл",
       "packageQuantity": "300",
-      "atcCode": "A10AE06",
-      "copayUah": "0.00",
+      "atcCode": "A10AB06",
+      "copayUah": "36.61",
       "sourcePage": 57,
       "sourceRow": 787
     },
@@ -11052,21 +11052,21 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AE06",
-      "copayUah": "80.41",
+      "copayUah": "0.00",
       "sourcePage": 57,
       "sourceRow": 788
     },
     {
-      "packageKey": "nszu-8cf4e466b3c96b70cc7bc205",
+      "packageKey": "nszu-a37e044ca22a9784f2ab3754",
       "section": "insulin",
-      "registrationNumber": "UA/18253/01/01",
-      "inn": "(Insulin",
-      "tradeName": "КСАЛТОФАЙ",
-      "dosageForm": "попередньо заповненій багатодозовій одноразовій",
-      "strength": "100 ОД інсуліну",
+      "registrationNumber": "UA/14264/01/01",
+      "inn": "Інсулін деглюдек (Insulin degludec)",
+      "tradeName": "ТРЕСІБА® ФЛЕКСТАЧ®",
+      "dosageForm": "який міститься у багатодозовій одноразовій шприц-ручці, по 5",
+      "strength": "100 МО/мл",
       "packageQuantity": "300",
-      "atcCode": "A10AE56",
-      "copayUah": "0.00",
+      "atcCode": "A10AE06",
+      "copayUah": "80.41",
       "sourcePage": 57,
       "sourceRow": 789
     },
@@ -11080,22 +11080,22 @@
       "strength": "100 ОД інсуліну",
       "packageQuantity": "300",
       "atcCode": "A10AE56",
-      "copayUah": "298.32",
+      "copayUah": "0.00",
       "sourcePage": 57,
       "sourceRow": 790
     },
     {
-      "packageKey": "nszu-9b3b564a2d78274762c4a546",
+      "packageKey": "nszu-f68a84371d6aca4f19c1d5b9",
       "section": "insulin",
-      "registrationNumber": "UA/4858/01/01",
-      "inn": "Інсулін детемір (Insulin detemir)",
-      "tradeName": "ЛЕВЕМІР® ФЛЕКСПЕН®",
-      "dosageForm": "картриджу в багатодозовій",
-      "strength": "100 МО/мл",
+      "registrationNumber": "UA/18253/01/01",
+      "inn": "(Insulin",
+      "tradeName": "КСАЛТОФАЙ",
+      "dosageForm": "попередньо заповненій багатодозовій одноразовій",
+      "strength": "100 ОД інсуліну",
       "packageQuantity": "300",
-      "atcCode": "A10AE05",
-      "copayUah": "0.00",
-      "sourcePage": 58,
+      "atcCode": "A10AE56",
+      "copayUah": "298.32",
+      "sourcePage": 57,
       "sourceRow": 791
     },
     {
@@ -11108,12 +11108,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AE05",
-      "copayUah": "80.63",
+      "copayUah": "0.00",
       "sourcePage": 58,
       "sourceRow": 792
     },
     {
-      "packageKey": "nszu-189236fdf52aea7c9ab6ce6d",
+      "packageKey": "nszu-7e765e539acd338a3a677a0b",
+      "section": "insulin",
+      "registrationNumber": "UA/4858/01/01",
+      "inn": "Інсулін детемір (Insulin detemir)",
+      "tradeName": "ЛЕВЕМІР® ФЛЕКСПЕН®",
+      "dosageForm": "картриджу в багатодозовій",
+      "strength": "100 МО/мл",
+      "packageQuantity": "300",
+      "atcCode": "A10AE05",
+      "copayUah": "80.63",
+      "sourcePage": 58,
+      "sourceRow": 793
+    },
+    {
+      "packageKey": "nszu-b23dc0dfa439b64eec3b8fe2",
       "section": "insulin",
       "registrationNumber": "UA/0325/01/02",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11124,10 +11138,10 @@
       "atcCode": "A10AB01",
       "copayUah": "0.00",
       "sourcePage": 58,
-      "sourceRow": 793
+      "sourceRow": 794
     },
     {
-      "packageKey": "nszu-837032ea82b82dc80c1eb511",
+      "packageKey": "nszu-5c3f70868e5c9a7779a520dc",
       "section": "insulin",
       "registrationNumber": "UA/17171/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11138,10 +11152,10 @@
       "atcCode": "A10AB01",
       "copayUah": "0.00",
       "sourcePage": 58,
-      "sourceRow": 794
+      "sourceRow": 795
     },
     {
-      "packageKey": "nszu-363a7644c017f14ee587aeaa",
+      "packageKey": "nszu-601b5576773eae608f4218c3",
       "section": "insulin",
       "registrationNumber": "UA/17171/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11152,10 +11166,10 @@
       "atcCode": "A10AB01",
       "copayUah": "33.01",
       "sourcePage": 59,
-      "sourceRow": 795
+      "sourceRow": 796
     },
     {
-      "packageKey": "nszu-8e6dd5490e43bba890b96d0a",
+      "packageKey": "nszu-c5d27f595b89c68fd26be17a",
       "section": "insulin",
       "registrationNumber": "UA/1978/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11163,20 +11177,6 @@
       "dosageForm": "флаконі, по 1 флакону в",
       "strength": "100 МО/мл",
       "packageQuantity": "1000",
-      "atcCode": "A10AD01",
-      "copayUah": "0.00",
-      "sourcePage": 59,
-      "sourceRow": 796
-    },
-    {
-      "packageKey": "nszu-2cb076004313d360ffe0f745",
-      "section": "insulin",
-      "registrationNumber": "UA/1978/01/01",
-      "inn": "Інсулін людини (Insulin (human)",
-      "tradeName": "Генсулін М30",
-      "dosageForm": "ОД/мл по 3 мл у картриджі; по 5 картриджів у блістері; по",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
       "atcCode": "A10AD01",
       "copayUah": "0.00",
       "sourcePage": 59,
@@ -11192,12 +11192,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AD01",
-      "copayUah": "30.00",
+      "copayUah": "0.00",
       "sourcePage": 59,
       "sourceRow": 798
     },
     {
-      "packageKey": "nszu-6bd231339fe704a3d1f743d5",
+      "packageKey": "nszu-924d02d79a2bbd0023cd3c18",
+      "section": "insulin",
+      "registrationNumber": "UA/1978/01/01",
+      "inn": "Інсулін людини (Insulin (human)",
+      "tradeName": "Генсулін М30",
+      "dosageForm": "ОД/мл по 3 мл у картриджі; по 5 картриджів у блістері; по",
+      "strength": "100 МО/мл",
+      "packageQuantity": "300",
+      "atcCode": "A10AD01",
+      "copayUah": "30.00",
+      "sourcePage": 59,
+      "sourceRow": 799
+    },
+    {
+      "packageKey": "nszu-ac597dbee12c76c4c40729ff",
       "section": "insulin",
       "registrationNumber": "UA/1016/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11208,10 +11222,10 @@
       "atcCode": "A10AC01",
       "copayUah": "0.00",
       "sourcePage": 59,
-      "sourceRow": 799
+      "sourceRow": 800
     },
     {
-      "packageKey": "nszu-bc4c0030551c06143d4e169b",
+      "packageKey": "nszu-a52041866029b951fafefa0e",
       "section": "insulin",
       "registrationNumber": "UA/1016/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11222,10 +11236,10 @@
       "atcCode": "A10AC01",
       "copayUah": "0.00",
       "sourcePage": 59,
-      "sourceRow": 800
+      "sourceRow": 801
     },
     {
-      "packageKey": "nszu-745d72581a35531b6740173b",
+      "packageKey": "nszu-c16c46e077a7b3f3d4852156",
       "section": "insulin",
       "registrationNumber": "UA/1016/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11236,10 +11250,10 @@
       "atcCode": "A10AC01",
       "copayUah": "29.71",
       "sourcePage": 60,
-      "sourceRow": 801
+      "sourceRow": 802
     },
     {
-      "packageKey": "nszu-4a9d15cbe3609a856bb734e5",
+      "packageKey": "nszu-ccf2e08c2afb4fc5f1659046",
       "section": "insulin",
       "registrationNumber": "UA/1613/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11247,20 +11261,6 @@
       "dosageForm": "по 10 мл у скляному флаконі;",
       "strength": "100 МО/мл",
       "packageQuantity": "1000",
-      "atcCode": "A10AB01",
-      "copayUah": "0.00",
-      "sourcePage": 60,
-      "sourceRow": 802
-    },
-    {
-      "packageKey": "nszu-00abbcf0b1d32c072fe0db4f",
-      "section": "insulin",
-      "registrationNumber": "UA/1613/01/01",
-      "inn": "Інсулін людини (Insulin (human)",
-      "tradeName": "Генсулін Р",
-      "dosageForm": "картриджів у блістері; по 1",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
       "atcCode": "A10AB01",
       "copayUah": "0.00",
       "sourcePage": 60,
@@ -11276,12 +11276,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AB01",
-      "copayUah": "30.45",
+      "copayUah": "0.00",
       "sourcePage": 60,
       "sourceRow": 804
     },
     {
-      "packageKey": "nszu-ccb45586fdd1215d47d1f110",
+      "packageKey": "nszu-bd966bdb21ed946046d9c8e6",
+      "section": "insulin",
+      "registrationNumber": "UA/1613/01/01",
+      "inn": "Інсулін людини (Insulin (human)",
+      "tradeName": "Генсулін Р",
+      "dosageForm": "картриджів у блістері; по 1",
+      "strength": "100 МО/мл",
+      "packageQuantity": "300",
+      "atcCode": "A10AB01",
+      "copayUah": "30.45",
+      "sourcePage": 60,
+      "sourceRow": 805
+    },
+    {
+      "packageKey": "nszu-249a92fc87242b92a70ba1e2",
       "section": "insulin",
       "registrationNumber": "UA/2682/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11292,10 +11306,10 @@
       "atcCode": "A10AD01",
       "copayUah": "0.00",
       "sourcePage": 60,
-      "sourceRow": 805
+      "sourceRow": 806
     },
     {
-      "packageKey": "nszu-2ee77107bda9135f0b01a913",
+      "packageKey": "nszu-d783ff8a94ecde88294820a4",
       "section": "insulin",
       "registrationNumber": "UA/2700/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11306,10 +11320,10 @@
       "atcCode": "A10AC01",
       "copayUah": "0.00",
       "sourcePage": 60,
-      "sourceRow": 806
+      "sourceRow": 807
     },
     {
-      "packageKey": "nszu-cafa253fca4972c4ee594432",
+      "packageKey": "nszu-82eb1f7a037d2ad2f127e041",
       "section": "insulin",
       "registrationNumber": "UA/17174/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11320,10 +11334,10 @@
       "atcCode": "A10AC01",
       "copayUah": "0.00",
       "sourcePage": 60,
-      "sourceRow": 807
+      "sourceRow": 808
     },
     {
-      "packageKey": "nszu-7607c110fca25163cf7fb5f4",
+      "packageKey": "nszu-1c8cece9e9844ae81b27cc8e",
       "section": "insulin",
       "registrationNumber": "UA/17174/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11334,10 +11348,10 @@
       "atcCode": "A10AC01",
       "copayUah": "38.17",
       "sourcePage": 61,
-      "sourceRow": 808
+      "sourceRow": 809
     },
     {
-      "packageKey": "nszu-9ae83ccc3835040cd59eb38d",
+      "packageKey": "nszu-63a41be356b9c2f52175fdc8",
       "section": "insulin",
       "registrationNumber": "UA/2318/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11345,20 +11359,6 @@
       "dosageForm": "розчин для ін'єкцій, флакон",
       "strength": "100 МО/мл",
       "packageQuantity": "1000",
-      "atcCode": "A10AB01",
-      "copayUah": "0.00",
-      "sourcePage": 61,
-      "sourceRow": 809
-    },
-    {
-      "packageKey": "nszu-f8089da991fad2f3e3e8389a",
-      "section": "insulin",
-      "registrationNumber": "UA/2318/01/01",
-      "inn": "Інсулін людини (Insulin (human)",
-      "tradeName": "ФАРМАСУЛІН® H",
-      "dosageForm": "розчин для ін'єкцій, картридж",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
       "atcCode": "A10AB01",
       "copayUah": "0.00",
       "sourcePage": 61,
@@ -11374,12 +11374,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AB01",
-      "copayUah": "30.45",
+      "copayUah": "0.00",
       "sourcePage": 61,
       "sourceRow": 811
     },
     {
-      "packageKey": "nszu-7b994be45e130e33a9ce8f0a",
+      "packageKey": "nszu-18cc0bfedf44deceaee048f3",
+      "section": "insulin",
+      "registrationNumber": "UA/2318/01/01",
+      "inn": "Інсулін людини (Insulin (human)",
+      "tradeName": "ФАРМАСУЛІН® H",
+      "dosageForm": "розчин для ін'єкцій, картридж",
+      "strength": "100 МО/мл",
+      "packageQuantity": "300",
+      "atcCode": "A10AB01",
+      "copayUah": "30.45",
+      "sourcePage": 61,
+      "sourceRow": 812
+    },
+    {
+      "packageKey": "nszu-dd5009428037e2e05bb76b88",
       "section": "insulin",
       "registrationNumber": "UA/2319/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11387,20 +11401,6 @@
       "dosageForm": "суспензія для ін'єкцій, флакон",
       "strength": "100 МО/мл",
       "packageQuantity": "1000",
-      "atcCode": "A10AD01",
-      "copayUah": "0.00",
-      "sourcePage": 61,
-      "sourceRow": 812
-    },
-    {
-      "packageKey": "nszu-af4caf0b6faf86a3fb795cf4",
-      "section": "insulin",
-      "registrationNumber": "UA/2319/01/01",
-      "inn": "Інсулін людини (Insulin (human)",
-      "tradeName": "ФАРМАСУЛІН® H 30/70",
-      "dosageForm": "суспензія для ін'єкцій, картридж",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
       "atcCode": "A10AD01",
       "copayUah": "0.00",
       "sourcePage": 61,
@@ -11416,12 +11416,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AD01",
-      "copayUah": "30.00",
+      "copayUah": "0.00",
       "sourcePage": 61,
       "sourceRow": 814
     },
     {
-      "packageKey": "nszu-f7adc39733a7fa13a067a2d6",
+      "packageKey": "nszu-cd79baa32436ba20443fb068",
+      "section": "insulin",
+      "registrationNumber": "UA/2319/01/01",
+      "inn": "Інсулін людини (Insulin (human)",
+      "tradeName": "ФАРМАСУЛІН® H 30/70",
+      "dosageForm": "суспензія для ін'єкцій, картридж",
+      "strength": "100 МО/мл",
+      "packageQuantity": "300",
+      "atcCode": "A10AD01",
+      "copayUah": "30.00",
+      "sourcePage": 61,
+      "sourceRow": 815
+    },
+    {
+      "packageKey": "nszu-49ac0c0cc0ea913dcd72a5a2",
       "section": "insulin",
       "registrationNumber": "UA/2320/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11429,20 +11443,6 @@
       "dosageForm": "суспензія для ін'єкцій, флакон",
       "strength": "100 МО/мл",
       "packageQuantity": "1000",
-      "atcCode": "A10AC01",
-      "copayUah": "0.00",
-      "sourcePage": 61,
-      "sourceRow": 815
-    },
-    {
-      "packageKey": "nszu-21240ac8c01bbb8ab357ff05",
-      "section": "insulin",
-      "registrationNumber": "UA/2320/01/01",
-      "inn": "Інсулін людини (Insulin (human)",
-      "tradeName": "ФАРМАСУЛІН® H NP",
-      "dosageForm": "суспензія для ін'єкцій, картридж",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
       "atcCode": "A10AC01",
       "copayUah": "0.00",
       "sourcePage": 61,
@@ -11458,12 +11458,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AC01",
-      "copayUah": "29.71",
+      "copayUah": "0.00",
       "sourcePage": 61,
       "sourceRow": 817
     },
     {
-      "packageKey": "nszu-e66f2ed2e076778a180d22e1",
+      "packageKey": "nszu-020b38a46a1440769eef5b8e",
+      "section": "insulin",
+      "registrationNumber": "UA/2320/01/01",
+      "inn": "Інсулін людини (Insulin (human)",
+      "tradeName": "ФАРМАСУЛІН® H NP",
+      "dosageForm": "суспензія для ін'єкцій, картридж",
+      "strength": "100 МО/мл",
+      "packageQuantity": "300",
+      "atcCode": "A10AC01",
+      "copayUah": "29.71",
+      "sourcePage": 61,
+      "sourceRow": 818
+    },
+    {
+      "packageKey": "nszu-d2fd27f55303cc43893f266e",
       "section": "insulin",
       "registrationNumber": "UA/1155/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11474,10 +11488,10 @@
       "atcCode": "A10AC01",
       "copayUah": "0.00",
       "sourcePage": 62,
-      "sourceRow": 818
+      "sourceRow": 819
     },
     {
-      "packageKey": "nszu-0ac89651a39c5fae5d1b827c",
+      "packageKey": "nszu-98f414105863e40eb2648f61",
       "section": "insulin",
       "registrationNumber": "UA/1155/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11485,20 +11499,6 @@
       "dosageForm": "суспензія для ін'єкцій , по 5 мл у флаконі",
       "strength": "100 МО/мл",
       "packageQuantity": "500",
-      "atcCode": "A10AC01",
-      "copayUah": "0.00",
-      "sourcePage": 62,
-      "sourceRow": 819
-    },
-    {
-      "packageKey": "nszu-5b0a1d9d642969bea1939ec4",
-      "section": "insulin",
-      "registrationNumber": "UA/1155/01/01",
-      "inn": "Інсулін людини (Insulin (human)",
-      "tradeName": "Хумодар® Б100 Р",
-      "dosageForm": "суспензія для ін'єкцій , по 3 мл у картриджі",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
       "atcCode": "A10AC01",
       "copayUah": "0.00",
       "sourcePage": 62,
@@ -11514,12 +11514,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AC01",
-      "copayUah": "29.71",
+      "copayUah": "0.00",
       "sourcePage": 62,
       "sourceRow": 821
     },
     {
-      "packageKey": "nszu-986de893d968892ce9202f9b",
+      "packageKey": "nszu-92c38ca156b3058db4a50c09",
+      "section": "insulin",
+      "registrationNumber": "UA/1155/01/01",
+      "inn": "Інсулін людини (Insulin (human)",
+      "tradeName": "Хумодар® Б100 Р",
+      "dosageForm": "суспензія для ін'єкцій , по 3 мл у картриджі",
+      "strength": "100 МО/мл",
+      "packageQuantity": "300",
+      "atcCode": "A10AC01",
+      "copayUah": "29.71",
+      "sourcePage": 62,
+      "sourceRow": 822
+    },
+    {
+      "packageKey": "nszu-93a54e540d342fe6ad9e8019",
       "section": "insulin",
       "registrationNumber": "UA/1533/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11530,10 +11544,10 @@
       "atcCode": "A10AD01",
       "copayUah": "0.00",
       "sourcePage": 62,
-      "sourceRow": 822
+      "sourceRow": 823
     },
     {
-      "packageKey": "nszu-a6471c403088e0937eebd52c",
+      "packageKey": "nszu-6b28164cd09f1dc56dfe05e7",
       "section": "insulin",
       "registrationNumber": "UA/1533/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11541,20 +11555,6 @@
       "dosageForm": "суспензія для ін'єкцій , по 5 мл у флаконі",
       "strength": "100 МО/мл",
       "packageQuantity": "500",
-      "atcCode": "A10AD01",
-      "copayUah": "0.00",
-      "sourcePage": 62,
-      "sourceRow": 823
-    },
-    {
-      "packageKey": "nszu-c4eab30a8dc0e3f83addc9b8",
-      "section": "insulin",
-      "registrationNumber": "UA/1533/01/01",
-      "inn": "Інсулін людини (Insulin (human)",
-      "tradeName": "Хумодар® К25 100 Р",
-      "dosageForm": "суспензія для ін'єкцій , по 3 мл у картриджі",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
       "atcCode": "A10AD01",
       "copayUah": "0.00",
       "sourcePage": 62,
@@ -11570,12 +11570,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AD01",
-      "copayUah": "30.00",
+      "copayUah": "0.00",
       "sourcePage": 62,
       "sourceRow": 825
     },
     {
-      "packageKey": "nszu-d0e8c616520bdfdaf342f794",
+      "packageKey": "nszu-39e9c376bce2818648525cdf",
+      "section": "insulin",
+      "registrationNumber": "UA/1533/01/01",
+      "inn": "Інсулін людини (Insulin (human)",
+      "tradeName": "Хумодар® К25 100 Р",
+      "dosageForm": "суспензія для ін'єкцій , по 3 мл у картриджі",
+      "strength": "100 МО/мл",
+      "packageQuantity": "300",
+      "atcCode": "A10AD01",
+      "copayUah": "30.00",
+      "sourcePage": 62,
+      "sourceRow": 826
+    },
+    {
+      "packageKey": "nszu-1578deca79a780cfe6ef5711",
       "section": "insulin",
       "registrationNumber": "UA/1232/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11586,10 +11600,10 @@
       "atcCode": "A10AB01",
       "copayUah": "0.00",
       "sourcePage": 62,
-      "sourceRow": 826
+      "sourceRow": 827
     },
     {
-      "packageKey": "nszu-f7080f220f51e300864bdb3e",
+      "packageKey": "nszu-7afaebbcda854bbe27ec24e1",
       "section": "insulin",
       "registrationNumber": "UA/1232/01/01",
       "inn": "Інсулін людини (Insulin (human)",
@@ -11597,20 +11611,6 @@
       "dosageForm": "розчин для ін'єкцій, по 5 мл у флаконі",
       "strength": "100 МО/мл",
       "packageQuantity": "500",
-      "atcCode": "A10AB01",
-      "copayUah": "0.00",
-      "sourcePage": 62,
-      "sourceRow": 827
-    },
-    {
-      "packageKey": "nszu-0cabff135e70a5fc4b0aed0a",
-      "section": "insulin",
-      "registrationNumber": "UA/1232/01/01",
-      "inn": "Інсулін людини (Insulin (human)",
-      "tradeName": "Хумодар® Р 100 Р",
-      "dosageForm": "розчин для ін'єкцій, по 3 мл у картриджі",
-      "strength": "100 МО/мл",
-      "packageQuantity": "300",
       "atcCode": "A10AB01",
       "copayUah": "0.00",
       "sourcePage": 62,
@@ -11626,12 +11626,26 @@
       "strength": "100 МО/мл",
       "packageQuantity": "300",
       "atcCode": "A10AB01",
-      "copayUah": "30.45",
+      "copayUah": "0.00",
       "sourcePage": 62,
       "sourceRow": 829
     },
     {
-      "packageKey": "nszu-230412a47bb7d4cab8a47c45",
+      "packageKey": "nszu-42be43d9a09c0ccd6558e091",
+      "section": "insulin",
+      "registrationNumber": "UA/1232/01/01",
+      "inn": "Інсулін людини (Insulin (human)",
+      "tradeName": "Хумодар® Р 100 Р",
+      "dosageForm": "розчин для ін'єкцій, по 3 мл у картриджі",
+      "strength": "100 МО/мл",
+      "packageQuantity": "300",
+      "atcCode": "A10AB01",
+      "copayUah": "30.45",
+      "sourcePage": 62,
+      "sourceRow": 830
+    },
+    {
+      "packageKey": "nszu-24f80ba53c1a89b1331a2f62",
       "section": "combination_medicines",
       "registrationNumber": "UA/5433/01/03",
       "inn": "Будесонід + Формотерол (Formoterol + Budesonide)",
@@ -11642,30 +11656,16 @@
       "atcCode": "R03AK07",
       "copayUah": "345.53",
       "sourcePage": 63,
-      "sourceRow": 830
+      "sourceRow": 831
     },
     {
-      "packageKey": "nszu-3d971e85fcea7e7195bde434",
+      "packageKey": "nszu-23da672f68701a204afad34a",
       "section": "combination_medicines",
       "registrationNumber": "UA/5433/01/02",
       "inn": "Будесонід + Формотерол (Formoterol + Budesonide)",
       "tradeName": "CИМБІКОРТ ТУРБУХАЛЕР",
       "dosageForm": "порошок для інгаляцій, дозований",
       "strength": "160мкг/4,5мкг /доза",
-      "packageQuantity": "60",
-      "atcCode": "R03AK07",
-      "copayUah": "0.00",
-      "sourcePage": 63,
-      "sourceRow": 831
-    },
-    {
-      "packageKey": "nszu-1d1c435be56991edac5992a9",
-      "section": "combination_medicines",
-      "registrationNumber": "UA/5433/01/01",
-      "inn": "Будесонід + Формотерол (Formoterol + Budesonide)",
-      "tradeName": "CИМБІКОРТ ТУРБУХАЛЕР",
-      "dosageForm": "порошок для інгаляцій, дозований",
-      "strength": "80мкг/4,5мкг/ доза",
       "packageQuantity": "60",
       "atcCode": "R03AK07",
       "copayUah": "0.00",
@@ -11673,7 +11673,21 @@
       "sourceRow": 832
     },
     {
-      "packageKey": "nszu-45d9b363096165da925a23c6",
+      "packageKey": "nszu-7de1b8bff91e33b9f2a2e1ec",
+      "section": "combination_medicines",
+      "registrationNumber": "UA/5433/01/01",
+      "inn": "Будесонід + Формотерол (Formoterol + Budesonide)",
+      "tradeName": "CИМБІКОРТ ТУРБУХАЛЕР",
+      "dosageForm": "порошок для інгаляцій, дозований",
+      "strength": "80мкг/4,5мкг/ доза",
+      "packageQuantity": "60",
+      "atcCode": "R03AK07",
+      "copayUah": "0.00",
+      "sourcePage": 63,
+      "sourceRow": 833
+    },
+    {
+      "packageKey": "nszu-70e0134d0f6e728f2b77ccee",
       "section": "combination_medicines",
       "registrationNumber": "UA/5433/01/02",
       "inn": "Будесонід + Формотерол (Formoterol + Budesonide)",
@@ -11684,10 +11698,10 @@
       "atcCode": "R03AK07",
       "copayUah": "0.00",
       "sourcePage": 63,
-      "sourceRow": 833
+      "sourceRow": 834
     },
     {
-      "packageKey": "nszu-0d4522325568bea0c3a51160",
+      "packageKey": "nszu-931320281d8be0d338cffe04",
       "section": "combination_medicines",
       "registrationNumber": "UA/5433/01/01",
       "inn": "Будесонід + Формотерол (Formoterol + Budesonide)",
@@ -11698,10 +11712,10 @@
       "atcCode": "R03AK07",
       "copayUah": "0.00",
       "sourcePage": 63,
-      "sourceRow": 834
+      "sourceRow": 835
     },
     {
-      "packageKey": "nszu-ecbb7b9629d791cbcc29e867",
+      "packageKey": "nszu-f59b72d6d4d55e03251fe0fd",
       "section": "combination_medicines",
       "registrationNumber": "UA/14855/01/01",
       "inn": "Будесонід + Формотерол (Formoterol + Budesonide)",
@@ -11712,10 +11726,10 @@
       "atcCode": "R03AK07",
       "copayUah": "0.00",
       "sourcePage": 63,
-      "sourceRow": 835
+      "sourceRow": 836
     },
     {
-      "packageKey": "nszu-6b51e6662301d05ac58491d7",
+      "packageKey": "nszu-a7eb118a0fbeb09921f5d7df",
       "section": "combination_medicines",
       "registrationNumber": "UA/14855/01/02",
       "inn": "Будесонід + Формотерол (Formoterol + Budesonide)",
@@ -11726,10 +11740,10 @@
       "atcCode": "R03AK07",
       "copayUah": "0.00",
       "sourcePage": 63,
-      "sourceRow": 836
+      "sourceRow": 837
     },
     {
-      "packageKey": "nszu-4389fae555d36f575561122e",
+      "packageKey": "nszu-9c907606b2947c9795718858",
       "section": "combination_medicines",
       "registrationNumber": "UA/14855/01/03",
       "inn": "Будесонід + Формотерол (Formoterol + Budesonide)",
@@ -11740,10 +11754,10 @@
       "atcCode": "R03AK07",
       "copayUah": "418.62",
       "sourcePage": 63,
-      "sourceRow": 837
+      "sourceRow": 838
     },
     {
-      "packageKey": "nszu-ca839aec50349c386cdcfa3b",
+      "packageKey": "nszu-321ba94adfcd92b31e249a65",
       "section": "combination_medicines",
       "registrationNumber": "UA/21341/01/03",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11754,10 +11768,10 @@
       "atcCode": "C09DB08",
       "copayUah": "44.44",
       "sourcePage": 63,
-      "sourceRow": 838
+      "sourceRow": 839
     },
     {
-      "packageKey": "nszu-7f5b8e8e7224662c7746a79c",
+      "packageKey": "nszu-34a4d9fd4a873c2da9a58a8b",
       "section": "combination_medicines",
       "registrationNumber": "UA/19273/01/03",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11768,10 +11782,10 @@
       "atcCode": "C09DB01",
       "copayUah": "35.22",
       "sourcePage": 63,
-      "sourceRow": 839
+      "sourceRow": 840
     },
     {
-      "packageKey": "nszu-a41d38ae1be355a3794abe36",
+      "packageKey": "nszu-687d0d1429853c2cd1ac57f5",
       "section": "combination_medicines",
       "registrationNumber": "UA/14357/01/02",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11782,10 +11796,10 @@
       "atcCode": "C09DB01",
       "copayUah": "0.00",
       "sourcePage": 63,
-      "sourceRow": 840
+      "sourceRow": 841
     },
     {
-      "packageKey": "nszu-71e8db4deef6dd8a8d0d9a42",
+      "packageKey": "nszu-60bce1f308a32a5c5e3f3485",
       "section": "combination_medicines",
       "registrationNumber": "UA/16612/01/03",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11796,10 +11810,10 @@
       "atcCode": "C09DB01",
       "copayUah": "23.79",
       "sourcePage": 63,
-      "sourceRow": 841
+      "sourceRow": 842
     },
     {
-      "packageKey": "nszu-37e4c6f5473c3580c011b7d2",
+      "packageKey": "nszu-1e50ec8f871ad7b5fe2d2f60",
       "section": "combination_medicines",
       "registrationNumber": "UA/12365/01/03",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11810,10 +11824,10 @@
       "atcCode": "C09DB01",
       "copayUah": "40.10",
       "sourcePage": 63,
-      "sourceRow": 842
+      "sourceRow": 843
     },
     {
-      "packageKey": "nszu-ff4d605c251ce67caa06d2d2",
+      "packageKey": "nszu-4687a608da0f53876043b3b9",
       "section": "combination_medicines",
       "registrationNumber": "UA/15341/01/01",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11824,10 +11838,10 @@
       "atcCode": "C09DB01",
       "copayUah": "49.04",
       "sourcePage": 63,
-      "sourceRow": 843
+      "sourceRow": 844
     },
     {
-      "packageKey": "nszu-3bac2f8ccb3421d87db97eef",
+      "packageKey": "nszu-4f75bca54f20afab6e76781b",
       "section": "combination_medicines",
       "registrationNumber": "UA/21341/01/02",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11838,10 +11852,10 @@
       "atcCode": "C09DB08",
       "copayUah": "30.14",
       "sourcePage": 63,
-      "sourceRow": 844
+      "sourceRow": 845
     },
     {
-      "packageKey": "nszu-ae8d609694309b705bf02732",
+      "packageKey": "nszu-b661a9f21e9da6d0dcd75774",
       "section": "combination_medicines",
       "registrationNumber": "UA/19273/01/02",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11852,10 +11866,10 @@
       "atcCode": "C09DB01",
       "copayUah": "0.00",
       "sourcePage": 63,
-      "sourceRow": 845
+      "sourceRow": 846
     },
     {
-      "packageKey": "nszu-53cb5a74a06dfc60bf59bca4",
+      "packageKey": "nszu-50fdba407b067de0e004faaa",
       "section": "combination_medicines",
       "registrationNumber": "UA/14358/01/01",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11866,10 +11880,10 @@
       "atcCode": "C09DB01",
       "copayUah": "0.00",
       "sourcePage": 63,
-      "sourceRow": 846
+      "sourceRow": 847
     },
     {
-      "packageKey": "nszu-c357b5c24e9d50ac23ed4589",
+      "packageKey": "nszu-477dc7e7605e8816411df4e0",
       "section": "combination_medicines",
       "registrationNumber": "UA/16612/01/02",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11880,10 +11894,10 @@
       "atcCode": "C09DB01",
       "copayUah": "27.26",
       "sourcePage": 64,
-      "sourceRow": 847
+      "sourceRow": 848
     },
     {
-      "packageKey": "nszu-8269296d1ab7578fa657f647",
+      "packageKey": "nszu-28297f360323f161cd711ada",
       "section": "combination_medicines",
       "registrationNumber": "UA/12365/01/01",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11894,10 +11908,10 @@
       "atcCode": "C09DB01",
       "copayUah": "52.08",
       "sourcePage": 64,
-      "sourceRow": 848
+      "sourceRow": 849
     },
     {
-      "packageKey": "nszu-0bed15ca9848ffa4dbf7d325",
+      "packageKey": "nszu-59d7bcfeef5d42b39b7927ab",
       "section": "combination_medicines",
       "registrationNumber": "UA/15340/01/01",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11908,10 +11922,10 @@
       "atcCode": "C09DB01",
       "copayUah": "43.20",
       "sourcePage": 64,
-      "sourceRow": 849
+      "sourceRow": 850
     },
     {
-      "packageKey": "nszu-1f165cee2744c70d9a5ab414",
+      "packageKey": "nszu-0f7630d974a5aca5976a3b7d",
       "section": "combination_medicines",
       "registrationNumber": "UA/16393/01/01",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11922,10 +11936,10 @@
       "atcCode": "C09DB01",
       "copayUah": "56.49",
       "sourcePage": 64,
-      "sourceRow": 850
+      "sourceRow": 851
     },
     {
-      "packageKey": "nszu-3f02e9846de20bc51e3f507c",
+      "packageKey": "nszu-c7e41b012ad347dc597dc02e",
       "section": "combination_medicines",
       "registrationNumber": "UA/21341/01/01",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11936,10 +11950,10 @@
       "atcCode": "C09DB08",
       "copayUah": "0.00",
       "sourcePage": 64,
-      "sourceRow": 851
+      "sourceRow": 852
     },
     {
-      "packageKey": "nszu-5b09712fa888342f1ea4a084",
+      "packageKey": "nszu-dce8c50706f33e06aa6af080",
       "section": "combination_medicines",
       "registrationNumber": "UA/12365/01/02",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11950,10 +11964,10 @@
       "atcCode": "C09DB01",
       "copayUah": "0.00",
       "sourcePage": 64,
-      "sourceRow": 852
+      "sourceRow": 853
     },
     {
-      "packageKey": "nszu-0bca1709e0b25c250b961e07",
+      "packageKey": "nszu-507b3102f075f37433ce93eb",
       "section": "combination_medicines",
       "registrationNumber": "UA/16392/01/01",
       "inn": "Валсартан та амлодипін (Valsartan and amlodipine)",
@@ -11964,10 +11978,10 @@
       "atcCode": "C09DB01",
       "copayUah": "0.00",
       "sourcePage": 64,
-      "sourceRow": 853
+      "sourceRow": 854
     },
     {
-      "packageKey": "nszu-9c8ac354bbb5eb29eeda1aef",
+      "packageKey": "nszu-5c09a1436888958489842b87",
       "section": "combination_medicines",
       "registrationNumber": "UA/16280/01/02",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -11978,10 +11992,10 @@
       "atcCode": "C09DA03",
       "copayUah": "0.00",
       "sourcePage": 64,
-      "sourceRow": 854
+      "sourceRow": 855
     },
     {
-      "packageKey": "nszu-0085194740ccd61151d19099",
+      "packageKey": "nszu-e2fbb4fe4c05728d935ce830",
       "section": "combination_medicines",
       "registrationNumber": "UA/18175/01/02",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -11992,10 +12006,10 @@
       "atcCode": "C09DA03",
       "copayUah": "0.00",
       "sourcePage": 64,
-      "sourceRow": 855
+      "sourceRow": 856
     },
     {
-      "packageKey": "nszu-c54a8fc5c9dec1c2d3e00548",
+      "packageKey": "nszu-e4f3e41b07451aaa097b69d0",
       "section": "combination_medicines",
       "registrationNumber": "UA/16280/01/02",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -12006,10 +12020,10 @@
       "atcCode": "C09DA03",
       "copayUah": "0.00",
       "sourcePage": 64,
-      "sourceRow": 856
+      "sourceRow": 857
     },
     {
-      "packageKey": "nszu-d60797887af3cac4e90224d5",
+      "packageKey": "nszu-330341db94997a0ff4d532b1",
       "section": "combination_medicines",
       "registrationNumber": "UA/8318/01/01",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -12020,10 +12034,10 @@
       "atcCode": "C09DA03",
       "copayUah": "0.00",
       "sourcePage": 64,
-      "sourceRow": 857
+      "sourceRow": 858
     },
     {
-      "packageKey": "nszu-e78f13d76dcd7a8e34290b13",
+      "packageKey": "nszu-9dd89222b716d59d713af586",
       "section": "combination_medicines",
       "registrationNumber": "UA/16280/01/01",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -12034,10 +12048,24 @@
       "atcCode": "C09DA03",
       "copayUah": "0.00",
       "sourcePage": 64,
-      "sourceRow": 858
+      "sourceRow": 859
     },
     {
-      "packageKey": "nszu-056f699203ba2af80e886848",
+      "packageKey": "nszu-542c7191f2dacd36fd237e42",
+      "section": "combination_medicines",
+      "registrationNumber": "UA/17127/01/03",
+      "inn": "Валсартан та діуретики (Valsartan and diuretics)",
+      "tradeName": "ВАЛМІСАР H",
+      "dosageForm": "плівковою",
+      "strength": "160 мг/25 мг",
+      "packageQuantity": "30",
+      "atcCode": "C09DA03",
+      "copayUah": "0.00",
+      "sourcePage": 64,
+      "sourceRow": 860
+    },
+    {
+      "packageKey": "nszu-477278bde99d5671d3a54218",
       "section": "combination_medicines",
       "registrationNumber": "UA/12839/01/02",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -12048,10 +12076,10 @@
       "atcCode": "C09DA03",
       "copayUah": "120.04",
       "sourcePage": 64,
-      "sourceRow": 859
+      "sourceRow": 861
     },
     {
-      "packageKey": "nszu-4d271934cf5c293311719fbb",
+      "packageKey": "nszu-983b0325d52df53d6c44710b",
       "section": "combination_medicines",
       "registrationNumber": "UA/16280/01/03",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -12062,10 +12090,10 @@
       "atcCode": "C09DA03",
       "copayUah": "0.00",
       "sourcePage": 65,
-      "sourceRow": 860
+      "sourceRow": 862
     },
     {
-      "packageKey": "nszu-f5010df02411a2f7faf50302",
+      "packageKey": "nszu-626ef64599f649aaea10d4e7",
       "section": "combination_medicines",
       "registrationNumber": "UA/17127/01/01",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -12076,10 +12104,10 @@
       "atcCode": "C09DA03",
       "copayUah": "50.41",
       "sourcePage": 65,
-      "sourceRow": 861
+      "sourceRow": 863
     },
     {
-      "packageKey": "nszu-47956f65d4e15d31fdac1c6f",
+      "packageKey": "nszu-afe7e1f157239cec4f1acc9c",
       "section": "combination_medicines",
       "registrationNumber": "UA/5743/01/01",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -12090,10 +12118,10 @@
       "atcCode": "C09DA03",
       "copayUah": "0.00",
       "sourcePage": 65,
-      "sourceRow": 862
+      "sourceRow": 864
     },
     {
-      "packageKey": "nszu-d44abd110982b04a86632279",
+      "packageKey": "nszu-5f9734f9bea9083af0071b3a",
       "section": "combination_medicines",
       "registrationNumber": "UA/18175/01/01",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -12104,10 +12132,10 @@
       "atcCode": "C09DA03",
       "copayUah": "39.38",
       "sourcePage": 65,
-      "sourceRow": 863
+      "sourceRow": 865
     },
     {
-      "packageKey": "nszu-ae2ee3048e04545fc63a22a8",
+      "packageKey": "nszu-cb7ad1e10d094ba32fdbcbd2",
       "section": "combination_medicines",
       "registrationNumber": "UA/16280/01/03",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -12118,10 +12146,10 @@
       "atcCode": "C09DA03",
       "copayUah": "0.00",
       "sourcePage": 65,
-      "sourceRow": 864
+      "sourceRow": 866
     },
     {
-      "packageKey": "nszu-963d46094da31d449bf8f3ba",
+      "packageKey": "nszu-9c79b39fd3e82d1c14d4bbc0",
       "section": "combination_medicines",
       "registrationNumber": "UA/8318/01/02",
       "inn": "Валсартан та діуретики (Valsartan and diuretics)",
@@ -12132,10 +12160,10 @@
       "atcCode": "C09DA03",
       "copayUah": "0.00",
       "sourcePage": 65,
-      "sourceRow": 865
+      "sourceRow": 867
     },
     {
-      "packageKey": "nszu-58201d473066a338430ef383",
+      "packageKey": "nszu-f232ded6f5802c64ceba93b7",
       "section": "combination_medicines",
       "registrationNumber": "UA/20362/01/02",
       "inn": "Валсартан та сакубітрил (Valsartan and sacubitril)",
@@ -12146,10 +12174,10 @@
       "atcCode": "C09DX04",
       "copayUah": "0.00",
       "sourcePage": 65,
-      "sourceRow": 866
+      "sourceRow": 868
     },
     {
-      "packageKey": "nszu-31755cb0579eedee1ab0ac0c",
+      "packageKey": "nszu-2a19874a61f8d9ac82b44702",
       "section": "combination_medicines",
       "registrationNumber": "UA/16691/01/02",
       "inn": "Валсартан та сакубітрил (Valsartan and sacubitril)",
@@ -12160,10 +12188,10 @@
       "atcCode": "C09DX04",
       "copayUah": "1047.63",
       "sourcePage": 65,
-      "sourceRow": 867
+      "sourceRow": 869
     },
     {
-      "packageKey": "nszu-85125f8e08a5b6200dd10e4c",
+      "packageKey": "nszu-1ec220d3c5a6f3eccf0e8497",
       "section": "combination_medicines",
       "registrationNumber": "UA/20995/01/01",
       "inn": "Валсартан та сакубітрил (Valsartan and sacubitril)",
@@ -12174,10 +12202,10 @@
       "atcCode": "C09DX04",
       "copayUah": "130.99",
       "sourcePage": 65,
-      "sourceRow": 868
+      "sourceRow": 870
     },
     {
-      "packageKey": "nszu-31a719e04e45cccc84d1afd3",
+      "packageKey": "nszu-ea6e40f647c28c5504f336ab",
       "section": "combination_medicines",
       "registrationNumber": "UA/20995/01/02",
       "inn": "Валсартан та сакубітрил (Valsartan and sacubitril)",
@@ -12188,10 +12216,10 @@
       "atcCode": "C09DX04",
       "copayUah": "0.00",
       "sourcePage": 65,
-      "sourceRow": 869
+      "sourceRow": 871
     },
     {
-      "packageKey": "nszu-a882548d2d2fab87cb85e5c8",
+      "packageKey": "nszu-92a2eb7487386d57c45c7de7",
       "section": "combination_medicines",
       "registrationNumber": "UA/15069/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12202,10 +12230,10 @@
       "atcCode": "C09DX01",
       "copayUah": "27.12",
       "sourcePage": 65,
-      "sourceRow": 870
+      "sourceRow": 872
     },
     {
-      "packageKey": "nszu-1f97765f2b5ba0bf1e140923",
+      "packageKey": "nszu-45232c422e7eafab2834f60a",
       "section": "combination_medicines",
       "registrationNumber": "UA/15069/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12216,10 +12244,10 @@
       "atcCode": "C09DX01",
       "copayUah": "54.23",
       "sourcePage": 66,
-      "sourceRow": 871
+      "sourceRow": 873
     },
     {
-      "packageKey": "nszu-102b2df349e2654e090477b1",
+      "packageKey": "nszu-cb6245c065d758413f11a216",
       "section": "combination_medicines",
       "registrationNumber": "UA/18938/01/02",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12230,10 +12258,10 @@
       "atcCode": "C09DX01",
       "copayUah": "38.06",
       "sourcePage": 66,
-      "sourceRow": 872
+      "sourceRow": 874
     },
     {
-      "packageKey": "nszu-497584e49cdc520987b36e5b",
+      "packageKey": "nszu-702d6ce026b48151924cdd28",
       "section": "combination_medicines",
       "registrationNumber": "UA/17875/01/02",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12244,10 +12272,10 @@
       "atcCode": "C09DX01",
       "copayUah": "0.00",
       "sourcePage": 66,
-      "sourceRow": 873
+      "sourceRow": 875
     },
     {
-      "packageKey": "nszu-ff0357638d56920635b4e7de",
+      "packageKey": "nszu-0f5a781dca677269345a2f00",
       "section": "combination_medicines",
       "registrationNumber": "UA/15125/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12258,10 +12286,10 @@
       "atcCode": "C09DX01",
       "copayUah": "59.06",
       "sourcePage": 66,
-      "sourceRow": 874
+      "sourceRow": 876
     },
     {
-      "packageKey": "nszu-10bfc3cd5bd19ca828c1b7c4",
+      "packageKey": "nszu-9653dc3f281f30da6086e166",
       "section": "combination_medicines",
       "registrationNumber": "UA/18176/01/02",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12272,10 +12300,10 @@
       "atcCode": "C09DX01",
       "copayUah": "45.77",
       "sourcePage": 66,
-      "sourceRow": 875
+      "sourceRow": 877
     },
     {
-      "packageKey": "nszu-4df014be6dc72cb1a862ea55",
+      "packageKey": "nszu-da642a1034d245d7edba1226",
       "section": "combination_medicines",
       "registrationNumber": "UA/15069/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12286,10 +12314,10 @@
       "atcCode": "C09DX01",
       "copayUah": "162.71",
       "sourcePage": 66,
-      "sourceRow": 876
+      "sourceRow": 878
     },
     {
-      "packageKey": "nszu-e5b9d77d07c217e132ffdb1c",
+      "packageKey": "nszu-867c895c2f0a448a51b8122a",
       "section": "combination_medicines",
       "registrationNumber": "UA/15070/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12300,10 +12328,10 @@
       "atcCode": "C09DX01",
       "copayUah": "25.50",
       "sourcePage": 66,
-      "sourceRow": 877
+      "sourceRow": 879
     },
     {
-      "packageKey": "nszu-ed9ecdeae158562dc74d279d",
+      "packageKey": "nszu-6d7a946cbe4b5b02b1d25bc6",
       "section": "combination_medicines",
       "registrationNumber": "UA/15070/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12314,10 +12342,10 @@
       "atcCode": "C09DX01",
       "copayUah": "50.99",
       "sourcePage": 66,
-      "sourceRow": 878
+      "sourceRow": 880
     },
     {
-      "packageKey": "nszu-2eb74eb9bfa7dcef41e2e2e2",
+      "packageKey": "nszu-cbdd286ca76e86cb357b42ac",
       "section": "combination_medicines",
       "registrationNumber": "UA/18938/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12328,10 +12356,10 @@
       "atcCode": "C09DX01",
       "copayUah": "36.40",
       "sourcePage": 66,
-      "sourceRow": 879
+      "sourceRow": 881
     },
     {
-      "packageKey": "nszu-e59800d5599e78071a551c97",
+      "packageKey": "nszu-7ac765d840ef45092e2a1290",
       "section": "combination_medicines",
       "registrationNumber": "UA/17875/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12342,10 +12370,10 @@
       "atcCode": "C09DX01",
       "copayUah": "0.00",
       "sourcePage": 67,
-      "sourceRow": 880
+      "sourceRow": 882
     },
     {
-      "packageKey": "nszu-71c60446d0e0a341fef4288d",
+      "packageKey": "nszu-2e57c0981f244c11857f9a9a",
       "section": "combination_medicines",
       "registrationNumber": "UA/15124/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12356,10 +12384,10 @@
       "atcCode": "C09DX01",
       "copayUah": "34.94",
       "sourcePage": 67,
-      "sourceRow": 881
+      "sourceRow": 883
     },
     {
-      "packageKey": "nszu-64c0e634ef1234ab123b42f7",
+      "packageKey": "nszu-a6896fc7fccbaa6ca90ea1dc",
       "section": "combination_medicines",
       "registrationNumber": "UA/18176/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12370,10 +12398,10 @@
       "atcCode": "C09DX01",
       "copayUah": "34.94",
       "sourcePage": 67,
-      "sourceRow": 882
+      "sourceRow": 884
     },
     {
-      "packageKey": "nszu-969fcc806784fcdd100944ab",
+      "packageKey": "nszu-79c0aeece835cb2f38f4470a",
       "section": "combination_medicines",
       "registrationNumber": "UA/15070/01/01",
       "inn": "гідрохлортіазид (Valsartan, amlodipine",
@@ -12384,10 +12412,10 @@
       "atcCode": "C09DX01",
       "copayUah": "152.98",
       "sourcePage": 67,
-      "sourceRow": 883
+      "sourceRow": 885
     },
     {
-      "packageKey": "nszu-05bfac9244fc55209b708a44",
+      "packageKey": "nszu-ecb90d0125b1541e7a3e7ce6",
       "section": "combination_medicines",
       "registrationNumber": "UA/1350/01/01",
       "inn": "Еналаприл та діуретики (Enalapril and diuretics)",
@@ -12398,10 +12426,10 @@
       "atcCode": "C09BA02",
       "copayUah": "0.00",
       "sourcePage": 67,
-      "sourceRow": 884
+      "sourceRow": 886
     },
     {
-      "packageKey": "nszu-4b683fc423d76f50f111073d",
+      "packageKey": "nszu-c0eefb21ce2f1266120a115a",
       "section": "combination_medicines",
       "registrationNumber": "UA/0702/01/01",
       "inn": "Еналаприл та діуретики (Enalapril and diuretics)",
@@ -12412,10 +12440,10 @@
       "atcCode": "C09BA02",
       "copayUah": "0.00",
       "sourcePage": 67,
-      "sourceRow": 885
+      "sourceRow": 887
     },
     {
-      "packageKey": "nszu-cefa0d4d5e7ea0992c763641",
+      "packageKey": "nszu-828eae1480cd78196bb8602d",
       "section": "combination_medicines",
       "registrationNumber": "UA/1351/01/01",
       "inn": "Еналаприл та діуретики (Enalapril and diuretics)",
@@ -12426,10 +12454,10 @@
       "atcCode": "C09BA02",
       "copayUah": "0.00",
       "sourcePage": 67,
-      "sourceRow": 886
+      "sourceRow": 888
     },
     {
-      "packageKey": "nszu-8eb5614e0087ba10a3a1b3f0",
+      "packageKey": "nszu-92c343e6bc170576ea562054",
       "section": "combination_medicines",
       "registrationNumber": "UA/16668/01/01",
       "inn": "Еналаприл та діуретики (Enalapril and diuretics)",
@@ -12440,10 +12468,10 @@
       "atcCode": "C09BA02",
       "copayUah": "0.00",
       "sourcePage": 67,
-      "sourceRow": 887
+      "sourceRow": 889
     },
     {
-      "packageKey": "nszu-37747addf999126952c5db69",
+      "packageKey": "nszu-09af56f61e31794a7d134918",
       "section": "combination_medicines",
       "registrationNumber": "UA/5568/01/01",
       "inn": "Еналаприл та діуретики (Enalapril and diuretics)",
@@ -12454,10 +12482,10 @@
       "atcCode": "C09BA02",
       "copayUah": "57.01",
       "sourcePage": 67,
-      "sourceRow": 888
+      "sourceRow": 890
     },
     {
-      "packageKey": "nszu-e17eb3ffc9f8e67474831f4f",
+      "packageKey": "nszu-2f45f89f50dcc1fcc153f0f4",
       "section": "combination_medicines",
       "registrationNumber": "UA/13715/01/01",
       "inn": "Ірбесартан та діуретики (Irbesartan and diuretics)",
@@ -12468,10 +12496,10 @@
       "atcCode": "C09DA04",
       "copayUah": "0.00",
       "sourcePage": 68,
-      "sourceRow": 889
+      "sourceRow": 891
     },
     {
-      "packageKey": "nszu-cd3ed55158023053703eb181",
+      "packageKey": "nszu-d9a805a780dd6d0cd2f571fa",
       "section": "combination_medicines",
       "registrationNumber": "UA/13715/01/02",
       "inn": "Ірбесартан та діуретики (Irbesartan and diuretics)",
@@ -12482,10 +12510,10 @@
       "atcCode": "C09DA04",
       "copayUah": "0.00",
       "sourcePage": 68,
-      "sourceRow": 890
+      "sourceRow": 892
     },
     {
-      "packageKey": "nszu-680a9d49e40eec434e207437",
+      "packageKey": "nszu-4acfe83b2bb32bf30d28354e",
       "section": "combination_medicines",
       "registrationNumber": "UA/19251/01/01",
       "inn": "Кандесартан та діуретики (Candesartan and diuretics)",
@@ -12496,10 +12524,10 @@
       "atcCode": "C09DA06",
       "copayUah": "0.00",
       "sourcePage": 68,
-      "sourceRow": 891
+      "sourceRow": 893
     },
     {
-      "packageKey": "nszu-3ddbc6dc1e0116f394c70f06",
+      "packageKey": "nszu-23f949732b0b709f8b8a1f98",
       "section": "combination_medicines",
       "registrationNumber": "UA/19276/01/01",
       "inn": "Кандесартан та діуретики (Candesartan and diuretics)",
@@ -12510,10 +12538,10 @@
       "atcCode": "C09DA06",
       "copayUah": "0.00",
       "sourcePage": 68,
-      "sourceRow": 892
+      "sourceRow": 894
     },
     {
-      "packageKey": "nszu-ca752dcb6bed6fa8ddc8d4e7",
+      "packageKey": "nszu-d01e9f006dcff2994a3e51b7",
       "section": "combination_medicines",
       "registrationNumber": "UA/8156/01/02",
       "inn": "Каптоприл та діуретики (Captopril and diuretics)",
@@ -12524,10 +12552,10 @@
       "atcCode": "C09BA01",
       "copayUah": "0.00",
       "sourcePage": 68,
-      "sourceRow": 893
+      "sourceRow": 895
     },
     {
-      "packageKey": "nszu-54af0f4d4dfce0ec873c6828",
+      "packageKey": "nszu-fb0fe5cd4ca9b0af63a87606",
       "section": "combination_medicines",
       "registrationNumber": "UA/3668/01/01",
       "inn": "Каптоприл та діуретики (Captopril and diuretics)",
@@ -12538,10 +12566,10 @@
       "atcCode": "C09BA01",
       "copayUah": "0.00",
       "sourcePage": 68,
-      "sourceRow": 894
+      "sourceRow": 896
     },
     {
-      "packageKey": "nszu-6ba40edf0390fad263712963",
+      "packageKey": "nszu-f1eb1f1fda8a5b5537bc6f6c",
       "section": "combination_medicines",
       "registrationNumber": "UA/16260/01/01",
       "inn": "Леводопа + Карбідопа (Levodopa + Carbidopa)",
@@ -12552,10 +12580,10 @@
       "atcCode": "N04BA02",
       "copayUah": "0.00",
       "sourcePage": 68,
-      "sourceRow": 895
+      "sourceRow": 897
     },
     {
-      "packageKey": "nszu-39dcfb82a35fc16ac8ac1f64",
+      "packageKey": "nszu-77301b74b4161cdc517fe189",
       "section": "combination_medicines",
       "registrationNumber": "UA/7844/01/01",
       "inn": "Леводопа + Карбідопа (Levodopa + Carbidopa)",
@@ -12566,10 +12594,10 @@
       "atcCode": "N04BA02",
       "copayUah": "0.00",
       "sourcePage": 68,
-      "sourceRow": 896
+      "sourceRow": 898
     },
     {
-      "packageKey": "nszu-85a9e548faed5127a4394042",
+      "packageKey": "nszu-907ba5660efd3120a2e6853f",
       "section": "combination_medicines",
       "registrationNumber": "UA/16260/01/01",
       "inn": "Леводопа + Карбідопа (Levodopa + Carbidopa)",
@@ -12580,10 +12608,10 @@
       "atcCode": "N04BA02",
       "copayUah": "0.00",
       "sourcePage": 68,
-      "sourceRow": 897
+      "sourceRow": 899
     },
     {
-      "packageKey": "nszu-fd9024d47a3787a292544e70",
+      "packageKey": "nszu-8232a97b220ebb63930ec879",
       "section": "combination_medicines",
       "registrationNumber": "UA/7844/02/01",
       "inn": "Леводопа + Карбідопа (Levodopa + Carbidopa)",
@@ -12594,10 +12622,10 @@
       "atcCode": "N04BA02",
       "copayUah": "72.39",
       "sourcePage": 68,
-      "sourceRow": 898
+      "sourceRow": 900
     },
     {
-      "packageKey": "nszu-b1ec7079ef8b9a5513bd6358",
+      "packageKey": "nszu-8dc269aef8db9594bf863d54",
       "section": "combination_medicines",
       "registrationNumber": "UA/18054/01/01",
       "inn": "Леводопа + Карбідопа (Levodopa + Carbidopa)",
@@ -12608,10 +12636,10 @@
       "atcCode": "N04BA02",
       "copayUah": "0.00",
       "sourcePage": 69,
-      "sourceRow": 899
+      "sourceRow": 901
     },
     {
-      "packageKey": "nszu-f5acedf60e21e3ca94177524",
+      "packageKey": "nszu-f4c46c6e03f3b2eca24cf25b",
       "section": "combination_medicines",
       "registrationNumber": "UA/7844/02/01",
       "inn": "Леводопа + Карбідопа (Levodopa + Carbidopa)",
@@ -12622,10 +12650,10 @@
       "atcCode": "N04BA02",
       "copayUah": "241.29",
       "sourcePage": 69,
-      "sourceRow": 900
+      "sourceRow": 902
     },
     {
-      "packageKey": "nszu-b0b1d495aea901ee0073d2ed",
+      "packageKey": "nszu-86d1d236cb3b8eae0e3d934c",
       "section": "combination_medicines",
       "registrationNumber": "UA/9134/01/01",
       "inn": "Леводопа + Карбідопа (Levodopa + Carbidopa)",
@@ -12636,10 +12664,10 @@
       "atcCode": "N04BA02",
       "copayUah": "0.00",
       "sourcePage": 69,
-      "sourceRow": 901
+      "sourceRow": 903
     },
     {
-      "packageKey": "nszu-ec918edd1d9e24181de5dbcc",
+      "packageKey": "nszu-542dbe56964a3b107b3a10a5",
       "section": "combination_medicines",
       "registrationNumber": "UA/16076/01/01",
       "inn": "Лізиноприл + Гідрохлортіазид (Lisinopril + Hydrochlorothiazide)",
@@ -12650,10 +12678,10 @@
       "atcCode": "C09BA03",
       "copayUah": "0.00",
       "sourcePage": 69,
-      "sourceRow": 902
+      "sourceRow": 904
     },
     {
-      "packageKey": "nszu-a7b9b55b954a8f2c79f35cf9",
+      "packageKey": "nszu-08de68171baf982d98b88da6",
       "section": "combination_medicines",
       "registrationNumber": "UA/16076/01/02",
       "inn": "Лізиноприл + Гідрохлортіазид (Lisinopril + Hydrochlorothiazide)",
@@ -12664,10 +12692,10 @@
       "atcCode": "C09BA03",
       "copayUah": "13.30",
       "sourcePage": 69,
-      "sourceRow": 903
+      "sourceRow": 905
     },
     {
-      "packageKey": "nszu-71fabec9a81ef5a4ed8586f9",
+      "packageKey": "nszu-f16e555624116693664a9a88",
       "section": "combination_medicines",
       "registrationNumber": "UA/6916/01/01",
       "inn": "Лізиноприл + Гідрохлортіазид (Lisinopril + Hydrochlorothiazide)",
@@ -12678,10 +12706,10 @@
       "atcCode": "C09BA03",
       "copayUah": "0.00",
       "sourcePage": 69,
-      "sourceRow": 904
+      "sourceRow": 906
     },
     {
-      "packageKey": "nszu-2e0eefc70c0f8451331c0f04",
+      "packageKey": "nszu-bec1e78ef19b8968046867e4",
       "section": "combination_medicines",
       "registrationNumber": "UA/6917/01/01",
       "inn": "Лізиноприл + Гідрохлортіазид (Lisinopril + Hydrochlorothiazide)",
@@ -12692,10 +12720,10 @@
       "atcCode": "C09BA03",
       "copayUah": "25.19",
       "sourcePage": 69,
-      "sourceRow": 905
+      "sourceRow": 907
     },
     {
-      "packageKey": "nszu-0bfc016b5a0a3f2a6d50fd89",
+      "packageKey": "nszu-1822f1dde168ce6ee9b4613b",
       "section": "combination_medicines",
       "registrationNumber": "UA/9533/01/01",
       "inn": "Лізиноприл + Гідрохлортіазид (Lisinopril + Hydrochlorothiazide)",
@@ -12706,10 +12734,10 @@
       "atcCode": "C09BA03",
       "copayUah": "0.00",
       "sourcePage": 69,
-      "sourceRow": 906
+      "sourceRow": 908
     },
     {
-      "packageKey": "nszu-5baf30c5e340ac3dc29df54f",
+      "packageKey": "nszu-6f939a9060e12378cb2f20d7",
       "section": "combination_medicines",
       "registrationNumber": "UA/9533/01/02",
       "inn": "Лізиноприл + Гідрохлортіазид (Lisinopril + Hydrochlorothiazide)",
@@ -12720,10 +12748,10 @@
       "atcCode": "C09BA03",
       "copayUah": "31.90",
       "sourcePage": 70,
-      "sourceRow": 907
+      "sourceRow": 909
     },
     {
-      "packageKey": "nszu-578cd61263fc814e5d498603",
+      "packageKey": "nszu-341aaa4923214041e986b981",
       "section": "combination_medicines",
       "registrationNumber": "UA/18211/01/01",
       "inn": "Лізиноприл + Гідрохлортіазид (Lisinopril + Hydrochlorothiazide)",
@@ -12734,10 +12762,10 @@
       "atcCode": "C09BA03",
       "copayUah": "24.15",
       "sourcePage": 70,
-      "sourceRow": 908
+      "sourceRow": 910
     },
     {
-      "packageKey": "nszu-9ce52d5c15cfa5e07d9d6ec7",
+      "packageKey": "nszu-200590d5d980e3b850ebfac2",
       "section": "combination_medicines",
       "registrationNumber": "UA/6092/01/01",
       "inn": "Лізиноприл + Гідрохлортіазид (Lisinopril + Hydrochlorothiazide)",
@@ -12748,10 +12776,10 @@
       "atcCode": "C09BA03",
       "copayUah": "8.53",
       "sourcePage": 70,
-      "sourceRow": 909
+      "sourceRow": 911
     },
     {
-      "packageKey": "nszu-69fe4389fbce57b1f5c2733d",
+      "packageKey": "nszu-01614fbca6abd6b132f5cc0b",
       "section": "combination_medicines",
       "registrationNumber": "UA/6092/01/02",
       "inn": "Лізиноприл + Гідрохлортіазид (Lisinopril + Hydrochlorothiazide)",
@@ -12762,10 +12790,10 @@
       "atcCode": "C09BA03",
       "copayUah": "27.32",
       "sourcePage": 70,
-      "sourceRow": 910
+      "sourceRow": 912
     },
     {
-      "packageKey": "nszu-2b1149710be5bfd49ac89aa7",
+      "packageKey": "nszu-891d015a517987dfdce22eb3",
       "section": "combination_medicines",
       "registrationNumber": "UA/11887/01/01",
       "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
@@ -12776,10 +12804,10 @@
       "atcCode": "C09BB03",
       "copayUah": "0.00",
       "sourcePage": 70,
-      "sourceRow": 911
+      "sourceRow": 913
     },
     {
-      "packageKey": "nszu-ce2ccb2137cf3fc66d1d13e1",
+      "packageKey": "nszu-7758d9413a35c36b14e43f1b",
       "section": "combination_medicines",
       "registrationNumber": "UA/19600/01/01",
       "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
@@ -12790,10 +12818,10 @@
       "atcCode": "C09BB03",
       "copayUah": "0.00",
       "sourcePage": 70,
-      "sourceRow": 912
+      "sourceRow": 914
     },
     {
-      "packageKey": "nszu-991138a677852bc56d35e6eb",
+      "packageKey": "nszu-988725e52a7ab06d5f273f87",
       "section": "combination_medicines",
       "registrationNumber": "UA/20491/01/01",
       "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
@@ -12804,10 +12832,10 @@
       "atcCode": "C09BB03",
       "copayUah": "0.00",
       "sourcePage": 70,
-      "sourceRow": 913
+      "sourceRow": 915
     },
     {
-      "packageKey": "nszu-32157ad95314f7a379146959",
+      "packageKey": "nszu-7de6207edc476cd784762fda",
       "section": "combination_medicines",
       "registrationNumber": "UA/20491/01/01",
       "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
@@ -12818,10 +12846,10 @@
       "atcCode": "C09BB03",
       "copayUah": "0.00",
       "sourcePage": 70,
-      "sourceRow": 914
+      "sourceRow": 916
     },
     {
-      "packageKey": "nszu-a6c218c8714457ee33aa6b01",
+      "packageKey": "nszu-c8f3b3261db22a9602916b58",
       "section": "combination_medicines",
       "registrationNumber": "UA/19600/01/03",
       "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
@@ -12832,44 +12860,16 @@
       "atcCode": "C09BB03",
       "copayUah": "0.00",
       "sourcePage": 70,
-      "sourceRow": 915
-    },
-    {
-      "packageKey": "nszu-45a05e8c5452ff6a65d4c1fe",
-      "section": "combination_medicines",
-      "registrationNumber": "UA/20491/01/03",
-      "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
-      "tradeName": "ПРАМІЛЕТ®",
-      "dosageForm": "таблетки",
-      "strength": "20 мг/10 мг",
-      "packageQuantity": "30",
-      "atcCode": "C09BB03",
-      "copayUah": "0.00",
-      "sourcePage": 70,
-      "sourceRow": 916
-    },
-    {
-      "packageKey": "nszu-d87de595565868c5ec27f715",
-      "section": "combination_medicines",
-      "registrationNumber": "UA/20491/01/03",
-      "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
-      "tradeName": "ПРАМІЛЕТ®",
-      "dosageForm": "таблетки",
-      "strength": "20 мг/10 мг",
-      "packageQuantity": "90",
-      "atcCode": "C09BB03",
-      "copayUah": "0.00",
-      "sourcePage": 70,
       "sourceRow": 917
     },
     {
-      "packageKey": "nszu-09abe49827a3a562ed9b2238",
+      "packageKey": "nszu-3a94a331445211d44c35a941",
       "section": "combination_medicines",
-      "registrationNumber": "UA/20491/01/02",
+      "registrationNumber": "UA/20491/01/03",
       "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
       "tradeName": "ПРАМІЛЕТ®",
       "dosageForm": "таблетки",
-      "strength": "20 мг/5 мг",
+      "strength": "20 мг/10 мг",
       "packageQuantity": "30",
       "atcCode": "C09BB03",
       "copayUah": "0.00",
@@ -12877,7 +12877,35 @@
       "sourceRow": 918
     },
     {
-      "packageKey": "nszu-e6dd6cfb26dd42682f4f363b",
+      "packageKey": "nszu-c7c3d8448023f02a0820a14a",
+      "section": "combination_medicines",
+      "registrationNumber": "UA/20491/01/03",
+      "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
+      "tradeName": "ПРАМІЛЕТ®",
+      "dosageForm": "таблетки",
+      "strength": "20 мг/10 мг",
+      "packageQuantity": "90",
+      "atcCode": "C09BB03",
+      "copayUah": "0.00",
+      "sourcePage": 70,
+      "sourceRow": 919
+    },
+    {
+      "packageKey": "nszu-326f52b27c507c064438303f",
+      "section": "combination_medicines",
+      "registrationNumber": "UA/20491/01/02",
+      "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
+      "tradeName": "ПРАМІЛЕТ®",
+      "dosageForm": "таблетки",
+      "strength": "20 мг/5 мг",
+      "packageQuantity": "30",
+      "atcCode": "C09BB03",
+      "copayUah": "0.00",
+      "sourcePage": 70,
+      "sourceRow": 920
+    },
+    {
+      "packageKey": "nszu-9b17b9d3785a7024205bf309",
       "section": "combination_medicines",
       "registrationNumber": "UA/20491/01/02",
       "inn": "Лізиноприл та амлодипін (Lisinopril and amlodipine)",
@@ -12888,10 +12916,10 @@
       "atcCode": "C09BB03",
       "copayUah": "0.00",
       "sourcePage": 70,
-      "sourceRow": 919
+      "sourceRow": 921
     },
     {
-      "packageKey": "nszu-f2b593522229ee0a4ca07c40",
+      "packageKey": "nszu-c9385c4bb294daf06b619df5",
       "section": "combination_medicines",
       "registrationNumber": "UA/16519/01/02",
       "inn": "Лозартан та діуретики (Losartan and diuretics)",
@@ -12902,10 +12930,10 @@
       "atcCode": "C09DA01",
       "copayUah": "91.95",
       "sourcePage": 70,
-      "sourceRow": 920
+      "sourceRow": 922
     },
     {
-      "packageKey": "nszu-3649f68be98594052e37a343",
+      "packageKey": "nszu-58e068be7d94b2847835a8e7",
       "section": "combination_medicines",
       "registrationNumber": "UA/6454/01/02",
       "inn": "Лозартан та діуретики (Losartan and diuretics)",
@@ -12916,10 +12944,10 @@
       "atcCode": "C09DA01",
       "copayUah": "0.00",
       "sourcePage": 70,
-      "sourceRow": 921
+      "sourceRow": 923
     },
     {
-      "packageKey": "nszu-e96fe69f4d641cabd0e4f250",
+      "packageKey": "nszu-da9aee5958e28b817de802bc",
       "section": "combination_medicines",
       "registrationNumber": "UA/16519/01/01",
       "inn": "Лозартан та діуретики (Losartan and diuretics)",
@@ -12930,10 +12958,10 @@
       "atcCode": "C09DA01",
       "copayUah": "0.00",
       "sourcePage": 71,
-      "sourceRow": 922
+      "sourceRow": 924
     },
     {
-      "packageKey": "nszu-ccfd3426653feec60c546aa3",
+      "packageKey": "nszu-f63d186e359e9869a259777a",
       "section": "combination_medicines",
       "registrationNumber": "UA/20134/01/01",
       "inn": "діуретики (Olmesartan medoxomil and",
@@ -12944,10 +12972,10 @@
       "atcCode": "C09DA08",
       "copayUah": "0.00",
       "sourcePage": 71,
-      "sourceRow": 923
+      "sourceRow": 925
     },
     {
-      "packageKey": "nszu-9a830a510c550c32130fe2ad",
+      "packageKey": "nszu-578f9bb5147b8e7d2fdc4b77",
       "section": "combination_medicines",
       "registrationNumber": "UA/17391/01/02",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -12958,10 +12986,10 @@
       "atcCode": "C09BB04",
       "copayUah": "23.64",
       "sourcePage": 71,
-      "sourceRow": 924
+      "sourceRow": 926
     },
     {
-      "packageKey": "nszu-5fcf87b050b1f649dcca6825",
+      "packageKey": "nszu-d790433bf12dbbe954464fa1",
       "section": "combination_medicines",
       "registrationNumber": "UA/12846/01/01",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -12972,10 +13000,10 @@
       "atcCode": "C09BB04",
       "copayUah": "0.00",
       "sourcePage": 71,
-      "sourceRow": 925
+      "sourceRow": 927
     },
     {
-      "packageKey": "nszu-e41ac2df9d042acd29cbf7a5",
+      "packageKey": "nszu-a1f2eaccceb17defea80b0ff",
       "section": "combination_medicines",
       "registrationNumber": "UA/17391/01/01",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -12986,10 +13014,10 @@
       "atcCode": "C09BB04",
       "copayUah": "19.73",
       "sourcePage": 71,
-      "sourceRow": 926
+      "sourceRow": 928
     },
     {
-      "packageKey": "nszu-dd8dd38ff3a1f080e674ae4c",
+      "packageKey": "nszu-fb38055e8602ff02c8c45a24",
       "section": "combination_medicines",
       "registrationNumber": "UA/17826/01/01",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -13000,10 +13028,10 @@
       "atcCode": "C09BB04",
       "copayUah": "48.46",
       "sourcePage": 71,
-      "sourceRow": 927
+      "sourceRow": 929
     },
     {
-      "packageKey": "nszu-156ee2990c14c79b9a2ba770",
+      "packageKey": "nszu-b64f4bca82994e5e09b6edda",
       "section": "combination_medicines",
       "registrationNumber": "UA/17768/01/01",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -13014,10 +13042,10 @@
       "atcCode": "C09BB04",
       "copayUah": "0.00",
       "sourcePage": 71,
-      "sourceRow": 928
+      "sourceRow": 930
     },
     {
-      "packageKey": "nszu-8d665174feadd5dd20ee2468",
+      "packageKey": "nszu-4cfda8b8a5b28300a203514a",
       "section": "combination_medicines",
       "registrationNumber": "UA/12846/01/03",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -13028,10 +13056,10 @@
       "atcCode": "C09BB04",
       "copayUah": "0.00",
       "sourcePage": 71,
-      "sourceRow": 929
+      "sourceRow": 931
     },
     {
-      "packageKey": "nszu-06b93591c007fd71d552affd",
+      "packageKey": "nszu-a0fd56fab3ab2bd67362e69c",
       "section": "combination_medicines",
       "registrationNumber": "UA/17391/01/04",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -13042,10 +13070,10 @@
       "atcCode": "C09BB04",
       "copayUah": "40.15",
       "sourcePage": 72,
-      "sourceRow": 930
+      "sourceRow": 932
     },
     {
-      "packageKey": "nszu-a9f128864b9810c756b555d8",
+      "packageKey": "nszu-da0f3361fe77caebfe84f029",
       "section": "combination_medicines",
       "registrationNumber": "UA/17826/01/02",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -13056,10 +13084,10 @@
       "atcCode": "C09BB04",
       "copayUah": "65.87",
       "sourcePage": 72,
-      "sourceRow": 931
+      "sourceRow": 933
     },
     {
-      "packageKey": "nszu-97fa3e7f2890ef77c9159b90",
+      "packageKey": "nszu-7b63d3f6215ffdfd1b1fef4e",
       "section": "combination_medicines",
       "registrationNumber": "UA/17768/01/02",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -13070,10 +13098,10 @@
       "atcCode": "C09BB04",
       "copayUah": "42.54",
       "sourcePage": 72,
-      "sourceRow": 932
+      "sourceRow": 934
     },
     {
-      "packageKey": "nszu-38bc3e31502262a2367a35b4",
+      "packageKey": "nszu-c25463981045865e9baabe9c",
       "section": "combination_medicines",
       "registrationNumber": "UA/17391/01/03",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -13084,10 +13112,10 @@
       "atcCode": "C09BB04",
       "copayUah": "31.57",
       "sourcePage": 72,
-      "sourceRow": 933
+      "sourceRow": 935
     },
     {
-      "packageKey": "nszu-26a15eab9a46a13824d411be",
+      "packageKey": "nszu-eef6a477fd68a157e97aca55",
       "section": "combination_medicines",
       "registrationNumber": "UA/12846/01/02",
       "inn": "Периндоприл та амлодипін (Perindopril and amlodipine)",
@@ -13098,10 +13126,10 @@
       "atcCode": "C09BB04",
       "copayUah": "0.00",
       "sourcePage": 72,
-      "sourceRow": 934
+      "sourceRow": 936
     },
     {
-      "packageKey": "nszu-203d29f97221b5dcec6595b9",
+      "packageKey": "nszu-7a3a00d18e5193fb2426318a",
       "section": "combination_medicines",
       "registrationNumber": "UA/17135/01/01",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13112,10 +13140,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 72,
-      "sourceRow": 935
+      "sourceRow": 937
     },
     {
-      "packageKey": "nszu-cf8808bef443d3788a8ba8a3",
+      "packageKey": "nszu-3dec27b11b15fda09976fc59",
       "section": "combination_medicines",
       "registrationNumber": "UA/20545/01/01",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13126,10 +13154,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 72,
-      "sourceRow": 936
+      "sourceRow": 938
     },
     {
-      "packageKey": "nszu-026b53048f5680e0a1d754bd",
+      "packageKey": "nszu-9710e5e89f029184d35c2e0e",
       "section": "combination_medicines",
       "registrationNumber": "UA/17135/01/02",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13140,10 +13168,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 73,
-      "sourceRow": 937
+      "sourceRow": 939
     },
     {
-      "packageKey": "nszu-7558f3241f70cee5740a764f",
+      "packageKey": "nszu-83e79109c63c5ca692ca2fe2",
       "section": "combination_medicines",
       "registrationNumber": "UA/17442/01/01",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13154,10 +13182,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 73,
-      "sourceRow": 938
+      "sourceRow": 940
     },
     {
-      "packageKey": "nszu-3f9e1635d1c2d8261e417d4a",
+      "packageKey": "nszu-4535e4835f7fd72f0c375401",
       "section": "combination_medicines",
       "registrationNumber": "UA/10953/01/02",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13168,10 +13196,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 73,
-      "sourceRow": 939
+      "sourceRow": 941
     },
     {
-      "packageKey": "nszu-1bb98b5664c945f3ab9a57f6",
+      "packageKey": "nszu-e11a45470e8db3783a6e1681",
       "section": "combination_medicines",
       "registrationNumber": "UA/20545/01/02",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13182,10 +13210,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 73,
-      "sourceRow": 940
+      "sourceRow": 942
     },
     {
-      "packageKey": "nszu-72d21b050f5dbeed0ffc7a26",
+      "packageKey": "nszu-f6c2a95e09ec9116250079e0",
       "section": "combination_medicines",
       "registrationNumber": "UA/19069/01/01",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13196,10 +13224,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 73,
-      "sourceRow": 941
+      "sourceRow": 943
     },
     {
-      "packageKey": "nszu-ba2c7ad4128107e173bdf6a0",
+      "packageKey": "nszu-e6d906f77dbdd3828f084ebb",
       "section": "combination_medicines",
       "registrationNumber": "UA/19069/01/01",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13210,10 +13238,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 73,
-      "sourceRow": 942
+      "sourceRow": 944
     },
     {
-      "packageKey": "nszu-c12ba675e95daefca9557014",
+      "packageKey": "nszu-a898c0b79d788cb0b5daa4d9",
       "section": "combination_medicines",
       "registrationNumber": "UA/17135/01/03",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13224,10 +13252,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 73,
-      "sourceRow": 943
+      "sourceRow": 945
     },
     {
-      "packageKey": "nszu-73864eb1f9e7005a832f8c10",
+      "packageKey": "nszu-858a2150bc39f1693853ce6d",
       "section": "combination_medicines",
       "registrationNumber": "UA/20545/01/03",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13238,10 +13266,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 73,
-      "sourceRow": 944
+      "sourceRow": 946
     },
     {
-      "packageKey": "nszu-b5b74c9281c13614a6a7a1bb",
+      "packageKey": "nszu-3476cc9ba06d6b5d40243749",
       "section": "combination_medicines",
       "registrationNumber": "UA/19069/01/02",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13252,10 +13280,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 73,
-      "sourceRow": 945
+      "sourceRow": 947
     },
     {
-      "packageKey": "nszu-5ccc28dd2153e880fe8b2185",
+      "packageKey": "nszu-915864cb43462f900d06291a",
       "section": "combination_medicines",
       "registrationNumber": "UA/19069/01/02",
       "inn": "Периндоприл та діуретики (Perindopril and diuretics)",
@@ -13266,10 +13294,10 @@
       "atcCode": "C09BA04",
       "copayUah": "0.00",
       "sourcePage": 73,
-      "sourceRow": 946
+      "sourceRow": 948
     },
     {
-      "packageKey": "nszu-344a1c1d54b7b152527299c5",
+      "packageKey": "nszu-280b26d2ab95ed2036fc21e1",
       "section": "combination_medicines",
       "registrationNumber": "UA/19239/01/02",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13280,10 +13308,10 @@
       "atcCode": "C09BX01",
       "copayUah": "23.11",
       "sourcePage": 73,
-      "sourceRow": 947
+      "sourceRow": 949
     },
     {
-      "packageKey": "nszu-87783bb2ac979cc7f8e775fd",
+      "packageKey": "nszu-e8ab4d3659b4b9823fad938e",
       "section": "combination_medicines",
       "registrationNumber": "UA/19239/01/02",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13294,10 +13322,10 @@
       "atcCode": "C09BX01",
       "copayUah": "69.33",
       "sourcePage": 74,
-      "sourceRow": 948
+      "sourceRow": 950
     },
     {
-      "packageKey": "nszu-7bd073fb573418c891b5df1b",
+      "packageKey": "nszu-23b26b1ff05271a255d51016",
       "section": "combination_medicines",
       "registrationNumber": "UA/14677/01/02",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13308,10 +13336,10 @@
       "atcCode": "C09BX01",
       "copayUah": "0.00",
       "sourcePage": 74,
-      "sourceRow": 949
+      "sourceRow": 951
     },
     {
-      "packageKey": "nszu-a27013bc121c6d930a380298",
+      "packageKey": "nszu-1814ac39b336905156816831",
       "section": "combination_medicines",
       "registrationNumber": "UA/20547/01/01",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13322,10 +13350,10 @@
       "atcCode": "C09BX01",
       "copayUah": "43.68",
       "sourcePage": 74,
-      "sourceRow": 950
+      "sourceRow": 952
     },
     {
-      "packageKey": "nszu-ddc2676151c45ab7eae54bb0",
+      "packageKey": "nszu-ce578e1b43efb5836e4c75d1",
       "section": "combination_medicines",
       "registrationNumber": "UA/19239/01/01",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13336,10 +13364,10 @@
       "atcCode": "C09BX01",
       "copayUah": "0.00",
       "sourcePage": 74,
-      "sourceRow": 951
+      "sourceRow": 953
     },
     {
-      "packageKey": "nszu-54654e67ddb677ea8d47d1fe",
+      "packageKey": "nszu-9c95242ffa7355e93a47facf",
       "section": "combination_medicines",
       "registrationNumber": "UA/17632/01/01",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13350,10 +13378,10 @@
       "atcCode": "C09BX01",
       "copayUah": "38.27",
       "sourcePage": 74,
-      "sourceRow": 952
+      "sourceRow": 954
     },
     {
-      "packageKey": "nszu-1be2cd858f3494bbfe945f67",
+      "packageKey": "nszu-dbe0c94096b6bd881a327126",
       "section": "combination_medicines",
       "registrationNumber": "UA/19239/01/01",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13364,10 +13392,10 @@
       "atcCode": "C09BX01",
       "copayUah": "0.00",
       "sourcePage": 74,
-      "sourceRow": 953
+      "sourceRow": 955
     },
     {
-      "packageKey": "nszu-788bc6d4cd5842e263b95f4e",
+      "packageKey": "nszu-6d197906a403b61785af910b",
       "section": "combination_medicines",
       "registrationNumber": "UA/14676/01/02",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13378,10 +13406,10 @@
       "atcCode": "C09BX01",
       "copayUah": "0.00",
       "sourcePage": 75,
-      "sourceRow": 954
+      "sourceRow": 956
     },
     {
-      "packageKey": "nszu-c93172c09b37f708c528c608",
+      "packageKey": "nszu-6f67c28070247aac1ddced16",
       "section": "combination_medicines",
       "registrationNumber": "UA/20547/01/03",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13392,10 +13420,10 @@
       "atcCode": "C09BX01",
       "copayUah": "36.70",
       "sourcePage": 75,
-      "sourceRow": 955
+      "sourceRow": 957
     },
     {
-      "packageKey": "nszu-0bec2830852f4f5c2767155e",
+      "packageKey": "nszu-fcf8cfc3c1f549cf2f8cdca0",
       "section": "combination_medicines",
       "registrationNumber": "UA/19239/01/04",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13406,10 +13434,10 @@
       "atcCode": "C09BX01",
       "copayUah": "32.27",
       "sourcePage": 75,
-      "sourceRow": 956
+      "sourceRow": 958
     },
     {
-      "packageKey": "nszu-3a1b1b14459839a095696301",
+      "packageKey": "nszu-d1b51082812cb02ab0b20497",
       "section": "combination_medicines",
       "registrationNumber": "UA/17632/01/04",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13420,10 +13448,10 @@
       "atcCode": "C09BX01",
       "copayUah": "57.06",
       "sourcePage": 75,
-      "sourceRow": 957
+      "sourceRow": 959
     },
     {
-      "packageKey": "nszu-cdd6215942770649ed24c397",
+      "packageKey": "nszu-0d06b35fba8c66b7f75edcd3",
       "section": "combination_medicines",
       "registrationNumber": "UA/19239/01/04",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13434,10 +13462,10 @@
       "atcCode": "C09BX01",
       "copayUah": "96.80",
       "sourcePage": 75,
-      "sourceRow": 958
+      "sourceRow": 960
     },
     {
-      "packageKey": "nszu-4ac0852c32214145bc737f69",
+      "packageKey": "nszu-5063869f0edb0b286066364f",
       "section": "combination_medicines",
       "registrationNumber": "UA/14676/01/01",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13448,10 +13476,10 @@
       "atcCode": "C09BX01",
       "copayUah": "0.00",
       "sourcePage": 76,
-      "sourceRow": 959
+      "sourceRow": 961
     },
     {
-      "packageKey": "nszu-5dd6362866ffd7a51ca2dc7a",
+      "packageKey": "nszu-7447201608a8a4f46a3553af",
       "section": "combination_medicines",
       "registrationNumber": "UA/20547/01/04",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13462,10 +13490,10 @@
       "atcCode": "C09BX01",
       "copayUah": "48.32",
       "sourcePage": 76,
-      "sourceRow": 960
+      "sourceRow": 962
     },
     {
-      "packageKey": "nszu-36d92bc3f4775d02ded709e5",
+      "packageKey": "nszu-d82dafbe43073817461a297f",
       "section": "combination_medicines",
       "registrationNumber": "UA/19239/01/03",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13476,10 +13504,10 @@
       "atcCode": "C09BX01",
       "copayUah": "38.19",
       "sourcePage": 76,
-      "sourceRow": 961
+      "sourceRow": 963
     },
     {
-      "packageKey": "nszu-7ee3f240f63c388c036627f5",
+      "packageKey": "nszu-57a96866062f60e925af57e1",
       "section": "combination_medicines",
       "registrationNumber": "UA/17632/01/03",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13490,10 +13518,10 @@
       "atcCode": "C09BX01",
       "copayUah": "55.60",
       "sourcePage": 76,
-      "sourceRow": 962
+      "sourceRow": 964
     },
     {
-      "packageKey": "nszu-ea0d2ce3efbd30a33a6ac447",
+      "packageKey": "nszu-84edf1849d02096a0c9c0d82",
       "section": "combination_medicines",
       "registrationNumber": "UA/19239/01/03",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13504,10 +13532,10 @@
       "atcCode": "C09BX01",
       "copayUah": "114.58",
       "sourcePage": 76,
-      "sourceRow": 963
+      "sourceRow": 965
     },
     {
-      "packageKey": "nszu-4f7c34e0e26aaceebe105b0c",
+      "packageKey": "nszu-7598f7fa9d9d3ffefed2a82e",
       "section": "combination_medicines",
       "registrationNumber": "UA/14678/01/01",
       "inn": "індапамід (Perindopril, amlodipine and",
@@ -13518,10 +13546,10 @@
       "atcCode": "C09BX01",
       "copayUah": "0.00",
       "sourcePage": 77,
-      "sourceRow": 964
+      "sourceRow": 966
     },
     {
-      "packageKey": "nszu-bbad075bff6ca2687e910d3b",
+      "packageKey": "nszu-061e226b609d30fcd4871470",
       "section": "combination_medicines",
       "registrationNumber": "UA/15319/01/02",
       "inn": "Раміприл та амлодипін (Ramipril and amlodipine)",
@@ -13532,10 +13560,10 @@
       "atcCode": "C09BB07",
       "copayUah": "43.66",
       "sourcePage": 77,
-      "sourceRow": 965
+      "sourceRow": 967
     },
     {
-      "packageKey": "nszu-bb16a10f509d77470259830f",
+      "packageKey": "nszu-20f7c851c607ea184be38371",
       "section": "combination_medicines",
       "registrationNumber": "UA/18731/01/04",
       "inn": "Раміприл та амлодипін (Ramipril and amlodipine)",
@@ -13546,10 +13574,10 @@
       "atcCode": "C09BB07",
       "copayUah": "0.00",
       "sourcePage": 77,
-      "sourceRow": 966
+      "sourceRow": 968
     },
     {
-      "packageKey": "nszu-fd39c19cddfee9595b1114de",
+      "packageKey": "nszu-68c1d7454bd977ded5b2a499",
       "section": "combination_medicines",
       "registrationNumber": "UA/13634/01/03",
       "inn": "Раміприл та амлодипін (Ramipril and amlodipine)",
@@ -13560,10 +13588,10 @@
       "atcCode": "C09BB07",
       "copayUah": "0.00",
       "sourcePage": 77,
-      "sourceRow": 967
+      "sourceRow": 969
     },
     {
-      "packageKey": "nszu-dacd6b2da3334c32b126938b",
+      "packageKey": "nszu-a3ae6a775e9f53734f339319",
       "section": "combination_medicines",
       "registrationNumber": "UA/18731/01/03",
       "inn": "Раміприл та амлодипін (Ramipril and amlodipine)",
@@ -13574,10 +13602,10 @@
       "atcCode": "C09BB07",
       "copayUah": "0.00",
       "sourcePage": 77,
-      "sourceRow": 968
+      "sourceRow": 970
     },
     {
-      "packageKey": "nszu-494818fd00ce2ad4055663c5",
+      "packageKey": "nszu-611e25dbcddbf07c9498e9cc",
       "section": "combination_medicines",
       "registrationNumber": "UA/13635/01/01",
       "inn": "Раміприл та амлодипін (Ramipril and amlodipine)",
@@ -13588,10 +13616,10 @@
       "atcCode": "C09BB07",
       "copayUah": "0.00",
       "sourcePage": 77,
-      "sourceRow": 969
+      "sourceRow": 971
     },
     {
-      "packageKey": "nszu-f5e53fb3a661b6f846381ad8",
+      "packageKey": "nszu-3c4211fc1a82b54c4d951d9d",
       "section": "combination_medicines",
       "registrationNumber": "UA/18731/01/02",
       "inn": "Раміприл та амлодипін (Ramipril and amlodipine)",
@@ -13602,10 +13630,10 @@
       "atcCode": "C09BB07",
       "copayUah": "0.00",
       "sourcePage": 77,
-      "sourceRow": 970
+      "sourceRow": 972
     },
     {
-      "packageKey": "nszu-5fa47c9c473e55c09f821b60",
+      "packageKey": "nszu-6c362e57981e1a622555126a",
       "section": "combination_medicines",
       "registrationNumber": "UA/13636/01/01",
       "inn": "Раміприл та амлодипін (Ramipril and amlodipine)",
@@ -13616,10 +13644,10 @@
       "atcCode": "C09BB07",
       "copayUah": "0.00",
       "sourcePage": 77,
-      "sourceRow": 971
+      "sourceRow": 973
     },
     {
-      "packageKey": "nszu-33a84b5b9215ff496eb744a4",
+      "packageKey": "nszu-02c51022039d1ec6bc50b98b",
       "section": "combination_medicines",
       "registrationNumber": "UA/15319/01/01",
       "inn": "Раміприл та амлодипін (Ramipril and amlodipine)",
@@ -13630,10 +13658,10 @@
       "atcCode": "C09BB07",
       "copayUah": "40.69",
       "sourcePage": 77,
-      "sourceRow": 972
+      "sourceRow": 974
     },
     {
-      "packageKey": "nszu-6a40fe1a802d4a02b492883b",
+      "packageKey": "nszu-490500dfc8ca51405d1739c3",
       "section": "combination_medicines",
       "registrationNumber": "UA/18731/01/01",
       "inn": "Раміприл та амлодипін (Ramipril and amlodipine)",
@@ -13644,10 +13672,10 @@
       "atcCode": "C09BB07",
       "copayUah": "0.00",
       "sourcePage": 78,
-      "sourceRow": 973
+      "sourceRow": 975
     },
     {
-      "packageKey": "nszu-be6bde202a29913cd79c4459",
+      "packageKey": "nszu-f348fd7fb3f1b03d67ba8abd",
       "section": "combination_medicines",
       "registrationNumber": "UA/13634/01/02",
       "inn": "Раміприл та амлодипін (Ramipril and amlodipine)",
@@ -13658,10 +13686,10 @@
       "atcCode": "C09BB07",
       "copayUah": "0.00",
       "sourcePage": 78,
-      "sourceRow": 974
+      "sourceRow": 976
     },
     {
-      "packageKey": "nszu-69c51181183a4b5eb6c4fac5",
+      "packageKey": "nszu-043f3844421d63cd83ab5a45",
       "section": "combination_medicines",
       "registrationNumber": "UA/17578/01/01",
       "inn": "Раміприл та діуретики (Ramipril and diuretics)",
@@ -13672,10 +13700,10 @@
       "atcCode": "C09BA05",
       "copayUah": "0.00",
       "sourcePage": 78,
-      "sourceRow": 975
+      "sourceRow": 977
     },
     {
-      "packageKey": "nszu-56a3a629444102ac0a923188",
+      "packageKey": "nszu-f8edd31bd6976ff9c780ed3f",
       "section": "combination_medicines",
       "registrationNumber": "UA/17578/01/02",
       "inn": "Раміприл та діуретики (Ramipril and diuretics)",
@@ -13686,10 +13714,10 @@
       "atcCode": "C09BA05",
       "copayUah": "0.00",
       "sourcePage": 78,
-      "sourceRow": 976
+      "sourceRow": 978
     },
     {
-      "packageKey": "nszu-8c3d65c0486210bd2765d474",
+      "packageKey": "nszu-c250168df020036013a5ee62",
       "section": "combination_medicines",
       "registrationNumber": "UA/19794/01/01",
       "inn": "кислота (Rosuvastatin and",
@@ -13700,10 +13728,10 @@
       "atcCode": "C10BX05",
       "copayUah": "0.00",
       "sourcePage": 78,
-      "sourceRow": 977
+      "sourceRow": 979
     },
     {
-      "packageKey": "nszu-a9e0bc0e07b7e3fbce337b01",
+      "packageKey": "nszu-8632945ab099e9ef78bb2a14",
       "section": "combination_medicines",
       "registrationNumber": "UA/19281/01/03",
       "inn": "кислота (Rosuvastatin and",
@@ -13714,10 +13742,10 @@
       "atcCode": "C10BX05",
       "copayUah": "0.00",
       "sourcePage": 78,
-      "sourceRow": 978
+      "sourceRow": 980
     },
     {
-      "packageKey": "nszu-4d385595571525eb79a976a6",
+      "packageKey": "nszu-d0ff3b69e7481c470122660a",
       "section": "combination_medicines",
       "registrationNumber": "UA/19281/01/02",
       "inn": "кислота (Rosuvastatin and",
@@ -13728,10 +13756,10 @@
       "atcCode": "C10BX05",
       "copayUah": "0.00",
       "sourcePage": 78,
-      "sourceRow": 979
+      "sourceRow": 981
     },
     {
-      "packageKey": "nszu-f5ef596f0c9731dce1700730",
+      "packageKey": "nszu-4d5809eea7106aeeeb8138f2",
       "section": "combination_medicines",
       "registrationNumber": "UA/19917/01/01",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13742,10 +13770,10 @@
       "atcCode": "C10BA06",
       "copayUah": "87.13",
       "sourcePage": 78,
-      "sourceRow": 980
+      "sourceRow": 982
     },
     {
-      "packageKey": "nszu-96a2645e3d9e767ba90bdb21",
+      "packageKey": "nszu-37981ce5819ed559db758e27",
       "section": "combination_medicines",
       "registrationNumber": "UA/20719/01/02",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13756,10 +13784,10 @@
       "atcCode": "C10BA06",
       "copayUah": "89.58",
       "sourcePage": 78,
-      "sourceRow": 981
+      "sourceRow": 983
     },
     {
-      "packageKey": "nszu-14ed7119d4f101d00813ebd0",
+      "packageKey": "nszu-69363a2178a2fcee25d0147b",
       "section": "combination_medicines",
       "registrationNumber": "UA/16808/01/01",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13770,10 +13798,10 @@
       "atcCode": "C10BA06",
       "copayUah": "203.34",
       "sourcePage": 78,
-      "sourceRow": 982
+      "sourceRow": 984
     },
     {
-      "packageKey": "nszu-e503f7861be910de8a219a5f",
+      "packageKey": "nszu-e37a0037ede3429f6561bd11",
       "section": "combination_medicines",
       "registrationNumber": "UA/20590/01/01",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13784,10 +13812,10 @@
       "atcCode": "С10BA06",
       "copayUah": "67.36",
       "sourcePage": 78,
-      "sourceRow": 983
+      "sourceRow": 985
     },
     {
-      "packageKey": "nszu-ca7f6d2ceaa773a67934aa76",
+      "packageKey": "nszu-64eb73fea0b27dccd0772086",
       "section": "combination_medicines",
       "registrationNumber": "UA/18324/01/02",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13798,10 +13826,10 @@
       "atcCode": "C10BA06",
       "copayUah": "0.00",
       "sourcePage": 79,
-      "sourceRow": 984
+      "sourceRow": 986
     },
     {
-      "packageKey": "nszu-e0ebc129d14944a8f2275d79",
+      "packageKey": "nszu-368ceec89e96cd7b468a26c4",
       "section": "combination_medicines",
       "registrationNumber": "UA/19917/01/02",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13812,10 +13840,10 @@
       "atcCode": "C10BA06",
       "copayUah": "92.89",
       "sourcePage": 79,
-      "sourceRow": 985
+      "sourceRow": 987
     },
     {
-      "packageKey": "nszu-845954f778e370303ca6998d",
+      "packageKey": "nszu-af663b0c10090ab61221d7b9",
       "section": "combination_medicines",
       "registrationNumber": "UA/20719/01/03",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13826,10 +13854,10 @@
       "atcCode": "C10BA06",
       "copayUah": "66.48",
       "sourcePage": 79,
-      "sourceRow": 986
+      "sourceRow": 988
     },
     {
-      "packageKey": "nszu-67ca143b74bf74d9809abf67",
+      "packageKey": "nszu-f22bf0c192f05d4b3e00630f",
       "section": "combination_medicines",
       "registrationNumber": "UA/16807/01/01",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13840,10 +13868,10 @@
       "atcCode": "C10BA06",
       "copayUah": "94.21",
       "sourcePage": 79,
-      "sourceRow": 987
+      "sourceRow": 989
     },
     {
-      "packageKey": "nszu-05443ce9d7c1af27714acaca",
+      "packageKey": "nszu-baee21b09834b01b2d09775b",
       "section": "combination_medicines",
       "registrationNumber": "UA/20590/01/02",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13854,10 +13882,10 @@
       "atcCode": "С10BA06",
       "copayUah": "0.00",
       "sourcePage": 79,
-      "sourceRow": 988
+      "sourceRow": 990
     },
     {
-      "packageKey": "nszu-45fd2ffd2fe5eb6621270091",
+      "packageKey": "nszu-f741074d4d10d7012896446a",
       "section": "combination_medicines",
       "registrationNumber": "UA/18324/01/04",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13868,10 +13896,10 @@
       "atcCode": "C10BA06",
       "copayUah": "0.00",
       "sourcePage": 80,
-      "sourceRow": 989
+      "sourceRow": 991
     },
     {
-      "packageKey": "nszu-ef9e6d00e5cb3f90fd8877a5",
+      "packageKey": "nszu-645604bd630b89c60cde1062",
       "section": "combination_medicines",
       "registrationNumber": "UA/20719/01/04",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13882,10 +13910,10 @@
       "atcCode": "C10BA06",
       "copayUah": "0.00",
       "sourcePage": 80,
-      "sourceRow": 990
+      "sourceRow": 992
     },
     {
-      "packageKey": "nszu-17cd44ac790fb9e88df6fe98",
+      "packageKey": "nszu-d0d469716fab650ea944c15d",
       "section": "combination_medicines",
       "registrationNumber": "UA/18324/01/05",
       "inn": "Розувастатин та езетиміб (Rosuvastatin and ezetimibe)",
@@ -13896,10 +13924,10 @@
       "atcCode": "C10BA06",
       "copayUah": "0.00",
       "sourcePage": 80,
-      "sourceRow": 991
+      "sourceRow": 993
     },
     {
-      "packageKey": "nszu-9feddf06a68483a4719c64d5",
+      "packageKey": "nszu-6818f8af3295c673efe551bc",
       "section": "combination_medicines",
       "registrationNumber": "UA/8524/01/01",
       "inn": "Сальметерол + Флютиказон (Salmeterol + Fluticasone)",
@@ -13910,10 +13938,10 @@
       "atcCode": "R03АК06",
       "copayUah": "0.00",
       "sourcePage": 80,
-      "sourceRow": 992
+      "sourceRow": 994
     },
     {
-      "packageKey": "nszu-0fe23827fedf7b09a70d2f78",
+      "packageKey": "nszu-59f8d4a38f758fa9157d2729",
       "section": "combination_medicines",
       "registrationNumber": "UA/8524/01/02",
       "inn": "Сальметерол + Флютиказон (Salmeterol + Fluticasone)",
@@ -13924,10 +13952,10 @@
       "atcCode": "R03АК06",
       "copayUah": "0.00",
       "sourcePage": 81,
-      "sourceRow": 993
+      "sourceRow": 995
     },
     {
-      "packageKey": "nszu-3cba96953c1d75e1f19941b5",
+      "packageKey": "nszu-9cbce6b28beaaeac619c5052",
       "section": "combination_medicines",
       "registrationNumber": "UA/8524/01/03",
       "inn": "Сальметерол + Флютиказон (Salmeterol + Fluticasone)",
@@ -13938,10 +13966,10 @@
       "atcCode": "R03АК06",
       "copayUah": "0.00",
       "sourcePage": 81,
-      "sourceRow": 994
+      "sourceRow": 996
     },
     {
-      "packageKey": "nszu-4ef7fc866368a3cf44567770",
+      "packageKey": "nszu-020e46c0fef065d15a3a4c70",
       "section": "combination_medicines",
       "registrationNumber": "UA/17332/01/04",
       "inn": "Телмісартан + Амлодипін (Telmisartan + Amlodipine)",
@@ -13952,10 +13980,10 @@
       "atcCode": "C09DB04",
       "copayUah": "0.00",
       "sourcePage": 81,
-      "sourceRow": 995
+      "sourceRow": 997
     },
     {
-      "packageKey": "nszu-d824deead681d2bf6df8e53c",
+      "packageKey": "nszu-51ce82b574979e2e81766696",
       "section": "combination_medicines",
       "registrationNumber": "UA/17332/01/02",
       "inn": "Телмісартан + Амлодипін (Telmisartan + Amlodipine)",
@@ -13966,10 +13994,10 @@
       "atcCode": "C09DB04",
       "copayUah": "49.01",
       "sourcePage": 81,
-      "sourceRow": 996
+      "sourceRow": 998
     },
     {
-      "packageKey": "nszu-2f3b9b1f3c5ce754b9269872",
+      "packageKey": "nszu-bc3a7449bea0355be4c42256",
       "section": "combination_medicines",
       "registrationNumber": "UA/17332/01/03",
       "inn": "Телмісартан + Амлодипін (Telmisartan + Amlodipine)",
@@ -13980,10 +14008,10 @@
       "atcCode": "C09DB04",
       "copayUah": "56.25",
       "sourcePage": 81,
-      "sourceRow": 997
+      "sourceRow": 999
     },
     {
-      "packageKey": "nszu-172bd7d3cfd66458eae84c9e",
+      "packageKey": "nszu-f0f07979f4426b8e1e59ffce",
       "section": "combination_medicines",
       "registrationNumber": "UA/19120/01/01",
       "inn": "Телмісартан + Амлодипін (Telmisartan + Amlodipine)",
@@ -13994,10 +14022,10 @@
       "atcCode": "C09DB04",
       "copayUah": "53.19",
       "sourcePage": 81,
-      "sourceRow": 998
+      "sourceRow": 1000
     },
     {
-      "packageKey": "nszu-a4172aafd050920f139323e4",
+      "packageKey": "nszu-72c734df34de7e47a3b6c6a6",
       "section": "combination_medicines",
       "registrationNumber": "UA/19120/01/04",
       "inn": "Телмісартан + Амлодипін (Telmisartan + Amlodipine)",
@@ -14008,10 +14036,10 @@
       "atcCode": "C09DB04",
       "copayUah": "135.14",
       "sourcePage": 81,
-      "sourceRow": 999
+      "sourceRow": 1001
     },
     {
-      "packageKey": "nszu-0b1bed6857beac43b87c0dd4",
+      "packageKey": "nszu-8e41d4e22af88a53c5b214c2",
       "section": "combination_medicines",
       "registrationNumber": "UA/19120/01/03",
       "inn": "Телмісартан + Амлодипін (Telmisartan + Amlodipine)",
@@ -14022,10 +14050,10 @@
       "atcCode": "C09DB04",
       "copayUah": "105.48",
       "sourcePage": 81,
-      "sourceRow": 1000
+      "sourceRow": 1002
     },
     {
-      "packageKey": "nszu-0ec4d037dbcc286f1e6b9f16",
+      "packageKey": "nszu-a4ba283941aee2012815f92e",
       "section": "combination_medicines",
       "registrationNumber": "UA/0465/01/02",
       "inn": "Телмісартан + Гідрохлортіазид (Telmisartan + Hydrochlorothiazide)",
@@ -14036,10 +14064,10 @@
       "atcCode": "C09DA07",
       "copayUah": "62.16",
       "sourcePage": 81,
-      "sourceRow": 1001
+      "sourceRow": 1003
     },
     {
-      "packageKey": "nszu-0350c83b80d8fc51c87b9b74",
+      "packageKey": "nszu-900b63ae39ce34a251bc0b2f",
       "section": "combination_medicines",
       "registrationNumber": "UA/15859/01/01",
       "inn": "Телмісартан + Гідрохлортіазид (Telmisartan + Hydrochlorothiazide)",
@@ -14050,10 +14078,10 @@
       "atcCode": "C09DA07",
       "copayUah": "0.00",
       "sourcePage": 81,
-      "sourceRow": 1002
+      "sourceRow": 1004
     },
     {
-      "packageKey": "nszu-bc87d8c6956a9a7903f079c9",
+      "packageKey": "nszu-6187262d56d613020ebbcc70",
       "section": "combination_medicines",
       "registrationNumber": "UA/15858/01/01",
       "inn": "Телмісартан + Гідрохлортіазид (Telmisartan + Hydrochlorothiazide)",
@@ -14064,10 +14092,10 @@
       "atcCode": "C09DA07",
       "copayUah": "45.61",
       "sourcePage": 82,
-      "sourceRow": 1003
+      "sourceRow": 1005
     },
     {
-      "packageKey": "nszu-6756047b304ac19f2827ee10",
+      "packageKey": "nszu-0497910cf6af70c08cd6b74e",
       "section": "combination_medicines",
       "registrationNumber": "UA/15860/01/01",
       "inn": "Телмісартан + Гідрохлортіазид (Telmisartan + Hydrochlorothiazide)",
@@ -14078,10 +14106,10 @@
       "atcCode": "C09DA07",
       "copayUah": "58.19",
       "sourcePage": 82,
-      "sourceRow": 1004
+      "sourceRow": 1006
     },
     {
-      "packageKey": "nszu-658a6c60f1a7c379304e0f23",
+      "packageKey": "nszu-79a400a0e16d4a6afc9a04cf",
       "section": "combination_medicines",
       "registrationNumber": "UA/15949/01/01",
       "inn": "Телмісартан + Гідрохлортіазид (Telmisartan + Hydrochlorothiazide)",
@@ -14092,10 +14120,10 @@
       "atcCode": "C09DA07",
       "copayUah": "0.00",
       "sourcePage": 82,
-      "sourceRow": 1005
+      "sourceRow": 1007
     },
     {
-      "packageKey": "nszu-6409ab98f0f310ab31a33d04",
+      "packageKey": "nszu-daa79c050ad3a4301aa689c2",
       "section": "combination_medicines",
       "registrationNumber": "UA/15949/01/03",
       "inn": "Телмісартан + Гідрохлортіазид (Telmisartan + Hydrochlorothiazide)",
@@ -14106,10 +14134,10 @@
       "atcCode": "C09DA07",
       "copayUah": "0.00",
       "sourcePage": 82,
-      "sourceRow": 1006
+      "sourceRow": 1008
     },
     {
-      "packageKey": "nszu-0533f576604ed620140685b3",
+      "packageKey": "nszu-069c22bd7fa53567ed614c02",
       "section": "combination_medicines",
       "registrationNumber": "UA/16438/01/01",
       "inn": "Формотерол + Беклометазон (Formoterol and Beclometasone)",
@@ -14120,10 +14148,10 @@
       "atcCode": "R03AK08",
       "copayUah": "0.00",
       "sourcePage": 82,
-      "sourceRow": 1007
+      "sourceRow": 1009
     }
   ],
   "warnings": [
-    "published_summary_count_mismatch:1038:1043"
+    "published_summary_count_mismatch:1038:1045"
   ]
 }
