@@ -97,17 +97,47 @@ const PROFILE_SOURCE_LABELS: Record<
 
 export function ProfessionalProfileCoveragePanel({
   profile,
+  seriesRestriction,
 }: {
   profile: ProfessionalProductProfile;
+  seriesRestriction?: SeriesRestrictionCheck | null;
 }) {
+  const sources = profile.coverage.sources.map((item) => {
+    if (item.key !== "series_restrictions" || seriesRestriction === undefined) {
+      return item;
+    }
+    if (seriesRestriction === null) {
+      return {
+        ...item,
+        status: "unavailable" as const,
+        detail:
+          "Перевірка серії недоступна. Звірте офіційний реєстр Держлікслужби вручну.",
+      };
+    }
+    const current = seriesRestriction.source.freshness === "current";
+    const needsAttention =
+      !current ||
+      seriesRestriction.status === "blocked" ||
+      seriesRestriction.status === "needs_review";
+    return {
+      ...item,
+      status: needsAttention ? ("attention" as const) : ("ready" as const),
+      detail: seriesRestriction.summary,
+      sourceUrl: seriesRestriction.source.url,
+      checkedAt: seriesRestriction.source.generatedAt,
+    };
+  });
+  const connectedSources = sources.filter(
+    (item) => item.status !== "not_connected" && item.status !== "unavailable",
+  ).length;
+
   return (
     <Card data-testid="professional-profile-coverage">
       <CardHeader className="space-y-2 p-4 pb-2 sm:p-5 sm:pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-xl">Єдиний профіль джерел</CardTitle>
           <Badge variant="outline">
-            Підключено {profile.coverage.connectedSources}/
-            {profile.coverage.totalSources}
+            Підключено {connectedSources}/{profile.coverage.totalSources}
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -116,7 +146,7 @@ export function ProfessionalProfileCoveragePanel({
         </p>
       </CardHeader>
       <CardContent className="grid gap-2 p-4 pt-2 sm:grid-cols-2 sm:p-5 sm:pt-2">
-        {profile.coverage.sources.map((item) => (
+        {sources.map((item) => (
           <div
             key={item.key}
             className="flex min-h-12 items-center justify-between gap-3 rounded-xl border bg-background/60 px-3 py-2"
@@ -435,20 +465,29 @@ export function DispensingAssessmentPanel({
   product,
   seriesRestriction,
   dispensingCategory,
+  officialPrograms,
 }: {
   product: RegistryProductResult;
   seriesRestriction?: SeriesRestrictionCheck | null;
   dispensingCategory?: DispensingCategoryCheck | null;
+  officialPrograms?: ProfessionalProductProfile | null;
 }) {
   const assessment = buildDispensingAssessment(
     product,
     seriesRestriction,
     dispensingCategory,
+    officialPrograms ?? undefined,
   );
   const instructionStatus =
     product.instructionSourceStatus ??
     (product.instructionAvailable ? "structured" : "not_published");
   const officialInstructionUrl = product.officialInstructionDocumentUrl ?? null;
+  const DecisionIcon =
+    assessment.decision === "manual_review"
+      ? CheckCircle2
+      : assessment.decision === "blocked"
+        ? OctagonX
+        : ShieldAlert;
 
   return (
     <section className="space-y-4" data-testid="dispensing-assessment">
@@ -457,10 +496,12 @@ export function DispensingAssessmentPanel({
         className={
           assessment.decision === "blocked"
             ? undefined
-            : "border-amber-500/40 bg-amber-500/5"
+            : assessment.decision === "manual_review"
+              ? "border-emerald-500/40 bg-emerald-500/5"
+              : "border-amber-500/40 bg-amber-500/5"
         }
       >
-        <ShieldAlert className="h-4 w-4" />
+        <DecisionIcon className="h-4 w-4" />
         <AlertTitle>{assessment.decisionLabel}</AlertTitle>
         <AlertDescription>{assessment.decisionDetail}</AlertDescription>
       </Alert>
@@ -918,22 +959,19 @@ export default function Dispensing() {
           </div>
           <ProductSummary product={selected} />
           {selectedProfile ? (
-            <>
-              <OfficialProgramsPanel
-                profile={selectedProfile}
-                isLoading={officialPackageLoading}
-                error={officialPackageError}
-                onSelectReimbursementPackage={(packageKey) =>
-                  void resolveOfficialPackage({
-                    reimbursementPackageKey: packageKey,
-                  })
-                }
-                onSelectPricePackage={(catalogId) =>
-                  void resolveOfficialPackage({ priceCatalogId: catalogId })
-                }
-              />
-              <ProfessionalProfileCoveragePanel profile={selectedProfile} />
-            </>
+            <OfficialProgramsPanel
+              profile={selectedProfile}
+              isLoading={officialPackageLoading}
+              error={officialPackageError}
+              onSelectReimbursementPackage={(packageKey) =>
+                void resolveOfficialPackage({
+                  reimbursementPackageKey: packageKey,
+                })
+              }
+              onSelectPricePackage={(catalogId) =>
+                void resolveOfficialPackage({ priceCatalogId: catalogId })
+              }
+            />
           ) : null}
           <SeriesRestrictionCheckPanel
             product={selected}
@@ -949,7 +987,14 @@ export default function Dispensing() {
             product={selected}
             seriesRestriction={seriesAssessment}
             dispensingCategory={dispensingCategoryAssessment}
+            officialPrograms={selectedProfile}
           />
+          {selectedProfile ? (
+            <ProfessionalProfileCoveragePanel
+              profile={selectedProfile}
+              seriesRestriction={seriesAssessment}
+            />
+          ) : null}
           <ManualChecklist
             checked={manualChecks}
             onChange={(index, value) =>

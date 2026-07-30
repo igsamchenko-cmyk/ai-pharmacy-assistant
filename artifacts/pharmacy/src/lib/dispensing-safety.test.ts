@@ -7,7 +7,10 @@ import type {
   SeriesRestrictionCheck,
 } from "@workspace/api-client-react";
 import { DispensingAssessmentPanel } from "@/pages/dispensing";
-import { buildDispensingAssessment } from "./dispensing-safety";
+import {
+  buildDispensingAssessment,
+  type DispensingOfficialPrograms,
+} from "./dispensing-safety";
 
 function productFixture(
   overrides: Partial<RegistryProductResult> = {},
@@ -90,6 +93,72 @@ function dispensingCategoryFixture(
   };
 }
 
+function officialProgramsFixture(): DispensingOfficialPrograms {
+  return {
+    reimbursement: {
+      version: "1.0",
+      registrationNumber: "UA/10001/01/01",
+      status: "listed",
+      selected: {
+        packageKey: "nszu-aaaaaaaaaaaaaaaaaaaaaaaa",
+        section: "standard_medicines",
+        registrationNumber: "UA/10001/01/01",
+        inn: "Еналаприл",
+        tradeName: "ЕНАП",
+        dosageForm: "таблетки",
+        strength: "10 мг",
+        packageQuantity: "20 таблеток",
+        atcCode: "C09AA02",
+        copayUah: "0.00",
+        sourcePage: 3,
+        sourceRow: 1,
+      },
+      candidates: [],
+      summary: "Упаковка включена до програми «Доступні ліки».",
+      source: {
+        title: "Перелік лікарських засобів, які підлягають реімбурсації",
+        url: "https://backend.nszu.gov.ua/reimbursement.pdf",
+        checkedAt: "2026-07-29T00:00:00.000Z",
+        releaseDate: "2026-07-17",
+        recordCount: 1007,
+        sha256: "b".repeat(64),
+        freshness: "current",
+        warnings: [],
+      },
+    },
+    price: {
+      version: "1.0",
+      registrationNumber: "UA/10001/01/01",
+      status: "not_in_catalog",
+      selected: null,
+      candidates: [],
+      summary: "Реімбурсовані препарати не входять до каталогу цін.",
+      source: {
+        title: "Національний каталог цін",
+        url: "https://moz.gov.ua/uk/nacionalnij-katalog-cin",
+        checkedAt: "2026-07-29T00:00:00.000Z",
+        releaseDate: "2026-07-01",
+        recordCount: 11060,
+        sha256: "c".repeat(64),
+        freshness: "current",
+        scopeNote: "Реімбурсовані препарати не входять до каталогу.",
+      },
+    },
+  };
+}
+
+function clearSeriesFixture(): SeriesRestrictionCheck {
+  return {
+    status: "no_match",
+    summary: "Точного збігу за реєстраційним номером і серією не знайдено.",
+    source: {
+      title: "Реєстр документів щодо якості лікарських засобів",
+      url: "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
+      generatedAt: "2026-07-29T00:00:00.000Z",
+      freshness: "current",
+    },
+  } as SeriesRestrictionCheck;
+}
 describe("dispensing safety assessment", () => {
   it("never marks dispensing complete while critical regulatory sources are disconnected", () => {
     const assessment = buildDispensingAssessment(productFixture());
@@ -121,6 +190,74 @@ describe("dispensing safety assessment", () => {
     });
     expect(check?.detail).toContain("Умови ДРЛЗ: без рецепта");
     expect(assessment.decision).toBe("incomplete");
+  });
+
+  it("uses exact NSZU and price-source results instead of disconnected placeholders", () => {
+    const programs = officialProgramsFixture();
+    const assessment = buildDispensingAssessment(
+      productFixture(),
+      undefined,
+      dispensingCategoryFixture(),
+      programs,
+    );
+
+    expect(
+      assessment.checks.find((check) => check.id === "reimbursement"),
+    ).toMatchObject({
+      tone: "verified",
+      statusLabel: "У програмі · безоплатно",
+    });
+    expect(
+      assessment.checks.find((check) => check.id === "price"),
+    ).toMatchObject({
+      tone: "verified",
+      statusLabel: "Доплата НСЗУ · 0 грн",
+    });
+    expect(
+      assessment.checks
+        .filter((check) => check.id === "reimbursement" || check.id === "price")
+        .map((check) => check.statusLabel),
+    ).not.toContain("Джерело не підключено");
+  });
+
+  it("advances to manual review only after every automatic regulatory check resolves", () => {
+    const assessment = buildDispensingAssessment(
+      productFixture(),
+      clearSeriesFixture(),
+      dispensingCategoryFixture(),
+      officialProgramsFixture(),
+    );
+
+    expect(assessment.decision).toBe("manual_review");
+    expect(assessment.decisionLabel).toContain("завершіть ручний контроль");
+    expect(assessment.decisionDetail).toContain("Це не дозвіл на відпуск");
+  });
+
+  it("keeps stale official-program data in an incomplete state", () => {
+    const programs = officialProgramsFixture();
+    programs.reimbursement = programs.reimbursement
+      ? {
+          ...programs.reimbursement,
+          source: {
+            ...programs.reimbursement.source,
+            freshness: "stale",
+          },
+        }
+      : null;
+    const assessment = buildDispensingAssessment(
+      productFixture(),
+      clearSeriesFixture(),
+      dispensingCategoryFixture(),
+      programs,
+    );
+
+    expect(assessment.decision).toBe("incomplete");
+    expect(
+      assessment.checks.find((check) => check.id === "reimbursement"),
+    ).toMatchObject({
+      tone: "attention",
+      statusLabel: "Дані НСЗУ застарілі",
+    });
   });
 
   it("keeps package-dependent conditions in manual review", () => {

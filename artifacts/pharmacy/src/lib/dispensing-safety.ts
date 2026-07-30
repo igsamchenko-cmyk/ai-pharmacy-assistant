@@ -1,5 +1,6 @@
 import type {
   DispensingCategoryCheck,
+  ProfessionalProductProfile,
   RegistryProductResult,
   SeriesRestrictionCheck,
 } from "@workspace/api-client-react";
@@ -30,12 +31,17 @@ export type DispensingCheck = {
 };
 
 export type DispensingAssessment = {
-  decision: "blocked" | "incomplete";
+  decision: "blocked" | "incomplete" | "manual_review";
   decisionLabel: string;
   decisionDetail: string;
   checks: DispensingCheck[];
   connectedCount: number;
 };
+
+export type DispensingOfficialPrograms = Pick<
+  ProfessionalProductProfile,
+  "reimbursement" | "price"
+>;
 
 const NOT_CONNECTED_DETAIL =
   "Джерело ще не підключено. Не робіть висновок про відпуск за цією карткою.";
@@ -162,6 +168,135 @@ function unavailableCheck(
   };
 }
 
+function formatUah(value: string | null | undefined): string {
+  if (value === null || value === undefined || value === "") {
+    return "не оприлюднено";
+  }
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return `${value} грн`;
+  return new Intl.NumberFormat("uk-UA", {
+    style: "currency",
+    currency: "UAH",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 3,
+  }).format(amount);
+}
+
+function reimbursementCheck(
+  result: DispensingOfficialPrograms["reimbursement"] | undefined,
+): DispensingCheck {
+  if (result === undefined) {
+    return unavailableCheck(
+      "reimbursement",
+      "Реімбурсація «Доступні ліки»",
+      "НСЗУ / МОЗ",
+    );
+  }
+  if (result === null) {
+    return {
+      id: "reimbursement",
+      title: "Реімбурсація «Доступні ліки»",
+      statusLabel: "Перевірка НСЗУ недоступна",
+      detail:
+        "Не робіть висновок про участь препарату в програмі. Звірте чинний перелік НСЗУ вручну.",
+      tone: "unavailable",
+      sourceLabel: "НСЗУ / МОЗ",
+    };
+  }
+
+  const current = result.source.freshness === "current";
+  const selected = result.status === "listed" ? result.selected : null;
+  const freshnessNote = current
+    ? ""
+    : " Знімок неактуальний або неповний; звірте чинний перелік НСЗУ.";
+
+  return {
+    id: "reimbursement",
+    title: "Реімбурсація «Доступні ліки»",
+    statusLabel: !current
+      ? result.source.freshness === "stale"
+        ? "Дані НСЗУ застарілі"
+        : "Дані НСЗУ неповні"
+      : selected
+        ? Number(selected.copayUah) === 0
+          ? "У програмі · безоплатно"
+          : `У програмі · доплата ${formatUah(selected.copayUah)}`
+        : result.status === "requires_package"
+          ? "Оберіть точну упаковку"
+          : "Не знайдено в чинному переліку",
+    detail: `${result.summary}${freshnessNote}`,
+    tone: current && selected ? "verified" : "attention",
+    sourceLabel: result.source.title,
+    sourceUrl: result.source.url,
+    checkedAt: result.source.checkedAt,
+  };
+}
+
+function priceCheck(
+  result: DispensingOfficialPrograms["price"] | undefined,
+  reimbursement: DispensingOfficialPrograms["reimbursement"] | undefined,
+): DispensingCheck {
+  const reimbursedPackage =
+    reimbursement?.status === "listed" &&
+    reimbursement.selected &&
+    reimbursement.source.freshness === "current"
+      ? reimbursement.selected
+      : null;
+  if (reimbursedPackage && reimbursement) {
+    return {
+      id: "price",
+      title: "Ціна або доплата",
+      statusLabel:
+        Number(reimbursedPackage.copayUah) === 0
+          ? "Доплата НСЗУ · 0 грн"
+          : `Доплата НСЗУ · ${formatUah(reimbursedPackage.copayUah)}`,
+      detail:
+        "Для обраної реімбурсованої упаковки використовуйте офіційну суму доплати НСЗУ, а не Національний каталог цін.",
+      tone: "verified",
+      sourceLabel: reimbursement.source.title,
+      sourceUrl: reimbursement.source.url,
+      checkedAt: reimbursement.source.checkedAt,
+    };
+  }
+  if (result === undefined) {
+    return unavailableCheck("price", "Гранична роздрібна ціна", "МОЗ");
+  }
+  if (result === null) {
+    return {
+      id: "price",
+      title: "Гранична роздрібна ціна",
+      statusLabel: "Перевірка каталогу цін недоступна",
+      detail:
+        "Ціновий висновок неможливий. Звірте чинний Національний каталог цін вручну.",
+      tone: "unavailable",
+      sourceLabel: "МОЗ",
+    };
+  }
+
+  const current = result.source.freshness === "current";
+  const selected = result.status === "priced" ? result.selected : null;
+  const freshnessNote = current
+    ? ""
+    : " Знімок неактуальний або неповний; звірте чинний каталог МОЗ.";
+  return {
+    id: "price",
+    title: "Гранична роздрібна ціна",
+    statusLabel: !current
+      ? result.source.freshness === "stale"
+        ? "Дані каталогу застарілі"
+        : "Дані каталогу неповні"
+      : selected
+        ? `Не більше ${formatUah(selected.maximumRetailPriceUah)}`
+        : result.status === "requires_package"
+          ? "Оберіть точну упаковку"
+          : "Не знайдено в каталозі цін",
+    detail: `${result.summary}${freshnessNote}`,
+    tone: current && selected ? "verified" : "attention",
+    sourceLabel: result.source.title,
+    sourceUrl: result.source.url,
+    checkedAt: result.source.checkedAt,
+  };
+}
 const DLS_QUALITY_DOCUMENTS_URL = "https://pub-mex.dls.gov.ua/QLA/DocList.aspx";
 
 function seriesRestrictionCheck(
@@ -220,6 +355,7 @@ export function buildDispensingAssessment(
   product: RegistryProductResult,
   seriesRestriction?: SeriesRestrictionCheck | null,
   dispensingCategory?: DispensingCategoryCheck | null,
+  officialPrograms?: DispensingOfficialPrograms,
 ): DispensingAssessment {
   const registrationTone: DispensingCheckTone =
     product.registration.status === "active"
@@ -266,23 +402,66 @@ export function buildDispensingAssessment(
     },
     instructionCheck(product),
     rxOtcCheck(dispensingCategory),
-    unavailableCheck(
-      "reimbursement",
-      "Реімбурсація «Доступні ліки»",
-      "НСЗУ / МОЗ",
-    ),
-    unavailableCheck("price", "Гранична та референтна ціна", "МОЗ"),
+    reimbursementCheck(officialPrograms?.reimbursement),
+    priceCheck(officialPrograms?.price, officialPrograms?.reimbursement),
     seriesRestrictionCheck(seriesRestriction),
   ];
   const blockedByRegistration = product.registration.status === "terminated";
   const blockedBySeries = seriesRestriction?.status === "blocked";
   const blocked = blockedByRegistration || blockedBySeries;
+  const categoryResolved = Boolean(
+    dispensingCategory &&
+    dispensingCategory.matchStatus === "product_and_registration" &&
+    dispensingCategory.source.freshness === "current" &&
+    (dispensingCategory.status === "otc" ||
+      dispensingCategory.status === "prescription"),
+  );
+  const seriesResolved = Boolean(
+    seriesRestriction &&
+    seriesRestriction.source.freshness === "current" &&
+    seriesRestriction.status !== "needs_review" &&
+    seriesRestriction.status !== "blocked",
+  );
+  const reimbursementResolved = Boolean(
+    officialPrograms?.reimbursement &&
+    officialPrograms.reimbursement.source.freshness === "current" &&
+    officialPrograms.reimbursement.status !== "requires_package",
+  );
+  const reimbursedPackageResolved = Boolean(
+    officialPrograms?.reimbursement?.status === "listed" &&
+    officialPrograms.reimbursement.selected &&
+    officialPrograms.reimbursement.source.freshness === "current",
+  );
+  const priceResolved =
+    reimbursedPackageResolved ||
+    Boolean(
+      officialPrograms?.price &&
+      officialPrograms.price.source.freshness === "current" &&
+      officialPrograms.price.status !== "requires_package",
+    );
+  const nationalListResolved =
+    product.nationalListStatus !== "uncertain" &&
+    product.nationalListStatus !== "not_applicable";
+  const automaticChecksResolved =
+    product.registration.status === "active" &&
+    categoryResolved &&
+    seriesResolved &&
+    reimbursementResolved &&
+    priceResolved &&
+    nationalListResolved;
+  const decision: DispensingAssessment["decision"] = blocked
+    ? "blocked"
+    : automaticChecksResolved
+      ? "manual_review"
+      : "incomplete";
 
   return {
-    decision: blocked ? "blocked" : "incomplete",
+    decision,
     decisionLabel: blocked
       ? "Відпуск за цією позицією не підтверджено"
-      : "Автоматична перевірка не завершена",
+      : decision === "manual_review"
+        ? "Автоматичні перевірки виконано — завершіть ручний контроль"
+        : "Автоматична перевірка не завершена",
     decisionDetail: blockedBySeries
       ? (seriesRestriction?.summary ?? "Знайдено заборону серії.")
       : blockedByRegistration
@@ -300,10 +479,14 @@ export function buildDispensingAssessment(
                     dispensingCategory.status === "not_found"
                   ? "Автоматичний висновок Rx/OTC неможливий. Потрібна ручна перевірка ДРЛЗ та офіційної інструкції."
                   : seriesRestriction === undefined
-                    ? "Введіть серію упаковки. Категорія Rx/OTC і частина цінових джерел ще потребують ручної перевірки."
+                    ? "Введіть серію упаковки. Після цього завершіть перевірку офіційних програм, ціни та ручний контроль."
                     : seriesRestriction === null
-                      ? "Перевірка серії недоступна. Звірте офіційний реєстр вручну та перевірте категорію Rx/OTC."
-                      : "Перевірку серії виконано, але результат не є автоматичним дозволом. Завершіть ручну перевірку Rx/OTC та інших умов відпуску.",
+                      ? "Перевірка серії недоступна. Звірте офіційний реєстр вручну та перевірте інші умови відпуску."
+                      : !reimbursementResolved || !priceResolved
+                        ? "Оберіть точну упаковку, якщо це запропоновано, або звірте недоступне чи неактуальне офіційне джерело вручну."
+                        : !nationalListResolved
+                          ? "Статус Нацпереліку не визначено. Звірте чинну редакцію вручну."
+                          : "Автоматичні джерела перевірено для точної позиції та серії. Це не дозвіл на відпуск: завершіть перевірку рецепта, пацієнта, взаємодій та консультування.",
     checks,
     connectedCount: checks.filter((check) => check.tone !== "unavailable")
       .length,

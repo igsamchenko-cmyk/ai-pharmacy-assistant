@@ -1,7 +1,10 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { ProfessionalProductProfile } from "@workspace/api-client-react";
+import type {
+  ProfessionalProductProfile,
+  SeriesRestrictionCheck,
+} from "@workspace/api-client-react";
 import {
   OfficialProgramsPanel,
   ProfessionalProfileCoveragePanel,
@@ -189,6 +192,30 @@ describe("professional profile coverage panel", () => {
     expect(html).toContain("Потрібні дані");
     expect(html).toContain("Неповне покриття не є дозволом на відпуск");
     expect(html).not.toContain("Безпечно");
+  });
+
+  it("updates series-source coverage after the exact series check", () => {
+    const seriesRestriction = {
+      status: "no_match",
+      summary: "Точного збігу не знайдено.",
+      source: {
+        title: "Реєстр документів щодо якості лікарських засобів",
+        url: "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
+        generatedAt: "2026-07-29T00:00:00.000Z",
+        freshness: "current",
+      },
+    } as SeriesRestrictionCheck;
+    const html = renderToStaticMarkup(
+      createElement(ProfessionalProfileCoveragePanel, {
+        profile,
+        seriesRestriction,
+      }),
+    );
+
+    expect(html).toMatch(
+      /profile-source-series_restrictions[\s\S]*?Підтверджено/,
+    );
+    expect(html.match(/Потрібні дані/g)).toHaveLength(1);
   });
 });
 describe("official programs panel", () => {
