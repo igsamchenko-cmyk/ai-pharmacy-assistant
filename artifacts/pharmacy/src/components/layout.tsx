@@ -13,6 +13,7 @@ import {
   Database,
   ClipboardList,
   ClipboardCheck,
+  BellRing,
   FlaskConical,
   Moon,
   Sun,
@@ -40,6 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/", icon: Home, label: "Головна" },
     { href: "/dispense", icon: ClipboardCheck, label: "Відпуск за 30 секунд" },
+    { href: "/regulatory-radar", icon: BellRing, label: "Регуляторний радар" },
     { href: "/search", icon: Search, label: "Пошук" },
     { href: "/interactions", icon: GitCompare, label: "Взаємодії" },
     { href: "/compare", icon: Columns3, label: "Порівняння" },

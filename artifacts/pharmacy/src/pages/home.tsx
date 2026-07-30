@@ -18,6 +18,7 @@ import {
   Columns3,
   Stethoscope,
   ClipboardCheck,
+  BellRing,
   Clock,
   Pill,
   Star,
@@ -62,6 +63,12 @@ export default function Home() {
       icon: ClipboardCheck,
       title: "Відпуск за 30 секунд",
       desc: "Єдиний профіль точної реєстрової позиції",
+    },
+    {
+      href: "/regulatory-radar",
+      icon: BellRing,
+      title: "Регуляторний радар",
+      desc: "Заборони серій, реімбурсація, ціни та свіжість джерел",
     },
     {
       href: "/search",

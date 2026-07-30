@@ -11,6 +11,7 @@ import externalRouter from "./external";
 import knowledgeRouter from "./knowledge";
 import diagnosticsRouter from "./diagnostics";
 import betaDashboardRouter from "./betaDashboard";
+import regulatoryRadarRouter from "./regulatoryRadar";
 
 const router: IRouter = Router();
 
@@ -25,6 +26,7 @@ router.use(historyRouter);
 router.use(externalRouter);
 router.use(knowledgeRouter);
 router.use(betaDashboardRouter);
+router.use(regulatoryRadarRouter);
 router.use(diagnosticsRouter);
 
 export default router;

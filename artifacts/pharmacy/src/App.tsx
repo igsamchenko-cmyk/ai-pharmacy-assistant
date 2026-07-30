@@ -28,6 +28,7 @@ const About = lazy(() => import("@/pages/about"));
 const DataQuality = lazy(() => import("@/pages/data-quality"));
 const ReviewQueue = lazy(() => import("@/pages/review"));
 const BetaDashboard = lazy(() => import("@/pages/beta-dashboard"));
+const RegulatoryRadar = lazy(() => import("@/pages/regulatory-radar"));
 const DrugInstruction = lazy(() => import("@/pages/drug-instruction"));
 const RegistryProductDetail = lazy(
   () => import("@/pages/registry-product-detail"),
@@ -51,6 +52,9 @@ const ProtectedDataQuality = () => (
 );
 const ProtectedReviewQueue = () => (
   <ProtectedRoute component={ReviewQueue} minRole="reviewer" />
+);
+const ProtectedRegulatoryRadar = () => (
+  <ProtectedRoute component={RegulatoryRadar} />
 );
 const ProtectedBetaDashboard = () => (
   <ProtectedRoute component={BetaDashboard} />
@@ -86,6 +90,10 @@ function Router() {
             <Route path="/login" component={LoginPage} />
             <Route path="/access-denied" component={AccessDeniedRoute} />
             <Route path="/dispense" component={ProtectedDispensing} />
+            <Route
+              path="/regulatory-radar"
+              component={ProtectedRegulatoryRadar}
+            />
             <Route path="/search" component={ProtectedSearch} />
             <Route
               path="/instructions/:productId"

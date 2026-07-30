@@ -1,0 +1,86 @@
+name: Regulatory radar daily source audit
+
+on:
+  schedule:
+    - cron: "37 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: regulatory-radar-source-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: Compare fresh official sources with reviewed snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25.8.2
+
+      - name: Enable repository pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download, validate and compare all regulatory sources
+        id: source_audit
+        continue-on-error: true
+        run: >-
+          pnpm knowledge:regulatory-radar:audit --
+          --refresh
+          --out="$RUNNER_TEMP/regulatory-radar-audit.json"
+          --fail-on-change
+
+      - name: Publish concise audit summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ ! -f "$RUNNER_TEMP/regulatory-radar-audit.json" ]]; then
+            echo "## Regulatory radar source audit" >> "$GITHUB_STEP_SUMMARY"
+            echo "The audit did not produce a report; inspect the failed step." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          node - "$RUNNER_TEMP/regulatory-radar-audit.json" "$GITHUB_STEP_SUMMARY" <<'NODE'
+          const fs = require("node:fs");
+          const report = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+          const lines = [
+            "## Regulatory radar source audit",
+            "",
+            `Generated: ${report.generatedAt}`,
+            "",
+            "| Source | Status | Count delta | Candidate date |",
+            "|---|---:|---:|---:|",
+            ...report.sources.map((source) =>
+              `| ${source.key} | ${source.status} | ${source.countDelta ?? "—"} | ${source.candidateDate ?? "—"} |`,
+            ),
+            "",
+            report.summary.requiresReview
+              ? "**Review required. No production snapshot was changed automatically.**"
+              : "All fresh source hashes match the reviewed snapshots.",
+          ];
+          fs.appendFileSync(process.argv[3], `${lines.join("\n")}\n`);
+          NODE
+
+      - name: Upload immutable audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regulatory-radar-audit-${{ github.run_id }}
+          retention-days: 90
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/regulatory-radar-audit.json
+
+      - name: Require reviewed snapshots to match official sources
+        if: steps.source_audit.outcome != 'success'
+        run: |
+          echo "Official regulatory sources changed, became unavailable, or failed validation."
+          echo "Review the uploaded report before updating any production snapshot."
+          exit 1

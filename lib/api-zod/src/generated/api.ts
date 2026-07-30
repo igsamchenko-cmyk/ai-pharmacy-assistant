@@ -1416,6 +1416,79 @@ export const CheckProductSeriesRestrictionsResponse = zod.object({
 
 
 /**
+ * Returns bounded, server-side verified metadata for the official Ukrainian pharmacy sources used by FarmAssist and the latest DLS quality-document events. Stale or incomplete evidence is never presented as current.
+ * @summary Show official-source freshness and recent regulatory events
+ */
+export const getRegulatoryRadarResponseSummaryEventCountsTemporaryBanMin = 0;
+
+export const getRegulatoryRadarResponseSummaryEventCountsPermanentBanMin = 0;
+
+export const getRegulatoryRadarResponseSummaryEventCountsRestoredMin = 0;
+
+export const getRegulatoryRadarResponseSummaryEventCountsOtherMin = 0;
+
+export const getRegulatoryRadarResponseSourcesItemRecordCountMin = 0;
+
+export const getRegulatoryRadarResponseSourcesMin = 5;
+export const getRegulatoryRadarResponseSourcesMax = 5;
+
+export const getRegulatoryRadarResponseEventsMax = 50;
+
+
+
+export const GetRegulatoryRadarResponse = zod.object({
+  "version": zod.enum(['1.0']),
+  "generatedAt": zod.coerce.date(),
+  "status": zod.enum(['current', 'attention']),
+  "window": zod.object({
+  "from": zod.coerce.date(),
+  "to": zod.coerce.date(),
+  "days": zod.literal(30)
+}),
+  "summary": zod.object({
+  "sourceCount": zod.number(),
+  "currentSourceCount": zod.number(),
+  "attentionSourceCount": zod.number(),
+  "recentEventCount": zod.number(),
+  "eventCounts": zod.object({
+  "temporaryBan": zod.number().min(getRegulatoryRadarResponseSummaryEventCountsTemporaryBanMin),
+  "permanentBan": zod.number().min(getRegulatoryRadarResponseSummaryEventCountsPermanentBanMin),
+  "restored": zod.number().min(getRegulatoryRadarResponseSummaryEventCountsRestoredMin),
+  "other": zod.number().min(getRegulatoryRadarResponseSummaryEventCountsOtherMin)
+})
+}),
+  "sources": zod.array(zod.object({
+  "key": zod.enum(['series_restrictions', 'dispensing_categories', 'reimbursement', 'price_catalog', 'national_list']),
+  "label": zod.string(),
+  "publisher": zod.string(),
+  "status": zod.enum(['current', 'stale', 'incomplete', 'unavailable']),
+  "checkedAt": zod.coerce.date().nullable(),
+  "releaseDate": zod.coerce.date().nullable(),
+  "latestChangeDate": zod.coerce.date().nullable(),
+  "recordCount": zod.number().min(getRegulatoryRadarResponseSourcesItemRecordCountMin),
+  "sourceUrl": zod.string().url(),
+  "note": zod.string(),
+  "warnings": zod.array(zod.string())
+})).min(getRegulatoryRadarResponseSourcesMin).max(getRegulatoryRadarResponseSourcesMax),
+  "events": zod.array(zod.object({
+  "id": zod.string(),
+  "date": zod.coerce.date(),
+  "documentNumber": zod.string(),
+  "type": zod.enum(['temporary_ban', 'permanent_ban', 'restore_temporary', 'restore_permanent', 'partial_cancellation', 'supplement']),
+  "severity": zod.enum(['critical', 'review', 'info']),
+  "label": zod.string(),
+  "registrationNumber": zod.string().nullable(),
+  "medicineName": zod.string(),
+  "dosageForm": zod.string(),
+  "series": zod.string(),
+  "manufacturer": zod.string(),
+  "sourceUrl": zod.string().url()
+})).max(getRegulatoryRadarResponseEventsMax),
+  "notices": zod.array(zod.string())
+})
+
+
+/**
  * Aggregate statistics about the demo drug database.
  * @summary Drug database statistics
  */
