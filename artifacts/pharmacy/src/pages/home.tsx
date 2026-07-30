@@ -61,8 +61,8 @@ export default function Home() {
     {
       href: "/dispense",
       icon: ClipboardCheck,
-      title: "Відпуск за 30 секунд",
-      desc: "Єдиний профіль точної реєстрової позиції",
+      title: "Оперативний довідник",
+      desc: "Реєстрові, регуляторні та цінові дані препарату",
     },
     {
       href: "/regulatory-radar",

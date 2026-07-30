@@ -2,7 +2,6 @@ import type {
   DispensingCategoryCheck,
   ProfessionalProductProfile,
   RegistryProductResult,
-  SeriesRestrictionCheck,
 } from "@workspace/api-client-react";
 import { nationalListVerdict } from "@/lib/national-list-status";
 
@@ -19,8 +18,7 @@ export type DispensingCheck = {
     | "instruction"
     | "rx-otc"
     | "reimbursement"
-    | "price"
-    | "series-restrictions";
+    | "price";
   title: string;
   statusLabel: string;
   detail: string;
@@ -297,63 +295,8 @@ function priceCheck(
     checkedAt: result.source.checkedAt,
   };
 }
-const DLS_QUALITY_DOCUMENTS_URL = "https://pub-mex.dls.gov.ua/QLA/DocList.aspx";
-
-function seriesRestrictionCheck(
-  result: SeriesRestrictionCheck | null | undefined,
-): DispensingCheck {
-  if (result === null) {
-    return {
-      id: "series-restrictions",
-      title: "Заборони та поновлення обігу серій",
-      statusLabel: "Перевірка недоступна",
-      detail:
-        "Локальний знімок Держлікслужби не пройшов перевірку або недоступний. Перевірте серію в офіційному реєстрі вручну.",
-      tone: "unavailable",
-      sourceLabel: "Держлікслужба",
-      sourceUrl: DLS_QUALITY_DOCUMENTS_URL,
-    };
-  }
-  if (result === undefined) {
-    return {
-      id: "series-restrictions",
-      title: "Заборони та поновлення обігу серій",
-      statusLabel: "Введіть серію упаковки",
-      detail:
-        "Перевірка виконується лише за точним реєстраційним номером і серією. Відсутність перевірки не означає відсутність заборони.",
-      tone: "attention",
-      sourceLabel: "Держлікслужба",
-      sourceUrl: DLS_QUALITY_DOCUMENTS_URL,
-    };
-  }
-
-  const staleNote =
-    result.source.freshness === "current"
-      ? ""
-      : " Знімок не є актуальним; обов'язково звірте живий офіційний реєстр.";
-  const statusLabel =
-    result.status === "blocked"
-      ? "СТОП: знайдено заборону"
-      : result.status === "restored"
-        ? "Знайдено поновлення обігу"
-        : result.status === "needs_review"
-          ? "Документ потребує ручної перевірки"
-          : "Точного збігу не знайдено — це не дозвіл";
-
-  return {
-    id: "series-restrictions",
-    title: "Заборони та поновлення обігу серій",
-    statusLabel,
-    detail: `${result.summary}${staleNote}`,
-    tone: result.status === "blocked" ? "blocked" : "attention",
-    sourceLabel: result.source.title,
-    sourceUrl: result.source.url,
-    checkedAt: result.source.generatedAt,
-  };
-}
 export function buildDispensingAssessment(
   product: RegistryProductResult,
-  seriesRestriction?: SeriesRestrictionCheck | null,
   dispensingCategory?: DispensingCategoryCheck | null,
   officialPrograms?: DispensingOfficialPrograms,
 ): DispensingAssessment {
@@ -404,23 +347,14 @@ export function buildDispensingAssessment(
     rxOtcCheck(dispensingCategory),
     reimbursementCheck(officialPrograms?.reimbursement),
     priceCheck(officialPrograms?.price, officialPrograms?.reimbursement),
-    seriesRestrictionCheck(seriesRestriction),
   ];
-  const blockedByRegistration = product.registration.status === "terminated";
-  const blockedBySeries = seriesRestriction?.status === "blocked";
-  const blocked = blockedByRegistration || blockedBySeries;
+  const blocked = product.registration.status === "terminated";
   const categoryResolved = Boolean(
     dispensingCategory &&
     dispensingCategory.matchStatus === "product_and_registration" &&
     dispensingCategory.source.freshness === "current" &&
     (dispensingCategory.status === "otc" ||
       dispensingCategory.status === "prescription"),
-  );
-  const seriesResolved = Boolean(
-    seriesRestriction &&
-    seriesRestriction.source.freshness === "current" &&
-    seriesRestriction.status !== "needs_review" &&
-    seriesRestriction.status !== "blocked",
   );
   const reimbursementResolved = Boolean(
     officialPrograms?.reimbursement &&
@@ -445,7 +379,6 @@ export function buildDispensingAssessment(
   const automaticChecksResolved =
     product.registration.status === "active" &&
     categoryResolved &&
-    seriesResolved &&
     reimbursementResolved &&
     priceResolved &&
     nationalListResolved;
@@ -460,33 +393,27 @@ export function buildDispensingAssessment(
     decisionLabel: blocked
       ? "Відпуск за цією позицією не підтверджено"
       : decision === "manual_review"
-        ? "Автоматичні перевірки виконано — завершіть ручний контроль"
-        : "Автоматична перевірка не завершена",
-    decisionDetail: blockedBySeries
-      ? (seriesRestriction?.summary ?? "Знайдено заборону серії.")
-      : blockedByRegistration
-        ? "Реєстрацію завершено. Не використовуйте цю картку як підставу для відпуску; звірте актуальну позицію в офіційному реєстрі."
-        : dispensingCategory === undefined
-          ? "Точна категорія Rx/OTC перевіряється. Дочекайтеся відповіді ДРЛЗ і завершіть інші професійні перевірки."
-          : dispensingCategory === null
-            ? "Перевірка Rx/OTC недоступна. Звірте живий ДРЛЗ та офіційну інструкцію вручну."
-            : dispensingCategory.status === "prescription"
-              ? "Для цієї точної позиції ДРЛЗ вимагає рецепт. Перевірте рецепт, серію та інші умови відпуску."
-              : dispensingCategory.status === "conditional"
-                ? "Категорія залежить від упаковки. Звірте точний розмір упаковки з умовами ДРЛЗ перед відпуском."
-                : dispensingCategory.status === "unknown" ||
-                    dispensingCategory.status === "conflict" ||
-                    dispensingCategory.status === "not_found"
-                  ? "Автоматичний висновок Rx/OTC неможливий. Потрібна ручна перевірка ДРЛЗ та офіційної інструкції."
-                  : seriesRestriction === undefined
-                    ? "Введіть серію упаковки. Після цього завершіть перевірку офіційних програм, ціни та ручний контроль."
-                    : seriesRestriction === null
-                      ? "Перевірка серії недоступна. Звірте офіційний реєстр вручну та перевірте інші умови відпуску."
-                      : !reimbursementResolved || !priceResolved
-                        ? "Оберіть точну упаковку, якщо це запропоновано, або звірте недоступне чи неактуальне офіційне джерело вручну."
-                        : !nationalListResolved
-                          ? "Статус Нацпереліку не визначено. Звірте чинну редакцію вручну."
-                          : "Автоматичні джерела перевірено для точної позиції та серії. Це не дозвіл на відпуск: завершіть перевірку рецепта, пацієнта, взаємодій та консультування.",
+        ? "Довідкові перевірки виконано — завершіть професійний контроль"
+        : "Довідкові перевірки не завершені",
+    decisionDetail: blocked
+      ? "Реєстрацію завершено. Не використовуйте цю картку як підставу для відпуску; звірте актуальну позицію в офіційному реєстрі."
+      : dispensingCategory === undefined
+        ? "Точна категорія Rx/OTC перевіряється. Дочекайтеся відповіді ДРЛЗ."
+        : dispensingCategory === null
+          ? "Перевірка Rx/OTC недоступна. Звірте живий ДРЛЗ та офіційну інструкцію вручну."
+          : dispensingCategory.status === "prescription"
+            ? "Для цієї точної позиції ДРЛЗ вимагає рецепт. Перевірте рецепт та інші умови відпуску."
+            : dispensingCategory.status === "conditional"
+              ? "Категорія залежить від упаковки. Звірте точний розмір упаковки з умовами ДРЛЗ перед відпуском."
+              : dispensingCategory.status === "unknown" ||
+                  dispensingCategory.status === "conflict" ||
+                  dispensingCategory.status === "not_found"
+                ? "Автоматичний висновок Rx/OTC неможливий. Потрібна ручна перевірка ДРЛЗ та офіційної інструкції."
+                : !reimbursementResolved || !priceResolved
+                  ? "Оберіть точну упаковку, якщо це запропоновано, або звірте недоступне чи неактуальне офіційне джерело вручну."
+                  : !nationalListResolved
+                    ? "Статус Нацпереліку не визначено. Звірте чинну редакцію вручну."
+                    : "Довідкові джерела перевірено для точної реєстрової позиції. Окремо перегляньте нові заборони в Регуляторному радарі та завершіть професійний контроль.",
     checks,
     connectedCount: checks.filter((check) => check.tone !== "unavailable")
       .length,
