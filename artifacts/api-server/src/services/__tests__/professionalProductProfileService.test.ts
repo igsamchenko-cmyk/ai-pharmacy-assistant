@@ -104,6 +104,62 @@ function dispensingCategory() {
   };
 }
 
+function reimbursement() {
+  const selected = {
+    packageKey: "nszu-aaaaaaaaaaaaaaaaaaaaaaaa",
+    section: "standard_medicines" as const,
+    registrationNumber: REGISTRATION,
+    inn: "Еналаприл",
+    tradeName: "ЕНАП",
+    dosageForm: "таблетки",
+    strength: "10 мг",
+    packageQuantity: "20 таблеток",
+    atcCode: "C09AA02",
+    copayUah: "0.00",
+    sourcePage: 3,
+    sourceRow: 1,
+  };
+  return {
+    version: "1.0" as const,
+    registrationNumber: REGISTRATION,
+    status: "listed" as const,
+    selected,
+    candidates: [selected],
+    summary: "Упаковка включена до програми «Доступні ліки».",
+    source: {
+      title: "Перелік лікарських засобів, які підлягають реімбурсації",
+      url: "https://backend.nszu.gov.ua/reimbursement.pdf",
+      checkedAt: "2026-07-29T00:00:00.000Z",
+      releaseDate: "2026-07-17",
+      recordCount: 1_007,
+      sha256: "b".repeat(64),
+      freshness: "current" as const,
+      warnings: [],
+    },
+  };
+}
+
+function priceCatalog() {
+  return {
+    version: "1.0" as const,
+    registrationNumber: REGISTRATION,
+    status: "not_in_catalog" as const,
+    selected: null,
+    candidates: [],
+    summary: "Реєстраційного номера немає в поточному каталозі цін.",
+    source: {
+      title: "Національний каталог цін",
+      url: "https://moz.gov.ua/uk/nacionalnij-katalog-cin",
+      checkedAt: "2026-07-29T00:00:00.000Z",
+      releaseDate: "2026-07-01",
+      recordCount: 11_060,
+      sha256: "c".repeat(64),
+      freshness: "current" as const,
+      scopeNote: "Реімбурсовані препарати не входять до каталогу.",
+    },
+  };
+}
+
 function dependencies(
   overrides: Partial<ProfessionalProductProfileDependencies> = {},
 ): ProfessionalProductProfileDependencies {
@@ -113,6 +169,8 @@ function dependencies(
       product: product(),
     }),
     checkDispensingCategory: () => dispensingCategory(),
+    checkReimbursement: () => reimbursement(),
+    checkPriceCatalog: () => priceCatalog(),
     ...overrides,
   };
 }
@@ -139,7 +197,7 @@ describe("professional product profile service", () => {
       matchStatus: "product_and_registration",
     });
     expect(result.profile.coverage).toMatchObject({
-      connectedSources: 6,
+      connectedSources: 8,
       totalSources: 8,
       complete: false,
     });
@@ -158,10 +216,12 @@ describe("professional product profile service", () => {
         (item) => item.key === "interactions",
       )?.detail,
     ).toContain("33 з 320");
-    expect(result.profile.warnings).toEqual([
-      "reimbursement_source_not_connected",
-      "price_source_not_connected",
-    ]);
+    expect(result.profile.reimbursement).toMatchObject({
+      status: "listed",
+      selected: { copayUah: "0.00" },
+    });
+    expect(result.profile.price).toMatchObject({ status: "not_in_catalog" });
+    expect(result.profile.warnings).toEqual([]);
   });
 
   it("fails closed when the exact product pair is absent or mismatched", async () => {
@@ -217,7 +277,7 @@ describe("professional product profile service", () => {
     expect(result.status).toBe("ready");
     if (result.status !== "ready") return;
     expect(result.profile.dispensingCategory).toBeNull();
-    expect(result.profile.coverage.connectedSources).toBe(5);
+    expect(result.profile.coverage.connectedSources).toBe(7);
     expect(
       result.profile.coverage.sources.find(
         (item) => item.key === "dispensing_category",
@@ -262,6 +322,36 @@ describe("professional product profile service", () => {
         "instruction_not_structured",
       ]),
     );
+  });
+
+  it("does not treat stale reimbursement as the current price authority", async () => {
+    const currentReimbursement = reimbursement();
+    const result = await loadProfessionalProductProfile(
+      PRODUCT_ID,
+      REGISTRATION,
+      dependencies({
+        checkReimbursement: () => ({
+          ...currentReimbursement,
+          source: {
+            ...currentReimbursement.source,
+            freshness: "stale",
+          },
+        }),
+      }),
+    );
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    expect(result.profile.warnings).toEqual(
+      expect.arrayContaining([
+        "reimbursement_source_stale",
+        "price_not_in_catalog",
+      ]),
+    );
+    expect(
+      result.profile.coverage.sources.find((item) => item.key === "price")
+        ?.detail,
+    ).toContain("немає в поточному каталозі цін");
   });
 
   it("contains no secrets or local filesystem paths", async () => {

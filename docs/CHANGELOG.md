@@ -7,11 +7,18 @@
 
 ### Added
 
+- Connected the official 17 July 2026 NSZU reimbursement list and the 1 July
+  2026 MOH National Price Catalog to the exact professional product profile.
+  The UI now shows package-level reimbursement/copay and declared/maximum
+  retail prices, requires explicit package selection for ambiguous registry
+  numbers, preserves source dates and hashes, and keeps absence or stale data
+  fail-closed. Reproducible PDF/XLSX importers and regression tests cover all
+  1,007 medicine rows and 11,060 price-catalog rows.
 - Added one fail-closed professional product profile endpoint and connected it
   to the «Відпуск за 30 секунд» workspace. One exact registry identity now
-  exposes eight independent source states; missing reimbursement and price
-  feeds remain explicitly `not_connected`, while interactions and series
-  restrictions require their own input.
+  exposes eight independent source states; reimbursement and price provide
+  exact package-level states, while interactions and series restrictions
+  require their own input.
 
 - Expanded the approved-only interaction registry from 27 to 33 exact-INN
   pairs using current official product information. Added clarithromycin +

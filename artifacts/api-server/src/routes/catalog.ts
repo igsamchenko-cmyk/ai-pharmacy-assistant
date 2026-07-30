@@ -89,6 +89,11 @@ router.get("/catalog/professional-profile", async (req, res): Promise<void> => {
   const result = await loadProfessionalProductProfile(
     parsed.data.productId,
     parsed.data.registrationNumber,
+    undefined,
+    {
+      reimbursementPackageKey: parsed.data.reimbursementPackageKey,
+      priceCatalogId: parsed.data.priceCatalogId,
+    },
   );
   if (result.status === "not_found") {
     res.status(404).json({ error: "Exact registry product was not found" });

@@ -6,14 +6,18 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { DispensingCategoryCheck } from './dispensingCategoryCheck';
+import type { PriceCatalogCheck } from './priceCatalogCheck';
 import type { ProfessionalProductProfileVersion } from './professionalProductProfileVersion';
 import type { ProfessionalProfileCoverage } from './professionalProfileCoverage';
 import type { RegistryProductResult } from './registryProductResult';
+import type { ReimbursementCheck } from './reimbursementCheck';
 
 export interface ProfessionalProductProfile {
   version: ProfessionalProductProfileVersion;
   product: RegistryProductResult;
   dispensingCategory: DispensingCategoryCheck | null;
+  reimbursement: ReimbursementCheck | null;
+  price: PriceCatalogCheck | null;
   coverage: ProfessionalProfileCoverage;
   /**
      * @maxItems 20

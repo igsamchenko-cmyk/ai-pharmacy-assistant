@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   getCheckProductSeriesRestrictionsQueryKey,
   getGetProfessionalProductProfileQueryKey,
+  getProfessionalProductProfile,
   useCheckProductSeriesRestrictions,
   useGetProfessionalProductProfile,
   type DispensingCategoryCheck,
@@ -11,6 +12,7 @@ import {
 } from "@workspace/api-client-react";
 import {
   AlertTriangle,
+  Banknote,
   BookOpenText,
   CheckCircle2,
   CircleHelp,
@@ -133,6 +135,299 @@ export function ProfessionalProfileCoveragePanel({
         ))}
       </CardContent>
     </Card>
+  );
+}
+
+function formatUah(value: string | null | undefined): string {
+  if (value === null || value === undefined || value === "") {
+    return "Не оприлюднено";
+  }
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return `${value} грн`;
+  return new Intl.NumberFormat("uk-UA", {
+    style: "currency",
+    currency: "UAH",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 3,
+  }).format(amount);
+}
+
+export function OfficialProgramsPanel({
+  profile,
+  isLoading = false,
+  error = null,
+  onSelectReimbursementPackage,
+  onSelectPricePackage,
+}: {
+  profile: ProfessionalProductProfile;
+  isLoading?: boolean;
+  error?: string | null;
+  onSelectReimbursementPackage?: (packageKey: string) => void;
+  onSelectPricePackage?: (catalogId: string) => void;
+}) {
+  const reimbursement = profile.reimbursement;
+  const price = profile.price;
+  const listedReimbursementPackage =
+    reimbursement?.status === "listed" ? reimbursement.selected : null;
+  const reimbursedPackage =
+    reimbursement?.source.freshness === "current"
+      ? listedReimbursementPackage
+      : null;
+
+  return (
+    <section className="space-y-3" data-testid="official-programs-panel">
+      <div>
+        <h2 className="text-xl font-bold">Офіційні програми та ціни</h2>
+        <p className="text-sm text-muted-foreground">
+          Результати зіставлено лише за точним реєстраційним номером. Для
+          неоднозначних записів потрібно обрати упаковку.
+        </p>
+      </div>
+
+      {error ? (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Упаковку не підтверджено</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Card className="overflow-hidden" data-testid="reimbursement-card">
+          <CardHeader className="space-y-2 p-4 pb-2">
+            <div className="flex items-start justify-between gap-2">
+              <CardTitle className="text-base">«Доступні ліки»</CardTitle>
+              <Badge
+                variant={reimbursedPackage ? "default" : "secondary"}
+                className="shrink-0"
+              >
+                {reimbursement && reimbursement.source.freshness !== "current"
+                  ? reimbursement.source.freshness === "stale"
+                    ? "Дані застарілі"
+                    : "Дані неповні"
+                  : reimbursedPackage
+                    ? "Включено"
+                    : reimbursement?.status === "requires_package"
+                      ? "Оберіть упаковку"
+                      : reimbursement?.status === "not_listed"
+                        ? "Не підтверджено"
+                        : "Недоступно"}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {reimbursement?.summary ??
+                "Офіційний знімок переліку НСЗУ недоступний."}
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3 p-4 pt-1 text-sm">
+            {listedReimbursementPackage ? (
+              <div className="rounded-xl border bg-primary/5 p-3">
+                <p className="font-semibold">
+                  {listedReimbursementPackage.tradeName}
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  {[
+                    listedReimbursementPackage.strength,
+                    listedReimbursementPackage.dosageForm,
+                    listedReimbursementPackage.packageQuantity,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+                <p className="mt-2 text-lg font-bold text-primary">
+                  {Number(listedReimbursementPackage.copayUah) === 0
+                    ? "Безоплатно"
+                    : `Доплата ${formatUah(listedReimbursementPackage.copayUah)}`}
+                </p>
+              </div>
+            ) : null}
+
+            {reimbursement && reimbursement.candidates.length > 1 ? (
+              <label className="block space-y-1.5">
+                <span className="font-medium">Точна упаковка НСЗУ</span>
+                <select
+                  value={listedReimbursementPackage?.packageKey ?? ""}
+                  disabled={isLoading || !onSelectReimbursementPackage}
+                  onChange={(event) => {
+                    if (event.target.value) {
+                      onSelectReimbursementPackage?.(event.target.value);
+                    }
+                  }}
+                  className="min-h-11 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                  aria-label="Точна упаковка програми Доступні ліки"
+                >
+                  <option value="" disabled>
+                    Оберіть форму, дозування й кількість
+                  </option>
+                  {reimbursement.candidates.map((candidate) => (
+                    <option
+                      key={candidate.packageKey}
+                      value={candidate.packageKey}
+                    >
+                      {candidate.tradeName} — {candidate.strength} — №
+                      {candidate.packageQuantity} —{" "}
+                      {formatUah(candidate.copayUah)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
+            {reimbursement ? (
+              <p className="text-xs text-muted-foreground">
+                Джерело:{" "}
+                <a
+                  href={reimbursement.source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  НСЗУ <ExternalLink className="ml-1 inline h-3 w-3" />
+                </a>
+                {formatCheckedAt(reimbursement.source.checkedAt)
+                  ? ` · перевірено ${formatCheckedAt(reimbursement.source.checkedAt)}`
+                  : ""}
+              </p>
+            ) : null}
+            {reimbursement && reimbursement.source.freshness !== "current" ? (
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                Не використовуйте цей статус для відпуску без звірки з чинним
+                переліком НСЗУ.
+              </p>
+            ) : null}
+            {reimbursement?.source.warnings.length ? (
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                У публікації та самому PDF різниться підсумкова кількість
+                позицій; перевірка виконується за фактичними рядками PDF.
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden" data-testid="price-catalog-card">
+          <CardHeader className="space-y-2 p-4 pb-2">
+            <div className="flex items-start justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Banknote className="h-4 w-4 text-primary" />
+                Національний каталог цін
+              </CardTitle>
+              <Badge variant="secondary" className="shrink-0">
+                {price && price.source.freshness !== "current"
+                  ? price.source.freshness === "stale"
+                    ? "Дані застарілі"
+                    : "Дані неповні"
+                  : reimbursedPackage
+                    ? "НСЗУ"
+                    : price?.status === "priced"
+                      ? "Ціну знайдено"
+                      : price?.status === "requires_package"
+                        ? "Оберіть упаковку"
+                        : price?.status === "not_in_catalog"
+                          ? "Поза каталогом"
+                          : "Недоступно"}
+              </Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {reimbursedPackage
+                ? "Для обраної реімбурсованої упаковки використовуйте офіційну суму доплати НСЗУ."
+                : (price?.summary ??
+                  "Офіційний знімок Національного каталогу цін недоступний.")}
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3 p-4 pt-1 text-sm">
+            {!reimbursedPackage && price?.selected ? (
+              <div className="grid gap-2 rounded-xl border bg-primary/5 p-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground">
+                    Гранична роздрібна ціна
+                  </p>
+                  <p className="text-lg font-bold text-primary">
+                    {formatUah(price.selected.maximumRetailPriceUah)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase text-muted-foreground">
+                    Задекларована ціна
+                  </p>
+                  <p className="font-semibold">
+                    {formatUah(price.selected.declaredPriceUah)}
+                  </p>
+                </div>
+                <p className="break-words text-muted-foreground sm:col-span-2">
+                  {price.selected.tradeName} ·{" "}
+                  {price.selected.packageDescription}
+                </p>
+              </div>
+            ) : null}
+
+            {!reimbursedPackage && price && price.candidates.length > 1 ? (
+              <label className="block space-y-1.5">
+                <span className="font-medium">Точна упаковка каталогу</span>
+                <select
+                  value={price.selected?.catalogId ?? ""}
+                  disabled={isLoading || !onSelectPricePackage}
+                  onChange={(event) => {
+                    if (event.target.value) {
+                      onSelectPricePackage?.(event.target.value);
+                    }
+                  }}
+                  className="min-h-11 w-full rounded-xl border bg-background px-3 py-2 text-sm"
+                  aria-label="Точна упаковка Національного каталогу цін"
+                >
+                  <option value="" disabled>
+                    Оберіть точний опис упаковки
+                  </option>
+                  {price.candidates.map((candidate) => (
+                    <option
+                      key={candidate.catalogId}
+                      value={candidate.catalogId}
+                    >
+                      {candidate.tradeName} — {candidate.packageDescription} —{" "}
+                      {formatUah(candidate.maximumRetailPriceUah)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
+            {price ? (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Джерело:{" "}
+                  <a
+                    href={price.source.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                  >
+                    МОЗ України <ExternalLink className="ml-1 inline h-3 w-3" />
+                  </a>
+                  {formatCheckedAt(price.source.checkedAt)
+                    ? ` · перевірено ${formatCheckedAt(price.source.checkedAt)}`
+                    : ""}
+                </p>
+                {price.source.freshness !== "current" ? (
+                  <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                    Не використовуйте цю ціну без звірки з чинним каталогом МОЗ.
+                  </p>
+                ) : null}
+                {!reimbursedPackage ? (
+                  <p className="text-xs text-muted-foreground">
+                    {price.source.scopeNote}
+                  </p>
+                ) : null}
+              </>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
+      {isLoading ? (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <LoaderCircle className="h-4 w-4 animate-spin" />
+          Перевіряємо точну упаковку…
+        </p>
+      ) : null}
+    </section>
   );
 }
 
@@ -401,6 +696,10 @@ function ManualChecklist({
 export default function Dispensing() {
   const [selectedProfile, setSelectedProfile] =
     useState<ProfessionalProductProfile | null>(null);
+  const [officialPackageLoading, setOfficialPackageLoading] = useState(false);
+  const [officialPackageError, setOfficialPackageError] = useState<
+    string | null
+  >(null);
   const selected = selectedProfile?.product ?? null;
   const [pendingProduct, setPendingProduct] =
     useState<InteractionProductSelection | null>(null);
@@ -477,6 +776,7 @@ export default function Dispensing() {
 
   const selectProduct = (product: InteractionProductSelection) => {
     setPendingProduct(product);
+    setOfficialPackageError(null);
     setManualChecks(MANUAL_DISPENSING_STEPS.map(() => false));
     setSeriesDraft("");
     setSubmittedSeries("");
@@ -485,6 +785,8 @@ export default function Dispensing() {
   const reset = () => {
     setSelectedProfile(null);
     setPendingProduct(null);
+    setOfficialPackageLoading(false);
+    setOfficialPackageError(null);
     setManualChecks(MANUAL_DISPENSING_STEPS.map(() => false));
     setSeriesDraft("");
     setSubmittedSeries("");
@@ -500,6 +802,40 @@ export default function Dispensing() {
     if (!normalized) return;
     if (normalized === submittedSeries) void seriesCheck.refetch();
     else setSubmittedSeries(normalized);
+  };
+
+  const resolveOfficialPackage = async (selection: {
+    reimbursementPackageKey?: string;
+    priceCatalogId?: string;
+  }) => {
+    const current = selectedProfile;
+    if (!current) return;
+    setOfficialPackageLoading(true);
+    setOfficialPackageError(null);
+    try {
+      const next = await getProfessionalProductProfile({
+        productId: current.product.id,
+        registrationNumber: current.product.registration.number,
+        reimbursementPackageKey:
+          selection.reimbursementPackageKey ??
+          current.reimbursement?.selected?.packageKey,
+        priceCatalogId:
+          selection.priceCatalogId ?? current.price?.selected?.catalogId,
+      });
+      if (
+        next.product.id !== current.product.id ||
+        next.product.registration.number !== current.product.registration.number
+      ) {
+        throw new Error("profile_identity_mismatch");
+      }
+      setSelectedProfile(next);
+    } catch {
+      setOfficialPackageError(
+        "Не вдалося повторно перевірити вибрану упаковку. Спробуйте ще раз або звірте офіційне джерело.",
+      );
+    } finally {
+      setOfficialPackageLoading(false);
+    }
   };
 
   return (
@@ -582,7 +918,22 @@ export default function Dispensing() {
           </div>
           <ProductSummary product={selected} />
           {selectedProfile ? (
-            <ProfessionalProfileCoveragePanel profile={selectedProfile} />
+            <>
+              <OfficialProgramsPanel
+                profile={selectedProfile}
+                isLoading={officialPackageLoading}
+                error={officialPackageError}
+                onSelectReimbursementPackage={(packageKey) =>
+                  void resolveOfficialPackage({
+                    reimbursementPackageKey: packageKey,
+                  })
+                }
+                onSelectPricePackage={(catalogId) =>
+                  void resolveOfficialPackage({ priceCatalogId: catalogId })
+                }
+              />
+              <ProfessionalProfileCoveragePanel profile={selectedProfile} />
+            </>
           ) : null}
           <SeriesRestrictionCheckPanel
             product={selected}
