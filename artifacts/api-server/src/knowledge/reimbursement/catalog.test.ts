@@ -17,7 +17,7 @@ describe("NSZU reimbursement catalog", () => {
         tradeName: "АЗИТЕР®",
         copayUah: "0.00",
       },
-      source: { recordCount: 1_007, freshness: "current" },
+      source: { recordCount: 1_009, freshness: "current" },
     });
   });
 

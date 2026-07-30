@@ -177,11 +177,20 @@ export function parseNationalListHtml(
   options: { checkedAt?: string; expectedDocumentHash?: string | null } = {},
 ): NationalListSnapshot {
   const bytes = Buffer.from(html, "utf8");
-  const documentHash = createHash("sha256").update(bytes).digest("hex");
   const releaseId = `ua-national-list-${NATIONAL_LIST_REVISION_DATE}`;
   const marker = html.indexOf("НАЦІОНАЛЬНИЙ ПЕРЕЛІК");
   const tableStart = marker >= 0 ? html.indexOf("<table", marker) : -1;
   const tableEnd = tableStart >= 0 ? html.indexOf("</table>", tableStart) : -1;
+  const table = tableStart >= 0 && tableEnd >= 0
+    ? html.slice(tableStart, tableEnd + 8)
+    : "";
+  const canonicalDocumentText = textFromHtml(table)
+    .normalize("NFKC")
+    .replace(/\s+/gu, " ")
+    .trim();
+  const documentHash = createHash("sha256")
+    .update(canonicalDocumentText, "utf8")
+    .digest("hex");
   const errors: string[] = [];
   const expectedDocumentHash = options.expectedDocumentHash === undefined
     ? NATIONAL_LIST_EXPECTED_DOCUMENT_HASH
@@ -198,9 +207,6 @@ export function parseNationalListHtml(
   if (marker < 0 || tableStart < 0 || tableEnd < 0) {
     errors.push("National list table was not found in the official document.");
   }
-  const table = tableStart >= 0 && tableEnd >= 0
-    ? html.slice(tableStart, tableEnd + 8)
-    : "";
   const rows = [...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/giu)];
   const entries: NationalListEntry[] = [];
   let section = "";

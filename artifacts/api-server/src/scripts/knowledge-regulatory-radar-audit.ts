@@ -1,7 +1,11 @@
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { resolveDataFilePath } from "../lib/dataPath";
-import { importSeriesRestrictions } from "../knowledge/seriesRestrictions/importer";
+import {
+  importSeriesRestrictions,
+  mergeSeriesRestrictionSnapshots,
+  seriesRestrictionOverlapStart,
+} from "../knowledge/seriesRestrictions/importer";
 import { SeriesRestrictionSnapshotSchema } from "../knowledge/seriesRestrictions/model";
 import { importDispensingCategories } from "../knowledge/dispensingCategories/importer";
 import { DispensingCategorySnapshotSchema } from "../knowledge/dispensingCategories/model";
@@ -148,23 +152,34 @@ async function main(): Promise<void> {
         baselineDate: series.source.latestDocumentDate,
       },
       async () => {
-        const candidate = await importSeriesRestrictions();
-        const minimumSafeCount = Math.floor(series.source.recordCount * 0.7);
-        const countIsPlausible =
-          candidate.source.recordCount >= minimumSafeCount;
+        const refreshFrom = seriesRestrictionOverlapStart(series);
+        const refresh = await importSeriesRestrictions({ from: refreshFrom });
+        const candidate = mergeSeriesRestrictionSnapshots(series, refresh);
+        const refreshHasContinuity =
+          refresh.source.recordCount > 0 &&
+          refresh.source.latestDocumentDate !== null &&
+          refresh.source.latestDocumentDate >= refreshFrom;
+        const historyIsPreserved =
+          candidate.source.recordCount >= series.source.recordCount;
+        const valid =
+          refresh.source.complete &&
+          refresh.warnings.length === 0 &&
+          refreshHasContinuity &&
+          historyIsPreserved;
+        const addedCount =
+          candidate.source.recordCount - series.source.recordCount;
         return {
           hash: candidate.source.sha256,
           count: candidate.source.recordCount,
           date: candidate.source.latestDocumentDate,
-          valid:
-            candidate.source.complete &&
-            candidate.warnings.length === 0 &&
-            countIsPlausible,
-          reason: !countIsPlausible
-            ? `Candidate DLS record count is below the 70% anomaly gate: ${candidate.source.recordCount} < ${minimumSafeCount}.`
-            : candidate.source.complete
-              ? undefined
-              : "Candidate DLS export is incomplete.",
+          valid,
+          reason: !refreshHasContinuity
+            ? "Candidate DLS overlap does not reach the reviewed history."
+            : !historyIsPreserved
+              ? "Candidate DLS merge would remove reviewed historical records."
+              : candidate.source.sha256 !== series.source.sha256
+                ? `Official DLS overlap was merged without deleting history; net record delta: ${addedCount}.`
+                : undefined,
         };
       },
     ),

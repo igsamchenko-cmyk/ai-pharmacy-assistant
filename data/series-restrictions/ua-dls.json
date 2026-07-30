@@ -1,16 +1,16 @@
 {
   "schemaVersion": "ua-dls-series-restrictions-v1",
-  "generatedAt": "2026-07-27T20:16:46.102Z",
+  "generatedAt": "2026-07-30T16:46:47.703Z",
   "source": {
     "title": "Реєстр документів щодо якості лікарських засобів",
     "publisher": "Державна служба України з лікарських засобів та контролю за наркотиками",
     "url": "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
     "coverageStartDate": "2000-01-01",
-    "latestDocumentDate": "2026-07-24",
+    "latestDocumentDate": "2026-07-30",
     "complete": true,
-    "recordCount": 21421,
-    "requestCount": 8,
-    "sha256": "4b7741a6c067fd5dfcf3cbff730fb157d6a71f02c9149a1e9a2c64023d37d826",
+    "recordCount": 21444,
+    "requestCount": 6,
+    "sha256": "588531d3bdbbd686572b99a557e4ea8bdf0b7734b67172d1bac03c516884dc61",
     "documentTypeIds": [
       "48",
       "50",
@@ -379137,6 +379137,38 @@
       "documentDate": "2026-07-22",
       "documentNumber": "335-001.001/002.0/17-26",
       "eventType": "permanent_ban",
+      "registrationNumber": "UA/16849/01/01",
+      "medicineName": "ЦЕФЕПІМ АНАНТА",
+      "dosageForm": "порошок для розчину для ін'єкцій по 1 г; 1 або 10 флаконів з порошком в коробці",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Ананта Медікеар Лімітед",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21416
+    },
+    {
+      "documentDate": "2026-07-22",
+      "documentNumber": "335-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/16849/01/02",
+      "medicineName": "ЦЕФЕПІМ АНАНТА",
+      "dosageForm": "порошок для розчину для ін'єкцій по 2 г; 1 або 10 флаконів з порошком в коробці",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Ананта Медікеар Лімітед",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21417
+    },
+    {
+      "documentDate": "2026-07-22",
+      "documentNumber": "335-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
       "registrationNumber": "UA/17125/01/01",
       "medicineName": "ФЛОРАЗІД",
       "dosageForm": "порошок для розчину для ін`єкцій по 1 г, 1 флакон з порошком у коробці",
@@ -379147,7 +379179,23 @@
       "manufacturer": "Ананта Медікеар Лімітед, Індія",
       "country": "Індія",
       "additionalInfo": "",
-      "sourceOrder": 21416
+      "sourceOrder": 21418
+    },
+    {
+      "documentDate": "2026-07-22",
+      "documentNumber": "335-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/17125/01/02",
+      "medicineName": "ФЛОРАЗІД",
+      "dosageForm": "порошок для розчину для ін`єкцій по 2 г, 1 флакон з порошком у коробці",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Ананта Медікеар Лімітед, Індія",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21419
     },
     {
       "documentDate": "2026-07-22",
@@ -379163,7 +379211,7 @@
       "manufacturer": "Свісс Перентералс Лтд., Індія Ананта Медікеар Лімітед, Індія",
       "country": "Індія",
       "additionalInfo": "",
-      "sourceOrder": 21417
+      "sourceOrder": 21420
     },
     {
       "documentDate": "2026-07-22",
@@ -379179,7 +379227,7 @@
       "manufacturer": "Ананта Медікеар Лімітед",
       "country": "Індія",
       "additionalInfo": "",
-      "sourceOrder": 21418
+      "sourceOrder": 21421
     },
     {
       "documentDate": "2026-07-22",
@@ -379195,7 +379243,23 @@
       "manufacturer": "Ананта Медікеар Лімітед",
       "country": "Індія",
       "additionalInfo": "",
-      "sourceOrder": 21419
+      "sourceOrder": 21422
+    },
+    {
+      "documentDate": "2026-07-22",
+      "documentNumber": "335-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/20497/01/02",
+      "medicineName": "ФОРЦЕФТРИН",
+      "dosageForm": "порошок для розчину для ін'єкцій по 1,5 г у флаконі, по 1 флакону з порошком у коробці",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Ананта Медікеар Лімітед",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21423
     },
     {
       "documentDate": "2026-07-24",
@@ -379213,7 +379277,359 @@
       "manufacturer": "контроль та випуск серії: АкВіда ГмбХ, Німеччина виробництво in bulk, первинне та вторинне пакування: Самянг Холдінгз Корпорейшн, Республiка Корея виробництво in bulk, первинне пакування, вторинне пакування, контроль серії: АкВіда ГмбХ, Німеччина",
       "country": "Німеччина/ Республiка Корея",
       "additionalInfo": "",
-      "sourceOrder": 21420
+      "sourceOrder": 21424
+    },
+    {
+      "documentDate": "2026-07-27",
+      "documentNumber": "337-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/7581/01/01",
+      "medicineName": "ЛОПЕРАМІД",
+      "dosageForm": "таблетки по 2 мг по 10 таблеток у блістері; по 2 блістери в пачці",
+      "seriesRaw": "011188",
+      "seriesValues": [
+        "011188"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ТОВ \"МАРІФАРМ\"",
+      "country": "Словенія",
+      "additionalInfo": "",
+      "sourceOrder": 21425
+    },
+    {
+      "documentDate": "2026-07-27",
+      "documentNumber": "338-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/6632/01/01",
+      "medicineName": "ГРИПОМЕД®",
+      "dosageForm": "капсули, по 10 капсул у блістері; по 2 блістери у пачці з картону",
+      "seriesRaw": "070925",
+      "seriesValues": [
+        "070925"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПАТ \"Хімфармзавод \"Червона зірка\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21426
+    },
+    {
+      "documentDate": "2026-07-27",
+      "documentNumber": "339-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/14764/01/03",
+      "medicineName": "ГАБАНА®",
+      "dosageForm": "капсули по 300 мг, по 10 капсул у блістері; по 2 блістери в пачці",
+      "seriesRaw": "011502",
+      "seriesValues": [
+        "011502"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ТОВ «МАРІФАРМ»",
+      "country": "Словенія",
+      "additionalInfo": "",
+      "sourceOrder": 21427
+    },
+    {
+      "documentDate": "2026-07-27",
+      "documentNumber": "339-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/14764/01/03",
+      "medicineName": "ГАБАНА®",
+      "dosageForm": "капсули по 300 мг, по 10 капсул у блістері; по 2 блістери в пачці",
+      "seriesRaw": "011520",
+      "seriesValues": [
+        "011520"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ТОВ «МАРІФАРМ»",
+      "country": "Словенія",
+      "additionalInfo": "",
+      "sourceOrder": 21428
+    },
+    {
+      "documentDate": "2026-07-27",
+      "documentNumber": "339-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/14764/01/03",
+      "medicineName": "ГАБАНА®",
+      "dosageForm": "капсули по 300 мг, по 10 капсул у блістері; по 2 блістери в пачці",
+      "seriesRaw": "011523",
+      "seriesValues": [
+        "011523"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ТОВ «МАРІФАРМ»",
+      "country": "Словенія",
+      "additionalInfo": "",
+      "sourceOrder": 21429
+    },
+    {
+      "documentDate": "2026-07-27",
+      "documentNumber": "340-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/10268/01/01",
+      "medicineName": "РАПІМАКС",
+      "dosageForm": "таблетки, по 10 таблеток у блістері; по 1 блістеру у картонній упаковці",
+      "seriesRaw": "2362001",
+      "seriesValues": [
+        "2362001"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Бафна Фармасьютікалс Лтд.",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21430
+    },
+    {
+      "documentDate": "2026-07-27",
+      "documentNumber": "341-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/6846/01/01",
+      "medicineName": "СУЛЬФАЦИЛ",
+      "dosageForm": "краплі очні, 200 мг/мл, по 10 мл у флаконі; по 1 флакону у пачці з картону",
+      "seriesRaw": "140825",
+      "seriesValues": [
+        "140825"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "АТ \"Фармак\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21431
+    },
+    {
+      "documentDate": "2026-07-27",
+      "documentNumber": "342-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/6683/01/03",
+      "medicineName": "САЛІЦИЛОВА МАЗЬ",
+      "dosageForm": "мазь 10 % по 25 г у тубі ламінатній в пачці",
+      "seriesRaw": "010124",
+      "seriesValues": [
+        "010124"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПрАТ Фармацевтична фабрика \"Віола\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21432
+    },
+    {
+      "documentDate": "2026-07-27",
+      "documentNumber": "342-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/6683/01/03",
+      "medicineName": "САЛІЦИЛОВА МАЗЬ",
+      "dosageForm": "мазь 10% по 25 г у тубі ламінатній в пачці",
+      "seriesRaw": "090824",
+      "seriesValues": [
+        "090824"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПрАТ Фармацевтична фабрика \"Віола\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21433
+    },
+    {
+      "documentDate": "2026-07-27",
+      "documentNumber": "342-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/6683/01/03",
+      "medicineName": "САЛІЦИЛОВА МАЗЬ",
+      "dosageForm": "мазь 10 % по 25 г у тубі ламінатній; по 1 тубі в пачці",
+      "seriesRaw": "111023",
+      "seriesValues": [
+        "111023"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПрАТ Фармацевтична фабрика \"Віола\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21434
+    },
+    {
+      "documentDate": "2026-07-28",
+      "documentNumber": "343-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/4596/01/01",
+      "medicineName": "ЕМЛА",
+      "dosageForm": "крем по 30 г у тубі; по 1 тубі у картонній коробці",
+      "seriesRaw": "100272",
+      "seriesValues": [
+        "100272"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Ресіфарм Карлскога АБ",
+      "country": "Австрія",
+      "additionalInfo": "",
+      "sourceOrder": 21435
+    },
+    {
+      "documentDate": "2026-07-28",
+      "documentNumber": "344-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "VALAMOR(ФАЛЬСИФІКАТ)",
+      "medicineName": "VALAMOR (ribociclib) 200 mg",
+      "dosageForm": "таблетки № 63",
+      "seriesRaw": "A0213K",
+      "seriesValues": [
+        "A0213K"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Novartis Sagl?k, G?da ve Tar?m Urunleri San. ve Tic. A.S.",
+      "country": "-",
+      "additionalInfo": "",
+      "sourceOrder": 21436
+    },
+    {
+      "documentDate": "2026-07-28",
+      "documentNumber": "345-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/10426/01/01",
+      "medicineName": "ФІБРИНАЗА-10",
+      "dosageForm": "таблетки, вкриті оболонкою, кишковорозчинні по 10 мг, по 10 таблеток у блістері; по 3 блістери у картонній пачці",
+      "seriesRaw": "ESI25011B1, ESI25012B1, ESI26002B1, ESI26003B1",
+      "seriesValues": [
+        "ESI25011B1, ESI25012B1, ESI26002B1, ESI26003B1",
+        "ESI25011B1",
+        "ESI25012B1",
+        "ESI26002B1",
+        "ESI26003B1"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Евертоджен Лайф Саєнсиз Лімітед",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21437
+    },
+    {
+      "documentDate": "2026-07-28",
+      "documentNumber": "345-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/10426/01/02",
+      "medicineName": "ФІБРИНАЗА-20",
+      "dosageForm": "таблетки, вкриті оболонкою, кишковорозчинні по 20 мг; по 10 таблеток у блістері; по 3 блістери у картонній пачці",
+      "seriesRaw": "EBK25010B1, EBK25011B1, EBK25012B1, EBK26004B1, EBK26005B1, EBK26007B1",
+      "seriesValues": [
+        "EBK25010B1, EBK25011B1, EBK25012B1, EBK26004B1, EBK26005B1, EBK26007B1",
+        "EBK25010B1",
+        "EBK25011B1",
+        "EBK25012B1",
+        "EBK26004B1",
+        "EBK26005B1",
+        "EBK26007B1"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Евертоджен Лайф Саєнсиз Лімітед",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21438
+    },
+    {
+      "documentDate": "2026-07-29",
+      "documentNumber": "346-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/7359/01/01",
+      "medicineName": "ЦИТРАМОН В",
+      "dosageForm": "таблетки; по 10 таблеток у блістерах",
+      "seriesRaw": "61025",
+      "seriesValues": [
+        "61025"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПАТ \"Монфарм\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21439
+    },
+    {
+      "documentDate": "2026-07-29",
+      "documentNumber": "347-001.001/002.0/17-26",
+      "eventType": "restore_permanent",
+      "registrationNumber": "UA/3347/01/01",
+      "medicineName": "ПРОТЕКОН®",
+      "dosageForm": "таблетки, вкриті оболонкою; по 60 таблеток у контейнері; по 1 контейнеру у пачці з картону",
+      "seriesRaw": "EGC23009C1",
+      "seriesValues": [
+        "EGC23009C1"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Евертоджен Лайф Саєнсиз Лімітед",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21440
+    },
+    {
+      "documentDate": "2026-07-29",
+      "documentNumber": "348-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/10381/01/01",
+      "medicineName": "СЕПТАНЕСТ З АДРЕНАЛІНОМ 1/200 000",
+      "dosageForm": "розчин для ін'єкцій по 1,7 мл у картриджі; по 10 картриджів у блістері; по 5 блістерів у картонній коробці",
+      "seriesRaw": "L00611AC",
+      "seriesValues": [
+        "L00611AC"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "СЕПТОДОНТ",
+      "country": "Франція",
+      "additionalInfo": "",
+      "sourceOrder": 21441
+    },
+    {
+      "documentDate": "2026-07-30",
+      "documentNumber": "349-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/10380/01/01",
+      "medicineName": "СЕПТАНЕСТ З АДРЕНАЛІНОМ 1/100 000",
+      "dosageForm": "розчин для ін'єкцій по 1,7 мл у картриджі; по 10 картриджів у блістері; по 5 блістерів у картонній коробці",
+      "seriesRaw": "L00609BA",
+      "seriesValues": [
+        "L00609BA"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "СЕПТОДОНТ",
+      "country": "Франція",
+      "additionalInfo": "",
+      "sourceOrder": 21442
+    },
+    {
+      "documentDate": "2026-07-30",
+      "documentNumber": "350-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/17410/01/01",
+      "medicineName": "ЛАЗИН",
+      "dosageForm": "таблетки, вкриті плівковою оболонкою, по 5 мг по 10 таблеток у блістері; по 3 блістери в картонній коробці",
+      "seriesRaw": "E254584",
+      "seriesValues": [
+        "E254584"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Гетеро Лабз Лімітед",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21443
     }
   ],
   "warnings": []
