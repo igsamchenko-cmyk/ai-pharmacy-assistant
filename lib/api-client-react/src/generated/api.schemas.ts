@@ -2675,6 +2675,145 @@ export interface CompareResult {
   disclaimer: string;
 }
 
+export type RegulatorySourceStatus = typeof RegulatorySourceStatus[keyof typeof RegulatorySourceStatus];
+
+
+export const RegulatorySourceStatus = {
+  current: 'current',
+  stale: 'stale',
+  incomplete: 'incomplete',
+  unavailable: 'unavailable',
+} as const;
+
+export type RegulatorySourceKey = typeof RegulatorySourceKey[keyof typeof RegulatorySourceKey];
+
+
+export const RegulatorySourceKey = {
+  series_restrictions: 'series_restrictions',
+  dispensing_categories: 'dispensing_categories',
+  reimbursement: 'reimbursement',
+  price_catalog: 'price_catalog',
+  national_list: 'national_list',
+} as const;
+
+export interface RegulatorySource {
+  key: RegulatorySourceKey;
+  label: string;
+  publisher: string;
+  status: RegulatorySourceStatus;
+  /** @nullable */
+  checkedAt: string | null;
+  /** @nullable */
+  releaseDate: string | null;
+  /** @nullable */
+  latestChangeDate: string | null;
+  /** @minimum 0 */
+  recordCount: number;
+  sourceUrl: string;
+  note: string;
+  warnings: string[];
+}
+
+export type RegulatoryEventType = typeof RegulatoryEventType[keyof typeof RegulatoryEventType];
+
+
+export const RegulatoryEventType = {
+  temporary_ban: 'temporary_ban',
+  permanent_ban: 'permanent_ban',
+  restore_temporary: 'restore_temporary',
+  restore_permanent: 'restore_permanent',
+  partial_cancellation: 'partial_cancellation',
+  supplement: 'supplement',
+} as const;
+
+export type RegulatoryEventSeverity = typeof RegulatoryEventSeverity[keyof typeof RegulatoryEventSeverity];
+
+
+export const RegulatoryEventSeverity = {
+  critical: 'critical',
+  review: 'review',
+  info: 'info',
+} as const;
+
+export interface RegulatoryEvent {
+  id: string;
+  date: string;
+  documentNumber: string;
+  type: RegulatoryEventType;
+  severity: RegulatoryEventSeverity;
+  label: string;
+  /** @nullable */
+  registrationNumber: string | null;
+  medicineName: string;
+  dosageForm: string;
+  series: string;
+  manufacturer: string;
+  sourceUrl: string;
+}
+
+export interface RegulatoryEventCounts {
+  /** @minimum 0 */
+  temporaryBan: number;
+  /** @minimum 0 */
+  permanentBan: number;
+  /** @minimum 0 */
+  restored: number;
+  /** @minimum 0 */
+  other: number;
+}
+
+export interface RegulatoryRadarSummary {
+  sourceCount: number;
+  currentSourceCount: number;
+  attentionSourceCount: number;
+  recentEventCount: number;
+  eventCounts: RegulatoryEventCounts;
+}
+
+export type RegulatoryRadarWindowDays = typeof RegulatoryRadarWindowDays[keyof typeof RegulatoryRadarWindowDays];
+
+
+export const RegulatoryRadarWindowDays = {
+  NUMBER_30: 30,
+} as const;
+
+export interface RegulatoryRadarWindow {
+  from: string;
+  to: string;
+  days: RegulatoryRadarWindowDays;
+}
+
+export type RegulatoryRadarVersion = typeof RegulatoryRadarVersion[keyof typeof RegulatoryRadarVersion];
+
+
+export const RegulatoryRadarVersion = {
+  '10': '1.0',
+} as const;
+
+export type RegulatoryRadarStatus = typeof RegulatoryRadarStatus[keyof typeof RegulatoryRadarStatus];
+
+
+export const RegulatoryRadarStatus = {
+  current: 'current',
+  attention: 'attention',
+} as const;
+
+export interface RegulatoryRadar {
+  version: RegulatoryRadarVersion;
+  generatedAt: string;
+  status: RegulatoryRadarStatus;
+  window: RegulatoryRadarWindow;
+  summary: RegulatoryRadarSummary;
+  /**
+     * @minItems 5
+     * @maxItems 5
+     */
+  sources: RegulatorySource[];
+  /** @maxItems 50 */
+  events: RegulatoryEvent[];
+  notices: string[];
+}
+
 export type SearchDrugsParams = {
 q?: string;
 field?: SearchDrugsField;

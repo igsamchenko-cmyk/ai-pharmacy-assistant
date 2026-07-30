@@ -59,7 +59,8 @@
     "knowledge:series-restrictions": "tsx src/scripts/knowledge-series-restrictions.ts",
     "knowledge:dispensing-categories": "tsx src/scripts/knowledge-dispensing-categories.ts",
     "knowledge:price-catalog": "tsx src/scripts/knowledge-price-catalog.ts",
-    "knowledge:reimbursement": "tsx src/scripts/knowledge-reimbursement.ts"
+    "knowledge:reimbursement": "tsx src/scripts/knowledge-reimbursement.ts",
+    "knowledge:regulatory-radar:audit": "tsx src/scripts/knowledge-regulatory-radar-audit.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",

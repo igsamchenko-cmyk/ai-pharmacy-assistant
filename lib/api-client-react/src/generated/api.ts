@@ -67,6 +67,7 @@ import type {
   ProvenanceSourceList,
   RegistryInteractionCheckInput,
   RegistryInteractionResult,
+  RegulatoryRadar,
   ReviewActionBody,
   ReviewActionResponse,
   ReviewQueueResponse,
@@ -1268,6 +1269,84 @@ export function useCheckProductSeriesRestrictions<TData = Awaited<ReturnType<typ
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getCheckProductSeriesRestrictionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetRegulatoryRadarUrl = () => {
+
+
+
+
+  return `/api/regulatory-radar`
+}
+
+/**
+ * Returns bounded, server-side verified metadata for the official Ukrainian pharmacy sources used by FarmAssist and the latest DLS quality-document events. Stale or incomplete evidence is never presented as current.
+ * @summary Show official-source freshness and recent regulatory events
+ */
+export const getRegulatoryRadar = async ( options?: RequestInit): Promise<RegulatoryRadar> => {
+
+  return customFetch<RegulatoryRadar>(getGetRegulatoryRadarUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRegulatoryRadarQueryKey = () => {
+    return [
+    `/api/regulatory-radar`
+    ] as const;
+    }
+
+
+export const getGetRegulatoryRadarQueryOptions = <TData = Awaited<ReturnType<typeof getRegulatoryRadar>>, TError = ErrorType<ErrorResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRegulatoryRadar>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRegulatoryRadarQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRegulatoryRadar>>> = ({ signal }) => getRegulatoryRadar({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRegulatoryRadar>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRegulatoryRadarQueryResult = NonNullable<Awaited<ReturnType<typeof getRegulatoryRadar>>>
+export type GetRegulatoryRadarQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Show official-source freshness and recent regulatory events
+ */
+
+export function useGetRegulatoryRadar<TData = Awaited<ReturnType<typeof getRegulatoryRadar>>, TError = ErrorType<ErrorResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRegulatoryRadar>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRegulatoryRadarQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

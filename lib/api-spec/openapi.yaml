@@ -16,6 +16,8 @@ tags:
     description: Closed beta validation dashboard
   - name: diagnostics
     description: Internal diagnostics and release readiness status
+  - name: regulatory
+    description: Verified official-source freshness and regulatory change radar
   - name: drugs
     description: Drug search and details
   - name: analogs
@@ -619,6 +621,28 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "503":
           description: Verified local DLS snapshot is unavailable or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /regulatory-radar:
+    get:
+      operationId: getRegulatoryRadar
+      tags: [regulatory]
+      summary: Show official-source freshness and recent regulatory events
+      description: >-
+        Returns bounded, server-side verified metadata for the official Ukrainian
+        pharmacy sources used by FarmAssist and the latest DLS quality-document
+        events. Stale or incomplete evidence is never presented as current.
+      responses:
+        "200":
+          description: Regulatory source status and bounded recent-event journal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegulatoryRadar"
+        "503":
+          description: One or more verified regulatory snapshots could not be loaded
           content:
             application/json:
               schema:
@@ -4476,3 +4500,200 @@ components:
           $ref: "#/components/schemas/InteractionResult"
         disclaimer:
           type: string
+    RegulatorySourceStatus:
+      type: string
+      enum: [current, stale, incomplete, unavailable]
+    RegulatorySource:
+      type: object
+      required:
+        - key
+        - label
+        - publisher
+        - status
+        - checkedAt
+        - releaseDate
+        - latestChangeDate
+        - recordCount
+        - sourceUrl
+        - note
+        - warnings
+      properties:
+        key:
+          type: string
+          enum:
+            - series_restrictions
+            - dispensing_categories
+            - reimbursement
+            - price_catalog
+            - national_list
+        label:
+          type: string
+        publisher:
+          type: string
+        status:
+          $ref: "#/components/schemas/RegulatorySourceStatus"
+        checkedAt:
+          type: [string, "null"]
+          format: date-time
+        releaseDate:
+          type: [string, "null"]
+          format: date
+        latestChangeDate:
+          type: [string, "null"]
+          format: date
+        recordCount:
+          type: integer
+          minimum: 0
+        sourceUrl:
+          type: string
+          format: uri
+        note:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
+    RegulatoryEventType:
+      type: string
+      enum:
+        - temporary_ban
+        - permanent_ban
+        - restore_temporary
+        - restore_permanent
+        - partial_cancellation
+        - supplement
+    RegulatoryEvent:
+      type: object
+      required:
+        - id
+        - date
+        - documentNumber
+        - type
+        - severity
+        - label
+        - registrationNumber
+        - medicineName
+        - dosageForm
+        - series
+        - manufacturer
+        - sourceUrl
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+          format: date
+        documentNumber:
+          type: string
+        type:
+          $ref: "#/components/schemas/RegulatoryEventType"
+        severity:
+          type: string
+          enum: [critical, review, info]
+        label:
+          type: string
+        registrationNumber:
+          type: [string, "null"]
+        medicineName:
+          type: string
+        dosageForm:
+          type: string
+        series:
+          type: string
+        manufacturer:
+          type: string
+        sourceUrl:
+          type: string
+          format: uri
+    RegulatoryEventCounts:
+      type: object
+      required:
+        - temporaryBan
+        - permanentBan
+        - restored
+        - other
+      properties:
+        temporaryBan:
+          type: integer
+          minimum: 0
+        permanentBan:
+          type: integer
+          minimum: 0
+        restored:
+          type: integer
+          minimum: 0
+        other:
+          type: integer
+          minimum: 0
+    RegulatoryRadarSummary:
+      type: object
+      required:
+        - sourceCount
+        - currentSourceCount
+        - attentionSourceCount
+        - recentEventCount
+        - eventCounts
+      properties:
+        sourceCount:
+          type: integer
+        currentSourceCount:
+          type: integer
+        attentionSourceCount:
+          type: integer
+        recentEventCount:
+          type: integer
+        eventCounts:
+          $ref: "#/components/schemas/RegulatoryEventCounts"
+    RegulatoryRadarWindow:
+      type: object
+      required: [from, to, days]
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        days:
+          type: integer
+          enum: [30]
+    RegulatoryRadar:
+      type: object
+      required:
+        - version
+        - generatedAt
+        - status
+        - window
+        - summary
+        - sources
+        - events
+        - notices
+      properties:
+        version:
+          type: string
+          enum: ["1.0"]
+        generatedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [current, attention]
+        window:
+          $ref: "#/components/schemas/RegulatoryRadarWindow"
+        summary:
+          $ref: "#/components/schemas/RegulatoryRadarSummary"
+        sources:
+          type: array
+          minItems: 5
+          maxItems: 5
+          items:
+            $ref: "#/components/schemas/RegulatorySource"
+        events:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/RegulatoryEvent"
+        notices:
+          type: array
+          items:
+            type: string
