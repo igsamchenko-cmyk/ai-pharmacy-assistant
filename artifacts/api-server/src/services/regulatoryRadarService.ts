@@ -21,13 +21,13 @@ import {
 } from "../knowledge/priceCatalog/model";
 import { PRICE_CATALOG_FRESHNESS_MS } from "../knowledge/priceCatalog/catalog";
 import {
-  SeriesRestrictionSnapshotSchema,
   type SeriesRestrictionEventType,
   type SeriesRestrictionSnapshot,
 } from "../knowledge/seriesRestrictions/model";
 import {
   DLS_QUALITY_DOCUMENTS_URL,
   SERIES_RESTRICTION_FRESHNESS_MS,
+  loadSeriesRestrictionSnapshot,
 } from "../knowledge/seriesRestrictions/catalog";
 import type { NationalListSnapshot } from "../knowledge/nationalList/model";
 import { evaluateNationalListActivation } from "../knowledge/nationalList/source";
@@ -118,18 +118,7 @@ function readJson(filePath: string): unknown {
 }
 
 function verifySnapshots(): RadarSnapshots {
-  const series = SeriesRestrictionSnapshotSchema.parse(
-    readJson("data/series-restrictions/ua-dls.json"),
-  );
-  const seriesHash = createHash("sha256")
-    .update(JSON.stringify(series.records))
-    .digest("hex");
-  if (
-    seriesHash !== series.source.sha256 ||
-    series.records.length !== series.source.recordCount
-  ) {
-    throw new Error("regulatory_radar_series_snapshot_invalid");
-  }
+  const series = loadSeriesRestrictionSnapshot();
 
   const dispensing = DispensingCategorySnapshotSchema.parse(
     readJson("data/dispensing-categories/ua-drlz.json"),

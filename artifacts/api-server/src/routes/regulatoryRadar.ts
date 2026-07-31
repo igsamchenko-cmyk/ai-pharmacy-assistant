@@ -1,7 +1,11 @@
 import { Router, type IRouter } from "express";
-import { GetRegulatoryRadarResponse } from "@workspace/api-zod";
+import {
+  GetRegulatoryRadarResponse,
+  RefreshRegulatoryRadarResponse,
+} from "@workspace/api-zod";
 import { requireRole } from "../auth";
 import { loadRegulatoryRadar } from "../services/regulatoryRadarService";
+import { refreshRegulatoryRadarIfDue } from "../services/regulatoryRadarRefreshService";
 
 const router: IRouter = Router();
 router.use(requireRole("user"));
@@ -17,6 +21,25 @@ router.get("/regulatory-radar", (_req, res): void => {
   } catch {
     res.status(503).json({
       error: "Verified regulatory source snapshots are unavailable",
+    });
+  }
+});
+
+router.post("/regulatory-radar/refresh", async (req, res): Promise<void> => {
+  try {
+    const result = RefreshRegulatoryRadarResponse.parse(
+      await refreshRegulatoryRadarIfDue(),
+    );
+    if (result.status === "failed") {
+      req.log.warn(
+        "Automatic DLS runtime refresh failed; retained verified snapshot",
+      );
+    }
+    res.set("Cache-Control", "private, no-store");
+    res.json(result);
+  } catch {
+    res.status(503).json({
+      error: "Verified regulatory source snapshot is unavailable",
     });
   }
 });

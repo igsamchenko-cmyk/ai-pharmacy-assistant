@@ -2816,6 +2816,37 @@ export interface RegulatoryRadar {
   notices: string[];
 }
 
+export type RegulatoryRadarRefreshVersion = typeof RegulatoryRadarRefreshVersion[keyof typeof RegulatoryRadarRefreshVersion];
+
+
+export const RegulatoryRadarRefreshVersion = {
+  '10': '1.0',
+} as const;
+
+export type RegulatoryRadarRefreshStatus = typeof RegulatoryRadarRefreshStatus[keyof typeof RegulatoryRadarRefreshStatus];
+
+
+export const RegulatoryRadarRefreshStatus = {
+  current: 'current',
+  unchanged: 'unchanged',
+  updated: 'updated',
+  failed: 'failed',
+} as const;
+
+export interface RegulatoryRadarRefresh {
+  version: RegulatoryRadarRefreshVersion;
+  status: RegulatoryRadarRefreshStatus;
+  checkedAt: string;
+  nextCheckAt: string;
+  latestDocumentDate: string | null;
+  /** @minimum 0 */
+  recordCount: number;
+  /** @minimum 0 */
+  addedCount: number;
+  /** @minimum 0 */
+  updatedCount: number;
+}
+
 export type SearchDrugsParams = {
 q?: string;
 field?: SearchDrugsField;

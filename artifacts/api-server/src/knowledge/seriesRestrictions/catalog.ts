@@ -16,6 +16,7 @@ const snapshotCache = new TtlCache<SeriesRestrictionSnapshot>({
   ttlMs: 5 * 60_000,
   maxEntries: 1,
 });
+let runtimeSnapshot: SeriesRestrictionSnapshot | null = null;
 
 export type SeriesRestrictionStatus =
   | "blocked"
@@ -68,6 +69,34 @@ function readSnapshot(): SeriesRestrictionSnapshot {
   return parsed;
 }
 
+function validateRuntimeSnapshot(
+  snapshot: SeriesRestrictionSnapshot,
+): SeriesRestrictionSnapshot {
+  const parsed = SeriesRestrictionSnapshotSchema.parse(snapshot);
+  const actualHash = createHash("sha256")
+    .update(JSON.stringify(parsed.records))
+    .digest("hex");
+  if (actualHash !== parsed.source.sha256) {
+    throw new Error("series_restriction_snapshot_hash_mismatch");
+  }
+  if (parsed.source.recordCount !== parsed.records.length) {
+    throw new Error("series_restriction_snapshot_count_mismatch");
+  }
+  return parsed;
+}
+
+export function loadSeriesRestrictionSnapshot(): SeriesRestrictionSnapshot {
+  return runtimeSnapshot ?? readSnapshot();
+}
+
+export function setRuntimeSeriesRestrictionSnapshot(
+  snapshot: SeriesRestrictionSnapshot,
+): SeriesRestrictionSnapshot {
+  runtimeSnapshot = validateRuntimeSnapshot(snapshot);
+  snapshotCache.delete("snapshot");
+  return runtimeSnapshot;
+}
+
 function freshness(
   snapshot: SeriesRestrictionSnapshot,
   now: Date,
@@ -101,7 +130,7 @@ export function checkSeriesRestrictions(
   series: string,
   options: { snapshot?: SeriesRestrictionSnapshot; now?: Date } = {},
 ): SeriesRestrictionCheckResult {
-  const snapshot = options.snapshot ?? readSnapshot();
+  const snapshot = options.snapshot ?? loadSeriesRestrictionSnapshot();
   const normalizedRegistration =
     normalizeRegistrationNumber(registrationNumber);
   const normalizedSeries = normalizeSeries(series);
@@ -189,5 +218,6 @@ export function checkSeriesRestrictions(
 }
 
 export function clearSeriesRestrictionCache(): void {
+  runtimeSnapshot = null;
   snapshotCache.clear();
 }

@@ -18,12 +18,14 @@ import {
   getGetRegulatoryRadarQueryKey,
   type RegulatoryEvent,
   type RegulatorySource,
+  type RegulatoryRadarRefresh,
 } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRegulatoryRadarRefresh } from "@/lib/regulatory-radar-refresh";
 
 type EventFilter =
   | "all"
@@ -162,6 +164,29 @@ function formatDateTime(value: string): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+function refreshStatusMessage(
+  result: RegulatoryRadarRefresh | null,
+  isRefreshing: boolean,
+): string {
+  if (isRefreshing) {
+    return "Перевіряємо актуальність даних Держлікслужби…";
+  }
+  if (!result) {
+    return "Після відкриття застосунку дані перевіряються автоматично, але не частіше одного разу на 24 години.";
+  }
+  switch (result.status) {
+    case "updated":
+      return `Дані оновлено ${formatDateTime(result.checkedAt)}: додано ${result.addedCount}, змінено ${result.updatedCount}.`;
+    case "unchanged":
+      return `Перевірено ${formatDateTime(result.checkedAt)}: нових розпоряджень не виявлено.`;
+    case "failed":
+      return `Автоперевірка ${formatDateTime(result.checkedAt)} не вдалася. Використовується останній перевірений знімок.`;
+    case "current":
+      return `Дані актуальні. Остання успішна перевірка: ${formatDateTime(result.checkedAt)}.`;
+    default:
+      return "Після відкриття застосунку дані перевіряються автоматично.";
+  }
 }
 
 function sourceDate(source: RegulatorySource): string {
@@ -365,6 +390,8 @@ export default function RegulatoryRadarPage() {
       refetchOnWindowFocus: false,
     },
   });
+  const automaticRefresh = useRegulatoryRadarRefresh();
+  const isRefreshing = automaticRefresh.isRefreshing || radar.isFetching;
 
   useEffect(() => {
     if (!radar.data || seenStateReady) return;
@@ -422,17 +449,27 @@ export default function RegulatoryRadarPage() {
               Офіційні зміни, свіжість джерел і заборони серій в одному
               професійному екрані.
             </p>
+            <p className="mt-2 text-xs text-muted-foreground" role="status">
+              {refreshStatusMessage(
+                automaticRefresh.lastResult,
+                automaticRefresh.isRefreshing,
+              )}
+            </p>
           </div>
         </div>
         <Button
           variant="outline"
-          onClick={() => radar.refetch()}
-          disabled={radar.isFetching}
+          onClick={() => {
+            void automaticRefresh.refresh().then(() => {
+              void radar.refetch();
+            });
+          }}
+          disabled={isRefreshing}
         >
           <RefreshCw
-            className={`mr-2 h-4 w-4 ${radar.isFetching ? "animate-spin" : ""}`}
+            className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
           />
-          Перечитати довідник
+          Перевірити актуальність
         </Button>
       </header>
 

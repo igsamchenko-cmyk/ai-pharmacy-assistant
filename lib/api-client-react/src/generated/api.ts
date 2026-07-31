@@ -68,6 +68,7 @@ import type {
   RegistryInteractionCheckInput,
   RegistryInteractionResult,
   RegulatoryRadar,
+  RegulatoryRadarRefresh,
   ReviewActionBody,
   ReviewActionResponse,
   ReviewQueueResponse,
@@ -1358,6 +1359,77 @@ export function useGetRegulatoryRadar<TData = Awaited<ReturnType<typeof getRegul
 
 
 
+
+export const getRefreshRegulatoryRadarUrl = () => {
+
+
+
+
+  return `/api/regulatory-radar/refresh`
+}
+
+/**
+ * Performs at most one official DLS refresh per 24 hours for the running server process. Concurrent app openings share one in-flight refresh. Invalid or unavailable upstream data never replaces the last verified snapshot.
+ * @summary Refresh DLS regulatory data when the verified snapshot is due
+ */
+export const refreshRegulatoryRadar = async ( options?: RequestInit): Promise<RegulatoryRadarRefresh> => {
+
+  return customFetch<RegulatoryRadarRefresh>(getRefreshRegulatoryRadarUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRefreshRegulatoryRadarMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshRegulatoryRadar>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshRegulatoryRadar>>, TError,void, TContext> => {
+
+const mutationKey = ['refreshRegulatoryRadar'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshRegulatoryRadar>>, void> = () => {
+
+
+          return  refreshRegulatoryRadar(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefreshRegulatoryRadarMutationResult = NonNullable<Awaited<ReturnType<typeof refreshRegulatoryRadar>>>
+
+    export type RefreshRegulatoryRadarMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Refresh DLS regulatory data when the verified snapshot is due
+ */
+export const useRefreshRegulatoryRadar = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshRegulatoryRadar>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof refreshRegulatoryRadar>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRefreshRegulatoryRadarMutationOptions(options));
+    }
 
 export const getGetDrugStatsUrl = () => {
 

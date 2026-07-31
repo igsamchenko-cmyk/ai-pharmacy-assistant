@@ -9,6 +9,7 @@ import AccessDenied from "@/pages/access-denied";
 import { Layout } from "@/components/layout";
 import { AuthProvider } from "@/lib/auth";
 import { CatalogClientIndexProvider } from "@/lib/catalog-client-index";
+import { RegulatoryRadarRefreshProvider } from "@/lib/regulatory-radar-refresh";
 import { ProtectedRoute } from "@/components/protected-route";
 
 const Home = lazy(() => import("@/pages/home"));
@@ -129,14 +130,18 @@ function App() {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <CatalogClientIndexProvider>
-            <TooltipProvider>
-              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <Router />
-              </WouterRouter>
-              <Toaster />
-            </TooltipProvider>
-          </CatalogClientIndexProvider>
+          <RegulatoryRadarRefreshProvider>
+            <CatalogClientIndexProvider>
+              <TooltipProvider>
+                <WouterRouter
+                  base={import.meta.env.BASE_URL.replace(/\/$/, "")}
+                >
+                  <Router />
+                </WouterRouter>
+                <Toaster />
+              </TooltipProvider>
+            </CatalogClientIndexProvider>
+          </RegulatoryRadarRefreshProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

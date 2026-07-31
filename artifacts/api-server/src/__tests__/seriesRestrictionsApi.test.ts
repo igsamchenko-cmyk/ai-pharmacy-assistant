@@ -3,6 +3,7 @@ import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../app";
 import { clearSeriesRestrictionCache } from "../knowledge/seriesRestrictions/catalog";
+import { resetRegulatoryRadarRefreshStateForTests } from "../services/regulatoryRadarRefreshService";
 
 const originalEnv = { ...process.env };
 
@@ -36,6 +37,7 @@ function checkUrl(
 
 describe("series restriction API", () => {
   afterEach(() => {
+    resetRegulatoryRadarRefreshStateForTests();
     process.env = { ...originalEnv };
     vi.useRealTimers();
     clearSeriesRestrictionCache();
@@ -104,6 +106,29 @@ describe("series restriction API", () => {
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
         error: "Invalid product, registration number or series",
+      });
+    });
+  });
+
+  it("returns the verified daily refresh status without blocking on DLS when the snapshot is current", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-31T20:00:00.000Z"));
+    process.env.AUTH_REQUIRED = "false";
+    const app = createApp({ nodeEnv: "test" });
+
+    await withServer(createServer(app), async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/api/regulatory-radar/refresh`, {
+        method: "POST",
+      });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toContain("no-store");
+      expect(await response.json()).toMatchObject({
+        version: "1.0",
+        status: "current",
+        checkedAt: "2026-07-31T19:14:35.713Z",
+        recordCount: expect.any(Number),
+        addedCount: 0,
+        updatedCount: 0,
       });
     });
   });
