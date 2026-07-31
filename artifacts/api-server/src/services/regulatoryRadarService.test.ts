@@ -59,7 +59,10 @@ describe("regulatory radar service", () => {
     );
     expect(radar.events.length).toBeLessThanOrEqual(50);
     expect(radar.window.days).toBe(30);
-    expect(radar.window.to.toISOString().slice(0, 10)).toBe("2026-07-30");
+    expect(radar.sources[0]?.latestChangeDate).not.toBeNull();
+    expect(radar.window.to.toISOString()).toBe(
+      radar.sources[0]?.latestChangeDate?.toISOString(),
+    );
     expect(
       radar.events.every(
         (event) => event.sourceUrl === radar.sources[0]?.sourceUrl,
