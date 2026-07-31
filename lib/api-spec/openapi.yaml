@@ -4576,6 +4576,7 @@ components:
         - dosageForm
         - series
         - manufacturer
+        - additionalInfo
         - sourceUrl
       properties:
         id:
@@ -4602,6 +4603,9 @@ components:
           type: string
         manufacturer:
           type: string
+        additionalInfo:
+          type: string
+          maxLength: 8000
         sourceUrl:
           type: string
           format: uri

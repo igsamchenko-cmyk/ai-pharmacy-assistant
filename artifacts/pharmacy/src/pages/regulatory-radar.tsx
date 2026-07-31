@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   Ban,
@@ -138,6 +138,7 @@ export function filterRegulatoryEvents(
         event.registrationNumber ?? "",
         event.series,
         event.manufacturer,
+        event.additionalInfo,
         event.documentNumber,
       ].join(" "),
     ).includes(needle);
@@ -232,7 +233,7 @@ function SourceCard({ source }: { source: RegulatorySource }) {
   );
 }
 
-function EventCard({
+export function EventCard({
   event,
   isNew,
 }: {
@@ -307,6 +308,19 @@ function EventCard({
               </p>
             ) : null}
           </div>
+          {event.additionalInfo ? (
+            <p className="mt-3 rounded-xl bg-background/70 px-3 py-2 text-sm">
+              <span className="font-medium text-foreground">
+                {event.type === "restore_temporary" ||
+                event.type === "restore_permanent"
+                  ? "Пов’язане рішення:"
+                  : "Примітка:"}
+              </span>{" "}
+              <span className="text-muted-foreground">
+                {event.additionalInfo}
+              </span>
+            </p>
+          ) : null}
         </div>
         <a
           href={event.sourceUrl}

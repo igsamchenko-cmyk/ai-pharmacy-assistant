@@ -1432,6 +1432,8 @@ export const getRegulatoryRadarResponseSourcesItemRecordCountMin = 0;
 export const getRegulatoryRadarResponseSourcesMin = 5;
 export const getRegulatoryRadarResponseSourcesMax = 5;
 
+export const getRegulatoryRadarResponseEventsItemAdditionalInfoMax = 8000;
+
 export const getRegulatoryRadarResponseEventsMax = 50;
 
 
@@ -1482,6 +1484,7 @@ export const GetRegulatoryRadarResponse = zod.object({
   "dosageForm": zod.string(),
   "series": zod.string(),
   "manufacturer": zod.string(),
+  "additionalInfo": zod.string().max(getRegulatoryRadarResponseEventsItemAdditionalInfoMax),
   "sourceUrl": zod.string().url()
 })).max(getRegulatoryRadarResponseEventsMax),
   "notices": zod.array(zod.string())

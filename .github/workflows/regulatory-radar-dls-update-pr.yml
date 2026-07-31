@@ -1,0 +1,252 @@
+name: Regulatory radar DLS update PR
+
+on:
+  schedule:
+    - cron: "7 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: regulatory-radar-dls-update-pr
+  cancel-in-progress: false
+
+env:
+  UPDATE_BRANCH: automation/regulatory-radar-dls-update
+  GH_TOKEN: ${{ secrets.REGULATORY_RADAR_PR_TOKEN || github.token }}
+  HAS_EXTERNAL_UPDATE_TOKEN: ${{ secrets.REGULATORY_RADAR_PR_TOKEN != '' }}
+
+jobs:
+  candidate:
+    name: Validate official DLS changes and open a review PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout reviewed main snapshot
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.14.1"
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build validated DLS candidate
+        id: update
+        run: >-
+          pnpm knowledge:regulatory-radar:update --
+          --refresh
+          --baseline=data/series-restrictions/ua-dls.json
+          --candidate-out=data/series-restrictions/ua-dls.json
+          --report-out="$RUNNER_TEMP/regulatory-radar-dls-update.json"
+
+      - name: Publish candidate summary
+        id: summary
+        shell: bash
+        run: |
+          node - "$RUNNER_TEMP/regulatory-radar-dls-update.json" \
+            "$GITHUB_OUTPUT" "$GITHUB_STEP_SUMMARY" <<'NODE'
+          const fs = require("node:fs");
+          const [reportPath, outputPath, summaryPath] = process.argv.slice(2);
+          const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+          const changed = report.status === "changed";
+          const escape = (value) => String(value ?? "—").replaceAll("|", "\\|");
+          fs.appendFileSync(
+            outputPath,
+            [
+              `changed=${changed}`,
+              `latest_date=${report.candidate.latestDocumentDate ?? "unknown"}`,
+              `added_count=${report.changes.addedCount}`,
+              `updated_count=${report.changes.updatedCount}`,
+            ].join("\n") + "\n",
+          );
+          const lines = [
+            "## DLS regulatory candidate",
+            "",
+            `Status: **${report.status}**`,
+            "",
+            `Baseline: ${report.baseline.recordCount} records · ${report.baseline.latestDocumentDate ?? "—"}`,
+            `Candidate: ${report.candidate.recordCount} records · ${report.candidate.latestDocumentDate ?? "—"}`,
+            `Changes: +${report.changes.addedCount} added · ${report.changes.updatedCount} corrected · ${report.changes.removedCount} removed`,
+            "",
+            "| Validation | Result |",
+            "|---|---:|",
+            ...report.checks.map((check) =>
+              `| ${escape(check.key)} | ${check.passed ? "pass" : "FAIL"} |`,
+            ),
+            "",
+            "**This workflow never writes directly to production.**",
+          ];
+          fs.appendFileSync(summaryPath, `${lines.join("\n")}\n`);
+          NODE
+
+      - name: Upload immutable candidate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regulatory-radar-dls-update-${{ github.run_id }}
+          retention-days: 90
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/regulatory-radar-dls-update.json
+
+      - name: Verify candidate changed only the reviewed DLS snapshot
+        if: steps.summary.outputs.changed == 'true'
+        shell: bash
+        run: |
+          git diff --check
+          test -n "$(git status --short -- data/series-restrictions/ua-dls.json)"
+          unexpected="$(
+            git status --short |
+              grep -vE '^ M data/series-restrictions/ua-dls\.json$' || true
+          )"
+          if [[ -n "$unexpected" ]]; then
+            echo "::error::Candidate generation changed unexpected files."
+            printf '%s\n' "$unexpected"
+            exit 1
+          fi
+
+      - name: Validate candidate snapshot
+        if: steps.summary.outputs.changed == 'true'
+        run: |
+          pnpm --filter @workspace/api-server run typecheck
+          pnpm --filter @workspace/api-server exec vitest run \
+            src/knowledge/seriesRestrictions \
+            src/knowledge/__tests__/regulatorySourceNormalization.test.ts
+          pnpm knowledge:import:validate:all
+
+      - name: Require a token that may create pull requests
+        if: >-
+          steps.summary.outputs.changed == 'true' &&
+          env.HAS_EXTERNAL_UPDATE_TOKEN != 'true'
+        shell: bash
+        run: |
+          allowed="$(
+            gh api \
+              "repos/${GITHUB_REPOSITORY}/actions/permissions/workflow" \
+              --jq '.can_approve_pull_request_reviews'
+          )"
+          if [[ "$allowed" != "true" ]]; then
+            echo "::error::Enable 'Allow GitHub Actions to create and approve pull requests' or add REGULATORY_RADAR_PR_TOKEN."
+            exit 1
+          fi
+
+      - name: Commit validated candidate branch
+        if: steps.summary.outputs.changed == 'true'
+        shell: bash
+        run: |
+          gh auth setup-git
+          git config user.name "farmassist-regulatory-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$UPDATE_BRANCH"
+          git add -- data/series-restrictions/ua-dls.json
+          git commit -m "data: refresh DLS regulatory snapshot"
+          git fetch origin \
+            "$UPDATE_BRANCH:refs/remotes/origin/$UPDATE_BRANCH" || true
+          git push \
+            --force-with-lease="refs/heads/$UPDATE_BRANCH" \
+            origin "HEAD:refs/heads/$UPDATE_BRANCH"
+
+      - name: Create or update review pull request
+        if: steps.summary.outputs.changed == 'true'
+        id: pull_request
+        shell: bash
+        run: |
+          node - "$RUNNER_TEMP/regulatory-radar-dls-update.json" \
+            "$RUNNER_TEMP/regulatory-radar-dls-pr.md" <<'NODE'
+          const fs = require("node:fs");
+          const [reportPath, bodyPath] = process.argv.slice(2);
+          const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+          const labels = {
+            temporary_ban: "тимчасові заборони",
+            permanent_ban: "постійні заборони",
+            restore_temporary: "поновлення після тимчасових",
+            restore_permanent: "поновлення після постійних",
+            partial_cancellation: "часткові скасування",
+            supplement: "доповнення",
+          };
+          const byType = Object.entries(report.changes.addedByType)
+            .filter(([, count]) => count > 0)
+            .map(([type, count]) => `- ${labels[type] ?? type}: ${count}`);
+          const preview = report.changes.preview.slice(0, 30).map((event) =>
+            `| ${event.changeKind} | ${event.changedFields.join(", ") || "—"} | ${event.documentDate} | ${event.eventType} | ${String(event.documentNumber).replaceAll("|", "\\|")} | ${String(event.medicineName).replaceAll("|", "\\|")} | ${event.registrationNumber ?? "—"} |`,
+          );
+          const body = [
+            "## Автоматичне оновлення Держлікслужби",
+            "",
+            `Офіційний знімок: **${report.candidate.latestDocumentDate ?? "дата відсутня"}**.`,
+            "",
+            `- додано записів: ${report.changes.addedCount}`,
+            `- виправлено наявних записів: ${report.changes.updatedCount}`,
+            `- видалено перевіреної історії: ${report.changes.removedCount}`,
+            `- загальна кількість після оновлення: ${report.candidate.recordCount}`,
+            "",
+            "### Нові записи за типом",
+            "",
+            ...(byType.length ? byType : ["- немає"]),
+            "",
+            "### Попередній перегляд",
+            "",
+            "| Зміна | Поля | Дата | Тип | Документ | Препарат | Реєстрація |",
+            "|---|---|---|---|---|---|---|",
+            ...preview,
+            "",
+            report.changes.previewTruncated
+              ? "У таблиці показано лише перші записи; повний звіт є в artifact workflow."
+              : "У таблиці показано всі змінені записи.",
+            "",
+            "Знімок сформовано автоматично, але production не змінюється до проходження CI та злиття PR.",
+          ].join("\n");
+          fs.writeFileSync(bodyPath, `${body}\n`);
+          NODE
+
+          title="data: refresh DLS radar through ${{ steps.summary.outputs.latest_date }}"
+          existing="$(
+            gh pr list \
+              --repo "$GITHUB_REPOSITORY" \
+              --base main \
+              --head "$UPDATE_BRANCH" \
+              --state open \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+          if [[ -n "$existing" ]]; then
+            gh pr edit "$existing" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$title" \
+              --body-file "$RUNNER_TEMP/regulatory-radar-dls-pr.md"
+            pr_url="$(
+              gh pr view "$existing" \
+                --repo "$GITHUB_REPOSITORY" \
+                --json url \
+                --jq '.url'
+            )"
+          else
+            pr_url="$(
+              gh pr create \
+                --repo "$GITHUB_REPOSITORY" \
+                --base main \
+                --head "$UPDATE_BRANCH" \
+                --title "$title" \
+                --body-file "$RUNNER_TEMP/regulatory-radar-dls-pr.md"
+            )"
+          fi
+          echo "url=$pr_url" >> "$GITHUB_OUTPUT"
+          echo "Review PR: $pr_url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Dispatch full validation for the candidate commit
+        if: steps.summary.outputs.changed == 'true'
+        run: >-
+          gh workflow run v16-registry-validation.yml
+          --repo "$GITHUB_REPOSITORY"
+          --ref "$UPDATE_BRANCH"

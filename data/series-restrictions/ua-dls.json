@@ -1,6 +1,6 @@
 {
   "schemaVersion": "ua-dls-series-restrictions-v1",
-  "generatedAt": "2026-07-30T16:46:47.703Z",
+  "generatedAt": "2026-07-31T04:15:41.718Z",
   "source": {
     "title": "Реєстр документів щодо якості лікарських засобів",
     "publisher": "Державна служба України з лікарських засобів та контролю за наркотиками",
@@ -10,7 +10,7 @@
     "complete": true,
     "recordCount": 21444,
     "requestCount": 6,
-    "sha256": "588531d3bdbbd686572b99a557e4ea8bdf0b7734b67172d1bac03c516884dc61",
+    "sha256": "f1d4e76441dfe05e7727ce347453a275dd5d9ad098018ed7f77f66df900772d8",
     "documentTypeIds": [
       "48",
       "50",
@@ -379384,7 +379384,7 @@
       "seriesUnspecified": false,
       "manufacturer": "Бафна Фармасьютікалс Лтд.",
       "country": "Індія",
-      "additionalInfo": "",
+      "additionalInfo": "Скасування розпорядження від 08.10.2025 № 780-001.1/002.0/17-25",
       "sourceOrder": 21430
     },
     {
@@ -379402,7 +379402,7 @@
       "seriesUnspecified": false,
       "manufacturer": "АТ \"Фармак\"",
       "country": "Україна",
-      "additionalInfo": "",
+      "additionalInfo": "Скасування розпорядження від 22.12.2025 № 1082-001.1/002.0/17-25",
       "sourceOrder": 21431
     },
     {
@@ -379574,7 +379574,7 @@
       "seriesUnspecified": false,
       "manufacturer": "Евертоджен Лайф Саєнсиз Лімітед",
       "country": "Індія",
-      "additionalInfo": "",
+      "additionalInfo": "Скасування розпорядження від 03.04.2024 № 3322-001.1/002.0/17-24",
       "sourceOrder": 21440
     },
     {
@@ -379628,7 +379628,7 @@
       "seriesUnspecified": false,
       "manufacturer": "Гетеро Лабз Лімітед",
       "country": "Індія",
-      "additionalInfo": "",
+      "additionalInfo": "Скасування розпорядження від 26.03.2026 № 160-001.2/002.0/17-26",
       "sourceOrder": 21443
     }
   ],

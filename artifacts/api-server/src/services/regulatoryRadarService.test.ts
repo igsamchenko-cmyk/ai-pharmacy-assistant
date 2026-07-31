@@ -65,5 +65,12 @@ describe("regulatory radar service", () => {
         (event) => event.sourceUrl === radar.sources[0]?.sourceUrl,
       ),
     ).toBe(true);
+    expect(
+      radar.events.find(
+        (event) =>
+          event.documentNumber === "350-001.001/002.0/17-26" &&
+          event.type === "restore_temporary",
+      )?.additionalInfo,
+    ).toContain("160-001.2/002.0/17-26");
   });
 });

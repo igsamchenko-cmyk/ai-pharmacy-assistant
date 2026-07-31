@@ -68,7 +68,8 @@
     "knowledge:dispensing-categories": "pnpm --filter @workspace/api-server run knowledge:dispensing-categories --",
     "knowledge:price-catalog": "pnpm --filter @workspace/api-server run knowledge:price-catalog --",
     "knowledge:reimbursement": "pnpm --filter @workspace/api-server run knowledge:reimbursement --",
-    "knowledge:regulatory-radar:audit": "pnpm --filter @workspace/api-server run knowledge:regulatory-radar:audit --"
+    "knowledge:regulatory-radar:audit": "pnpm --filter @workspace/api-server run knowledge:regulatory-radar:audit --",
+    "knowledge:regulatory-radar:update": "pnpm --filter @workspace/api-server run knowledge:regulatory-radar:update --"
   },
   "private": true,
   "devDependencies": {

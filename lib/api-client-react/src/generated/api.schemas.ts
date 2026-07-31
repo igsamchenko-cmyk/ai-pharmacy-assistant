@@ -2748,6 +2748,8 @@ export interface RegulatoryEvent {
   dosageForm: string;
   series: string;
   manufacturer: string;
+  /** @maxLength 8000 */
+  additionalInfo: string;
   sourceUrl: string;
 }
 
