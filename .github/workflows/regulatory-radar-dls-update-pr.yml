@@ -18,6 +18,7 @@ env:
   UPDATE_BRANCH: automation/regulatory-radar-dls-update
   GH_TOKEN: ${{ secrets.REGULATORY_RADAR_PR_TOKEN || github.token }}
   HAS_EXTERNAL_UPDATE_TOKEN: ${{ secrets.REGULATORY_RADAR_PR_TOKEN != '' }}
+  PR_CREATION_ALLOWED: ${{ vars.REGULATORY_RADAR_PR_CREATION_ALLOWED == 'true' }}
 
 jobs:
   candidate:
@@ -125,19 +126,14 @@ jobs:
             src/knowledge/__tests__/regulatorySourceNormalization.test.ts
           pnpm knowledge:import:validate:all
 
-      - name: Require a token that may create pull requests
+      - name: Require explicit pull request creation approval
         if: >-
           steps.summary.outputs.changed == 'true' &&
           env.HAS_EXTERNAL_UPDATE_TOKEN != 'true'
         shell: bash
         run: |
-          allowed="$(
-            gh api \
-              "repos/${GITHUB_REPOSITORY}/actions/permissions/workflow" \
-              --jq '.can_approve_pull_request_reviews'
-          )"
-          if [[ "$allowed" != "true" ]]; then
-            echo "::error::Enable 'Allow GitHub Actions to create and approve pull requests' or add REGULATORY_RADAR_PR_TOKEN."
+          if [[ "$PR_CREATION_ALLOWED" != "true" ]]; then
+            echo "::error::Set repository variable REGULATORY_RADAR_PR_CREATION_ALLOWED=true or add REGULATORY_RADAR_PR_TOKEN."
             exit 1
           fi
 
