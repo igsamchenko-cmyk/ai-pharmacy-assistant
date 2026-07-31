@@ -1492,6 +1492,31 @@ export const GetRegulatoryRadarResponse = zod.object({
 
 
 /**
+ * Performs at most one official DLS refresh per 24 hours for the running server process. Concurrent app openings share one in-flight refresh. Invalid or unavailable upstream data never replaces the last verified snapshot.
+ * @summary Refresh DLS regulatory data when the verified snapshot is due
+ */
+export const refreshRegulatoryRadarResponseLatestDocumentDateOneRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const refreshRegulatoryRadarResponseRecordCountMin = 0;
+
+export const refreshRegulatoryRadarResponseAddedCountMin = 0;
+
+export const refreshRegulatoryRadarResponseUpdatedCountMin = 0;
+
+
+
+export const RefreshRegulatoryRadarResponse = zod.object({
+  "version": zod.enum(['1.0']),
+  "status": zod.enum(['current', 'unchanged', 'updated', 'failed']),
+  "checkedAt": zod.coerce.date(),
+  "nextCheckAt": zod.coerce.date(),
+  "latestDocumentDate": zod.union([zod.string().regex(refreshRegulatoryRadarResponseLatestDocumentDateOneRegExp),zod.null()]),
+  "recordCount": zod.number().min(refreshRegulatoryRadarResponseRecordCountMin),
+  "addedCount": zod.number().min(refreshRegulatoryRadarResponseAddedCountMin),
+  "updatedCount": zod.number().min(refreshRegulatoryRadarResponseUpdatedCountMin)
+})
+
+
+/**
  * Aggregate statistics about the demo drug database.
  * @summary Drug database statistics
  */

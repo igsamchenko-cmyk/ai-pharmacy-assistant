@@ -97,6 +97,7 @@ async function request(
   url: string,
   init: RequestInit,
   jar: CookieJar,
+  signal?: AbortSignal,
 ): Promise<Response> {
   const headers = new Headers(init.headers);
   const cookie = jar.header();
@@ -105,7 +106,12 @@ async function request(
     "user-agent",
     "AI-Pharmacy-Assistant/1.0 official-DLS-snapshot-importer",
   );
-  const response = await fetch(url, { ...init, headers, redirect: "follow" });
+  const response = await fetch(url, {
+    ...init,
+    headers,
+    redirect: "follow",
+    signal: init.signal ?? signal,
+  });
   jar.capture(response.headers);
   if (!response.ok) {
     throw new Error(`dls_http_${response.status}`);
@@ -116,9 +122,10 @@ async function request(
 async function downloadRange(
   documentTypeId: string,
   range: DateRange,
+  signal?: AbortSignal,
 ): Promise<SeriesRestrictionRecord[]> {
   const jar = new CookieJar();
-  const initial = await request(DLS_EXPORT_URL, {}, jar);
+  const initial = await request(DLS_EXPORT_URL, {}, jar, signal);
   const initialHtml = await initial.text();
   const search = hiddenFields(initialHtml);
   search.set("__EVENTTARGET", "ctl00$Content$fvParams$UpdateButton");
@@ -140,6 +147,7 @@ async function downloadRange(
       body: search,
     },
     jar,
+    signal,
   );
   const searchHtml = await searchResponse.text();
   const exportParams = hiddenFields(searchHtml);
@@ -153,6 +161,7 @@ async function downloadRange(
       body: exportParams,
     },
     jar,
+    signal,
   );
   const contentType = exportResponse.headers.get("content-type") ?? "";
   if (
@@ -175,8 +184,9 @@ async function downloadRange(
 async function importRange(
   documentTypeId: string,
   range: DateRange,
+  signal?: AbortSignal,
 ): Promise<ImportResult> {
-  const records = await downloadRange(documentTypeId, range);
+  const records = await downloadRange(documentTypeId, range, signal);
   if (records.length < EXPORT_ROW_LIMIT) {
     return { records, requestCount: 1 };
   }
@@ -186,8 +196,8 @@ async function importRange(
       `dls_export_limit_on_single_day:${documentTypeId}:${range.from}`,
     );
   }
-  const left = await importRange(documentTypeId, split[0]);
-  const right = await importRange(documentTypeId, split[1]);
+  const left = await importRange(documentTypeId, split[0], signal);
+  const right = await importRange(documentTypeId, split[1], signal);
   return {
     records: [...left.records, ...right.records],
     requestCount: 1 + left.requestCount + right.requestCount,
@@ -222,7 +232,11 @@ function recordKey(record: SeriesRestrictionRecord): string {
 }
 
 export async function importSeriesRestrictions(
-  options: { from?: string; to?: string } = {},
+  options: {
+    from?: string;
+    to?: string;
+    signal?: AbortSignal;
+  } = {},
 ): Promise<SeriesRestrictionSnapshot> {
   const from = options.from ?? "2000-01-01";
   const to = options.to ?? new Date().toISOString().slice(0, 10);
@@ -230,7 +244,11 @@ export async function importSeriesRestrictions(
   let requestCount = 0;
 
   for (const documentTypeId of DLS_DOCUMENT_TYPE_IDS) {
-    const imported = await importRange(documentTypeId, { from, to });
+    const imported = await importRange(
+      documentTypeId,
+      { from, to },
+      options.signal,
+    );
     allRecords.push(...imported.records);
     requestCount += imported.requestCount;
   }
@@ -338,8 +356,7 @@ export function mergeSeriesRestrictionSnapshots(
       ...refresh.source,
       coverageStartDate: previous.source.coverageStartDate,
       latestDocumentDate:
-        records.at(-1)?.documentDate ??
-        previous.source.latestDocumentDate,
+        records.at(-1)?.documentDate ?? previous.source.latestDocumentDate,
       complete: previous.source.complete && refresh.source.complete,
       recordCount: records.length,
       sha256,

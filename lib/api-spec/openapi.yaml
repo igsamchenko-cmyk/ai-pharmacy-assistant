@@ -647,6 +647,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /regulatory-radar/refresh:
+    post:
+      operationId: refreshRegulatoryRadar
+      tags: [regulatory]
+      summary: Refresh DLS regulatory data when the verified snapshot is due
+      description: >-
+        Performs at most one official DLS refresh per 24 hours for the running
+        server process. Concurrent app openings share one in-flight refresh.
+        Invalid or unavailable upstream data never replaces the last verified
+        snapshot.
+      responses:
+        "200":
+          description: Runtime refresh state and retained or promoted snapshot metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegulatoryRadarRefresh"
+        "503":
+          description: The verified baseline snapshot could not be loaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /drugs/stats:
     get:
       operationId: getDrugStats
@@ -4701,3 +4724,41 @@ components:
           type: array
           items:
             type: string
+    RegulatoryRadarRefresh:
+      type: object
+      required:
+        - version
+        - status
+        - checkedAt
+        - nextCheckAt
+        - latestDocumentDate
+        - recordCount
+        - addedCount
+        - updatedCount
+      properties:
+        version:
+          type: string
+          enum: ["1.0"]
+        status:
+          type: string
+          enum: [current, unchanged, updated, failed]
+        checkedAt:
+          type: string
+          format: date-time
+        nextCheckAt:
+          type: string
+          format: date-time
+        latestDocumentDate:
+          oneOf:
+            - type: string
+              pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+            - type: "null"
+        recordCount:
+          type: integer
+          minimum: 0
+        addedCount:
+          type: integer
+          minimum: 0
+        updatedCount:
+          type: integer
+          minimum: 0
