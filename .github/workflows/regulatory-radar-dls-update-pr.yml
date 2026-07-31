@@ -119,7 +119,7 @@ jobs:
       - name: Validate candidate snapshot
         if: steps.summary.outputs.changed == 'true'
         run: |
-          pnpm --filter @workspace/api-server run typecheck
+          pnpm run typecheck
           pnpm --filter @workspace/api-server exec vitest run \
             src/knowledge/seriesRestrictions \
             src/knowledge/__tests__/regulatorySourceNormalization.test.ts
