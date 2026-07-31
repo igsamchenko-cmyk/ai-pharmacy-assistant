@@ -74,6 +74,7 @@ export interface RegulatoryRadarEvent {
   dosageForm: string;
   series: string;
   manufacturer: string;
+  additionalInfo: string;
   sourceUrl: string;
 }
 
@@ -263,6 +264,7 @@ function recentEvents(
       dosageForm: record.dosageForm,
       series: record.seriesRaw,
       manufacturer: record.manufacturer,
+      additionalInfo: record.additionalInfo,
       sourceUrl: DLS_QUALITY_DOCUMENTS_URL,
     };
   });

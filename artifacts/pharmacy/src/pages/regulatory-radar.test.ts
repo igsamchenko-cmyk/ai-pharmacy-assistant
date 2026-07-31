@@ -1,6 +1,8 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { RegulatoryEvent } from "@workspace/api-client-react";
-import { filterRegulatoryEvents } from "./regulatory-radar";
+import { EventCard, filterRegulatoryEvents } from "./regulatory-radar";
 
 const events: RegulatoryEvent[] = [
   {
@@ -15,6 +17,7 @@ const events: RegulatoryEvent[] = [
     dosageForm: "таблетки",
     series: "AB123",
     manufacturer: "Виробник",
+    additionalInfo: "",
     sourceUrl: "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
   },
   {
@@ -29,6 +32,8 @@ const events: RegulatoryEvent[] = [
     dosageForm: "капсули",
     series: "ZX900",
     manufacturer: "Інший виробник",
+    additionalInfo:
+      "Скасування розпорядження від 22.12.2025 № 1082-001.1/002.0/17-25",
     sourceUrl: "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
   },
   {
@@ -43,6 +48,7 @@ const events: RegulatoryEvent[] = [
     dosageForm: "розчин",
     series: "QW700",
     manufacturer: "Третій виробник",
+    additionalInfo: "",
     sourceUrl: "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
   },
 ];
@@ -51,6 +57,9 @@ describe("regulatory radar event filtering", () => {
   it("finds a record by series or registration number", () => {
     expect(filterRegulatoryEvents(events, "ab123", "all")).toEqual([events[0]]);
     expect(filterRegulatoryEvents(events, "ua/99999", "all")).toEqual([
+      events[1],
+    ]);
+    expect(filterRegulatoryEvents(events, "1082-001.1", "all")).toEqual([
       events[1],
     ]);
   });
@@ -67,6 +76,15 @@ describe("regulatory radar event filtering", () => {
     ]);
   });
 
+  it("renders the prior decision linked to a restoration", () => {
+    const html = renderToStaticMarkup(
+      createElement(EventCard, { event: events[1], isNew: true }),
+    );
+
+    expect(html).toContain("Пов’язане рішення:");
+    expect(html).toContain("1082-001.1/002.0/17-25");
+    expect(html).toContain("Нове");
+  });
   it("shows only unseen events in the new filter", () => {
     expect(
       filterRegulatoryEvents(events, "", "new", new Set(["restore"])),
