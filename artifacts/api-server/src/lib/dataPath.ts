@@ -105,4 +105,27 @@ export function resolveDataFilePath(
   return directPath;
 }
 
+export function findWorkspaceRoot(
+  options: Pick<DataPathResolveOptions, "cwd"> = {},
+): string | null {
+  let current = resolve(options.cwd ?? process.cwd());
+  while (true) {
+    if (existingFile(resolve(current, "pnpm-workspace.yaml"))) {
+      return current;
+    }
+    const parent = dirname(current);
+    if (parent === current) return null;
+    current = parent;
+  }
+}
+
+export function resolveWorkspacePath(
+  filePath: string,
+  options: Pick<DataPathResolveOptions, "cwd"> = {},
+): string {
+  if (isAbsolute(filePath)) return resolve(filePath);
+  const cwd = resolve(options.cwd ?? process.cwd());
+  return resolve(findWorkspaceRoot({ cwd }) ?? cwd, filePath);
+}
+
 export { DATA_DIR_ENV };

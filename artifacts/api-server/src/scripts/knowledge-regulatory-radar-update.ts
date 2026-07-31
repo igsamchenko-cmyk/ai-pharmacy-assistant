@@ -1,12 +1,12 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname } from "node:path";
 import {
   importSeriesRestrictions,
   seriesRestrictionOverlapStart,
 } from "../knowledge/seriesRestrictions/importer";
 import { SeriesRestrictionSnapshotSchema } from "../knowledge/seriesRestrictions/model";
 import { buildSeriesRestrictionUpdateCandidate } from "../knowledge/seriesRestrictions/update";
-import { resolveDataFilePath } from "../lib/dataPath";
+import { resolveDataFilePath, resolveWorkspacePath } from "../lib/dataPath";
 
 function option(name: string): string | undefined {
   const prefix = `--${name}=`;
@@ -27,10 +27,11 @@ function safeMessage(error: unknown): string {
     .slice(0, 500);
 }
 
-async function writeJson(path: string, value: unknown): Promise<void> {
-  const destination = resolve(process.cwd(), path);
+async function writeJson(path: string, value: unknown): Promise<string> {
+  const destination = resolveWorkspacePath(path);
   await mkdir(dirname(destination), { recursive: true });
   await writeFile(destination, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  return destination;
 }
 
 async function main(): Promise<void> {
@@ -42,6 +43,7 @@ async function main(): Promise<void> {
 
   const baselinePath =
     option("baseline") ?? "data/series-restrictions/ua-dls.json";
+  let candidateDestination: string | null = null;
   const candidateOutput = option("candidate-out");
   const reportOutput =
     option("report-out") ??
@@ -67,7 +69,7 @@ async function main(): Promise<void> {
     refreshFrom,
   });
 
-  await writeJson(reportOutput, report);
+  const reportDestination = await writeJson(reportOutput, report);
   if (report.status === "invalid") {
     console.error(JSON.stringify(report, null, 2));
     process.exitCode = 2;
@@ -79,7 +81,7 @@ async function main(): Promise<void> {
         "Official DLS data changed; pass --candidate-out to write the validated candidate snapshot.",
       );
     }
-    await writeJson(candidateOutput, candidate);
+    candidateDestination = await writeJson(candidateOutput, candidate);
   }
 
   console.log(
@@ -93,9 +95,8 @@ async function main(): Promise<void> {
         updatedCount: report.changes.updatedCount,
         removedCount: report.changes.removedCount,
         latestDocumentDate: report.candidate.latestDocumentDate,
-        candidateOutput:
-          report.status === "changed" ? resolve(candidateOutput!) : null,
-        reportOutput: resolve(reportOutput),
+        candidateOutput: candidateDestination,
+        reportOutput: reportDestination,
       },
       null,
       2,
