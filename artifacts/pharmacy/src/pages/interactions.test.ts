@@ -89,6 +89,11 @@ describe("registry interaction selection", () => {
       /Сила й\s+клінічна значущість тут не визначаються автоматично/u,
     );
     expect(pageSource).toContain("Це не підтверджує сумісність");
+    expect(pageSource).toContain("Клас за ATC:");
+    expect(pageSource).toContain("signal.classMatch.sourceUrl");
+    expect(pageSource).toContain(
+      "Це кандидатний сигнал, а не підтверджене правило",
+    );
   });
 
   it("shows limited evidence coverage even when some rules are eligible", () => {

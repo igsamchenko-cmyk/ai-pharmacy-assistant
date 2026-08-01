@@ -1796,6 +1796,59 @@ export interface InteractionInstructionSignalEvidence {
   excerpt: string;
 }
 
+export type InteractionInstructionClassMatchBasis = typeof InteractionInstructionClassMatchBasis[keyof typeof InteractionInstructionClassMatchBasis];
+
+
+export const InteractionInstructionClassMatchBasis = {
+  official_atc_prefix: 'official_atc_prefix',
+  official_atc_and_oral_form: 'official_atc_and_oral_form',
+} as const;
+
+export interface InteractionInstructionClassMatch {
+  /**
+     * @maxLength 100
+     * @pattern ^class:[a-z0-9-]+$
+     */
+  classId: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  className: string;
+  /** @pattern ^[A-F0-9]{32}$ */
+  matchedProductId: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  matchedProductName: string;
+  /** @pattern ^[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}$ */
+  atcCode: string;
+  /** @pattern ^[A-Z][0-9]{2}[A-Z]{1,2}[0-9]{0,2}$ */
+  matchedAtcRule: string;
+  basis: InteractionInstructionClassMatchBasis;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  sourceLabel: string;
+  /** @maxLength 1000 */
+  sourceUrl: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  sourceVersion: string;
+}
+
+export type InteractionInstructionSignalMatchBasis = typeof InteractionInstructionSignalMatchBasis[keyof typeof InteractionInstructionSignalMatchBasis];
+
+
+export const InteractionInstructionSignalMatchBasis = {
+  exact_ingredient: 'exact_ingredient',
+  official_atc_class: 'official_atc_class',
+} as const;
+
 export type InteractionInstructionSignalReviewStatus = typeof InteractionInstructionSignalReviewStatus[keyof typeof InteractionInstructionSignalReviewStatus];
 
 
@@ -1817,6 +1870,8 @@ export interface InteractionInstructionSignal {
      * @maxLength 300
      */
   ingredientB: string;
+  matchBasis: InteractionInstructionSignalMatchBasis;
+  classMatch: InteractionInstructionClassMatch | null;
   triageSignal: InteractionInstructionTriageSignal;
   reviewStatus: InteractionInstructionSignalReviewStatus;
   /**

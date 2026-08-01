@@ -1815,6 +1815,23 @@ export const getInteractionInstructionSignalsResponsePairsItemSignalsItemIngredi
 
 export const getInteractionInstructionSignalsResponsePairsItemSignalsItemIngredientBMax = 300;
 
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneClassIdMax = 100;
+
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneClassIdRegExp = new RegExp('^class:[a-z0-9-]+$');
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneClassNameMax = 300;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneMatchedProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneMatchedProductNameMax = 300;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneAtcCodeRegExp = new RegExp('^[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}$');
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneMatchedAtcRuleRegExp = new RegExp('^[A-Z][0-9]{2}[A-Z]{1,2}[0-9]{0,2}$');
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneSourceLabelMax = 300;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneSourceUrlMax = 1000;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneSourceVersionMax = 120;
+
 export const getInteractionInstructionSignalsResponsePairsItemSignalsItemSupportingDocumentCountMax = 5;
 
 export const getInteractionInstructionSignalsResponsePairsItemSignalsItemSupportingProductCountMax = 5;
@@ -1865,6 +1882,19 @@ export const GetInteractionInstructionSignalsResponse = zod.object({
   "id": zod.string().regex(getInteractionInstructionSignalsResponsePairsItemSignalsItemIdRegExp),
   "ingredientA": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemIngredientAMax),
   "ingredientB": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemIngredientBMax),
+  "matchBasis": zod.enum(['exact_ingredient', 'official_atc_class']),
+  "classMatch": zod.union([zod.object({
+  "classId": zod.string().max(getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneClassIdMax).regex(getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneClassIdRegExp),
+  "className": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneClassNameMax),
+  "matchedProductId": zod.string().regex(getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneMatchedProductIdRegExp),
+  "matchedProductName": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneMatchedProductNameMax),
+  "atcCode": zod.string().regex(getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneAtcCodeRegExp),
+  "matchedAtcRule": zod.string().regex(getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneMatchedAtcRuleRegExp),
+  "basis": zod.enum(['official_atc_prefix', 'official_atc_and_oral_form']),
+  "sourceLabel": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneSourceLabelMax),
+  "sourceUrl": zod.string().url().max(getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneSourceUrlMax),
+  "sourceVersion": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemClassMatchOneSourceVersionMax)
+}),zod.null()]),
   "triageSignal": zod.enum(['contraindication_language', 'avoidance_language', 'dose_adjustment_language', 'monitoring_language', 'caution_language', 'unspecified']),
   "reviewStatus": zod.enum(['needs_review', 'already_verified']),
   "supportingDocumentCount": zod.number().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemSupportingDocumentCountMax),

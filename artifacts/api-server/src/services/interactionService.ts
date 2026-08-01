@@ -98,6 +98,7 @@ export interface RegistryInteractionCatalogProduct {
   tradeName: string;
   inn: string;
   activeIngredient: string;
+  atcCode: string | null;
   dosageForm: string;
   strength: string | null;
   registration: { number: string };

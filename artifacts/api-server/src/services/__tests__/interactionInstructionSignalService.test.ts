@@ -22,6 +22,7 @@ function product(
     tradeName,
     inn,
     activeIngredient: inn,
+    atcCode: inn === "Ibuprofen" ? "M01AE01" : "B01AA03",
     dosageForm: "tablets",
     strength: "10 mg",
     registration: { number: registration },
@@ -149,12 +150,112 @@ describe("interaction instruction signals", () => {
         {
           ingredientA: "Ibuprofen",
           ingredientB: "Warfarin",
+          matchBasis: "exact_ingredient",
+          classMatch: null,
           triageSignal: "avoidance_language",
           reviewStatus: "needs_review",
         },
       ],
     });
     expect(result.disclaimer).toContain("не підтверджує сумісність");
+  });
+
+  it("links an instruction class phrase to the other exact product through official ATC", async () => {
+    const snapshots = new Map<string, DrugInstructionSnapshot>([
+      [
+        WARFARIN_ID,
+        snapshot(
+          WARFARIN_ID,
+          "UA/1000/01/01",
+          "WARFARIN",
+          "Warfarin",
+          "Слід уникати одночасного застосування з нестероїдними протизапальними засобами.",
+          "E",
+        ),
+      ],
+    ]);
+
+    const result = await getInteractionInstructionSignals(references, {
+      resolveProduct: async (reference) =>
+        products.get(reference.productId) ?? null,
+      loadInstruction: async (id) => snapshots.get(id) ?? null,
+      rules: [],
+    });
+
+    expect(GetInteractionInstructionSignalsResponse.parse(result)).toEqual(
+      result,
+    );
+    expect(result.pairs[0]).toMatchObject({
+      status: "signals_found",
+      signals: [
+        {
+          matchBasis: "official_atc_class",
+          reviewStatus: "needs_review",
+          classMatch: {
+            classId: "class:nsaids",
+            matchedProductId: IBUPROFEN_ID,
+            matchedProductName: "IBUPROFEN",
+            atcCode: "M01AE01",
+            matchedAtcRule: "M01A",
+            basis: "official_atc_prefix",
+            sourceVersion: "ATC/DDD Index 2026",
+          },
+        },
+      ],
+    });
+  });
+
+  it("does not infer unsupported CYP membership from ATC", async () => {
+    const result = await getInteractionInstructionSignals(references, {
+      resolveProduct: async (reference) =>
+        products.get(reference.productId) ?? null,
+      loadInstruction: async (id) =>
+        id === WARFARIN_ID
+          ? snapshot(
+              WARFARIN_ID,
+              "UA/1000/01/01",
+              "WARFARIN",
+              "Warfarin",
+              "Use with CYP3A4 inhibitors requires monitoring.",
+              "F",
+            )
+          : null,
+      rules: [],
+    });
+
+    expect(result.pairs[0]).toMatchObject({
+      status: "no_signal_in_loaded_instructions",
+      signals: [],
+    });
+  });
+
+  it("does not infer class membership when the selected product has no ATC", async () => {
+    const noAtcProducts = new Map(products);
+    noAtcProducts.set(IBUPROFEN_ID, {
+      ...noAtcProducts.get(IBUPROFEN_ID)!,
+      atcCode: null,
+    });
+    const result = await getInteractionInstructionSignals(references, {
+      resolveProduct: async (reference) =>
+        noAtcProducts.get(reference.productId) ?? null,
+      loadInstruction: async (id) =>
+        id === WARFARIN_ID
+          ? snapshot(
+              WARFARIN_ID,
+              "UA/1000/01/01",
+              "WARFARIN",
+              "Warfarin",
+              "NSAIDs should be avoided.",
+              "G",
+            )
+          : null,
+      rules: [],
+    });
+
+    expect(result.pairs[0]).toMatchObject({
+      status: "no_signal_in_loaded_instructions",
+      signals: [],
+    });
   });
 
   it("fails open for instruction download errors without inventing evidence", async () => {

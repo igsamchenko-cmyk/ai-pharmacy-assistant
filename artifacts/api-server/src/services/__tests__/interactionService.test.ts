@@ -29,6 +29,7 @@ function catalogProduct(
     tradeName,
     inn,
     activeIngredient: inn,
+    atcCode: null,
     dosageForm: "таблетки",
     strength: "10 мг",
     registration: { number: registrationNumber },

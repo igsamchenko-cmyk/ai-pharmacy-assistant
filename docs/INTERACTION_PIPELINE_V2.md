@@ -14,11 +14,11 @@ pipeline run produces:
 - 49 resolved subject documents;
 - 5 atomic official INNs admitted as candidate-only vocabulary;
 - 1 partially resolved combination document explicitly marked for review;
-- 294 unique evidence candidates from 334 bounded evidence records;
+- 299 unique evidence candidates from 339 bounded evidence records;
 - 254 exact ingredient-to-ingredient candidates;
-- 40 ingredient-to-class candidates;
+- 45 ingredient-to-class candidates;
 - 24 candidates already represented by approved runtime rules;
-- 270 candidates requiring clinical review;
+- 275 candidates requiring clinical review;
 - a deterministic top-100 review queue.
 
 These values are generated from the repository data. Reproduce them with:
@@ -57,7 +57,9 @@ The pipeline output is candidate evidence, not a clinical conclusion.
 
 - `automaticApproval` is always `false`;
 - runtime rules are not changed;
-- class membership is not inferred or expanded;
+- the offline extraction report does not infer or expand class membership;
+- the on-demand ATC bridge is candidate-only, versioned and limited to an
+  explicit allowlist; unsupported classes are never guessed;
 - warning-language detection is only a triage signal and is not a severity
   classification;
 - rejected, mismatched or unavailable instruction provenance is ignored;
@@ -78,8 +80,8 @@ two to five exact registry products:
 
 1. `/api/interactions/check` returns approved runtime rules immediately;
 2. `/api/interactions/instruction-signals` loads the exact official
-   instructions in parallel and searches them for exact selected-ingredient
-   mentions.
+   instructions in parallel and searches them for exact selected-ingredient or
+   explicitly supported therapeutic-class mentions.
 
 The second request reuses the registry-backed official instruction loader. A
 committed snapshot is used when present; otherwise the current official DRLZ
@@ -88,12 +90,23 @@ and cached for six hours. Up to five selected documents are loaded in parallel,
 so the main verified-rule result is never delayed by a slow or unavailable
 instruction document.
 
-Only exact ingredient-to-ingredient candidates with fully resolved
-compositions are shown. Class membership is not inferred. Every signal is
-labelled `candidate — not a rule`, includes the bounded official excerpt and a
-link to the original document, and keeps the warning that no signal does not
-mean compatibility. Download or parsing failure degrades only the instruction
-cross-check and does not remove the approved-rule result.
+Exact ingredient-to-ingredient candidates still require fully resolved
+compositions. A separate candidate-only ATC bridge may also connect a class
+phrase to the other exact selected product for this small allowlist:
+
+- non-steroidal anti-inflammatory drugs: `M01A`;
+- vitamin K antagonists: `B01AA`;
+- direct factor Xa inhibitors: `B01AF`;
+- oral anticoagulants: `B01AA`, `B01AF` or exact `B01AE07`, with an oral
+  dosage form required;
+- potassium-sparing agents: `C03D` or `C03E`.
+
+The bridge cites the official WHO Collaborating Centre ATC/DDD Index 2026 and
+does not map CYP, P-gp, QT, serotonergic or CNS-depressant phrases. Every signal
+is labelled `candidate — not a rule`, includes the bounded official excerpt
+and a link to both the instruction and ATC source, and keeps the warning that
+no signal does not mean compatibility. Download or parsing failure degrades
+only the instruction cross-check and does not remove the approved-rule result.
 
 ## Scaling path
 
@@ -109,5 +122,7 @@ ingredient/class claim regardless of how many brands or packages cite it.
 Changed hashes must reopen affected claims instead of silently modifying an
 approved rule.
 
-Before any class-scoped candidate can become runtime eligible, a separate
-versioned membership set and explicit source scope/exceptions are required.
+The versioned ATC allowlist only improves candidate discovery. Before any
+class-scoped candidate can become runtime eligible, it still requires clinical
+review and an explicit approved runtime rule; ATC membership alone is never
+sufficient.

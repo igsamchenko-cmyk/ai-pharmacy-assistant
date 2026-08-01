@@ -2,9 +2,14 @@ import type { DrugInstructionSnapshot } from "../knowledge/instructions/model";
 import { ingredientSeeds } from "../knowledge/dictionary/ingredients";
 import {
   buildInteractionCandidatePipelineReport,
+  type InteractionEvidenceCandidate,
   type InteractionTriageSignal,
 } from "../interactions/candidatePipeline";
 import { buildInteractionRuleRegistry } from "../interactions/audit";
+import {
+  resolveInteractionClassMembership,
+  type InteractionClassMembership,
+} from "../interactions/classMembership";
 import {
   normalizeIngredient,
   type VerifiedInteractionRule,
@@ -36,10 +41,25 @@ export interface InteractionInstructionSignalEvidence {
   excerpt: string;
 }
 
+export interface InteractionInstructionClassMatch {
+  classId: string;
+  className: string;
+  matchedProductId: string;
+  matchedProductName: string;
+  atcCode: string;
+  matchedAtcRule: string;
+  basis: InteractionClassMembership["basis"];
+  sourceLabel: string;
+  sourceUrl: string;
+  sourceVersion: string;
+}
+
 export interface InteractionInstructionSignal {
   id: string;
   ingredientA: string;
   ingredientB: string;
+  matchBasis: "exact_ingredient" | "official_atc_class";
+  classMatch: InteractionInstructionClassMatch | null;
   triageSignal: InteractionTriageSignal;
   reviewStatus: "needs_review" | "already_verified";
   supportingDocumentCount: number;
@@ -88,6 +108,76 @@ function ingredientPairKey(a: string, b: string): string {
     .join("|");
 }
 
+function candidateIngredientAndClass(candidate: InteractionEvidenceCandidate): {
+  ingredientName: string;
+  classId: string;
+} | null {
+  const ingredient =
+    candidate.left.kind === "ingredient"
+      ? candidate.left
+      : candidate.right.kind === "ingredient"
+        ? candidate.right
+        : null;
+  const therapeuticClass =
+    candidate.left.kind === "therapeutic_class"
+      ? candidate.left
+      : candidate.right.kind === "therapeutic_class"
+        ? candidate.right
+        : null;
+  return ingredient && therapeuticClass
+    ? {
+        ingredientName: ingredient.canonicalName,
+        classId: therapeuticClass.id,
+      }
+    : null;
+}
+
+function signalForPair(
+  candidate: InteractionEvidenceCandidate,
+  pairProductIds: ReadonlySet<string>,
+  classMatch: InteractionInstructionClassMatch | null,
+): InteractionInstructionSignal | null {
+  const classEntities = classMatch
+    ? candidateIngredientAndClass(candidate)
+    : null;
+  const eligibleEvidence = candidate.evidence.filter(
+    (item) =>
+      item.subjectResolution !== "partial_composition" &&
+      pairProductIds.has(item.registryProductId) &&
+      (!classEntities ||
+        item.subjectIngredients.some(
+          (ingredient) =>
+            normalizeIngredient(ingredient) ===
+            normalizeIngredient(classEntities.ingredientName),
+        )),
+  );
+  const evidence = eligibleEvidence.map((item) => ({
+    registryProductId: item.registryProductId,
+    registrationNumber: item.registrationNumber,
+    tradeName: item.tradeName,
+    sourceUrl: item.sourceUrl,
+    documentDate: item.documentDate,
+    excerpt: item.excerpt,
+  }));
+  if (!evidence.length) return null;
+  return {
+    id: candidate.id,
+    ingredientA: candidate.left.canonicalName,
+    ingredientB: candidate.right.canonicalName,
+    matchBasis: classMatch ? "official_atc_class" : "exact_ingredient",
+    classMatch,
+    triageSignal: candidate.triageSignal,
+    reviewStatus: candidate.reviewStatus,
+    supportingDocumentCount: new Set(
+      eligibleEvidence.map((item) => item.documentId),
+    ).size,
+    supportingProductCount: new Set(
+      evidence.map((item) => item.registryProductId),
+    ).size,
+    evidence,
+  };
+}
+
 export async function getInteractionInstructionSignals(
   references: readonly RegistryInteractionProductRef[],
   options: InteractionInstructionSignalOptions = {},
@@ -105,9 +195,10 @@ export async function getInteractionInstructionSignals(
   if (catalogProducts.some((product) => product === null)) {
     throw new RegistryInteractionSelectionError("product_not_found");
   }
+  const exactCatalogProducts = catalogProducts.map((product) => product!);
 
-  const resolved = catalogProducts.map((product) =>
-    resolveRegistryInteractionSelection(product!),
+  const resolved = exactCatalogProducts.map((product) =>
+    resolveRegistryInteractionSelection(product),
   );
   const instructionLoader =
     options.loadInstruction ?? getOfficialInstructionForProduct;
@@ -131,7 +222,7 @@ export async function getInteractionInstructionSignals(
     reviewQueueLimit: 1_000,
     evidenceLimitPerCandidate: 5,
   });
-  const candidatesByPair = new Map(
+  const exactCandidatesByPair = new Map(
     report.candidates
       .filter(
         (candidate) =>
@@ -140,6 +231,13 @@ export async function getInteractionInstructionSignals(
       )
       .map((candidate) => [candidate.pairKey, candidate] as const),
   );
+  const classCandidates = report.candidates.filter(
+    (candidate) =>
+      (candidate.left.kind === "ingredient" &&
+        candidate.right.kind === "therapeutic_class") ||
+      (candidate.left.kind === "therapeutic_class" &&
+        candidate.right.kind === "ingredient"),
+  );
   const pairs: InteractionInstructionSignalPair[] = [];
   let evaluatedIngredientPairs = 0;
 
@@ -147,50 +245,67 @@ export async function getInteractionInstructionSignals(
     for (let right = left + 1; right < resolved.length; right += 1) {
       const a = resolved[left]!;
       const b = resolved[right]!;
+      const catalogA = exactCatalogProducts[left]!;
+      const catalogB = exactCatalogProducts[right]!;
       const compositionUnresolved =
         a.product.unresolvedIngredients.length > 0 ||
         b.product.unresolvedIngredients.length > 0;
       const relevantCandidates = new Map<
         string,
-        (typeof report.candidates)[number]
+        {
+          candidate: InteractionEvidenceCandidate;
+          classMatch: InteractionInstructionClassMatch | null;
+        }
       >();
 
       if (!compositionUnresolved) {
         for (const ingredientA of a.product.resolvedIngredients) {
           for (const ingredientB of b.product.resolvedIngredients) {
             evaluatedIngredientPairs += 1;
-            const candidate = candidatesByPair.get(
+            const candidate = exactCandidatesByPair.get(
               ingredientPairKey(ingredientA, ingredientB),
             );
-            if (candidate) relevantCandidates.set(candidate.id, candidate);
+            if (candidate) {
+              relevantCandidates.set(candidate.id, {
+                candidate,
+                classMatch: null,
+              });
+            }
+          }
+        }
+
+        for (const candidate of classCandidates) {
+          const entities = candidateIngredientAndClass(candidate);
+          if (!entities) continue;
+          const ingredientId = ingredientEntityId(entities.ingredientName);
+          const matchesA = a.product.resolvedIngredients.some(
+            (ingredient) => ingredientEntityId(ingredient) === ingredientId,
+          );
+          const matchesB = b.product.resolvedIngredients.some(
+            (ingredient) => ingredientEntityId(ingredient) === ingredientId,
+          );
+          const classMatch = matchesA
+            ? resolveInteractionClassMembership(entities.classId, catalogB)
+            : matchesB
+              ? resolveInteractionClassMembership(entities.classId, catalogA)
+              : null;
+          if (classMatch) {
+            relevantCandidates.set(candidate.id, {
+              candidate,
+              classMatch,
+            });
           }
         }
       }
 
       const signals = [...relevantCandidates.values()]
-        .map((candidate): InteractionInstructionSignal | null => {
-          const evidence = candidate.evidence
-            .filter((item) => item.subjectResolution !== "partial_composition")
-            .map((item) => ({
-              registryProductId: item.registryProductId,
-              registrationNumber: item.registrationNumber,
-              tradeName: item.tradeName,
-              sourceUrl: item.sourceUrl,
-              documentDate: item.documentDate,
-              excerpt: item.excerpt,
-            }));
-          if (!evidence.length) return null;
-          return {
-            id: candidate.id,
-            ingredientA: candidate.left.canonicalName,
-            ingredientB: candidate.right.canonicalName,
-            triageSignal: candidate.triageSignal,
-            reviewStatus: candidate.reviewStatus,
-            supportingDocumentCount: candidate.supportingDocumentCount,
-            supportingProductCount: candidate.supportingProductCount,
-            evidence,
-          };
-        })
+        .map(({ candidate, classMatch }) =>
+          signalForPair(
+            candidate,
+            new Set([a.product.productId, b.product.productId]),
+            classMatch,
+          ),
+        )
         .filter(
           (signal): signal is InteractionInstructionSignal => signal !== null,
         );

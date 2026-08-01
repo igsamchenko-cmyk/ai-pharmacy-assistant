@@ -61,6 +61,34 @@ export const DEFAULT_INTERACTION_CLASS_SEEDS: readonly InteractionClassSeed[] =
       },
     },
     {
+      id: "class:vitamin-k-antagonists",
+      canonicalName: "Vitamin K antagonists",
+      aliases: [
+        "антагоністи вітаміну K",
+        "антагоністами вітаміну K",
+        "антагоністи вітаміну К",
+        "антагоністами вітаміну К",
+        "vitamin K antagonists",
+      ],
+      provenance: {
+        sourceKey: "curated-interaction-phrase-dictionary",
+        sourceVersion: "1.1.0",
+      },
+    },
+    {
+      id: "class:direct-factor-xa-inhibitors",
+      canonicalName: "Direct factor Xa inhibitors",
+      aliases: [
+        "прямі інгібітори фактора Xa",
+        "прямими інгібіторами фактора Xa",
+        "direct factor Xa inhibitors",
+      ],
+      provenance: {
+        sourceKey: "curated-interaction-phrase-dictionary",
+        sourceVersion: "1.1.0",
+      },
+    },
+    {
       id: "class:potassium-sparing-diuretics",
       canonicalName: "Potassium-sparing diuretics",
       aliases: [

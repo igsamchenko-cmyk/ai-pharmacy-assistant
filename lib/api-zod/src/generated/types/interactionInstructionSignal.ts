@@ -5,7 +5,9 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
+import type { InteractionInstructionClassMatch } from './interactionInstructionClassMatch';
 import type { InteractionInstructionSignalEvidence } from './interactionInstructionSignalEvidence';
+import type { InteractionInstructionSignalMatchBasis } from './interactionInstructionSignalMatchBasis';
 import type { InteractionInstructionSignalReviewStatus } from './interactionInstructionSignalReviewStatus';
 import type { InteractionInstructionTriageSignal } from './interactionInstructionTriageSignal';
 
@@ -22,6 +24,8 @@ export interface InteractionInstructionSignal {
      * @maxLength 300
      */
   ingredientB: string;
+  matchBasis: InteractionInstructionSignalMatchBasis;
+  classMatch: InteractionInstructionClassMatch | null;
   triageSignal: InteractionInstructionTriageSignal;
   reviewStatus: InteractionInstructionSignalReviewStatus;
   /**

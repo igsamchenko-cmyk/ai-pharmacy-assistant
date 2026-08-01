@@ -135,8 +135,8 @@ function InstructionSignalPairCard({
               {pair.productAName} + {pair.productBName}
             </p>
             <p className="text-xs text-muted-foreground">
-              Автоматичний пошук лише в офіційних інструкціях точних реєстрових
-              позицій
+              Автоматичний пошук в офіційних інструкціях точних реєстрових
+              позицій із безпечним зіставленням підтримуваних ATC-класів
             </p>
           </div>
         </div>
@@ -164,10 +164,38 @@ function InstructionSignalPairCard({
                       ? "Збігається з перевіреним правилом"
                       : "Кандидат — не правило"}
                   </Badge>
+                  {signal.classMatch ? (
+                    <Badge variant="outline">
+                      Клас за ATC: {signal.classMatch.matchedAtcRule}
+                    </Badge>
+                  ) : null}
                 </div>
                 <p className="break-words text-sm font-semibold">
                   {signal.ingredientA} + {signal.ingredientB}
                 </p>
+                {signal.classMatch ? (
+                  <div className="space-y-1 rounded-lg border border-cyan-500/25 bg-cyan-500/[0.04] p-3 text-xs">
+                    <p>
+                      <span className="font-semibold">
+                        {signal.classMatch.matchedProductName}
+                      </span>{" "}
+                      зіставлено з класом лише за реєстровим ATC{" "}
+                      <span className="font-semibold">
+                        {signal.classMatch.atcCode}
+                      </span>
+                      . Це кандидатний сигнал, а не підтверджене правило.
+                    </p>
+                    <a
+                      className="inline-flex items-center gap-1 break-all text-primary underline"
+                      href={signal.classMatch.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <BookOpen className="h-3.5 w-3.5 shrink-0" />
+                      {signal.classMatch.sourceLabel}
+                    </a>
+                  </div>
+                ) : null}
                 <p className="text-xs text-muted-foreground">
                   Знайдено в {signal.supportingDocumentCount} документі(ах) для{" "}
                   {signal.supportingProductCount} реєстрової позиції(й). Сила й
