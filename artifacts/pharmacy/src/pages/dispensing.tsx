@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "wouter";
 import {
   getGetProfessionalProductProfileQueryKey,
   getProfessionalProductProfile,
@@ -14,6 +15,7 @@ import {
   BookOpenText,
   CheckCircle2,
   CircleHelp,
+  Clock,
   ClipboardCheck,
   Database,
   ExternalLink,
@@ -38,6 +40,7 @@ import {
 } from "@/lib/dispensing-safety";
 import { conciseManufacturerText } from "@/lib/manufacturer-display";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
+import { drugRefHref, useRecentlyViewed } from "@/hooks/use-favorites";
 import { conciseDosageForm } from "@/pages/search";
 
 export const MANUAL_DISPENSING_STEPS = [
@@ -710,6 +713,7 @@ function ManualChecklist({
 }
 
 export default function Dispensing() {
+  const recentlyViewed = useRecentlyViewed();
   const [selectedProfile, setSelectedProfile] =
     useState<ProfessionalProductProfile | null>(null);
   const [officialPackageLoading, setOfficialPackageLoading] = useState(false);
@@ -824,7 +828,7 @@ export default function Dispensing() {
             <ClipboardCheck className="h-7 w-7 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Оперативний довідник</h1>
+            <h1 className="text-3xl font-bold">Довідник лікарських засобів</h1>
             <p className="text-muted-foreground">
               Реєстрові, регуляторні та цінові дані точної позиції.
             </p>
@@ -849,6 +853,39 @@ export default function Dispensing() {
             placeholder="Наприклад: Енап, ібупрофен або UA/1234/01/01"
             inputTestId="dispensing-search-input"
           />
+          <div className="flex justify-end">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/search?type=registry_products">
+                <Database className="h-4 w-4" />
+                Повний каталог і фільтри
+              </Link>
+            </Button>
+          </div>
+          {recentlyViewed.length > 0 ? (
+            <section
+              className="space-y-2 pt-2"
+              aria-labelledby="recently-viewed-heading"
+            >
+              <h2
+                id="recently-viewed-heading"
+                className="flex items-center gap-2 text-sm font-semibold text-muted-foreground"
+              >
+                <Clock className="h-4 w-4" />
+                Нещодавно переглянуті
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {recentlyViewed.slice(0, 8).map((item) => (
+                  <Link
+                    key={item.id}
+                    href={drugRefHref(item)}
+                    className="rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
+                  >
+                    {item.brandName}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
           {pendingProduct ? (
             <Card data-testid="dispensing-exact-resolution">
               <CardContent className="space-y-3 p-4">
