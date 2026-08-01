@@ -3,3 +3,4 @@ export * from "./policy";
 export * from "./engine";
 export * from "./audit";
 export * from "./verifiedRules";
+export * from "./candidatePipeline";

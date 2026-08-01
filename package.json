@@ -57,6 +57,7 @@
     "knowledge:registry:catalog-db-smoke": "pnpm --filter @workspace/api-server run knowledge:registry:catalog-db-smoke",
     "knowledge:interactions:audit": "pnpm --filter @workspace/api-server run knowledge:interactions:audit",
     "knowledge:interactions:coverage-report": "pnpm --filter @workspace/api-server run knowledge:interactions:coverage-report --",
+    "knowledge:interactions:candidates-report": "pnpm --filter @workspace/api-server run knowledge:interactions:candidates-report --",
     "knowledge:national-list:source": "pnpm --filter @workspace/api-server run knowledge:national-list -- --source-report",
     "knowledge:national-list:dry-run": "pnpm --filter @workspace/api-server run knowledge:national-list",
     "knowledge:national-list:match-report": "pnpm --filter @workspace/api-server run knowledge:national-list -- --match-report",
