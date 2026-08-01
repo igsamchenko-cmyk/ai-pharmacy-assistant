@@ -33,9 +33,11 @@ jobs:
       - name: Validate deploy hook configuration
         shell: bash
         env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
           set -euo pipefail
+          test -n "$RENDER_API_KEY"
           test -n "$RENDER_DEPLOY_HOOK_URL"
           case "$RENDER_DEPLOY_HOOK_URL" in
             https://api.render.com/deploy/*) ;;
@@ -44,6 +46,38 @@ jobs:
               exit 1
               ;;
           esac
+
+      - name: Ensure public reference access is enabled
+        shell: bash
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+
+          hook_path="${RENDER_DEPLOY_HOOK_URL%%\?*}"
+          service_id="${hook_path##*/}"
+          case "$service_id" in
+            srv-[a-z0-9]*) ;;
+            *)
+              echo "::error::Could not derive a Render service ID from the deploy hook."
+              exit 1
+              ;;
+          esac
+
+          env_var_json="$(curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --request PUT \
+            --header "Accept: application/json" \
+            --header "Content-Type: application/json" \
+            --header "Authorization: Bearer ${RENDER_API_KEY}" \
+            --data '{"value":"true"}' \
+            "https://api.render.com/v1/services/${service_id}/env-vars/PUBLIC_REFERENCE_ACCESS")"
+
+          test "$(jq -r '.value // empty' <<<"$env_var_json")" = "true"
+          echo "PUBLIC_REFERENCE_ACCESS=true is configured for ${service_id}."
 
       - name: Deploy exact commit to Render
         shell: bash
