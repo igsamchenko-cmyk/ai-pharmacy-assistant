@@ -19,6 +19,7 @@ import {
   ClipboardCheck,
   Database,
   ExternalLink,
+  FileWarning,
   GitCompare,
   LoaderCircle,
   OctagonX,
@@ -39,6 +40,7 @@ import {
   type DispensingCheckTone,
 } from "@/lib/dispensing-safety";
 import { conciseManufacturerText } from "@/lib/manufacturer-display";
+import { pharmacovigilanceHref } from "@/lib/pharmacovigilance-draft";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
 import { drugRefHref, useRecentlyViewed } from "@/hooks/use-favorites";
 import { conciseDosageForm } from "@/pages/search";
@@ -932,6 +934,25 @@ export default function Dispensing() {
             </Button>
           </div>
           <ProductSummary product={selected} />
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <FileWarning className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                <div>
+                  <p className="font-semibold">Підозра на побічну реакцію?</p>
+                  <p className="text-sm text-muted-foreground">
+                    Підготуйте клінічну чернетку з уже підставленими даними
+                    точної реєстрової позиції. Персональні дані не зберігаються.
+                  </p>
+                </div>
+              </div>
+              <Button asChild variant="outline" className="shrink-0">
+                <Link href={pharmacovigilanceHref(selected)}>
+                  Відкрити майстер
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
           {selectedProfile ? (
             <OfficialProgramsPanel
               profile={selectedProfile}

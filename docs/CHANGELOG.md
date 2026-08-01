@@ -7,6 +7,13 @@
 
 ### Added
 
+- Added a contextual pharmacovigilance draft assistant for an exact registry
+  product. It pre-fills trade name, INN, active ingredient, dosage form,
+  strength, manufacturer and registration number, validates five clinical
+  draft fields, supports explicit copy/TXT export and links to the official
+  AISF reporting channel. Patient and reporter identifiers are neither
+  requested nor persisted; free text is never sent to the FarmAssist backend.
+
 - Connected the official 17 July 2026 NSZU reimbursement list and the 1 July
   2026 MOH National Price Catalog to the exact professional product profile.
   The UI now shows package-level reimbursement/copay and declared/maximum

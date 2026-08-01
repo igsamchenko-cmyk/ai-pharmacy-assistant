@@ -28,6 +28,7 @@ const ReviewQueue = lazy(() => import("@/pages/review"));
 const BetaDashboard = lazy(() => import("@/pages/beta-dashboard"));
 const RegulatoryRadar = lazy(() => import("@/pages/regulatory-radar"));
 const DrugInstruction = lazy(() => import("@/pages/drug-instruction"));
+const Pharmacovigilance = lazy(() => import("@/pages/pharmacovigilance"));
 const RegistryProductDetail = lazy(
   () => import("@/pages/registry-product-detail"),
 );
@@ -60,6 +61,9 @@ const ProtectedDrugInstruction = () => (
 );
 const ProtectedRegistryProductDetail = () => (
   <ProtectedRoute component={RegistryProductDetail} />
+);
+const ProtectedPharmacovigilance = () => (
+  <ProtectedRoute component={Pharmacovigilance} />
 );
 const AccessDeniedRoute = () => <AccessDenied />;
 
@@ -98,6 +102,10 @@ function Router() {
             <Route
               path="/products/:productId"
               component={ProtectedRegistryProductDetail}
+            />
+            <Route
+              path="/pharmacovigilance"
+              component={ProtectedPharmacovigilance}
             />
             <Route path="/drug/:id" component={ProtectedDrugDetail} />
             <Route path="/analogs/:id" component={ProtectedAnalogs} />
