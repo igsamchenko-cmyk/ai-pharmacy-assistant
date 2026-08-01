@@ -12,7 +12,6 @@ import { CatalogClientIndexProvider } from "@/lib/catalog-client-index";
 import { RegulatoryRadarRefreshProvider } from "@/lib/regulatory-radar-refresh";
 import { ProtectedRoute } from "@/components/protected-route";
 
-const Home = lazy(() => import("@/pages/home"));
 const LoginPage = lazy(() => import("@/pages/login"));
 const Dispensing = lazy(() => import("@/pages/dispensing"));
 const SearchPage = lazy(() => import("@/pages/search"));
@@ -20,9 +19,7 @@ const DrugDetail = lazy(() => import("@/pages/drug-detail"));
 const Analogs = lazy(() => import("@/pages/analogs"));
 const Interactions = lazy(() => import("@/pages/interactions"));
 const Compare = lazy(() => import("@/pages/compare"));
-const QuickAccess = lazy(() => import("@/pages/quick-access"));
 const AiReference = lazy(() => import("@/pages/ai-reference"));
-const Scan = lazy(() => import("@/pages/scan"));
 const History = lazy(() => import("@/pages/history"));
 const Favorites = lazy(() => import("@/pages/favorites"));
 const About = lazy(() => import("@/pages/about"));
@@ -43,9 +40,7 @@ const ProtectedDrugDetail = () => <ProtectedRoute component={DrugDetail} />;
 const ProtectedAnalogs = () => <ProtectedRoute component={Analogs} />;
 const ProtectedInteractions = () => <ProtectedRoute component={Interactions} />;
 const ProtectedCompare = () => <ProtectedRoute component={Compare} />;
-const ProtectedQuickAccess = () => <ProtectedRoute component={QuickAccess} />;
 const ProtectedAiReference = () => <ProtectedRoute component={AiReference} />;
-const ProtectedScan = () => <ProtectedRoute component={Scan} />;
 const ProtectedHistory = () => <ProtectedRoute component={History} />;
 const ProtectedFavorites = () => <ProtectedRoute component={Favorites} />;
 const ProtectedDataQuality = () => (
@@ -87,7 +82,7 @@ function Router() {
       <ErrorBoundary>
         <Suspense fallback={<RouteLoadingFallback />}>
           <Switch>
-            <Route path="/" component={Home} />
+            <Route path="/" component={ProtectedDispensing} />
             <Route path="/login" component={LoginPage} />
             <Route path="/access-denied" component={AccessDeniedRoute} />
             <Route path="/dispense" component={ProtectedDispensing} />
@@ -108,9 +103,7 @@ function Router() {
             <Route path="/analogs/:id" component={ProtectedAnalogs} />
             <Route path="/interactions" component={ProtectedInteractions} />
             <Route path="/compare" component={ProtectedCompare} />
-            <Route path="/hospital" component={ProtectedQuickAccess} />
             <Route path="/ai" component={ProtectedAiReference} />
-            <Route path="/scan" component={ProtectedScan} />
             <Route path="/history" component={ProtectedHistory} />
             <Route path="/favorites" component={ProtectedFavorites} />
             <Route path="/data-quality" component={ProtectedDataQuality} />
