@@ -823,14 +823,16 @@ export default function Dispensing() {
   };
 
   return (
-    <div className="max-w-full space-y-6 overflow-x-hidden pb-10 animate-in fade-in">
+    <div className="mx-auto w-full max-w-7xl space-y-6 overflow-x-hidden pb-10 animate-in fade-in">
       <header className="space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="rounded-2xl bg-primary/10 p-3">
+        <div className="flex min-w-0 items-start gap-3 sm:items-center">
+          <div className="shrink-0 rounded-2xl bg-primary/10 p-3">
             <ClipboardCheck className="h-7 w-7 text-primary" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold">Довідник лікарських засобів</h1>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold sm:text-3xl">
+              Довідник лікарських засобів
+            </h1>
             <p className="text-muted-foreground">
               Реєстрові, регуляторні та цінові дані точної позиції.
             </p>
@@ -880,7 +882,7 @@ export default function Dispensing() {
                   <Link
                     key={item.id}
                     href={drugRefHref(item)}
-                    className="rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
+                    className="max-w-full break-words rounded-full bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
                   >
                     {item.brandName}
                   </Link>

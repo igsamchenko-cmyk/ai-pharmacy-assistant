@@ -239,8 +239,9 @@ describe("registry product mobile detail UI", () => {
     expect(html).toContain("motion-reduce:animate-none");
     expect(html).toContain("overflow-x-hidden");
     expect(html).not.toContain("overflow-x-auto");
-    expect(REGISTRY_PRODUCT_TOP_BAR_CLASS).toContain("top-[65px]");
-    expect(REGISTRY_PRODUCT_TOP_BAR_CLASS).toContain("md:top-0");
+    expect(REGISTRY_PRODUCT_TOP_BAR_CLASS).toContain("safe-area-inset-top");
+    expect(REGISTRY_PRODUCT_TOP_BAR_CLASS).toContain("top-[calc(4rem");
+    expect(REGISTRY_PRODUCT_TOP_BAR_CLASS).toContain("lg:top-0");
   });
 
   it("never creates an instruction route for an unavailable leaflet", () => {

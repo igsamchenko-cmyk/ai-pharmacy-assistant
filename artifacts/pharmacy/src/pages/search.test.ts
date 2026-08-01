@@ -279,8 +279,9 @@ describe("registry catalog UI", () => {
   });
   it("uses a mobile sticky search and compact skeletons without horizontal overflow", () => {
     expect(SEARCH_STICKY_CLASS).toContain("sticky");
-    expect(SEARCH_STICKY_CLASS).toContain("top-[65px]");
-    expect(SEARCH_STICKY_CLASS).toContain("md:top-0");
+    expect(SEARCH_STICKY_CLASS).toContain("safe-area-inset-top");
+    expect(SEARCH_STICKY_CLASS).toContain("top-[calc(4rem");
+    expect(SEARCH_STICKY_CLASS).toContain("lg:top-0");
 
     const html = renderToStaticMarkup(createElement(SearchLoadingSkeletons));
     expect(html).toContain('data-testid="search-skeletons"');

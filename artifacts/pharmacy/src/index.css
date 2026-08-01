@@ -150,12 +150,44 @@
 }
 
 @layer base {
+  html {
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   * {
     @apply border-border;
   }
 
+  body,
+  #root {
+    min-height: 100%;
+    min-height: 100dvh;
+    width: 100%;
+    overflow-x: clip;
+  }
+
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply m-0 bg-background font-sans text-foreground antialiased;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  summary {
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3,
+  p,
+  li,
+  dd {
+    overflow-wrap: break-word;
   }
 }
 
