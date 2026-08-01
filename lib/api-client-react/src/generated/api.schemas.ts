@@ -1760,6 +1760,154 @@ export interface RegistryInteractionEvidenceSource {
   reviewedAt: string;
 }
 
+export type InteractionInstructionTriageSignal = typeof InteractionInstructionTriageSignal[keyof typeof InteractionInstructionTriageSignal];
+
+
+export const InteractionInstructionTriageSignal = {
+  contraindication_language: 'contraindication_language',
+  avoidance_language: 'avoidance_language',
+  dose_adjustment_language: 'dose_adjustment_language',
+  monitoring_language: 'monitoring_language',
+  caution_language: 'caution_language',
+  unspecified: 'unspecified',
+} as const;
+
+export interface InteractionInstructionSignalEvidence {
+  /** @pattern ^[A-F0-9]{32}$ */
+  registryProductId: string;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  tradeName: string;
+  /** @maxLength 1000 */
+  sourceUrl: string;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  documentDate: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  excerpt: string;
+}
+
+export type InteractionInstructionSignalReviewStatus = typeof InteractionInstructionSignalReviewStatus[keyof typeof InteractionInstructionSignalReviewStatus];
+
+
+export const InteractionInstructionSignalReviewStatus = {
+  needs_review: 'needs_review',
+  already_verified: 'already_verified',
+} as const;
+
+export interface InteractionInstructionSignal {
+  /** @pattern ^candidate-[a-f0-9]{16}$ */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  ingredientA: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  ingredientB: string;
+  triageSignal: InteractionInstructionTriageSignal;
+  reviewStatus: InteractionInstructionSignalReviewStatus;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  supportingDocumentCount: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  supportingProductCount: number;
+  /**
+     * @minItems 1
+     * @maxItems 5
+     */
+  evidence: InteractionInstructionSignalEvidence[];
+}
+
+export type InteractionInstructionSignalPairStatus = typeof InteractionInstructionSignalPairStatus[keyof typeof InteractionInstructionSignalPairStatus];
+
+
+export const InteractionInstructionSignalPairStatus = {
+  signals_found: 'signals_found',
+  no_signal_in_loaded_instructions: 'no_signal_in_loaded_instructions',
+  instructions_unavailable: 'instructions_unavailable',
+  composition_unresolved: 'composition_unresolved',
+} as const;
+
+export interface InteractionInstructionSignalPair {
+  /** @pattern ^[A-F0-9]{32}$ */
+  productAId: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  productAName: string;
+  /** @pattern ^[A-F0-9]{32}$ */
+  productBId: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  productBName: string;
+  status: InteractionInstructionSignalPairStatus;
+  /** @maxItems 24 */
+  signals: InteractionInstructionSignal[];
+}
+
+export interface InteractionInstructionSignalsCoverage {
+  /**
+     * @minimum 2
+     * @maximum 5
+     */
+  selectedCount: number;
+  /**
+     * @minimum 0
+     * @maximum 5
+     */
+  instructionAvailableCount: number;
+  /**
+     * @minimum 0
+     * @maximum 600
+     */
+  evaluatedIngredientPairs: number;
+  /**
+     * @minimum 0
+     * @maximum 10
+     */
+  signalPairCount: number;
+  /**
+     * @minimum 0
+     * @maximum 240
+     */
+  candidateCount: number;
+}
+
+export interface InteractionInstructionSignalsResult {
+  /**
+     * @minItems 1
+     * @maxItems 10
+     */
+  pairs: InteractionInstructionSignalPair[];
+  coverage: InteractionInstructionSignalsCoverage;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  disclaimer: string;
+}
+
 export type RegistryInteractionFindingSeverity = typeof RegistryInteractionFindingSeverity[keyof typeof RegistryInteractionFindingSeverity];
 
 

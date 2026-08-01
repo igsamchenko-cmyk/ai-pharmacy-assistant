@@ -1787,6 +1787,110 @@ export const CheckInteractionsResponse = zod.object({
 
 
 /**
+ * Returns candidate-only signals from exact official product instructions. Signals never change verified runtime rules and absence never means compatibility.
+ * @summary Find exact ingredient mentions in official instructions
+ */
+export const getInteractionInstructionSignalsBodyProductsItemProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getInteractionInstructionSignalsBodyProductsItemRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getInteractionInstructionSignalsBodyProductsMin = 2;
+export const getInteractionInstructionSignalsBodyProductsMax = 5;
+
+
+
+export const GetInteractionInstructionSignalsBody = zod.object({
+  "products": zod.array(zod.object({
+  "productId": zod.string().regex(getInteractionInstructionSignalsBodyProductsItemProductIdRegExp),
+  "registrationNumber": zod.string().regex(getInteractionInstructionSignalsBodyProductsItemRegistrationNumberRegExp)
+})).min(getInteractionInstructionSignalsBodyProductsMin).max(getInteractionInstructionSignalsBodyProductsMax)
+})
+
+export const getInteractionInstructionSignalsResponsePairsItemProductAIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getInteractionInstructionSignalsResponsePairsItemProductANameMax = 300;
+
+export const getInteractionInstructionSignalsResponsePairsItemProductBIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getInteractionInstructionSignalsResponsePairsItemProductBNameMax = 300;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemIdRegExp = new RegExp('^candidate-[a-f0-9]{16}$');
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemIngredientAMax = 300;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemIngredientBMax = 300;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemSupportingDocumentCountMax = 5;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemSupportingProductCountMax = 5;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemRegistryProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemTradeNameMax = 300;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemSourceUrlMax = 1000;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemDocumentDateMax = 40;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemExcerptMax = 1000;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceMax = 5;
+
+export const getInteractionInstructionSignalsResponsePairsItemSignalsMax = 24;
+
+export const getInteractionInstructionSignalsResponsePairsMax = 10;
+
+export const getInteractionInstructionSignalsResponseCoverageSelectedCountMin = 2;
+export const getInteractionInstructionSignalsResponseCoverageSelectedCountMax = 5;
+
+export const getInteractionInstructionSignalsResponseCoverageInstructionAvailableCountMin = 0;
+export const getInteractionInstructionSignalsResponseCoverageInstructionAvailableCountMax = 5;
+
+export const getInteractionInstructionSignalsResponseCoverageEvaluatedIngredientPairsMin = 0;
+export const getInteractionInstructionSignalsResponseCoverageEvaluatedIngredientPairsMax = 600;
+
+export const getInteractionInstructionSignalsResponseCoverageSignalPairCountMin = 0;
+export const getInteractionInstructionSignalsResponseCoverageSignalPairCountMax = 10;
+
+export const getInteractionInstructionSignalsResponseCoverageCandidateCountMin = 0;
+export const getInteractionInstructionSignalsResponseCoverageCandidateCountMax = 240;
+
+export const getInteractionInstructionSignalsResponseDisclaimerMax = 2000;
+
+
+
+export const GetInteractionInstructionSignalsResponse = zod.object({
+  "pairs": zod.array(zod.object({
+  "productAId": zod.string().regex(getInteractionInstructionSignalsResponsePairsItemProductAIdRegExp),
+  "productAName": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemProductANameMax),
+  "productBId": zod.string().regex(getInteractionInstructionSignalsResponsePairsItemProductBIdRegExp),
+  "productBName": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemProductBNameMax),
+  "status": zod.enum(['signals_found', 'no_signal_in_loaded_instructions', 'instructions_unavailable', 'composition_unresolved']),
+  "signals": zod.array(zod.object({
+  "id": zod.string().regex(getInteractionInstructionSignalsResponsePairsItemSignalsItemIdRegExp),
+  "ingredientA": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemIngredientAMax),
+  "ingredientB": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemIngredientBMax),
+  "triageSignal": zod.enum(['contraindication_language', 'avoidance_language', 'dose_adjustment_language', 'monitoring_language', 'caution_language', 'unspecified']),
+  "reviewStatus": zod.enum(['needs_review', 'already_verified']),
+  "supportingDocumentCount": zod.number().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemSupportingDocumentCountMax),
+  "supportingProductCount": zod.number().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemSupportingProductCountMax),
+  "evidence": zod.array(zod.object({
+  "registryProductId": zod.string().regex(getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemRegistryProductIdRegExp),
+  "registrationNumber": zod.string().regex(getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemRegistrationNumberRegExp),
+  "tradeName": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemTradeNameMax),
+  "sourceUrl": zod.string().url().max(getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemSourceUrlMax),
+  "documentDate": zod.string().max(getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemDocumentDateMax).nullable(),
+  "excerpt": zod.string().min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceItemExcerptMax)
+})).min(1).max(getInteractionInstructionSignalsResponsePairsItemSignalsItemEvidenceMax)
+})).max(getInteractionInstructionSignalsResponsePairsItemSignalsMax)
+})).min(1).max(getInteractionInstructionSignalsResponsePairsMax),
+  "coverage": zod.object({
+  "selectedCount": zod.number().min(getInteractionInstructionSignalsResponseCoverageSelectedCountMin).max(getInteractionInstructionSignalsResponseCoverageSelectedCountMax),
+  "instructionAvailableCount": zod.number().min(getInteractionInstructionSignalsResponseCoverageInstructionAvailableCountMin).max(getInteractionInstructionSignalsResponseCoverageInstructionAvailableCountMax),
+  "evaluatedIngredientPairs": zod.number().min(getInteractionInstructionSignalsResponseCoverageEvaluatedIngredientPairsMin).max(getInteractionInstructionSignalsResponseCoverageEvaluatedIngredientPairsMax),
+  "signalPairCount": zod.number().min(getInteractionInstructionSignalsResponseCoverageSignalPairCountMin).max(getInteractionInstructionSignalsResponseCoverageSignalPairCountMax),
+  "candidateCount": zod.number().min(getInteractionInstructionSignalsResponseCoverageCandidateCountMin).max(getInteractionInstructionSignalsResponseCoverageCandidateCountMax)
+}),
+  "disclaimer": zod.string().min(1).max(getInteractionInstructionSignalsResponseDisclaimerMax)
+})
+
+
+/**
  * Generates a structured reference for a drug. Falls back to demo data when no AI key is configured. Blocks self-diagnosis / treatment requests.
  * @summary Generate an AI drug reference
  */

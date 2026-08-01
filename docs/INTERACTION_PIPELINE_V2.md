@@ -71,13 +71,43 @@ An approved rule still requires an allowed source, stable document reference,
 source version/date, clinical effect, action, review date and resolved conflict
 state under the existing approved-only policy.
 
+## Operational runtime cross-check
+
+The interaction page now runs two independent requests after the user selects
+two to five exact registry products:
+
+1. `/api/interactions/check` returns approved runtime rules immediately;
+2. `/api/interactions/instruction-signals` loads the exact official
+   instructions in parallel and searches them for exact selected-ingredient
+   mentions.
+
+The second request reuses the registry-backed official instruction loader. A
+committed snapshot is used when present; otherwise the current official DRLZ
+MHT URL for that exact registry product is fetched, provenance-checked, parsed
+and cached for six hours. Up to five selected documents are loaded in parallel,
+so the main verified-rule result is never delayed by a slow or unavailable
+instruction document.
+
+Only exact ingredient-to-ingredient candidates with fully resolved
+compositions are shown. Class membership is not inferred. Every signal is
+labelled `candidate — not a rule`, includes the bounded official excerpt and a
+link to the original document, and keeps the warning that no signal does not
+mean compatibility. Download or parsing failure degrades only the instruction
+cross-check and does not remove the approved-rule result.
+
 ## Scaling path
 
-The next ingestion step should feed current registry instruction URLs into the
-same pipeline in bounded batches. The review unit remains one deduplicated
-ingredient/class claim, regardless of how many brands or packages cite it.
-Changed document hashes must reopen affected claims for review instead of
-silently modifying an approved rule.
+The on-demand path removes the need to pre-import thousands of packages before
+the checker is useful: any current DB-backed registry product with an allowed
+official instruction URL can participate when selected. The committed
+50-document checkpoint remains the reproducible offline quality baseline and
+feeds the deterministic global review report.
+
+A future background refresh may widen that offline baseline by document hash,
+not by manual trade-name batches. The review unit remains one deduplicated
+ingredient/class claim regardless of how many brands or packages cite it.
+Changed hashes must reopen affected claims instead of silently modifying an
+approved rule.
 
 Before any class-scoped candidate can become runtime eligible, a separate
 versioned membership set and explicit source scope/exceptions are required.

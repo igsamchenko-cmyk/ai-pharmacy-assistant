@@ -755,6 +755,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /interactions/instruction-signals:
+    post:
+      operationId: getInteractionInstructionSignals
+      tags: [interactions]
+      summary: Find exact ingredient mentions in official instructions
+      description: Returns candidate-only signals from exact official product instructions. Signals never change verified runtime rules and absence never means compatibility.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistryInteractionCheckInput"
+      responses:
+        "200":
+          description: Official instruction signals for each selected product pair
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InteractionInstructionSignalsResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /ai/summary:
     post:
       operationId: createAiSummary
@@ -3101,6 +3126,115 @@ components:
         publishedAt: { type: ["string", "null"], maxLength: 40 }
         accessedAt: { type: ["string", "null"], maxLength: 40 }
         reviewedAt: { type: string, minLength: 1, maxLength: 40 }
+    InteractionInstructionTriageSignal:
+      type: string
+      enum:
+        [
+          contraindication_language,
+          avoidance_language,
+          dose_adjustment_language,
+          monitoring_language,
+          caution_language,
+          unspecified,
+        ]
+    InteractionInstructionSignalEvidence:
+      type: object
+      required:
+        [
+          registryProductId,
+          registrationNumber,
+          tradeName,
+          sourceUrl,
+          documentDate,
+          excerpt,
+        ]
+      properties:
+        registryProductId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        registrationNumber: { type: string, pattern: "^UA/\\d+/\\d+/\\d+$" }
+        tradeName: { type: string, minLength: 1, maxLength: 300 }
+        sourceUrl: { type: string, format: uri, maxLength: 1000 }
+        documentDate: { type: ["string", "null"], maxLength: 40 }
+        excerpt: { type: string, minLength: 1, maxLength: 1000 }
+    InteractionInstructionSignal:
+      type: object
+      required:
+        [
+          id,
+          ingredientA,
+          ingredientB,
+          triageSignal,
+          reviewStatus,
+          supportingDocumentCount,
+          supportingProductCount,
+          evidence,
+        ]
+      properties:
+        id: { type: string, pattern: "^candidate-[a-f0-9]{16}$" }
+        ingredientA: { type: string, minLength: 1, maxLength: 300 }
+        ingredientB: { type: string, minLength: 1, maxLength: 300 }
+        triageSignal:
+          $ref: "#/components/schemas/InteractionInstructionTriageSignal"
+        reviewStatus: { type: string, enum: [needs_review, already_verified] }
+        supportingDocumentCount: { type: integer, minimum: 1, maximum: 5 }
+        supportingProductCount: { type: integer, minimum: 1, maximum: 5 }
+        evidence:
+          type: array
+          minItems: 1
+          maxItems: 5
+          items:
+            $ref: "#/components/schemas/InteractionInstructionSignalEvidence"
+    InteractionInstructionSignalPair:
+      type: object
+      required:
+        [productAId, productAName, productBId, productBName, status, signals]
+      properties:
+        productAId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        productAName: { type: string, minLength: 1, maxLength: 300 }
+        productBId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        productBName: { type: string, minLength: 1, maxLength: 300 }
+        status:
+          type: string
+          enum:
+            [
+              signals_found,
+              no_signal_in_loaded_instructions,
+              instructions_unavailable,
+              composition_unresolved,
+            ]
+        signals:
+          type: array
+          maxItems: 24
+          items:
+            $ref: "#/components/schemas/InteractionInstructionSignal"
+    InteractionInstructionSignalsCoverage:
+      type: object
+      required:
+        [
+          selectedCount,
+          instructionAvailableCount,
+          evaluatedIngredientPairs,
+          signalPairCount,
+          candidateCount,
+        ]
+      properties:
+        selectedCount: { type: integer, minimum: 2, maximum: 5 }
+        instructionAvailableCount: { type: integer, minimum: 0, maximum: 5 }
+        evaluatedIngredientPairs: { type: integer, minimum: 0, maximum: 600 }
+        signalPairCount: { type: integer, minimum: 0, maximum: 10 }
+        candidateCount: { type: integer, minimum: 0, maximum: 240 }
+    InteractionInstructionSignalsResult:
+      type: object
+      required: [pairs, coverage, disclaimer]
+      properties:
+        pairs:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/InteractionInstructionSignalPair"
+        coverage:
+          $ref: "#/components/schemas/InteractionInstructionSignalsCoverage"
+        disclaimer: { type: string, minLength: 1, maxLength: 2000 }
     RegistryInteractionFinding:
       type: object
       required:

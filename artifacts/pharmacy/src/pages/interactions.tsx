@@ -3,6 +3,9 @@ import {
   getListHistoryQueryKey,
   useCheckInteractions,
   useCreateHistory,
+  useGetInteractionInstructionSignals,
+  type InteractionInstructionSignalPair,
+  type InteractionInstructionTriageSignal,
   type RegistryInteractionFindingSeverity,
   type RegistryInteractionPairStatus,
 } from "@workspace/api-client-react";
@@ -10,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   BookOpen,
+  FileSearch,
   GitCompare,
   Info,
   ShieldAlert,
@@ -83,6 +87,127 @@ const actionLabels = {
   informational: "Врахувати під час консультації",
 } as const;
 
+const instructionSignalLabels: Record<
+  InteractionInstructionTriageSignal,
+  string
+> = {
+  contraindication_language: "Формулювання про протипоказання",
+  avoidance_language: "Формулювання про уникнення",
+  dose_adjustment_language: "Згадка корекції дози",
+  monitoring_language: "Згадка моніторингу",
+  caution_language: "Формулювання про обережність",
+  unspecified: "Згадка без класифікації",
+};
+
+const instructionSignalStyles: Record<
+  InteractionInstructionTriageSignal,
+  string
+> = {
+  contraindication_language: "border-red-500/40 text-red-700 dark:text-red-200",
+  avoidance_language:
+    "border-orange-500/40 text-orange-700 dark:text-orange-200",
+  dose_adjustment_language:
+    "border-amber-500/40 text-amber-800 dark:text-amber-100",
+  monitoring_language: "border-sky-500/40 text-sky-800 dark:text-sky-100",
+  caution_language: "border-yellow-500/40 text-yellow-800 dark:text-yellow-100",
+  unspecified: "border-muted-foreground/30 text-muted-foreground",
+};
+
+function InstructionSignalPairCard({
+  pair,
+}: {
+  pair: InteractionInstructionSignalPair;
+}) {
+  const emptyMessage =
+    pair.status === "instructions_unavailable"
+      ? "Офіційні інструкції цієї пари зараз не завантажені. Висновок про сумісність не робиться."
+      : pair.status === "composition_unresolved"
+        ? "Точний склад однієї з позицій не зіставлено, тому автоматичний пошук згадок не виконувався."
+        : "У завантажених інструкціях точного перехресного згадування не знайдено. Це не підтверджує сумісність.";
+
+  return (
+    <Card className="max-w-full overflow-hidden border-cyan-500/25 bg-cyan-500/[0.03]">
+      <CardContent className="space-y-4 p-4 sm:p-5">
+        <div className="flex min-w-0 items-start gap-3">
+          <FileSearch className="mt-0.5 h-5 w-5 shrink-0 text-cyan-600" />
+          <div className="min-w-0 space-y-1">
+            <p className="break-words font-bold">
+              {pair.productAName} + {pair.productBName}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Автоматичний пошук лише в офіційних інструкціях точних реєстрових
+              позицій
+            </p>
+          </div>
+        </div>
+
+        {pair.signals.length === 0 ? (
+          <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+            {emptyMessage}
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {pair.signals.map((signal) => (
+              <div
+                key={signal.id}
+                className="space-y-3 rounded-xl border bg-background/75 p-4"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={instructionSignalStyles[signal.triageSignal]}
+                  >
+                    {instructionSignalLabels[signal.triageSignal]}
+                  </Badge>
+                  <Badge variant="secondary">
+                    {signal.reviewStatus === "already_verified"
+                      ? "Збігається з перевіреним правилом"
+                      : "Кандидат — не правило"}
+                  </Badge>
+                </div>
+                <p className="break-words text-sm font-semibold">
+                  {signal.ingredientA} + {signal.ingredientB}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Знайдено в {signal.supportingDocumentCount} документі(ах) для{" "}
+                  {signal.supportingProductCount} реєстрової позиції(й). Сила й
+                  клінічна значущість тут не визначаються автоматично.
+                </p>
+                <div className="space-y-2">
+                  {signal.evidence.map((evidence) => (
+                    <details
+                      key={`${signal.id}:${evidence.registryProductId}`}
+                      className="rounded-lg border p-3"
+                    >
+                      <summary className="cursor-pointer break-words text-sm font-semibold">
+                        {evidence.tradeName} · {evidence.registrationNumber}
+                      </summary>
+                      <div className="mt-3 space-y-3 text-sm">
+                        <p className="whitespace-pre-wrap break-words text-muted-foreground">
+                          {evidence.excerpt}
+                        </p>
+                        <a
+                          className="inline-flex items-center gap-1 break-all text-primary underline"
+                          href={evidence.sourceUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <BookOpen className="h-4 w-4 shrink-0" />
+                          Відкрити офіційний документ
+                        </a>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function addInteractionSelection(
   current: readonly InteractionProductSelection[],
   product: InteractionProductSelection,
@@ -107,11 +232,13 @@ export default function Interactions() {
   >([]);
   const queryClient = useQueryClient();
   const checkInteractions = useCheckInteractions();
+  const instructionSignals = useGetInteractionInstructionSignals();
   const createHistory = useCreateHistory();
 
   const handleAdd = (product: InteractionProductSelection) => {
     setSelectedProducts((current) => addInteractionSelection(current, product));
     checkInteractions.reset();
+    instructionSignals.reset();
   };
 
   const handleRemove = (productId: string) => {
@@ -119,19 +246,20 @@ export default function Interactions() {
       current.filter((product) => product.productId !== productId),
     );
     checkInteractions.reset();
+    instructionSignals.reset();
   };
 
   const handleCheck = () => {
     if (selectedProducts.length < 2 || selectedProducts.length > 5) return;
+    const data = {
+      products: selectedProducts.map((product) => ({
+        productId: product.productId,
+        registrationNumber: product.registration,
+      })),
+    };
+    instructionSignals.mutate({ data });
     checkInteractions.mutate(
-      {
-        data: {
-          products: selectedProducts.map((product) => ({
-            productId: product.productId,
-            registrationNumber: product.registration,
-          })),
-        },
-      },
+      { data },
       {
         onSuccess: () => {
           createHistory.mutate(
@@ -453,6 +581,50 @@ export default function Interactions() {
               </Card>
             ))}
           </div>
+
+          {instructionSignals.isPending ? (
+            <div className="flex gap-3 rounded-xl border border-cyan-500/25 bg-cyan-500/[0.03] p-4 text-sm">
+              <FileSearch className="mt-0.5 h-5 w-5 shrink-0 animate-pulse text-cyan-600" />
+              <p>Паралельно перевіряємо офіційні інструкції обраних позицій…</p>
+            </div>
+          ) : null}
+
+          {instructionSignals.isError ? (
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-muted-foreground">
+              Офіційні інструкції зараз не вдалося завантажити. Перевірені
+              правила вище залишаються доступними.
+            </div>
+          ) : null}
+
+          {instructionSignals.data ? (
+            <section
+              className="space-y-4"
+              data-testid="instruction-signal-results"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="flex items-center gap-2 text-lg font-bold">
+                  <FileSearch className="h-5 w-5 text-cyan-600" />
+                  Перехресна перевірка офіційних інструкцій
+                </h2>
+                <Badge variant="outline">
+                  Інструкції:{" "}
+                  {instructionSignals.data.coverage.instructionAvailableCount}/
+                  {instructionSignals.data.coverage.selectedCount}
+                </Badge>
+              </div>
+              <div className="space-y-3">
+                {instructionSignals.data.pairs.map((pair) => (
+                  <InstructionSignalPairCard
+                    key={`${pair.productAId}:${pair.productBId}`}
+                    pair={pair}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {instructionSignals.data.disclaimer}
+              </p>
+            </section>
+          ) : null}
 
           <details className="rounded-xl border p-4 text-sm">
             <summary className="cursor-pointer font-semibold">

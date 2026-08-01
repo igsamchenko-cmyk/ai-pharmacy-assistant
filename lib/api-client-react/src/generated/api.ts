@@ -54,6 +54,7 @@ import type {
   HistoryEntry,
   HistoryInput,
   ImportPreview,
+  InteractionInstructionSignalsResult,
   KnowledgeRuntimeStatus,
   KnowledgeSearchParams,
   KnowledgeSearchResult,
@@ -1731,6 +1732,77 @@ export const useCheckInteractions = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getCheckInteractionsMutationOptions(options));
+    }
+
+export const getGetInteractionInstructionSignalsUrl = () => {
+
+
+
+
+  return `/api/interactions/instruction-signals`
+}
+
+/**
+ * Returns candidate-only signals from exact official product instructions. Signals never change verified runtime rules and absence never means compatibility.
+ * @summary Find exact ingredient mentions in official instructions
+ */
+export const getInteractionInstructionSignals = async (registryInteractionCheckInput: RegistryInteractionCheckInput, options?: RequestInit): Promise<InteractionInstructionSignalsResult> => {
+
+  return customFetch<InteractionInstructionSignalsResult>(getGetInteractionInstructionSignalsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(registryInteractionCheckInput)
+  }
+);}
+
+
+
+
+export const getGetInteractionInstructionSignalsMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getInteractionInstructionSignals>>, TError,{data: BodyType<RegistryInteractionCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof getInteractionInstructionSignals>>, TError,{data: BodyType<RegistryInteractionCheckInput>}, TContext> => {
+
+const mutationKey = ['getInteractionInstructionSignals'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getInteractionInstructionSignals>>, {data: BodyType<RegistryInteractionCheckInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  getInteractionInstructionSignals(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetInteractionInstructionSignalsMutationResult = NonNullable<Awaited<ReturnType<typeof getInteractionInstructionSignals>>>
+    export type GetInteractionInstructionSignalsMutationBody = BodyType<RegistryInteractionCheckInput>
+    export type GetInteractionInstructionSignalsMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Find exact ingredient mentions in official instructions
+ */
+export const useGetInteractionInstructionSignals = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getInteractionInstructionSignals>>, TError,{data: BodyType<RegistryInteractionCheckInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof getInteractionInstructionSignals>>,
+        TError,
+        {data: BodyType<RegistryInteractionCheckInput>},
+        TContext
+      > => {
+      return useMutation(getGetInteractionInstructionSignalsMutationOptions(options));
     }
 
 export const getCreateAiSummaryUrl = () => {

@@ -55,7 +55,7 @@ export interface OfficialInstructionLoaderOptions {
 
 const dynamicInstructionCache = new TtlCache<DrugInstructionSnapshot | null>({
   ttlMs: SUCCESS_CACHE_TTL_MS,
-  maxEntries: 48,
+  maxEntries: 96,
 });
 
 async function executorOrDefault(

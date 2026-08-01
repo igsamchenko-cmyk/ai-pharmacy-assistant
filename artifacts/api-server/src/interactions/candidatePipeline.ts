@@ -521,7 +521,7 @@ export function detectInteractionTriageSignal(
     return "contraindication_language";
   }
   if (
-    /слід уникати|не слід застосовувати|не рекомендується|уникати одночасного|\bavoid\b|should not be used/iu.test(
+    /слід уникати|не слід застосовувати|не рекомендується|уникати одночасного|\bavoid(?:ed|ance)?\b|should not be used/iu.test(
       text,
     )
   ) {
