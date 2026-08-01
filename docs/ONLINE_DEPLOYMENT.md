@@ -35,6 +35,7 @@ NODE_VERSION=24.14.1
 NODE_ENV=production
 AUTH_PROVIDER=local
 AUTH_REQUIRED=true
+PUBLIC_REFERENCE_ACCESS=true
 INVITE_ONLY=true
 ADMIN_EMAILS=
 ALLOWED_EMAILS=
@@ -48,6 +49,9 @@ OPENAI_API_KEY=
 SUPABASE_URL=
 SUPABASE_ANON_KEY=
 ```
+
+`PUBLIC_REFERENCE_ACCESS=true` opens only pharmaceutical reference routes.
+Reviewer/admin and cost-bearing internal tools still require an invited login.
 
 `ADMIN_EMAILS` grants `admin`. `ALLOWED_EMAILS` grants `user` by default and
 supports `email@example.com:reviewer`. `DISABLED_EMAILS` blocks listed users.

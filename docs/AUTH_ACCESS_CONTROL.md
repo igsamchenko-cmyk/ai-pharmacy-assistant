@@ -8,6 +8,10 @@ auth mandatory.
 - `AUTH_REQUIRED=false`: local beta mode. The app is unlocked for development
   and diagnostics reports `local_beta`.
 - `AUTH_REQUIRED=true` and `INVITE_ONLY=true`: private beta mode. Users must log
+- `PUBLIC_REFERENCE_ACCESS=true`: opens only the reference surface without a
+  session. Login and role checks remain mandatory for AI/history, diagnostics,
+  data quality, import, review and administration. This is the production
+  public-reference mode.
   in with an email from `ADMIN_EMAILS` or `ALLOWED_EMAILS`.
 - `AUTH_PROVIDER=disabled`: auth layer is explicitly disabled for local work.
 - `AUTH_PROVIDER=supabase`: placeholder contract for future hosted auth. Real
@@ -18,8 +22,8 @@ auth mandatory.
 - `admin`: full reviewer access plus approve/reject review actions.
 - `reviewer`: review queue, data quality, import preview, diagnostics and
   runtime status.
-- `user`: search, drug cards, interactions, compare, hospital mode, AI
-  reference, scan, history and beta dashboard.
+- public visitor / `user`: search, drug cards, instructions, interactions,
+  compare and regulatory radar.
 
 `ADMIN_EMAILS` always grants `admin`. `ALLOWED_EMAILS` grants `user` by default
 and supports role suffixes:
@@ -39,10 +43,16 @@ Public:
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 
-Authenticated:
+Public when `PUBLIC_REFERENCE_ACCESS=true` (otherwise authenticated):
 
 - drug search/details/analogs
-- interactions, compare, AI reference and OCR scan
+- registry catalog, product profiles and instructions
+- interactions, comparison and knowledge reference lookup
+- regulatory radar and its once-daily due refresh
+
+Authenticated:
+
+- AI reference and OCR
 - history
 - beta dashboard
 - knowledge search, normalize, stats and ATC lookup
@@ -73,8 +83,10 @@ values or server filesystem paths.
 
 ## v1.3 Online Access Notes
 
-For the real online private beta, users can open the deployed URL from any PC,
-go to `/login`, and enter an invited email. There is no public self-service
+For public-reference deployment, ordinary users open the deployed URL and use
+the reference immediately; no login prompt is shown. Staff can still open
+`/login` directly. In private-only mode, users open the deployed URL from any PC,
+go to `/login` and enter an invited email. There is no public self-service
 registration. Access is granted only by environment configuration:
 
 - admins in `ADMIN_EMAILS`;

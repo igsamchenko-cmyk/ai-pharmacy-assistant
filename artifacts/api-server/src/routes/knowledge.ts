@@ -45,7 +45,7 @@ import {
   ReviewWorkflowUnavailableError,
   REVIEW_WORKFLOW_UNAVAILABLE_WARNING,
 } from "../knowledge";
-import { requireRole } from "../auth";
+import { requireReferenceAccess, requireRole } from "../auth";
 import { buildDataQualityApiReport } from "../knowledge/qualityReport";
 
 const router: IRouter = Router();
@@ -65,7 +65,7 @@ function handleReviewError(error: unknown, res: Response): void {
   throw error;
 }
 
-router.get("/knowledge/search", requireRole("user"), async (req, res): Promise<void> => {
+router.get("/knowledge/search", requireReferenceAccess, async (req, res): Promise<void> => {
   const parsed = KnowledgeSearchQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -77,7 +77,7 @@ router.get("/knowledge/search", requireRole("user"), async (req, res): Promise<v
   res.json(KnowledgeSearchResponse.parse(result));
 });
 
-router.get("/knowledge/normalize", requireRole("user"), async (req, res): Promise<void> => {
+router.get("/knowledge/normalize", requireReferenceAccess, async (req, res): Promise<void> => {
   const parsed = NormalizeDrugNameQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -101,7 +101,7 @@ router.get("/knowledge/runtime/status", requireRole("reviewer"), async (_req, re
   res.json(GetKnowledgeRuntimeStatusResponse.parse(await getKnowledgeRuntimeStatus()));
 });
 
-router.get("/knowledge/stats", requireRole("user"), (_req, res): void => {
+router.get("/knowledge/stats", requireReferenceAccess, (_req, res): void => {
   res.json(GetKnowledgeStatsResponse.parse(getKnowledgeEngineStats()));
 });
 
@@ -204,7 +204,7 @@ router.post("/knowledge/review/:id/needs-review", requireRole("reviewer"), async
     handleReviewError(error, res);
   }
 });
-router.get("/atc/:code", requireRole("user"), (req, res): void => {
+router.get("/atc/:code", requireReferenceAccess, (req, res): void => {
   const code = Array.isArray(req.params.code) ? req.params.code[0] : req.params.code;
   const info = getAtcInfo(code);
   if (!info) {
@@ -214,7 +214,7 @@ router.get("/atc/:code", requireRole("user"), (req, res): void => {
   res.json(GetAtcInfoResponse.parse(info));
 });
 
-router.post("/compare", requireRole("user"), (req, res): void => {
+router.post("/compare", requireReferenceAccess, (req, res): void => {
   const parsed = CompareDrugsBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

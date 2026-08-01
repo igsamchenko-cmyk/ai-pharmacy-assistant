@@ -50,6 +50,7 @@ const baseRoutes: RouteMap = {
     body: {
       authenticated: false,
       authRequired: true,
+      publicReferenceAccess: true,
       inviteOnly: true,
       provider: "local",
       mode: "private_beta",
@@ -64,6 +65,8 @@ const baseRoutes: RouteMap = {
     body: { session: { authenticated: true, role: "reviewer" } },
     cookie: "farmassist_session=abc; Path=/; HttpOnly",
   },
+  "/api/drugs/stats": { status: 200, body: { total: 31 } },
+  "/api/knowledge/stats": { status: 200, body: { totalDrugs: 31 } },
   "/api/beta/dashboard/status": {
     status: 401,
     body: { error: "auth required" },
@@ -102,6 +105,7 @@ describe("deploy verification", () => {
 
     expect(report.ok).toBe(true);
     expect(report.checks.map((item) => item.name)).toContain("beta-dashboard-api");
+    expect(report.checks.map((item) => item.name)).toContain("public-/api/drugs/stats");
     expect(report.checks.map((item) => item.name)).toContain("diagnostics-redaction");
     expect(report.checks.map((item) => item.name)).toContain("runtime-status");
   });

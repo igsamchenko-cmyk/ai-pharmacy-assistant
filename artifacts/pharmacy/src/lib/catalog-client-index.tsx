@@ -404,7 +404,7 @@ export function CatalogClientIndexProvider({
   const [isStale, setIsStale] = useState(false);
 
   useEffect(() => {
-    if (!auth.isAuthenticated) {
+    if (!auth.canUseReference) {
       setStatus("idle");
       setIndex(null);
       setSource(null);
@@ -445,7 +445,7 @@ export function CatalogClientIndexProvider({
       active = false;
       controller.abort();
     };
-  }, [auth.isAuthenticated, storage]);
+  }, [auth.canUseReference, storage]);
 
   const search = useCallback(
     (query: string, options?: CatalogClientIndexSearchOptions) => {

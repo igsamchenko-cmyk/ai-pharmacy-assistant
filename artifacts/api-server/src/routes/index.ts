@@ -20,13 +20,13 @@ router.use(authRouter);
 router.use(drugsRouter);
 router.use(catalogRouter);
 router.use(interactionsRouter);
+router.use(knowledgeRouter);
+router.use(regulatoryRadarRouter);
 router.use(aiRouter);
 router.use(ocrRouter);
 router.use(historyRouter);
 router.use(externalRouter);
-router.use(knowledgeRouter);
 router.use(betaDashboardRouter);
-router.use(regulatoryRadarRouter);
 router.use(diagnosticsRouter);
 
 export default router;

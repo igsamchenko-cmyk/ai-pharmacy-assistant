@@ -34,6 +34,11 @@ const PROTECTED_PATHS = [
   "/api/diagnostics",
   "/api/knowledge/runtime/status",
 ] as const;
+const PUBLIC_REFERENCE_PATHS = [
+  "/api/drugs/stats",
+  "/api/knowledge/stats",
+] as const;
+
 
 function normalizeBaseUrl(value: string): string {
   return value.trim().replace(/\/+$/, "");
@@ -121,17 +126,19 @@ export async function runDeployVerify(options: DeployVerifyOptions): Promise<Dep
   }
 
   let authSession: unknown = null;
+  let publicReferenceAccess = false;
   try {
     const session = await requestJson(fetchImpl, baseUrl, "/api/auth/session");
     authSession = session.json;
     const authRequired = objectValue(session.json, "authRequired") === true;
+    publicReferenceAccess = objectValue(session.json, "publicReferenceAccess") === true;
     const inviteOnly = objectValue(session.json, "inviteOnly") === true;
     const mode = String(objectValue(session.json, "mode") ?? "unknown");
     check(
       checks,
       "auth-mode",
-      session.status === 200 && authRequired && inviteOnly ? "passed" : "failed",
-      `GET /api/auth/session returned ${session.status}; mode=${mode}; authRequired=${authRequired}; inviteOnly=${inviteOnly}.`,
+      session.status === 200 && authRequired && publicReferenceAccess && inviteOnly ? "passed" : "failed",
+      `GET /api/auth/session returned ${session.status}; mode=${mode}; authRequired=${authRequired}; publicReferenceAccess=${publicReferenceAccess}; inviteOnly=${inviteOnly}.`,
     );
   } catch (error) {
     errors.push(error instanceof Error ? error.message : String(error));
@@ -145,6 +152,21 @@ export async function runDeployVerify(options: DeployVerifyOptions): Promise<Dep
   }
 
   for (const path of PROTECTED_PATHS) {
+  for (const path of PUBLIC_REFERENCE_PATHS) {
+    try {
+      const publicResponse = await requestJson(fetchImpl, baseUrl, path);
+      check(
+        checks,
+        `public-${path}`,
+        publicReferenceAccess && publicResponse.status === 200 ? "passed" : "failed",
+        `${path} returned ${publicResponse.status} without a session.`,
+      );
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+      check(checks, `public-${path}`, "failed", `${path} could not be reached.`);
+    }
+  }
+
     try {
       const unauth = await requestJson(fetchImpl, baseUrl, path);
       check(

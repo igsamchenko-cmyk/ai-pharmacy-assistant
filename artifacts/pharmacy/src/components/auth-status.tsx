@@ -17,6 +17,31 @@ export function AuthStatus({ compact = false }: { compact?: boolean }) {
     );
   }
 
+  if (auth.isPublicReference) {
+    return (
+      <div
+        className={
+          compact
+            ? "min-w-0 rounded-lg border border-border bg-muted/40 p-2.5"
+            : "rounded-xl border border-border bg-muted/40 p-3"
+        }
+        data-testid={compact ? "sidebar-public-access" : "public-access"}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+          <div className="min-w-0">
+            <div className="truncate text-sm font-medium">Вільний доступ</div>
+            {!compact && (
+              <div className="text-xs text-muted-foreground">
+                Довідник доступний без входу
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!session?.authenticated) {
     return (
       <Link

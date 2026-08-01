@@ -1,5 +1,15 @@
 # AI Pharmacy Assistant (FarmAssist)
 
+## Current Access Model
+
+The pharmaceutical reference is available without login when
+`PUBLIC_REFERENCE_ACCESS=true`: registry search and product cards,
+instructions, dispensing profiles, interactions, comparisons and regulatory
+updates. Authentication remains enabled for internal AI/history, data-quality,
+review, import and administration tools. Do not use `AUTH_PROVIDER=disabled` in
+production because local unlocked mode intentionally grants development admin
+access.
+
 ## v1.3 Real Online Deployment Readiness
 
 FarmAssist now includes an operator checklist, production env placeholder file
@@ -30,8 +40,8 @@ Service can provide both `/api/*` and direct app routes such as
 
 Roles:
 
-- `user`: pharmaceutical reference, exact product profiles, regulatory
-  updates, interactions and contextual reference tools.
+- public visitor / `user`: pharmaceutical reference, exact product profiles,
+  regulatory updates, interactions and contextual reference tools.
 - `reviewer`: data quality, diagnostics, runtime status, import preview and
   review queue.
 - `admin`: reviewer access plus approve/reject actions.

@@ -45,6 +45,7 @@ export interface AuthUser {
 export interface AuthSession {
   authenticated: boolean;
   authRequired: boolean;
+  publicReferenceAccess: boolean;
   inviteOnly: boolean;
   provider: AuthProvider;
   mode: AuthMode;
@@ -295,6 +296,7 @@ export type DiagnosticsPanelDataRuntime = {
 export type DiagnosticsPanelDataAuth = {
   configured: boolean;
   required: boolean;
+  publicReferenceAccess: boolean;
   inviteOnly: boolean;
   provider: AuthProvider;
   mode: AuthMode;
@@ -1758,6 +1760,209 @@ export interface RegistryInteractionEvidenceSource {
      * @maxLength 40
      */
   reviewedAt: string;
+}
+
+export type InteractionInstructionTriageSignal = typeof InteractionInstructionTriageSignal[keyof typeof InteractionInstructionTriageSignal];
+
+
+export const InteractionInstructionTriageSignal = {
+  contraindication_language: 'contraindication_language',
+  avoidance_language: 'avoidance_language',
+  dose_adjustment_language: 'dose_adjustment_language',
+  monitoring_language: 'monitoring_language',
+  caution_language: 'caution_language',
+  unspecified: 'unspecified',
+} as const;
+
+export interface InteractionInstructionSignalEvidence {
+  /** @pattern ^[A-F0-9]{32}$ */
+  registryProductId: string;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  tradeName: string;
+  /** @maxLength 1000 */
+  sourceUrl: string;
+  /**
+     * @maxLength 40
+     * @nullable
+     */
+  documentDate: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  excerpt: string;
+}
+
+export type InteractionInstructionClassMatchBasis = typeof InteractionInstructionClassMatchBasis[keyof typeof InteractionInstructionClassMatchBasis];
+
+
+export const InteractionInstructionClassMatchBasis = {
+  official_atc_prefix: 'official_atc_prefix',
+  official_atc_and_oral_form: 'official_atc_and_oral_form',
+} as const;
+
+export interface InteractionInstructionClassMatch {
+  /**
+     * @maxLength 100
+     * @pattern ^class:[a-z0-9-]+$
+     */
+  classId: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  className: string;
+  /** @pattern ^[A-F0-9]{32}$ */
+  matchedProductId: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  matchedProductName: string;
+  /** @pattern ^[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}$ */
+  atcCode: string;
+  /** @pattern ^[A-Z][0-9]{2}[A-Z]{1,2}[0-9]{0,2}$ */
+  matchedAtcRule: string;
+  basis: InteractionInstructionClassMatchBasis;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  sourceLabel: string;
+  /** @maxLength 1000 */
+  sourceUrl: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  sourceVersion: string;
+}
+
+export type InteractionInstructionSignalMatchBasis = typeof InteractionInstructionSignalMatchBasis[keyof typeof InteractionInstructionSignalMatchBasis];
+
+
+export const InteractionInstructionSignalMatchBasis = {
+  exact_ingredient: 'exact_ingredient',
+  official_atc_class: 'official_atc_class',
+} as const;
+
+export type InteractionInstructionSignalReviewStatus = typeof InteractionInstructionSignalReviewStatus[keyof typeof InteractionInstructionSignalReviewStatus];
+
+
+export const InteractionInstructionSignalReviewStatus = {
+  needs_review: 'needs_review',
+  already_verified: 'already_verified',
+} as const;
+
+export interface InteractionInstructionSignal {
+  /** @pattern ^candidate-[a-f0-9]{16}$ */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  ingredientA: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  ingredientB: string;
+  matchBasis: InteractionInstructionSignalMatchBasis;
+  classMatch: InteractionInstructionClassMatch | null;
+  triageSignal: InteractionInstructionTriageSignal;
+  reviewStatus: InteractionInstructionSignalReviewStatus;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  supportingDocumentCount: number;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  supportingProductCount: number;
+  /**
+     * @minItems 1
+     * @maxItems 5
+     */
+  evidence: InteractionInstructionSignalEvidence[];
+}
+
+export type InteractionInstructionSignalPairStatus = typeof InteractionInstructionSignalPairStatus[keyof typeof InteractionInstructionSignalPairStatus];
+
+
+export const InteractionInstructionSignalPairStatus = {
+  signals_found: 'signals_found',
+  no_signal_in_loaded_instructions: 'no_signal_in_loaded_instructions',
+  instructions_unavailable: 'instructions_unavailable',
+  composition_unresolved: 'composition_unresolved',
+} as const;
+
+export interface InteractionInstructionSignalPair {
+  /** @pattern ^[A-F0-9]{32}$ */
+  productAId: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  productAName: string;
+  /** @pattern ^[A-F0-9]{32}$ */
+  productBId: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  productBName: string;
+  status: InteractionInstructionSignalPairStatus;
+  /** @maxItems 24 */
+  signals: InteractionInstructionSignal[];
+}
+
+export interface InteractionInstructionSignalsCoverage {
+  /**
+     * @minimum 2
+     * @maximum 5
+     */
+  selectedCount: number;
+  /**
+     * @minimum 0
+     * @maximum 5
+     */
+  instructionAvailableCount: number;
+  /**
+     * @minimum 0
+     * @maximum 600
+     */
+  evaluatedIngredientPairs: number;
+  /**
+     * @minimum 0
+     * @maximum 10
+     */
+  signalPairCount: number;
+  /**
+     * @minimum 0
+     * @maximum 240
+     */
+  candidateCount: number;
+}
+
+export interface InteractionInstructionSignalsResult {
+  /**
+     * @minItems 1
+     * @maxItems 10
+     */
+  pairs: InteractionInstructionSignalPair[];
+  coverage: InteractionInstructionSignalsCoverage;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  disclaimer: string;
 }
 
 export type RegistryInteractionFindingSeverity = typeof RegistryInteractionFindingSeverity[keyof typeof RegistryInteractionFindingSeverity];

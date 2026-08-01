@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import React, { type ComponentType } from "react";
 import type { AuthRole } from "@workspace/api-client-react";
 import { useAuth, roleLabel } from "@/lib/auth";
 import AccessDenied from "@/pages/access-denied";
@@ -22,7 +22,7 @@ export function ProtectedRoute({
     );
   }
 
-  if (!auth.isAuthenticated) {
+  if (!auth.canUseReference) {
     return (
       <AccessDenied
         title="Потрібен вхід"

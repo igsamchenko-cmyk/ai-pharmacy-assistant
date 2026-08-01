@@ -21,6 +21,7 @@ import { isTreatmentRequest } from "../services/safety";
 const AUTH_ENV_KEYS = [
   "AUTH_PROVIDER",
   "AUTH_REQUIRED",
+  "PUBLIC_REFERENCE_ACCESS",
   "INVITE_ONLY",
   "ADMIN_EMAILS",
   "ALLOWED_EMAILS",
@@ -134,6 +135,35 @@ describe("private beta auth", () => {
     await withServer(async (baseUrl) => {
       const response = await api(baseUrl, "/drugs/stats");
       expect(response.status).toBe(401);
+    });
+  });
+
+  it("opens reference APIs without granting access to internal tools", async () => {
+    setAuthEnv({
+      AUTH_PROVIDER: "local",
+      AUTH_REQUIRED: "true",
+      PUBLIC_REFERENCE_ACCESS: "true",
+      INVITE_ONLY: "true",
+      ADMIN_EMAILS: "admin@example.com",
+    });
+
+    await withServer(async (baseUrl) => {
+      const session = await api<{
+        authenticated: boolean;
+        publicReferenceAccess: boolean;
+        role: string;
+      }>(baseUrl, "/auth/session");
+      expect(session.status).toBe(200);
+      expect(session.json).toMatchObject({
+        authenticated: false,
+        publicReferenceAccess: true,
+        role: "none",
+      });
+
+      expect((await api(baseUrl, "/drugs/stats")).status).toBe(200);
+      expect((await api(baseUrl, "/knowledge/stats")).status).toBe(200);
+      expect((await api(baseUrl, "/knowledge/quality")).status).toBe(401);
+      expect((await api(baseUrl, "/beta/dashboard/status")).status).toBe(401);
     });
   });
 
@@ -413,9 +443,9 @@ describe("private beta auth", () => {
     );
   });
 
-  it("keeps beta dashboard available to authenticated users", async () => {
+  it("keeps beta dashboard available to authenticated reviewers", async () => {
     await withServer(async (baseUrl) => {
-      const session = await login(baseUrl, "user@example.com");
+      const session = await login(baseUrl, "reviewer@example.com");
       const response = await api(baseUrl, "/beta/dashboard/status", {
         cookie: session.cookie,
       });

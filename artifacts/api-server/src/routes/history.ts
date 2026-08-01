@@ -15,7 +15,7 @@ import {
 import { requireRole } from "../auth";
 
 const router: IRouter = Router();
-router.use(requireRole("user"));
+router.use(requireRole("reviewer"));
 
 router.get("/history", async (_req, res): Promise<void> => {
   try {

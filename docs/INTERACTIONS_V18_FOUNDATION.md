@@ -78,6 +78,12 @@ A rule is eligible only when all of these are true:
 
 The API exposes the clinical effect, bounded severity, action category, evidence level, source, version/date and review date. It does not derive interaction conclusions from product instructions, substring matching or an LLM.
 
+Product instructions now feed a separate candidate-only evidence pipeline. It
+deduplicates exact ingredient and explicitly mentioned class claims, preserves
+bounded excerpts and provenance, and ranks a review queue without changing
+runtime rules. See `docs/INTERACTION_PIPELINE_V2.md` and reproduce the report
+with `pnpm knowledge:interactions:candidates-report -- --write`.
+
 ## Runtime and UX
 
 The interaction picker searches the same 16,533-product versioned browser index used by the main catalog. Typing does not call the legacy `/drugs` demo search. The server catalog is used only as a fallback when the local index cannot be loaded.

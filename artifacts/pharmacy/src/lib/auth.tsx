@@ -22,6 +22,8 @@ interface AuthContextValue {
   session: AuthSession | undefined;
   isLoading: boolean;
   isAuthenticated: boolean;
+  canUseReference: boolean;
+  isPublicReference: boolean;
   isLocalBeta: boolean;
   hasRole(role: Exclude<AuthRole, "none">): boolean;
   requestLoginCode(email: string): Promise<void>;
@@ -59,12 +61,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const session = sessionQuery.data;
+  const isAuthenticated = session?.authenticated === true;
+  const isPublicReference =
+    session?.publicReferenceAccess === true && !isAuthenticated;
   const value: AuthContextValue = {
     session,
     isLoading: sessionQuery.isLoading,
-    isAuthenticated: session?.authenticated === true,
+    isAuthenticated,
+    canUseReference: isAuthenticated || isPublicReference,
+    isPublicReference,
     isLocalBeta: session?.mode === "local_beta" || session?.mode === "disabled",
     hasRole(role) {
+      if (role === "user" && isPublicReference) return true;
       return ROLE_RANK[session?.role ?? "none"] >= ROLE_RANK[role];
     },
     async requestLoginCode(email) {

@@ -81,6 +81,21 @@ describe("registry interaction selection", () => {
     expect(pageSource).toContain("не робить висновок про сумісність");
   });
 
+  it("checks official instructions in parallel without promoting signals", () => {
+    expect(pageSource).toContain("useGetInteractionInstructionSignals");
+    expect(pageSource).toContain("instructionSignals.mutate({ data })");
+    expect(pageSource).toContain("Кандидат — не правило");
+    expect(pageSource).toMatch(
+      /Сила й\s+клінічна значущість тут не визначаються автоматично/u,
+    );
+    expect(pageSource).toContain("Це не підтверджує сумісність");
+    expect(pageSource).toContain("Клас за ATC:");
+    expect(pageSource).toContain("signal.classMatch.sourceUrl");
+    expect(pageSource).toContain(
+      "Це кандидатний сигнал, а не підтверджене правило",
+    );
+  });
+
   it("shows limited evidence coverage even when some rules are eligible", () => {
     expect(pageSource).toContain(
       "checkInteractions.data.coverage.runtimeEligibleRules <",

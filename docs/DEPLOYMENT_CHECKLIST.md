@@ -31,6 +31,7 @@ Set values in Render environment settings:
 - `NODE_ENV=production`
 - `AUTH_PROVIDER=local`
 - `AUTH_REQUIRED=true`
+- `PUBLIC_REFERENCE_ACCESS=true`
 - `INVITE_ONLY=true`
 - `ADMIN_EMAILS`
 - `ALLOWED_EMAILS`

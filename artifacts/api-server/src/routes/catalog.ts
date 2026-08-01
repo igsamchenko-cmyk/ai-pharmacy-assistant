@@ -13,7 +13,7 @@ import {
   SearchCatalogResponse,
 } from "@workspace/api-zod";
 import { checkDispensingCategory } from "../knowledge/dispensingCategories/catalog";
-import { requireRole } from "../auth";
+import { requireReferenceAccess } from "../auth";
 import { getOfficialInstructionForProduct } from "../services/officialInstructionService";
 import { loadCatalogClientIndex } from "../services/catalogClientIndexService";
 import { searchCatalog } from "../services/catalogSearchService";
@@ -37,7 +37,7 @@ export function normalizeCatalogQueryParams(
   return normalized;
 }
 const router: IRouter = Router();
-router.use(requireRole("user"));
+router.use(requireReferenceAccess);
 
 router.get("/catalog/client-index", async (req, res): Promise<void> => {
   try {
