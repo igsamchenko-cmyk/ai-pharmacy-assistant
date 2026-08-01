@@ -25,7 +25,13 @@ export const REFERENCE_NAV_ITEMS = [
   {
     href: "/",
     activeHrefs: ["/dispense", "/search"],
-    activePrefixes: ["/products", "/instructions", "/drug", "/analogs"],
+    activePrefixes: [
+      "/products",
+      "/instructions",
+      "/drug",
+      "/analogs",
+      "/pharmacovigilance",
+    ],
     icon: ClipboardCheck,
     label: "Довідник ЛЗ",
     mobileLabel: "Довідник",
