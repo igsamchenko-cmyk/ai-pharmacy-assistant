@@ -10,10 +10,10 @@ import {
 } from "@workspace/api-zod";
 import { searchDrugs, getDrugById, getStats } from "../services/drugService";
 import { findAnalogs } from "../services/analogService";
-import { requireRole } from "../auth";
+import { requireReferenceAccess } from "../auth";
 
 const router: IRouter = Router();
-router.use(requireRole("user"));
+router.use(requireReferenceAccess);
 
 router.get("/drugs", async (req, res): Promise<void> => {
   const parsed = SearchDrugsQueryParams.safeParse(req.query);

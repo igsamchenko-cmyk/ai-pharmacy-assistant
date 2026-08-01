@@ -41,8 +41,12 @@ const ProtectedDrugDetail = () => <ProtectedRoute component={DrugDetail} />;
 const ProtectedAnalogs = () => <ProtectedRoute component={Analogs} />;
 const ProtectedInteractions = () => <ProtectedRoute component={Interactions} />;
 const ProtectedCompare = () => <ProtectedRoute component={Compare} />;
-const ProtectedAiReference = () => <ProtectedRoute component={AiReference} />;
-const ProtectedHistory = () => <ProtectedRoute component={History} />;
+const ProtectedAiReference = () => (
+  <ProtectedRoute component={AiReference} minRole="reviewer" />
+);
+const ProtectedHistory = () => (
+  <ProtectedRoute component={History} minRole="reviewer" />
+);
 const ProtectedFavorites = () => <ProtectedRoute component={Favorites} />;
 const ProtectedDataQuality = () => (
   <ProtectedRoute component={DataQuality} minRole="reviewer" />
@@ -54,7 +58,7 @@ const ProtectedRegulatoryRadar = () => (
   <ProtectedRoute component={RegulatoryRadar} />
 );
 const ProtectedBetaDashboard = () => (
-  <ProtectedRoute component={BetaDashboard} />
+  <ProtectedRoute component={BetaDashboard} minRole="reviewer" />
 );
 const ProtectedDrugInstruction = () => (
   <ProtectedRoute component={DrugInstruction} />

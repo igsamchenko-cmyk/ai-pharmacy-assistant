@@ -11,12 +11,14 @@ services:
       - key: NODE_ENV
         value: production
       - key: APP_RELEASE_VERSION
-        value: v1.6.0
+        value: v1.6.1
       - key: APP_RELEASE_LABEL
-        value: v1.6.0 - Ukrainian Registry Database Scaling
+        value: v1.6.1 - Free Pharmaceutical Reference Access
       - key: AUTH_PROVIDER
         value: local
       - key: AUTH_REQUIRED
+        value: "true"
+      - key: PUBLIC_REFERENCE_ACCESS
         value: "true"
       - key: INVITE_ONLY
         value: "true"

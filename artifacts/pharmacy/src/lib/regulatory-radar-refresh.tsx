@@ -54,16 +54,16 @@ export function RegulatoryRadarRefreshProvider({
   }, [mutateAsync, queryClient]);
 
   useEffect(() => {
-    if (!auth.isAuthenticated) {
+    if (!auth.canUseReference) {
       attemptedIdentity.current = null;
       setLastResult(null);
       return;
     }
-    const identity = auth.session?.user?.email ?? "authenticated";
+    const identity = auth.session?.user?.email ?? "public-reference";
     if (attemptedIdentity.current === identity) return;
     attemptedIdentity.current = identity;
     void refresh();
-  }, [auth.isAuthenticated, auth.session?.user?.email, refresh]);
+  }, [auth.canUseReference, auth.session?.user?.email, refresh]);
 
   const value = useMemo<RegulatoryRadarRefreshContextValue>(
     () => ({

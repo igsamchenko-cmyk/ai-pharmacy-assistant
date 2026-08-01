@@ -45,6 +45,7 @@ export interface AuthUser {
 export interface AuthSession {
   authenticated: boolean;
   authRequired: boolean;
+  publicReferenceAccess: boolean;
   inviteOnly: boolean;
   provider: AuthProvider;
   mode: AuthMode;
@@ -295,6 +296,7 @@ export type DiagnosticsPanelDataRuntime = {
 export type DiagnosticsPanelDataAuth = {
   configured: boolean;
   required: boolean;
+  publicReferenceAccess: boolean;
   inviteOnly: boolean;
   provider: AuthProvider;
   mode: AuthMode;

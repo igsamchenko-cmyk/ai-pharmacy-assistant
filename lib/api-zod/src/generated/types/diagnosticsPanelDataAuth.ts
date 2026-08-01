@@ -12,6 +12,7 @@ import type { AuthRole } from './authRole';
 export type DiagnosticsPanelDataAuth = {
   configured: boolean;
   required: boolean;
+  publicReferenceAccess: boolean;
   inviteOnly: boolean;
   provider: AuthProvider;
   mode: AuthMode;

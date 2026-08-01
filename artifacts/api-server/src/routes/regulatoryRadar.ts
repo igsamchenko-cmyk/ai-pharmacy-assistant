@@ -3,12 +3,12 @@ import {
   GetRegulatoryRadarResponse,
   RefreshRegulatoryRadarResponse,
 } from "@workspace/api-zod";
-import { requireRole } from "../auth";
+import { requireReferenceAccess } from "../auth";
 import { loadRegulatoryRadar } from "../services/regulatoryRadarService";
 import { refreshRegulatoryRadarIfDue } from "../services/regulatoryRadarRefreshService";
 
 const router: IRouter = Router();
-router.use(requireRole("user"));
+router.use(requireReferenceAccess);
 
 router.get("/regulatory-radar", (_req, res): void => {
   try {

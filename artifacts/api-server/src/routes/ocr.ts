@@ -4,7 +4,7 @@ import { scanPackage } from "../services/ocrService";
 import { requireRole } from "../auth";
 
 const router: IRouter = Router();
-router.use(requireRole("user"));
+router.use(requireRole("reviewer"));
 
 router.post("/ocr/scan", async (req, res): Promise<void> => {
   const parsed = ScanPackageBody.safeParse(req.body);

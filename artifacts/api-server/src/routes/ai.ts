@@ -7,7 +7,7 @@ import { generateSummary } from "../services/aiService";
 import { requireRole } from "../auth";
 
 const router: IRouter = Router();
-router.use(requireRole("user"));
+router.use(requireRole("reviewer"));
 
 router.post("/ai/summary", async (req, res): Promise<void> => {
   const parsed = CreateAiSummaryBody.safeParse(req.body);

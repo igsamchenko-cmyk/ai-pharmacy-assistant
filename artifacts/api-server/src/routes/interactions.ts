@@ -10,10 +10,10 @@ import {
   checkRegistryInteractions,
 } from "../services/interactionService";
 import { getInteractionInstructionSignals } from "../services/interactionInstructionSignalService";
-import { requireRole } from "../auth";
+import { requireReferenceAccess } from "../auth";
 
 const router: IRouter = Router();
-router.use(requireRole("user"));
+router.use(requireReferenceAccess);
 
 router.post("/interactions/check", async (req, res): Promise<void> => {
   const parsed = CheckInteractionsBody.safeParse(req.body);

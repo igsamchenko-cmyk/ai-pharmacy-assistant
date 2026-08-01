@@ -16,6 +16,7 @@ export interface AuthUser {
 export interface AuthConfig {
   provider: AuthProvider;
   authRequired: boolean;
+  publicReferenceAccess: boolean;
   inviteOnly: boolean;
   mode: AuthMode;
   configured: boolean;
@@ -30,6 +31,7 @@ export interface AuthConfig {
 export interface AuthSession {
   authenticated: boolean;
   authRequired: boolean;
+  publicReferenceAccess: boolean;
   inviteOnly: boolean;
   provider: AuthProvider;
   mode: AuthMode;
@@ -42,6 +44,7 @@ export interface AuthSession {
 export interface AuthDiagnostics {
   configured: boolean;
   required: boolean;
+  publicReferenceAccess: boolean;
   inviteOnly: boolean;
   provider: AuthProvider;
   mode: AuthMode;
@@ -188,6 +191,7 @@ export function getAuthConfig(
   const provider = parseProvider(env.AUTH_PROVIDER);
   const authRequired =
     provider === "disabled" ? false : booleanEnv(env.AUTH_REQUIRED, false);
+  const publicReferenceAccess = booleanEnv(env.PUBLIC_REFERENCE_ACCESS, false);
   const inviteOnly = booleanEnv(env.INVITE_ONLY, true);
   const adminEmails = new Set(splitList(env.ADMIN_EMAILS).map(normalizeEmail));
   const allowedUsers = parseAllowedUsers(env.ALLOWED_EMAILS, env.ADMIN_EMAILS);
@@ -222,6 +226,7 @@ export function getAuthConfig(
   return {
     provider,
     authRequired,
+    publicReferenceAccess,
     inviteOnly,
     mode: authMode(provider, authRequired, supabaseConfigured),
     configured:
@@ -243,6 +248,15 @@ function localBetaUser(): AuthUser {
     email: "local-beta@farmassist.local",
     name: "Local beta",
     role: "admin",
+    disabled: false,
+  };
+}
+
+function publicReferenceUser(): AuthUser {
+  return {
+    email: "public-reference@farmassist.local",
+    name: "Вільний доступ",
+    role: "user",
     disabled: false,
   };
 }
@@ -327,6 +341,7 @@ export function buildAuthSessionForUser(
   return {
     authenticated: Boolean(user),
     authRequired: config.authRequired,
+    publicReferenceAccess: config.publicReferenceAccess,
     inviteOnly: config.inviteOnly,
     provider: config.provider,
     mode: config.mode,
@@ -346,6 +361,7 @@ export function buildAuthDiagnostics(
   return {
     configured: config.configured,
     required: config.authRequired,
+    publicReferenceAccess: config.publicReferenceAccess,
     inviteOnly: config.inviteOnly,
     provider: config.provider,
     mode: config.mode,
@@ -573,6 +589,21 @@ export function requireRole(required: Exclude<AuthRole, "none">) {
     res.locals.authUser = user;
     next();
   };
+}
+
+export function requireReferenceAccess(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
+  const config = getAuthConfig();
+  const user = config.localBetaMode ? localBetaUser() : storedUser(req, config);
+  if (!user && !config.publicReferenceAccess) {
+    res.status(401).json({ error: "Потрібен вхід до приватної бети." });
+    return;
+  }
+  res.locals.authUser = user ?? publicReferenceUser();
+  next();
 }
 
 export function resetAuthSessionsForTests(): void {

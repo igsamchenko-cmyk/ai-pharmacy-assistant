@@ -15,6 +15,7 @@ import * as zod from 'zod';
 export const GetAuthSessionResponse = zod.object({
   "authenticated": zod.boolean(),
   "authRequired": zod.boolean(),
+  "publicReferenceAccess": zod.boolean(),
   "inviteOnly": zod.boolean(),
   "provider": zod.enum(['local', 'supabase', 'disabled']),
   "mode": zod.enum(['local_beta', 'private_beta', 'supabase', 'disabled']),
@@ -45,6 +46,7 @@ export const LoginAuthResponse = zod.object({
   "session": zod.object({
   "authenticated": zod.boolean(),
   "authRequired": zod.boolean(),
+  "publicReferenceAccess": zod.boolean(),
   "inviteOnly": zod.boolean(),
   "provider": zod.enum(['local', 'supabase', 'disabled']),
   "mode": zod.enum(['local_beta', 'private_beta', 'supabase', 'disabled']),
@@ -83,6 +85,7 @@ export const LogoutAuthResponse = zod.object({
   "session": zod.object({
   "authenticated": zod.boolean(),
   "authRequired": zod.boolean(),
+  "publicReferenceAccess": zod.boolean(),
   "inviteOnly": zod.boolean(),
   "provider": zod.enum(['local', 'supabase', 'disabled']),
   "mode": zod.enum(['local_beta', 'private_beta', 'supabase', 'disabled']),
@@ -242,6 +245,7 @@ export const GetDiagnosticsResponse = zod.object({
   "auth": zod.object({
   "configured": zod.boolean(),
   "required": zod.boolean(),
+  "publicReferenceAccess": zod.boolean(),
   "inviteOnly": zod.boolean(),
   "provider": zod.enum(['local', 'supabase', 'disabled']),
   "mode": zod.enum(['local_beta', 'private_beta', 'supabase', 'disabled']),

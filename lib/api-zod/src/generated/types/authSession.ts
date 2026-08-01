@@ -13,6 +13,7 @@ import type { AuthUser } from './authUser';
 export interface AuthSession {
   authenticated: boolean;
   authRequired: boolean;
+  publicReferenceAccess: boolean;
   inviteOnly: boolean;
   provider: AuthProvider;
   mode: AuthMode;

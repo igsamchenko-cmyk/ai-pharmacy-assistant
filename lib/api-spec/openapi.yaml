@@ -1311,6 +1311,7 @@ components:
       required:
         - authenticated
         - authRequired
+        - publicReferenceAccess
         - inviteOnly
         - provider
         - mode
@@ -1322,6 +1323,8 @@ components:
         authenticated:
           type: boolean
         authRequired:
+          type: boolean
+        publicReferenceAccess:
           type: boolean
         inviteOnly:
           type: boolean
@@ -1770,6 +1773,7 @@ components:
           type: object
           required:
             - configured
+            - publicReferenceAccess
             - required
             - inviteOnly
             - provider
@@ -1782,6 +1786,8 @@ components:
             configured:
               type: boolean
             required:
+              type: boolean
+            publicReferenceAccess:
               type: boolean
             inviteOnly:
               type: boolean
