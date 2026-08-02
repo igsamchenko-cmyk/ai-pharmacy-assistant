@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useLayoutEffect, useMemo, useState } from "react";
 import {
   getGetDrugInstructionQueryKey,
   useGetDrugInstruction,
@@ -27,6 +27,33 @@ type SectionKey = keyof DrugInstruction["sections"];
 
 export const INSTRUCTION_SAFETY_COPY =
   "Інформація відтворена з офіційної інструкції. Не змінюйте лікування без консультації лікаря.";
+
+export const INSTRUCTION_PAGE_CLASS =
+  "mx-auto min-w-0 w-full max-w-5xl overflow-x-hidden pb-16";
+
+export const INSTRUCTION_HEADER_CLASS =
+  "min-w-0 space-y-4 border-b pb-6";
+
+export const INSTRUCTION_TITLE_CLASS =
+  "max-w-full [overflow-wrap:anywhere] text-2xl font-bold leading-tight sm:text-3xl";
+
+export type InstructionScrollTarget = {
+  scrollTo(options: ScrollToOptions): void;
+};
+
+export function resetInstructionPageScroll(
+  target: InstructionScrollTarget,
+): void {
+  target.scrollTo({ top: 0, left: 0, behavior: "auto" });
+}
+
+export function InstructionTitle({ tradeName }: { tradeName: string }) {
+  return (
+    <h1 className={INSTRUCTION_TITLE_CLASS} data-testid="instruction-title">
+      {tradeName}
+    </h1>
+  );
+}
 
 export const INSTRUCTION_SECTION_LABELS: ReadonlyArray<{
   key: SectionKey;
@@ -170,6 +197,11 @@ export default function DrugInstructionPage() {
   const validProductId = /^[A-F0-9]{32}$/u.test(productId);
   const [sectionSearch, setSectionSearch] = useState("");
   const [fullInstructionOpen, setFullInstructionOpen] = useState(false);
+
+  useLayoutEffect(() => {
+    resetInstructionPageScroll(window);
+  }, [productId]);
+
   const { data, isLoading, isError } = useGetDrugInstruction(productId, {
     query: {
       enabled: validProductId,
@@ -209,7 +241,7 @@ export default function DrugInstructionPage() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-5xl overflow-x-hidden pb-16">
+    <main className={INSTRUCTION_PAGE_CLASS}>
       <Link
         href="/search"
         className="mb-5 inline-flex min-h-9 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
@@ -218,7 +250,7 @@ export default function DrugInstructionPage() {
         До результатів пошуку
       </Link>
 
-      <header className="space-y-4 border-b pb-6">
+      <header className={INSTRUCTION_HEADER_CLASS}>
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="gap-1">
             <FileCheck2 className="h-3 w-3" />
@@ -228,11 +260,9 @@ export default function DrugInstructionPage() {
             {data.provenance.availableSectionCount}/9 розділів
           </Badge>
         </div>
-        <div>
-          <h1 className="break-words text-2xl font-bold sm:text-3xl">
-            {data.tradeName}
-          </h1>
-          <p className="mt-2 break-words text-sm text-muted-foreground">
+        <div className="min-w-0 max-w-full">
+          <InstructionTitle tradeName={data.tradeName} />
+          <p className="mt-2 max-w-full [overflow-wrap:anywhere] text-sm text-muted-foreground">
             {[data.inn, data.activeIngredient].filter(Boolean).join(" · ")}
           </p>
         </div>

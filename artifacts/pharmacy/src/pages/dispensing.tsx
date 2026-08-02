@@ -610,8 +610,8 @@ function ProductSummary({ product }: { product: RegistryProductResult }) {
           <div className="rounded-xl bg-primary/10 p-2">
             <ClipboardCheck className="h-6 w-6 text-primary" />
           </div>
-          <div className="min-w-0">
-            <h2 className="break-words text-2xl font-bold">
+          <div className="min-w-0 flex-1">
+            <h2 className="max-w-full [overflow-wrap:anywhere] text-2xl font-bold leading-tight">
               {product.tradeName}
             </h2>
             <p className="break-words text-sm text-muted-foreground">

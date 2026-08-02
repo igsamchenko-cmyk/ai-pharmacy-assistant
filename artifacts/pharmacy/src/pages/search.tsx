@@ -378,7 +378,7 @@ export function RegistryProductCard({
             <Pill className="h-5 w-5 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="break-words text-base font-bold leading-snug">
+            <h3 className="max-w-full [overflow-wrap:anywhere] text-base font-bold leading-snug">
               <a
                 href={registryProductDetailHref(product)}
                 className="rounded-sm underline-offset-4 hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -809,7 +809,7 @@ function ExactBrandCard({
         <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <h3 className="break-words text-xl font-bold leading-tight sm:text-2xl">
+              <h3 className="max-w-full [overflow-wrap:anywhere] text-xl font-bold leading-tight sm:text-2xl">
                 {trade.tradeName}
               </h3>
               <Badge className="whitespace-normal text-left">
