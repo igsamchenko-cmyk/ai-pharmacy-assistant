@@ -4,10 +4,15 @@ import { describe, expect, it } from "vitest";
 import type { DrugInstructionSections } from "@workspace/api-client-react";
 import {
   filterInstructionSections,
+  INSTRUCTION_HEADER_CLASS,
+  INSTRUCTION_PAGE_CLASS,
   INSTRUCTION_SAFETY_COPY,
+  INSTRUCTION_TITLE_CLASS,
   InstructionEssentials,
   InstructionSectionContent,
+  InstructionTitle,
   OfficialInstructionLink,
+  resetInstructionPageScroll,
 } from "./drug-instruction";
 
 const sections: DrugInstructionSections = {
@@ -98,5 +103,30 @@ describe("drug instruction UI helpers", () => {
   it("keeps the medical safety warning explicit", () => {
     expect(INSTRUCTION_SAFETY_COPY).toContain("Не змінюйте лікування");
     expect(INSTRUCTION_SAFETY_COPY).toContain("консультації лікаря");
+  });
+
+  it("keeps the instruction title visible on narrow mobile screens", () => {
+    const tradeName = `КРЕОН® ${"ДОВГА-НАЗВА".repeat(30)}`;
+    const html = renderToStaticMarkup(
+      createElement(InstructionTitle, { tradeName }),
+    );
+
+    expect(html).toContain(tradeName);
+    expect(html).toContain("instruction-title");
+    expect(INSTRUCTION_PAGE_CLASS).toContain("min-w-0");
+    expect(INSTRUCTION_HEADER_CLASS).toContain("min-w-0");
+    expect(INSTRUCTION_TITLE_CLASS).toContain("overflow-wrap:anywhere");
+    expect(INSTRUCTION_TITLE_CLASS).toContain("leading-tight");
+  });
+
+  it("opens each exact instruction at the top of the page", () => {
+    const calls: ScrollToOptions[] = [];
+    resetInstructionPageScroll({
+      scrollTo(options: ScrollToOptions) {
+        calls.push(options);
+      },
+    });
+
+    expect(calls).toEqual([{ top: 0, left: 0, behavior: "auto" }]);
   });
 });

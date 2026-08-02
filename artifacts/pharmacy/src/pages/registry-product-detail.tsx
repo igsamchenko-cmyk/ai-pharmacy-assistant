@@ -183,7 +183,7 @@ export function RegistryProductDetailContent({
             </div>
             <div className="min-w-0 flex-1">
               <h1
-                className="break-words text-3xl font-bold leading-tight tracking-tight sm:text-4xl"
+                className="max-w-full [overflow-wrap:anywhere] text-3xl font-bold leading-tight tracking-tight sm:text-4xl"
                 data-testid="registry-product-name"
               >
                 {product.tradeName}
