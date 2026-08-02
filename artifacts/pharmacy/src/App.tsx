@@ -27,11 +27,8 @@ const DataQuality = lazy(() => import("@/pages/data-quality"));
 const ReviewQueue = lazy(() => import("@/pages/review"));
 const BetaDashboard = lazy(() => import("@/pages/beta-dashboard"));
 const RegulatoryRadar = lazy(() => import("@/pages/regulatory-radar"));
-const DrugInstruction = lazy(() => import("@/pages/drug-instruction"));
 const Pharmacovigilance = lazy(() => import("@/pages/pharmacovigilance"));
-const RegistryProductDetail = lazy(
-  () => import("@/pages/registry-product-detail"),
-);
+const ProductCard = lazy(() => import("@/pages/product-card"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient();
@@ -60,12 +57,7 @@ const ProtectedRegulatoryRadar = () => (
 const ProtectedBetaDashboard = () => (
   <ProtectedRoute component={BetaDashboard} minRole="reviewer" />
 );
-const ProtectedDrugInstruction = () => (
-  <ProtectedRoute component={DrugInstruction} />
-);
-const ProtectedRegistryProductDetail = () => (
-  <ProtectedRoute component={RegistryProductDetail} />
-);
+const ProtectedProductCard = () => <ProtectedRoute component={ProductCard} />;
 const ProtectedPharmacovigilance = () => (
   <ProtectedRoute component={Pharmacovigilance} />
 );
@@ -101,11 +93,11 @@ function Router() {
             <Route path="/search" component={ProtectedSearch} />
             <Route
               path="/instructions/:productId"
-              component={ProtectedDrugInstruction}
+              component={ProtectedProductCard}
             />
             <Route
               path="/products/:productId"
-              component={ProtectedRegistryProductDetail}
+              component={ProtectedProductCard}
             />
             <Route
               path="/pharmacovigilance"
