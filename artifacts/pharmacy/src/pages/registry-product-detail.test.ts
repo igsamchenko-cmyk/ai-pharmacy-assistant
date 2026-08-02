@@ -3,9 +3,13 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { RegistryProductResult } from "@workspace/api-client-react";
 import {
+  REGISTRY_PRODUCT_CARD_CLASS,
+  REGISTRY_PRODUCT_PAGE_CLASS,
+  REGISTRY_PRODUCT_TITLE_CLASS,
   REGISTRY_PRODUCT_TOP_BAR_CLASS,
   RegistryProductDetailContent,
   RegistryProductDetailSkeleton,
+  resetRegistryProductPageScroll,
   registryProductDetailSearchParams,
 } from "./registry-product-detail";
 import {
@@ -239,9 +243,28 @@ describe("registry product mobile detail UI", () => {
     expect(html).toContain("motion-reduce:animate-none");
     expect(html).toContain("overflow-x-hidden");
     expect(html).not.toContain("overflow-x-auto");
-    expect(REGISTRY_PRODUCT_TOP_BAR_CLASS).toContain("safe-area-inset-top");
-    expect(REGISTRY_PRODUCT_TOP_BAR_CLASS).toContain("top-[calc(4rem");
+    expect(REGISTRY_PRODUCT_TOP_BAR_CLASS).not.toMatch(/(^|\s)sticky(\s|$)/u);
+    expect(REGISTRY_PRODUCT_TOP_BAR_CLASS).toContain("lg:sticky");
     expect(REGISTRY_PRODUCT_TOP_BAR_CLASS).toContain("lg:top-0");
+  });
+
+  it("keeps the trade name above the card background on mobile", () => {
+    expect(REGISTRY_PRODUCT_PAGE_CLASS).toContain("overflow-x-clip");
+    expect(REGISTRY_PRODUCT_CARD_CLASS).not.toContain("overflow-hidden");
+    expect(REGISTRY_PRODUCT_TITLE_CLASS).toContain("text-foreground");
+    expect(REGISTRY_PRODUCT_TITLE_CLASS).toContain("relative z-10");
+    expect(REGISTRY_PRODUCT_TITLE_CLASS).toContain("overflow-wrap:anywhere");
+  });
+
+  it("opens each exact product at the top of the page", () => {
+    const calls: ScrollToOptions[] = [];
+    resetRegistryProductPageScroll({
+      scrollTo(options: ScrollToOptions) {
+        calls.push(options);
+      },
+    });
+
+    expect(calls).toEqual([{ top: 0, left: 0, behavior: "auto" }]);
   });
 
   it("never creates an instruction route for an unavailable leaflet", () => {
