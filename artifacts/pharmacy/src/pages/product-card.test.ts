@@ -19,6 +19,8 @@ import {
 
 const PRODUCT_ID = "A".repeat(32);
 const REGISTRATION = "UA/10001/01/01";
+const ADMINISTRATION_TEXT = "Розчинити в 10 мл води для ін'єкцій.";
+const INTERACTIONS_TEXT = "Не змішувати з несумісними розчинами.";
 
 function freshness(): ProductCardFreshnessEntry[] {
   return [
@@ -175,12 +177,41 @@ function card(overrides: Partial<ProductCard> = {}): ProductCard {
         indications: "Показання з офіційної інструкції.",
         contraindications: "Протипоказання з офіційної інструкції.",
         adverseReactions: null,
-        interactions: "Не змішувати з несумісними розчинами.",
+        interactions: INTERACTIONS_TEXT,
         specialWarnings: null,
         pregnancyAndLactation: null,
-        administration: "Розчинити в 10 мл води для ін'єкцій.",
+        administration: ADMINISTRATION_TEXT,
         overdose: null,
         storage: "Зберігати до 25 °C.",
+      },
+      administrationFacts: {
+        reconstitution: {
+          text: ADMINISTRATION_TEXT,
+          sectionKey: "administration",
+          charStart: 0,
+          charEnd: ADMINISTRATION_TEXT.length,
+        },
+        diluents: [
+          {
+            text: ADMINISTRATION_TEXT,
+            sectionKey: "administration",
+            charStart: 0,
+            charEnd: ADMINISTRATION_TEXT.length,
+          },
+        ],
+        incompatibilities: [
+          {
+            text: INTERACTIONS_TEXT,
+            sectionKey: "interactions",
+            charStart: 0,
+            charEnd: INTERACTIONS_TEXT.length,
+          },
+        ],
+        infusionRate: null,
+        stabilityAfterPrep: null,
+        renalAdjustment: null,
+        hepaticAdjustment: null,
+        maxDailyDose: null,
       },
       source: {
         url: `https://www.drlz.com.ua/ibp/lz_www.nsf/id/${PRODUCT_ID}`,
@@ -276,6 +307,15 @@ describe("operational product card UI", () => {
 
     expect(html).toContain("Розчинити в 10 мл води для ін&#x27;єкцій.");
     expect(html).toContain("Не змішувати з несумісними розчинами.");
+    expect(html).toContain("Госпітальні факти з інструкції");
+    expect(html).toContain(
+      `id="instruction-quote-administration-0-${ADMINISTRATION_TEXT.length}"`,
+    );
+    expect(html).toContain(`data-char-end="${ADMINISTRATION_TEXT.length}"`);
+    expect(html).toContain(
+      "Прямої вказівки про швидкість введення не знайдено",
+    );
+    expect(html).toContain("У тексті");
     expect(html).toContain('id="instruction-administration"');
     expect(html).toContain("Переліки та ціна");
     expect(html).toContain("Свіжість кожного джерела");

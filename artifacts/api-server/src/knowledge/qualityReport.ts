@@ -11,6 +11,11 @@ import {
 import { getReviewStats } from "./reviewWorkflow";
 import { buildDictionaryBatchSummary } from "./import/batches";
 import { buildBulkIngestReport } from "./ingestion/report";
+import {
+  getInstructionForProduct,
+  loadInstructionManifest,
+} from "./instructions/catalog";
+import { buildAdministrationFactsCoverageReport } from "./instructions/factsCoverage";
 
 export interface ProductionDatabaseSnapshot {
   source: "db" | "static";
@@ -66,7 +71,9 @@ export function buildProductionDatabaseSnapshot(
   };
 }
 
-export interface DataQualityApiReport extends ReturnType<typeof validateKnowledge> {
+export interface DataQualityApiReport extends ReturnType<
+  typeof validateKnowledge
+> {
   productionSnapshot: ProductionDatabaseSnapshot;
 }
 
@@ -84,6 +91,7 @@ export interface KnowledgeQualityJsonReport {
   review: Awaited<ReturnType<typeof getReviewStats>>;
   dictionaryBatches: ReturnType<typeof buildDictionaryBatchSummary>;
   ingestion: ReturnType<typeof buildBulkIngestReport>;
+  instructionFacts: ReturnType<typeof buildAdministrationFactsCoverageReport>;
   warnings: string[];
   validation: ReturnType<typeof validateKnowledge>;
 }
@@ -101,7 +109,10 @@ export async function buildDataQualityApiReport(): Promise<DataQualityApiReport>
 
   return {
     ...validateKnowledge(),
-    productionSnapshot: buildProductionDatabaseSnapshot(runtime, registryCounts),
+    productionSnapshot: buildProductionDatabaseSnapshot(
+      runtime,
+      registryCounts,
+    ),
   };
 }
 
@@ -132,6 +143,12 @@ export async function buildKnowledgeQualityJsonReport(): Promise<KnowledgeQualit
   const approvedMappings = snapshot.names.filter(
     (name) => name.reviewStatus === "approved",
   ).length;
+  const instructionFacts = buildAdministrationFactsCoverageReport(
+    loadInstructionManifest().products.flatMap((product) => {
+      const instruction = getInstructionForProduct(product.registryProductId);
+      return instruction ? [instruction] : [];
+    }),
+  );
 
   return {
     version: "0.9",
@@ -148,6 +165,7 @@ export async function buildKnowledgeQualityJsonReport(): Promise<KnowledgeQualit
     dictionaryBatches:
       validation.dictionaryBatches ?? buildDictionaryBatchSummary(),
     ingestion: validation.ingestion ?? buildBulkIngestReport(),
+    instructionFacts,
     warnings: [
       ...validation.warnings.map((warning) => warning.message),
       ...runtime.warnings,

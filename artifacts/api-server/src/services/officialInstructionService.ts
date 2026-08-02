@@ -6,6 +6,7 @@ import {
 import {
   parseOfficialInstructionMht,
   type ParseInstructionOptions,
+  withAdministrationFacts,
 } from "../knowledge/instructions/parser";
 import { InstructionSourceProductSchema } from "../knowledge/instructions/model";
 import { hasStructuredOfficialInstructionSource } from "../knowledge/instructions/source";
@@ -187,7 +188,7 @@ async function loadDynamicInstruction(
     options.fetcher ?? fetch,
   );
   const dataset = loadInstructionSources().dataset;
-  const snapshot = (options.parser ?? parseOfficialInstructionMht)(
+  const parsedSnapshot = (options.parser ?? parseOfficialInstructionMht)(
     downloaded.bytes,
     {
       source,
@@ -200,6 +201,7 @@ async function loadDynamicInstruction(
       lastModified: downloaded.lastModified,
     },
   );
+  const snapshot = withAdministrationFacts(parsedSnapshot);
   if (
     snapshot.registryProductId !== row.registry_id ||
     snapshot.registrationNumber !== row.registration_number ||

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './administrationFacts';
 export * from './aiSummary';
 export * from './aiSummaryInput';
 export * from './analogResult';
@@ -143,6 +144,8 @@ export * from './importConflictType';
 export * from './importPreview';
 export * from './importPreviewConfidenceDistribution';
 export * from './importPreviewReviewDistribution';
+export * from './instructionQuote';
+export * from './instructionQuoteSectionKey';
 export * from './interactionCheckInput';
 export * from './interactionInstructionClassMatch';
 export * from './interactionInstructionClassMatchBasis';

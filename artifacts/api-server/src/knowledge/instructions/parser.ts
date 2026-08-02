@@ -1,16 +1,20 @@
 import { createHash } from "node:crypto";
 import {
+  AdministrationFactsSchema,
   INSTRUCTION_SECTION_KEYS,
+  type AdministrationFacts,
   type DrugInstructionSnapshot,
+  type InstructionQuote,
   type InstructionSectionKey,
   type InstructionSections,
   type InstructionSourceProduct,
   registrationKey,
 } from "./model";
 
-export const INSTRUCTION_PARSER_VERSION = "ua-drlz-mht-v1" as const;
+export const INSTRUCTION_PARSER_VERSION = "ua-drlz-mht-v2" as const;
 const MAX_DOCUMENT_BYTES = 3_000_000;
 const MAX_SECTION_CHARS = 60_000;
+const MAX_QUOTE_CHARS = 8_000;
 
 const HEADING_ALIASES: Record<InstructionSectionKey, string[]> = {
   indications: ["показання"],
@@ -94,7 +98,8 @@ export function isAllowedInstructionSource(sourceUrl: string): boolean {
   try {
     const url = new URL(sourceUrl);
     const host = url.hostname.toLowerCase();
-    return (url.protocol === "http:" || url.protocol === "https:") &&
+    return (
+      (url.protocol === "http:" || url.protocol === "https:") &&
       (host === "drlz.com.ua" || host === "www.drlz.com.ua") &&
       !url.username &&
       !url.password &&
@@ -102,7 +107,8 @@ export function isAllowedInstructionSource(sourceUrl: string): boolean {
       !url.hash &&
       /^\/ibp\/lz_www\.nsf\/id\/[A-F0-9]{32}\/\$file\/UA\d+_[A-F0-9]+\.mht$/iu.test(
         decodeURIComponent(url.pathname),
-      );
+      )
+    );
   } catch {
     return false;
   }
@@ -143,7 +149,8 @@ function decodeQuotedPrintable(value: string): Buffer {
 function decodeMimeBody(body: string, headers: Record<string, string>): string {
   const transfer = headers["content-transfer-encoding"]?.toLowerCase() ?? "";
   const contentType = headers["content-type"] ?? "";
-  const charset = contentType.match(/charset=["']?([^;"'\s]+)/iu)?.[1] ?? "utf-8";
+  const charset =
+    contentType.match(/charset=["']?([^;"'\s]+)/iu)?.[1] ?? "utf-8";
   const bytes = transfer.includes("quoted-printable")
     ? decodeQuotedPrintable(body)
     : transfer.includes("base64")
@@ -190,15 +197,18 @@ function decodeHtmlEntities(value: string): string {
     raquo: "»",
     reg: "®",
   };
-  return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/giu, (entity, key: string) => {
-    if (key.startsWith("#x")) {
-      return String.fromCodePoint(Number.parseInt(key.slice(2), 16));
-    }
-    if (key.startsWith("#")) {
-      return String.fromCodePoint(Number.parseInt(key.slice(1), 10));
-    }
-    return named[key.toLowerCase()] ?? entity;
-  });
+  return value.replace(
+    /&(#x[0-9a-f]+|#\d+|[a-z]+);/giu,
+    (entity, key: string) => {
+      if (key.startsWith("#x")) {
+        return String.fromCodePoint(Number.parseInt(key.slice(2), 16));
+      }
+      if (key.startsWith("#")) {
+        return String.fromCodePoint(Number.parseInt(key.slice(1), 10));
+      }
+      return named[key.toLowerCase()] ?? entity;
+    },
+  );
 }
 
 function textFromHtmlFragment(value: string): string {
@@ -216,7 +226,9 @@ export function extractInstructionParagraphs(html: string): string[] {
   const content = html
     .replace(/<(script|style|xml)\b[^>]*>[\s\S]*?<\/\1>/giu, " ")
     .replace(/<!--.*?-->/gsu, " ");
-  const paragraphs = [...content.matchAll(/<(?:p|li)\b[^>]*>([\s\S]*?)<\/(?:p|li)>/giu)]
+  const paragraphs = [
+    ...content.matchAll(/<(?:p|li)\b[^>]*>([\s\S]*?)<\/(?:p|li)>/giu),
+  ]
     .map((match) => textFromHtmlFragment(match[1] ?? ""))
     .filter(Boolean);
   if (!paragraphs.length) throw new Error("unsupported_mht_paragraphs_missing");
@@ -258,14 +270,19 @@ function boundedSection(value: string): string | null {
   return normalized.slice(0, MAX_SECTION_CHARS);
 }
 
-export function extractInstructionSections(paragraphs: string[]): InstructionSections {
+export function extractInstructionSections(
+  paragraphs: string[],
+): InstructionSections {
   const result = Object.fromEntries(
     INSTRUCTION_SECTION_KEYS.map((key) => [key, null]),
   ) as InstructionSections;
-  const firstHeadings = new Map<InstructionSectionKey, {
-    index: number;
-    heading: SectionHeadingMatch;
-  }>();
+  const firstHeadings = new Map<
+    InstructionSectionKey,
+    {
+      index: number;
+      heading: SectionHeadingMatch;
+    }
+  >();
 
   for (let index = 0; index < paragraphs.length; index += 1) {
     const heading = sectionHeading(paragraphs[index] ?? "");
@@ -285,30 +302,260 @@ export function extractInstructionSections(paragraphs: string[]): InstructionSec
       end < paragraphs.length &&
       !canonicalHeadingIndexes.has(end) &&
       !isOtherBoundary(paragraphs[end] ?? "")
-    ) end += 1;
-    result[key] = boundedSection([
-      selected.heading.inlineContent,
-      ...paragraphs.slice(selected.index + 1, end),
-    ].filter(Boolean).join("\n\n"));
+    )
+      end += 1;
+    result[key] = boundedSection(
+      [
+        selected.heading.inlineContent,
+        ...paragraphs.slice(selected.index + 1, end),
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    );
   }
   return result;
 }
 
-function parsedDocumentDate(html: string, lastModified?: string | null): string | null {
-  const value = html.match(/<o:(?:LastSaved|Created)>([^<]+)<\/o:(?:LastSaved|Created)>/iu)?.[1]
-    ?? lastModified
-    ?? null;
+interface TextSpan {
+  text: string;
+  start: number;
+  end: number;
+}
+
+const RECONSTITUTION_PATTERNS = [
+  /(?:розчин(?:ити|ення)|розводити|відновл(?:ення|ювати|ений|еного)|відтворен(?:ий|ого)|готувати\s+шляхом).{0,240}(?:вод[аи]\s+для\s+ін[’'ʼ ]?єкц|розчин|вміст|флакон)/iu,
+  /розчин\s+для\s+(?:болюсної\s+)?(?:інфузії|ін[’'ʼ ]?єкції).{0,120}(?:готувати|готується)/iu,
+];
+const DILUENT_PATTERNS = [
+  /0[,.]\s*9\s*%[^.\n]{0,160}(?:натрію\s+хлорид|NaCl)/iu,
+  /5\s*%[^.\n]{0,160}(?:глюкоз|декстроз)/iu,
+  /вод[аи]\s+для\s+ін[’'ʼ ]?єкц/iu,
+  /розчин(?:і|у)?\s+(?:Рінгера|Гартмана)/iu,
+];
+const NEGATIVE_DILUENT_PATTERN =
+  /(?:не\s+(?:слід|можна)|несуміс|заборон|преципітат)/iu;
+const INCOMPATIBILITY_PATTERNS = [
+  /не\s+(?:слід|можна)\s+змішувати/iu,
+  /не\s+(?:слід|можна)\s+використовувати.{0,180}(?:відновл|розвед|розчин)/iu,
+  /не\s+можна\s+вводити\s+одночасно/iu,
+  /не\s+слід\s+застосовувати\s+одночасно\s+з/iu,
+  /несуміс/iu,
+  /преципітат/iu,
+  /в\s+одн(?:ій|ому)\s+(?:інфузійній\s+)?систем/iu,
+  /(?:одному\s+шприці|інфузійному\s+розчині).{0,80}разом/iu,
+];
+const NON_INFORMATIVE_INCOMPATIBILITY =
+  /^несумісність[.:]?\s*(?:дані\s+відсутні|невідома|не\s+зазначено)?[.]?$/iu;
+const INFUSION_RATE_PATTERNS = [
+  /(?:ввод|введ|інфуз).{0,500}(?:протягом|впродовж|упродовж)\s+(?:(?:щонайменше|приблизно)\s+|не\s+менше\s+(?:ніж\s+)?)?\d[^.\n]{0,60}(?:секунд|хвилин|годин)/iu,
+  /(?:протягом|впродовж|упродовж)\s+(?:(?:щонайменше|приблизно)\s+|не\s+менше\s+(?:ніж\s+)?)?\d[^.\n]{0,60}(?:секунд|хвилин|годин).{0,300}(?:ввод|введ|інфуз)/iu,
+  /швидкіст[а-яіїєґ’'-]*\s+(?:інфузії\s+)?\d[^.\n]{0,80}(?:мг|мл)\s*\/\s*(?:год|хв)/iu,
+];
+const STABILITY_ONLY_CONTEXT =
+  /(?:стабільн|зберіг[а-яіїєґ’'-]*|використати\s+протягом)/iu;
+const STABILITY_PATTERNS = [
+  /(?:хімічн|фізичн)[а-яіїєґ’'-]*.{0,100}стабільн/iu,
+  /(?:приготован|відновлен|розведен)[а-яіїєґ’'-]*.{0,200}(?:зберігати|стабільн|використати|протягом)/iu,
+  /після\s+(?:розведення|відновлення).{0,200}(?:годин|хвилин|температур)/iu,
+];
+const RENAL_ADJUSTMENT_PATTERNS = [
+  /кліренс\s+креатиніну.{0,240}(?:мл|кориг|доз)/iu,
+  /(?:нирков[а-яіїєґ’'-]*\s+(?:недостатн|функц)|порушенн[а-яіїєґ’'-]*\s+функц[а-яіїєґ’'-]*\s+нирок).{0,240}(?:кориг|доз|не\s+потріб)/iu,
+];
+const HEPATIC_ADJUSTMENT_PATTERNS = [
+  /(?:печінков[а-яіїєґ’'-]*\s+(?:недостатн|функц)|порушенн[а-яіїєґ’'-]*\s+функц[а-яіїєґ’'-]*\s+печінки).{0,260}(?:кориг|доз|не\s+потріб|не\s+слід\s+перевищувати)/iu,
+];
+const MAX_DAILY_DOSE_PATTERNS = [
+  /максимальн[а-яіїєґ’'-]*\s+добов[а-яіїєґ’'-]*\s+доз/iu,
+  /добов[а-яіїєґ’'-]*\s+доз[а-яіїєґ’'-]*.{0,100}не\s+(?:повинна|має)\s+перевищувати/iu,
+  /не\s+слід\s+перевищувати.{0,100}(?:добов[а-яіїєґ’'-]*\s+доз|\d+\s*(?:мг|г)\s*(?:\/\s*добу|на\s+добу))/iu,
+  /максимальн[а-яіїєґ’'-]*\s+(?:до\s+)?\d[^.\n]{0,80}на\s+добу/iu,
+];
+
+function trimmedSpan(
+  text: string,
+  start: number,
+  end: number,
+): TextSpan | null {
+  let boundedStart = start;
+  let boundedEnd = end;
+  while (boundedStart < boundedEnd && /\s/u.test(text[boundedStart] ?? "")) {
+    boundedStart += 1;
+  }
+  while (boundedEnd > boundedStart && /\s/u.test(text[boundedEnd - 1] ?? "")) {
+    boundedEnd -= 1;
+  }
+  if (
+    boundedEnd <= boundedStart ||
+    boundedEnd - boundedStart > MAX_QUOTE_CHARS
+  ) {
+    return null;
+  }
+  return {
+    text: text.slice(boundedStart, boundedEnd),
+    start: boundedStart,
+    end: boundedEnd,
+  };
+}
+
+function paragraphSpans(text: string): TextSpan[] {
+  const spans: TextSpan[] = [];
+  const boundary = /\r?\n[\t ]*\r?\n/gu;
+  let start = 0;
+  for (const match of text.matchAll(boundary)) {
+    const span = trimmedSpan(text, start, match.index ?? start);
+    if (span) spans.push(span);
+    start = (match.index ?? start) + match[0].length;
+  }
+  const finalSpan = trimmedSpan(text, start, text.length);
+  if (finalSpan) spans.push(finalSpan);
+  return spans;
+}
+
+function quoteFromSpan(
+  span: TextSpan,
+  sectionKey: InstructionSectionKey,
+): InstructionQuote {
+  return {
+    text: span.text,
+    sectionKey,
+    charStart: span.start,
+    charEnd: span.end,
+  };
+}
+
+function matchingQuotes(
+  sections: InstructionSections,
+  sectionKeys: InstructionSectionKey[],
+  patterns: RegExp[],
+  options: { reject?: RegExp; limit?: number } = {},
+): InstructionQuote[] {
+  const quotes: InstructionQuote[] = [];
+  const seen = new Set<string>();
+  for (const sectionKey of sectionKeys) {
+    const section = sections[sectionKey];
+    if (!section) continue;
+    for (const span of paragraphSpans(section)) {
+      if (options.reject?.test(span.text)) continue;
+      if (!patterns.some((pattern) => pattern.test(span.text))) continue;
+      const key = `${sectionKey}:${span.start}:${span.end}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      quotes.push(quoteFromSpan(span, sectionKey));
+      if (quotes.length >= (options.limit ?? 1)) return quotes;
+    }
+  }
+  return quotes;
+}
+
+function firstMatchingQuote(
+  sections: InstructionSections,
+  sectionKeys: InstructionSectionKey[],
+  patterns: RegExp[],
+  options: { reject?: RegExp } = {},
+): InstructionQuote | null {
+  return matchingQuotes(sections, sectionKeys, patterns, options)[0] ?? null;
+}
+
+export function extractAdministrationFacts(
+  sections: InstructionSections,
+): AdministrationFacts {
+  return AdministrationFactsSchema.parse({
+    reconstitution: firstMatchingQuote(
+      sections,
+      ["administration"],
+      RECONSTITUTION_PATTERNS,
+    ),
+    diluents: matchingQuotes(sections, ["administration"], DILUENT_PATTERNS, {
+      reject: NEGATIVE_DILUENT_PATTERN,
+      limit: 8,
+    }),
+    incompatibilities: matchingQuotes(
+      sections,
+      ["interactions", "administration", "storage"],
+      INCOMPATIBILITY_PATTERNS,
+      {
+        reject: NON_INFORMATIVE_INCOMPATIBILITY,
+        limit: 8,
+      },
+    ),
+    infusionRate: firstMatchingQuote(
+      sections,
+      ["administration"],
+      INFUSION_RATE_PATTERNS,
+      { reject: STABILITY_ONLY_CONTEXT },
+    ),
+    stabilityAfterPrep: firstMatchingQuote(
+      sections,
+      ["administration", "storage"],
+      STABILITY_PATTERNS,
+    ),
+    renalAdjustment: firstMatchingQuote(
+      sections,
+      ["administration"],
+      RENAL_ADJUSTMENT_PATTERNS,
+    ),
+    hepaticAdjustment: firstMatchingQuote(
+      sections,
+      ["administration"],
+      HEPATIC_ADJUSTMENT_PATTERNS,
+    ),
+    maxDailyDose: firstMatchingQuote(
+      sections,
+      ["administration"],
+      MAX_DAILY_DOSE_PATTERNS,
+    ),
+  });
+}
+
+export function instructionQuoteMatchesSource(
+  quote: InstructionQuote,
+  sections: InstructionSections,
+): boolean {
+  const section = sections[quote.sectionKey];
+  return Boolean(
+    section &&
+    quote.charEnd <= section.length &&
+    section.slice(quote.charStart, quote.charEnd) === quote.text,
+  );
+}
+
+export function withAdministrationFacts(
+  snapshot: DrugInstructionSnapshot,
+): DrugInstructionSnapshot & { administrationFacts: AdministrationFacts } {
+  return {
+    ...snapshot,
+    administrationFacts:
+      snapshot.administrationFacts ??
+      extractAdministrationFacts(snapshot.sections),
+  };
+}
+
+function parsedDocumentDate(
+  html: string,
+  lastModified?: string | null,
+): string | null {
+  const value =
+    html.match(
+      /<o:(?:LastSaved|Created)>([^<]+)<\/o:(?:LastSaved|Created)>/iu,
+    )?.[1] ??
+    lastModified ??
+    null;
   if (!value) return null;
   const parsed = new Date(value);
   return Number.isNaN(parsed.valueOf()) ? null : parsed.toISOString();
 }
 
-function contentLocationMatches(html: string, registrationNumber: string): boolean {
+function contentLocationMatches(
+  html: string,
+  registrationNumber: string,
+): boolean {
   const key = registrationKey(registrationNumber);
-  return [...html.matchAll(/Content-Location:\s*([^\r\n]+)/giu)]
-    .some((match) => [...(match[1] ?? "").matchAll(
-      /(?:^|[^A-Z0-9])(UA\d+)(?=[^0-9]|$)/giu,
-    )].some((token) => token[1]?.toUpperCase() === key));
+  return [...html.matchAll(/Content-Location:\s*([^\r\n]+)/giu)].some((match) =>
+    [
+      ...(match[1] ?? "").matchAll(/(?:^|[^A-Z0-9])(UA\d+)(?=[^0-9]|$)/giu),
+    ].some((token) => token[1]?.toUpperCase() === key),
+  );
 }
 
 export function parseOfficialInstructionMht(
@@ -320,25 +567,36 @@ export function parseOfficialInstructionMht(
   }
   const sourceAllowed = isAllowedInstructionSource(options.source.sourceUrl);
   const documentId = sourceDocumentId(options.source.sourceUrl);
-  if (!sourceAllowed || !documentId) throw new Error("instruction_source_not_allowed");
+  if (!sourceAllowed || !documentId)
+    throw new Error("instruction_source_not_allowed");
 
   const sourceKey = registrationKey(options.source.registrationNumber);
-  const sourceRegistrationMatched = sourceRegistrationKey(options.source.sourceUrl) === sourceKey;
+  const sourceRegistrationMatched =
+    sourceRegistrationKey(options.source.sourceUrl) === sourceKey;
   const html = extractHtmlFromMht(raw);
-  const locationMatched = contentLocationMatches(raw.toString("latin1"), options.source.registrationNumber);
+  const locationMatched = contentLocationMatches(
+    raw.toString("latin1"),
+    options.source.registrationNumber,
+  );
   const registrationMatched = sourceRegistrationMatched && locationMatched;
-  const sections = extractInstructionSections(extractInstructionParagraphs(html));
-  const availableSectionCount = INSTRUCTION_SECTION_KEYS.filter((key) => sections[key]).length;
-  const warnings = INSTRUCTION_SECTION_KEYS
-    .filter((key) => !sections[key])
-    .map((key) => `missing_section:${key.replace(/[A-Z]/gu, (value) => `_${value.toLowerCase()}`)}`);
+  const sections = extractInstructionSections(
+    extractInstructionParagraphs(html),
+  );
+  const administrationFacts = extractAdministrationFacts(sections);
+  const availableSectionCount = INSTRUCTION_SECTION_KEYS.filter(
+    (key) => sections[key],
+  ).length;
+  const warnings = INSTRUCTION_SECTION_KEYS.filter((key) => !sections[key]).map(
+    (key) =>
+      `missing_section:${key.replace(/[A-Z]/gu, (value) => `_${value.toLowerCase()}`)}`,
+  );
   const status = !registrationMatched
-    ? "needs_review" as const
+    ? ("needs_review" as const)
     : availableSectionCount === INSTRUCTION_SECTION_KEYS.length
-      ? "available" as const
+      ? ("available" as const)
       : availableSectionCount > 0
-        ? "partial" as const
-        : "unavailable" as const;
+        ? ("partial" as const)
+        : ("unavailable" as const);
 
   return {
     version: "1.0",
@@ -355,6 +613,7 @@ export function parseOfficialInstructionMht(
     registrationEndDate: options.source.registrationEndDate,
     status,
     sections,
+    administrationFacts,
     source: {
       url: options.source.sourceUrl,
       documentId,
@@ -372,7 +631,9 @@ export function parseOfficialInstructionMht(
       registrationMatched,
       contentLocationMatched: locationMatched,
       availableSectionCount,
-      coveragePct: Math.round((availableSectionCount / INSTRUCTION_SECTION_KEYS.length) * 100),
+      coveragePct: Math.round(
+        (availableSectionCount / INSTRUCTION_SECTION_KEYS.length) * 100,
+      ),
     },
     warnings,
   };
