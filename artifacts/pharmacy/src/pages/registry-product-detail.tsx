@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useLayoutEffect, useMemo } from "react";
 import {
   getSearchCatalogQueryKey,
   useSearchCatalog,
@@ -40,7 +40,26 @@ import {
 } from "@/lib/manufacturer-display";
 
 export const REGISTRY_PRODUCT_TOP_BAR_CLASS =
-  "sticky top-[calc(4rem+env(safe-area-inset-top))] z-30 -mx-4 flex min-h-12 items-center gap-3 border-y bg-background/95 px-4 py-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:rounded-xl sm:border lg:top-0";
+  "relative z-0 -mx-4 flex min-h-12 items-center gap-3 border-y bg-background px-4 py-2 sm:mx-0 sm:rounded-xl sm:border lg:sticky lg:top-0 lg:z-30 lg:bg-background/95 lg:shadow-sm lg:backdrop-blur lg:supports-[backdrop-filter]:bg-background/85";
+
+export const REGISTRY_PRODUCT_PAGE_CLASS =
+  "mx-auto w-full max-w-6xl space-y-4 overflow-x-clip pb-10 animate-in fade-in duration-300 motion-reduce:animate-none";
+
+export const REGISTRY_PRODUCT_CARD_CLASS =
+  "relative isolate max-w-full rounded-2xl border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 shadow-sm";
+
+export const REGISTRY_PRODUCT_TITLE_CLASS =
+  "relative z-10 block max-w-full [overflow-wrap:anywhere] text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl";
+
+export type RegistryProductScrollTarget = {
+  scrollTo(options: ScrollToOptions): void;
+};
+
+export function resetRegistryProductPageScroll(
+  target: RegistryProductScrollTarget,
+): void {
+  target.scrollTo({ top: 0, left: 0, behavior: "auto" });
+}
 
 function registrationStatusLabel(
   status: RegistryProductResult["registration"]["status"],
@@ -155,7 +174,7 @@ export function RegistryProductDetailContent({
 
   return (
     <div
-      className="mx-auto w-full max-w-6xl space-y-4 overflow-x-hidden pb-10 animate-in fade-in duration-300 motion-reduce:animate-none"
+      className={REGISTRY_PRODUCT_PAGE_CLASS}
       data-testid={`registry-product-detail-${product.id}`}
     >
       <nav
@@ -175,15 +194,15 @@ export function RegistryProductDetailContent({
         </span>
       </nav>
 
-      <Card className="max-w-full overflow-hidden rounded-2xl border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 shadow-sm">
+      <Card className={REGISTRY_PRODUCT_CARD_CLASS}>
         <CardContent className="min-w-0 space-y-5 p-4 sm:p-6">
           <div className="flex min-w-0 items-start gap-3">
-            <div className="shrink-0 rounded-xl bg-primary/10 p-2.5">
+            <div className="relative z-10 shrink-0 rounded-xl bg-primary/10 p-2.5">
               <Pill className="h-6 w-6 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
               <h1
-                className="max-w-full [overflow-wrap:anywhere] text-3xl font-bold leading-tight tracking-tight sm:text-4xl"
+                className={REGISTRY_PRODUCT_TITLE_CLASS}
                 data-testid="registry-product-name"
               >
                 {product.tradeName}
@@ -516,6 +535,11 @@ export default function RegistryProductDetail() {
   );
   const validRoute =
     REGISTRY_PRODUCT_ID_PATTERN.test(productId) && Boolean(registration);
+
+  useLayoutEffect(() => {
+    resetRegistryProductPageScroll(window);
+  }, [productId, registration]);
+
   const params = useMemo(
     () => registryProductDetailSearchParams(productId, registration),
     [productId, registration],
