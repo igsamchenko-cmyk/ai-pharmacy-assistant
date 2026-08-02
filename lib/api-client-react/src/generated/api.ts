@@ -64,6 +64,7 @@ import type {
   NormalizeResult,
   OcrResult,
   OcrScanInput,
+  ProductCard,
   ProfessionalProductProfile,
   ProvenanceSourceList,
   RegistryInteractionCheckInput,
@@ -1023,6 +1024,84 @@ export function useGetProfessionalProductProfile<TData = Awaited<ReturnType<type
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetProfessionalProductProfileQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetProductCardUrl = (registryProductId: string,) => {
+
+
+
+
+  return `/api/catalog/product/${registryProductId}/card`
+}
+
+/**
+ * Resolves an exact registry product by its immutable identifier and returns identity, dispensing, economic, instruction and series-restriction evidence in one response. Missing sources remain explicit and never become a positive dispensing or safety conclusion.
+ * @summary Get one aggregated operational card for an exact registry product
+ */
+export const getProductCard = async (registryProductId: string, options?: RequestInit): Promise<ProductCard> => {
+
+  return customFetch<ProductCard>(getGetProductCardUrl(registryProductId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProductCardQueryKey = (registryProductId: string,) => {
+    return [
+    `/api/catalog/product/${registryProductId}/card`
+    ] as const;
+    }
+
+
+export const getGetProductCardQueryOptions = <TData = Awaited<ReturnType<typeof getProductCard>>, TError = ErrorType<ErrorResponse>>(registryProductId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProductCard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProductCardQueryKey(registryProductId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProductCard>>> = ({ signal }) => getProductCard(registryProductId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: registryProductId !== null && registryProductId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProductCard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProductCardQueryResult = NonNullable<Awaited<ReturnType<typeof getProductCard>>>
+export type GetProductCardQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Get one aggregated operational card for an exact registry product
+ */
+
+export function useGetProductCard<TData = Awaited<ReturnType<typeof getProductCard>>, TError = ErrorType<ErrorResponse>>(
+ registryProductId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProductCard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProductCardQueryOptions(registryProductId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

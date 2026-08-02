@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   GetProfessionalProductProfileQueryParams,
+  GetProductCardParams,
   SearchCatalogQueryParams,
 } from "@workspace/api-zod";
 import { normalizeCatalogQueryParams } from "./catalog";
@@ -62,6 +63,21 @@ describe("professional profile query contract", () => {
       GetProfessionalProductProfileQueryParams.safeParse({
         productId: "0123456789ABCDEF0123456789ABCDEF",
         registrationNumber: "",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("product card path contract", () => {
+  it("accepts only an immutable exact registry product ID", () => {
+    expect(
+      GetProductCardParams.safeParse({
+        registryProductId: "0123456789ABCDEF0123456789ABCDEF",
+      }).success,
+    ).toBe(true);
+    expect(
+      GetProductCardParams.safeParse({
+        registryProductId: "UA/12345/01/01",
       }).success,
     ).toBe(false);
   });
