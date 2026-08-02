@@ -15,7 +15,7 @@ export function FavoritesContent({
   onClear: () => void;
 }) {
   return (
-    <div className="max-w-full space-y-5 overflow-x-hidden pb-10">
+    <div className="mx-auto w-full max-w-5xl space-y-5 overflow-x-hidden pb-10">
       <header className="flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <h1 className="flex items-center gap-2 text-2xl font-bold text-primary">
@@ -42,7 +42,10 @@ export function FavoritesContent({
       </header>
 
       {favorites.length ? (
-        <section className="grid min-w-0 gap-3" aria-label="Збережені препарати">
+        <section
+          className="grid min-w-0 gap-3"
+          aria-label="Збережені препарати"
+        >
           {favorites.map((drug) => (
             <SavedDrugCard
               key={drug.id}

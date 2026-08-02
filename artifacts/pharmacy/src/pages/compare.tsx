@@ -394,7 +394,7 @@ export default function Compare() {
   ];
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-5 overflow-x-hidden pb-16">
+    <main className="mx-auto w-full max-w-7xl space-y-5 overflow-x-hidden pb-16">
       <header className="space-y-2">
         <div className="flex items-center gap-2">
           <Columns3 className="h-6 w-6 text-primary" />

@@ -324,7 +324,7 @@ export default function Interactions() {
     : [];
 
   return (
-    <div className="max-w-full space-y-6 overflow-x-hidden pb-10 motion-safe:animate-in motion-safe:fade-in">
+    <div className="mx-auto w-full max-w-6xl space-y-6 overflow-x-hidden pb-10 motion-safe:animate-in motion-safe:fade-in">
       <div className="space-y-1">
         <h1 className="flex items-center gap-2 text-2xl font-bold text-primary">
           <GitCompare className="h-6 w-6" />

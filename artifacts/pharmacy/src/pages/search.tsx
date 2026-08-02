@@ -71,7 +71,7 @@ const SEARCH_TYPES: Array<{ value: SearchType; label: string }> = [
 const numberFormatter = new Intl.NumberFormat("uk-UA");
 
 export const SEARCH_STICKY_CLASS =
-  "sticky top-[65px] z-30 -mx-4 border-y bg-background/95 px-4 py-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:rounded-xl sm:border md:top-0";
+  "sticky top-[calc(4rem+env(safe-area-inset-top))] z-30 -mx-4 border-y bg-background/95 px-4 py-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:rounded-xl sm:border lg:top-0";
 
 const PACKAGING_QUANTITY_PATTERN = /(?:,\s*|\s+)по\s+\d/iu;
 const DOSAGE_SUFFIX_PATTERN =
@@ -1903,7 +1903,7 @@ export default function SearchPage() {
             <Button
               type="submit"
               size="icon"
-              className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2"
+              className="absolute right-1 top-1/2 h-10 w-10 -translate-y-1/2"
               title="Шукати"
               aria-label="Шукати"
             >

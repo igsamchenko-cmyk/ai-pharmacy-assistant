@@ -209,7 +209,7 @@ export default function DrugInstructionPage() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-4xl overflow-x-hidden pb-16">
+    <main className="mx-auto w-full max-w-5xl overflow-x-hidden pb-16">
       <Link
         href="/search"
         className="mb-5 inline-flex min-h-9 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"

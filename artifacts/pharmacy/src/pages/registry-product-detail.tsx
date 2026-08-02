@@ -40,7 +40,7 @@ import {
 } from "@/lib/manufacturer-display";
 
 export const REGISTRY_PRODUCT_TOP_BAR_CLASS =
-  "sticky top-[65px] z-30 -mx-4 flex min-h-12 items-center gap-3 border-y bg-background/95 px-4 py-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:rounded-xl sm:border md:top-0";
+  "sticky top-[calc(4rem+env(safe-area-inset-top))] z-30 -mx-4 flex min-h-12 items-center gap-3 border-y bg-background/95 px-4 py-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:mx-0 sm:rounded-xl sm:border lg:top-0";
 
 function registrationStatusLabel(
   status: RegistryProductResult["registration"]["status"],
@@ -105,7 +105,7 @@ function ExpandableSection({
 export function RegistryProductDetailSkeleton() {
   return (
     <div
-      className="max-w-full space-y-4 overflow-x-hidden pb-8"
+      className="mx-auto w-full max-w-6xl space-y-4 overflow-x-hidden pb-8"
       aria-label="Завантаження препарату"
       data-testid="registry-product-detail-skeleton"
     >
@@ -155,7 +155,7 @@ export function RegistryProductDetailContent({
 
   return (
     <div
-      className="max-w-full space-y-4 overflow-x-hidden pb-10 animate-in fade-in duration-300 motion-reduce:animate-none"
+      className="mx-auto w-full max-w-6xl space-y-4 overflow-x-hidden pb-10 animate-in fade-in duration-300 motion-reduce:animate-none"
       data-testid={`registry-product-detail-${product.id}`}
     >
       <nav

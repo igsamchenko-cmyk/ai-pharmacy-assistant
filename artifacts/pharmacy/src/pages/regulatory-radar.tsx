@@ -435,14 +435,17 @@ export default function RegulatoryRadarPage() {
   };
 
   return (
-    <div className="space-y-7" data-testid="regulatory-radar-page">
+    <div
+      className="mx-auto w-full max-w-7xl space-y-7 overflow-x-hidden pb-10"
+      data-testid="regulatory-radar-page"
+    >
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
+        <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
             <BellRing className="h-6 w-6" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Регуляторний радар
             </h1>
             <p className="mt-1 text-muted-foreground">
@@ -459,6 +462,7 @@ export default function RegulatoryRadarPage() {
         </div>
         <Button
           variant="outline"
+          className="w-full sm:w-auto"
           onClick={() => {
             void automaticRefresh.refresh().then(() => {
               void radar.refetch();
@@ -660,7 +664,7 @@ export default function RegulatoryRadarPage() {
                       key={item.key}
                       type="button"
                       onClick={() => setFilter(item.key)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${filter === item.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-accent"}`}
+                      className={`min-h-11 rounded-full border px-3 py-2 text-xs font-medium transition-colors lg:min-h-9 ${filter === item.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-accent"}`}
                     >
                       {item.label}
                       {item.key === "new" ? ` · ${newEventIds.size}` : ""}
