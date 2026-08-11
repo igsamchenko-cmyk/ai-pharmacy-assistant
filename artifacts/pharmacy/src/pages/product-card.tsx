@@ -291,6 +291,37 @@ function quoteAnchorId(quote: InstructionQuote): string {
   return `instruction-quote-${quote.sectionKey}-${quote.charStart}-${quote.charEnd}`;
 }
 
+export function instructionQuoteFromHash(
+  hash: string,
+  sections: ProductCard["instruction"]["sections"],
+): InstructionQuote | null {
+  if (!sections) return null;
+  const match = hash.match(
+    /^#instruction-quote-(indications|contraindications|adverseReactions|interactions|specialWarnings|pregnancyAndLactation|administration|overdose|storage)-(\d+)-(\d+)$/u,
+  );
+  if (!match) return null;
+  const sectionKey = match[1] as InstructionQuote["sectionKey"];
+  const charStart = Number(match[2]);
+  const charEnd = Number(match[3]);
+  const content = sections[sectionKey];
+  if (
+    !content ||
+    !Number.isSafeInteger(charStart) ||
+    !Number.isSafeInteger(charEnd) ||
+    charStart < 0 ||
+    charEnd <= charStart ||
+    charEnd > content.length
+  ) {
+    return null;
+  }
+  return {
+    text: content.slice(charStart, charEnd),
+    sectionKey,
+    charStart,
+    charEnd,
+  };
+}
+
 function quotesForFact(
   facts: AdministrationFacts | null,
   key: keyof AdministrationFacts,
@@ -582,13 +613,21 @@ function InstructionSection({ card }: { card: ProductCard }) {
     () => (sections ? filterInstructionSections(sections, query) : []),
     [query, sections],
   );
-  const instructionQuotes = useMemo(
+  const targetQuote = useMemo(
     () =>
-      HOSPITAL_FACTS.flatMap((item) =>
-        quotesForFact(card.instruction.administrationFacts, item.key),
+      instructionQuoteFromHash(
+        typeof window === "undefined" ? "" : window.location.hash,
+        sections,
       ),
-    [card.instruction.administrationFacts],
+    [sections],
   );
+  const instructionQuotes = useMemo(() => {
+    const quotes = HOSPITAL_FACTS.flatMap((item) =>
+      quotesForFact(card.instruction.administrationFacts, item.key),
+    );
+    if (targetQuote) quotes.push(targetQuote);
+    return quotes;
+  }, [card.instruction.administrationFacts, targetQuote]);
   const officialUrl =
     card.instruction.source?.url ??
     card.identity.officialInstructionDocumentUrl ??
@@ -639,7 +678,11 @@ function InstructionSection({ card }: { card: ProductCard }) {
                 key={key}
                 id={`instruction-${key}`}
                 className="group scroll-mt-20 border-b py-1 last:border-b-0"
-                open={key === "administration" ? true : undefined}
+                open={
+                  key === "administration" || targetQuote?.sectionKey === key
+                    ? true
+                    : undefined
+                }
               >
                 <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold">
                   <span className="break-words">{label}</span>

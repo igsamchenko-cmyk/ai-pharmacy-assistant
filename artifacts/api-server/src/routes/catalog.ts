@@ -13,12 +13,15 @@ import {
   GetProductCardResponse,
   SearchCatalogQueryParams,
   SearchCatalogResponse,
+  SearchDrugInstructionsQueryParams,
+  SearchDrugInstructionsResponse,
 } from "@workspace/api-zod";
 import { checkDispensingCategory } from "../knowledge/dispensingCategories/catalog";
 import { requireReferenceAccess } from "../auth";
 import { getOfficialInstructionForProduct } from "../services/officialInstructionService";
 import { loadCatalogClientIndex } from "../services/catalogClientIndexService";
 import { searchCatalog } from "../services/catalogSearchService";
+import { searchOfficialInstructions } from "../services/instructionSearchService";
 import { loadProfessionalProductProfile } from "../services/professionalProductProfileService";
 import { loadProductCard } from "../services/productCardService";
 import { checkSeriesRestrictions } from "../knowledge/seriesRestrictions/catalog";
@@ -78,6 +81,31 @@ router.get("/catalog/search", async (req, res): Promise<void> => {
 
   const result = await searchCatalog(parsed.data);
   res.json(SearchCatalogResponse.parse(result));
+});
+
+router.get("/catalog/instructions/search", async (req, res): Promise<void> => {
+  const parsed = SearchDrugInstructionsQueryParams.safeParse(req.query);
+  if (!parsed.success || parsed.data.q.trim().length < 2) {
+    res.status(400).json({ error: "Invalid instruction search parameters" });
+    return;
+  }
+
+  try {
+    const result = searchOfficialInstructions({
+      q: parsed.data.q,
+      section: parsed.data.section,
+      limit: parsed.data.limit,
+    });
+    res.set({
+      "Cache-Control": "private, max-age=60",
+      "X-Instruction-Index-Count": String(result.indexedInstructionCount),
+    });
+    res.json(SearchDrugInstructionsResponse.parse(result));
+  } catch {
+    res.status(503).json({
+      error: "Verified instruction search index is unavailable",
+    });
+  }
 });
 
 router.get("/catalog/professional-profile", async (req, res): Promise<void> => {

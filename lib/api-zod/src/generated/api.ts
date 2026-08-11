@@ -1786,6 +1786,111 @@ export const GetProductCardResponse = zod.object({
 
 
 /**
+ * Searches only verified structured DRLZ instruction snapshots. Results contain literal source passages with exact section offsets and highlight ranges. No medical text is generated or paraphrased.
+ * @summary Search literal text across verified official instructions
+ */
+export const searchDrugInstructionsQueryQMin = 2;
+export const searchDrugInstructionsQueryQMax = 160;
+
+export const searchDrugInstructionsQuerySectionDefault = `all`;
+export const searchDrugInstructionsQueryLimitDefault = 20;
+export const searchDrugInstructionsQueryLimitMax = 30;
+
+
+
+export const SearchDrugInstructionsQueryParams = zod.object({
+  "q": zod.coerce.string().min(searchDrugInstructionsQueryQMin).max(searchDrugInstructionsQueryQMax),
+  "section": zod.enum(['all', 'indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']).default(searchDrugInstructionsQuerySectionDefault),
+  "limit": zod.coerce.number().min(1).max(searchDrugInstructionsQueryLimitMax).default(searchDrugInstructionsQueryLimitDefault)
+})
+
+export const searchDrugInstructionsResponseQueryMin = 2;
+export const searchDrugInstructionsResponseQueryMax = 160;
+
+export const searchDrugInstructionsResponseNormalizedQueryMax = 160;
+
+export const searchDrugInstructionsResponseTotalMin = 0;
+
+export const searchDrugInstructionsResponseIndexedInstructionCountMin = 0;
+
+export const searchDrugInstructionsResponseDurationMsMin = 0;
+
+export const searchDrugInstructionsResponseItemsItemRegistryProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const searchDrugInstructionsResponseItemsItemRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const searchDrugInstructionsResponseItemsItemTradeNameMax = 300;
+
+export const searchDrugInstructionsResponseItemsItemInnMax = 300;
+
+export const searchDrugInstructionsResponseItemsItemDosageFormMax = 2000;
+
+export const searchDrugInstructionsResponseItemsItemStrengthMax = 120;
+
+export const searchDrugInstructionsResponseItemsItemQuoteTextMax = 8000;
+
+export const searchDrugInstructionsResponseItemsItemQuoteCharStartMin = 0;
+export const searchDrugInstructionsResponseItemsItemQuoteCharStartMax = 60000;
+
+export const searchDrugInstructionsResponseItemsItemQuoteCharEndMax = 60000;
+
+export const searchDrugInstructionsResponseItemsItemHighlightsItemCharStartMin = 0;
+export const searchDrugInstructionsResponseItemsItemHighlightsItemCharStartMax = 60000;
+
+export const searchDrugInstructionsResponseItemsItemHighlightsItemCharEndMax = 60000;
+
+export const searchDrugInstructionsResponseItemsItemHighlightsMax = 12;
+
+export const searchDrugInstructionsResponseItemsItemMatchedTermsItemMax = 120;
+
+export const searchDrugInstructionsResponseItemsItemMatchedTermsMax = 12;
+
+export const searchDrugInstructionsResponseItemsItemSourceUrlMax = 1000;
+
+export const searchDrugInstructionsResponseItemsItemSourceCoveragePctMin = 0;
+export const searchDrugInstructionsResponseItemsItemSourceCoveragePctMax = 100;
+
+export const searchDrugInstructionsResponseItemsMax = 30;
+
+
+
+export const SearchDrugInstructionsResponse = zod.object({
+  "query": zod.string().min(searchDrugInstructionsResponseQueryMin).max(searchDrugInstructionsResponseQueryMax),
+  "normalizedQuery": zod.string().min(1).max(searchDrugInstructionsResponseNormalizedQueryMax),
+  "section": zod.enum(['all', 'indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "total": zod.number().min(searchDrugInstructionsResponseTotalMin),
+  "indexedInstructionCount": zod.number().min(searchDrugInstructionsResponseIndexedInstructionCountMin),
+  "snapshotGeneratedAt": zod.coerce.date(),
+  "durationMs": zod.number().min(searchDrugInstructionsResponseDurationMsMin),
+  "items": zod.array(zod.object({
+  "registryProductId": zod.string().regex(searchDrugInstructionsResponseItemsItemRegistryProductIdRegExp),
+  "registrationNumber": zod.string().regex(searchDrugInstructionsResponseItemsItemRegistrationNumberRegExp),
+  "tradeName": zod.string().min(1).max(searchDrugInstructionsResponseItemsItemTradeNameMax),
+  "inn": zod.string().min(1).max(searchDrugInstructionsResponseItemsItemInnMax),
+  "dosageForm": zod.string().min(1).max(searchDrugInstructionsResponseItemsItemDosageFormMax),
+  "strength": zod.string().min(1).max(searchDrugInstructionsResponseItemsItemStrengthMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "quote": zod.object({
+  "text": zod.string().min(1).max(searchDrugInstructionsResponseItemsItemQuoteTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(searchDrugInstructionsResponseItemsItemQuoteCharStartMin).max(searchDrugInstructionsResponseItemsItemQuoteCharStartMax),
+  "charEnd": zod.number().min(1).max(searchDrugInstructionsResponseItemsItemQuoteCharEndMax)
+}),
+  "highlights": zod.array(zod.object({
+  "charStart": zod.number().min(searchDrugInstructionsResponseItemsItemHighlightsItemCharStartMin).max(searchDrugInstructionsResponseItemsItemHighlightsItemCharStartMax),
+  "charEnd": zod.number().min(1).max(searchDrugInstructionsResponseItemsItemHighlightsItemCharEndMax)
+})).max(searchDrugInstructionsResponseItemsItemHighlightsMax),
+  "matchedTerms": zod.array(zod.string().min(1).max(searchDrugInstructionsResponseItemsItemMatchedTermsItemMax)).max(searchDrugInstructionsResponseItemsItemMatchedTermsMax),
+  "matchMode": zod.enum(['exact_phrase', 'all_terms', 'transliteration', 'keyboard_layout', 'approximate']),
+  "source": zod.object({
+  "url": zod.string().url().max(searchDrugInstructionsResponseItemsItemSourceUrlMax),
+  "documentDate": zod.coerce.date().nullable(),
+  "checkedAt": zod.coerce.date(),
+  "coveragePct": zod.number().min(searchDrugInstructionsResponseItemsItemSourceCoveragePctMin).max(searchDrugInstructionsResponseItemsItemSourceCoveragePctMax)
+})
+})).max(searchDrugInstructionsResponseItemsMax)
+})
+
+
+/**
  * Lazily returns a bounded structured snapshot parsed from the official Ukrainian registry document for this exact registry product. Missing sections remain null. The response contains no generated clinical text, secrets, raw environment values or server filesystem paths.
  * @summary Get a structured official instruction for one registry product
  */

@@ -535,6 +535,69 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /catalog/instructions/search:
+    get:
+      operationId: searchDrugInstructions
+      tags: [drugs]
+      summary: Search literal text across verified official instructions
+      description: >-
+        Searches only verified structured DRLZ instruction snapshots. Results
+        contain literal source passages with exact section offsets and highlight
+        ranges. No medical text is generated or paraphrased.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 160
+        - name: section
+          in: query
+          required: false
+          schema:
+            type: string
+            default: all
+            enum:
+              [
+                all,
+                indications,
+                contraindications,
+                adverseReactions,
+                interactions,
+                specialWarnings,
+                pregnancyAndLactation,
+                administration,
+                overdose,
+                storage,
+              ]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 30
+            default: 20
+      responses:
+        "200":
+          description: Ranked literal matches from verified instructions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstructionSearchResponse"
+        "400":
+          description: Invalid search query or section
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Verified instruction index is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /catalog/products/{productId}/instruction:
     get:
       operationId: getDrugInstruction
@@ -2489,8 +2552,7 @@ components:
             - { type: "null" }
     ProductCardNationalList:
       type: object
-      required:
-        [status, release, matchReason, section, source, checkedAt]
+      required: [status, release, matchReason, section, source, checkedAt]
       properties:
         status:
           type: string
@@ -2519,7 +2581,15 @@ components:
     ProductCardInstruction:
       type: object
       required:
-        [available, sourceStatus, sections, administrationFacts, source, provenance, warnings]
+        [
+          available,
+          sourceStatus,
+          sections,
+          administrationFacts,
+          source,
+          provenance,
+          warnings,
+        ]
       properties:
         available: { type: boolean }
         sourceStatus:
@@ -2672,6 +2742,117 @@ components:
             ]
         charStart: { type: integer, minimum: 0, maximum: 60000 }
         charEnd: { type: integer, minimum: 1, maximum: 60000 }
+    InstructionSearchHighlight:
+      type: object
+      required: [charStart, charEnd]
+      properties:
+        charStart: { type: integer, minimum: 0, maximum: 60000 }
+        charEnd: { type: integer, minimum: 1, maximum: 60000 }
+    InstructionSearchSource:
+      type: object
+      required: [url, documentDate, checkedAt, coveragePct]
+      properties:
+        url: { type: string, format: uri, maxLength: 1000 }
+        documentDate: { type: ["string", "null"], format: date-time }
+        checkedAt: { type: string, format: date-time }
+        coveragePct: { type: integer, minimum: 0, maximum: 100 }
+    InstructionSearchResult:
+      type: object
+      required:
+        [
+          registryProductId,
+          registrationNumber,
+          tradeName,
+          inn,
+          dosageForm,
+          strength,
+          sectionKey,
+          quote,
+          highlights,
+          matchedTerms,
+          matchMode,
+          source,
+        ]
+      properties:
+        registryProductId: { type: string, pattern: "^[A-F0-9]{32}$" }
+        registrationNumber: { type: string, pattern: "^UA/\\d+/\\d+/\\d+$" }
+        tradeName: { type: string, minLength: 1, maxLength: 300 }
+        inn: { type: string, minLength: 1, maxLength: 300 }
+        dosageForm: { type: string, minLength: 1, maxLength: 2000 }
+        strength: { type: string, minLength: 1, maxLength: 120 }
+        sectionKey:
+          type: string
+          enum:
+            [
+              indications,
+              contraindications,
+              adverseReactions,
+              interactions,
+              specialWarnings,
+              pregnancyAndLactation,
+              administration,
+              overdose,
+              storage,
+            ]
+        quote: { $ref: "#/components/schemas/InstructionQuote" }
+        highlights:
+          type: array
+          maxItems: 12
+          items: { $ref: "#/components/schemas/InstructionSearchHighlight" }
+        matchedTerms:
+          type: array
+          maxItems: 12
+          items: { type: string, minLength: 1, maxLength: 120 }
+        matchMode:
+          type: string
+          enum:
+            [
+              exact_phrase,
+              all_terms,
+              transliteration,
+              keyboard_layout,
+              approximate,
+            ]
+        source: { $ref: "#/components/schemas/InstructionSearchSource" }
+    InstructionSearchResponse:
+      type: object
+      required:
+        [
+          query,
+          normalizedQuery,
+          section,
+          total,
+          indexedInstructionCount,
+          snapshotGeneratedAt,
+          durationMs,
+          items,
+        ]
+      properties:
+        query: { type: string, minLength: 2, maxLength: 160 }
+        normalizedQuery: { type: string, minLength: 1, maxLength: 160 }
+        section:
+          type: string
+          enum:
+            [
+              all,
+              indications,
+              contraindications,
+              adverseReactions,
+              interactions,
+              specialWarnings,
+              pregnancyAndLactation,
+              administration,
+              overdose,
+              storage,
+            ]
+        total: { type: integer, minimum: 0 }
+        indexedInstructionCount: { type: integer, minimum: 0 }
+        snapshotGeneratedAt: { type: string, format: date-time }
+        durationMs: { type: number, minimum: 0 }
+        items:
+          type: array
+          maxItems: 30
+          items: { $ref: "#/components/schemas/InstructionSearchResult" }
     AdministrationFacts:
       type: object
       required:
@@ -2826,7 +3007,8 @@ components:
             enum: [available, partial, unavailable, needs_review],
           }
         sections: { $ref: "#/components/schemas/DrugInstructionSections" }
-        administrationFacts: { $ref: "#/components/schemas/AdministrationFacts" }
+        administrationFacts:
+          { $ref: "#/components/schemas/AdministrationFacts" }
         source: { $ref: "#/components/schemas/DrugInstructionSource" }
         provenance: { $ref: "#/components/schemas/DrugInstructionProvenance" }
         warnings:
