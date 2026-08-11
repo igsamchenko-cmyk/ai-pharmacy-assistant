@@ -153,6 +153,27 @@ jobs:
             ([.id, .name, (.autoDeploy // "unknown")] | @tsv)
           ' <<<"$service_json"
 
+          postgres_json="$(curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --header "Accept: application/json" \
+            --header "Authorization: Bearer ${RENDER_API_KEY}" \
+            "https://api.render.com/v1/postgres?limit=100")"
+
+          jq -r '
+            (["POSTGRES_ID", "NAME", "REGION", "PLAN", "SUSPENDED", "STATUS", "UPDATED_AT"] | @tsv),
+            (.[] | (.postgres // .) as $postgres | [
+              ($postgres.id // "-"),
+              ($postgres.name // "-"),
+              ($postgres.region // "-"),
+              ($postgres.plan // "-"),
+              ($postgres.suspended // "unknown"),
+              ($postgres.status // "unknown"),
+              ($postgres.updatedAt // "-")
+            ] | @tsv)
+          ' <<<"$postgres_json"
+
           deploys_json="$(curl \
             --fail-with-body \
             --silent \
