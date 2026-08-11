@@ -9,6 +9,7 @@ import {
   type InstructionManifest,
   type InstructionSources,
 } from "./model";
+import { withAdministrationFacts } from "./parser";
 
 const manifestCache = new TtlCache<InstructionManifest>({
   ttlMs: 5 * 60_000,
@@ -44,10 +45,11 @@ export function hasInstructionForProduct(
   registrationNumber: string,
 ): boolean {
   try {
-    return loadInstructionManifest().products.some((product) =>
-      product.registryProductId === registryProductId &&
-      product.registrationNumber === registrationNumber &&
-      (product.status === "available" || product.status === "partial")
+    return loadInstructionManifest().products.some(
+      (product) =>
+        product.registryProductId === registryProductId &&
+        product.registrationNumber === registrationNumber &&
+        (product.status === "available" || product.status === "partial"),
     );
   } catch {
     return false;
@@ -68,8 +70,10 @@ export function getInstructionForProduct(
   const cached = snapshotCache.get(cacheKey);
   if (cached) return cached;
 
-  const snapshot = DrugInstructionSnapshotSchema.parse(
-    readJson(`data/drug-instructions/${entry.snapshotFile}`),
+  const snapshot = withAdministrationFacts(
+    DrugInstructionSnapshotSchema.parse(
+      readJson(`data/drug-instructions/${entry.snapshotFile}`),
+    ),
   );
   if (
     snapshot.registryProductId !== entry.registryProductId ||

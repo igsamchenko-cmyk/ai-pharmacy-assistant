@@ -282,6 +282,12 @@ describe("product card service", () => {
       available: true,
       sourceStatus: "structured",
       provenance: { coveragePct: 56 },
+      administrationFacts: {
+        reconstitution: {
+          text: "Розчинити у 10 мл води для ін'єкцій.",
+          sectionKey: "administration",
+        },
+      },
     });
     expect(result.card.seriesStatus).toMatchObject({
       hasAnyRestriction: true,

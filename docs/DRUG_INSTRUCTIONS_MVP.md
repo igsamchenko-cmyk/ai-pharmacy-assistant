@@ -10,18 +10,18 @@ LLM to generate, summarize or complete medical text.
 The table below records the original 10-product MVP cohort. The full current
 50-product coverage is pinned in `data/drug-instructions/manifest.json`.
 
-| Product | INN | Registration |
-| --- | --- | --- |
-| АЛВОКОК | Ceftriaxone | `UA/13141/01/01` |
-| АМОКСИКЛАВ 2Х | Amoxicillin and beta-lactamase inhibitor | `UA/7064/01/02` |
-| АПІРОЛ | Ibuprofen | `UA/20748/01/01` |
-| МЕТФОРМІН | Metformin | `UA/20900/01/01` |
-| ОМЕПРАЗОЛ | Omeprazole | `UA/17985/01/01` |
-| АЛАДИН | Amlodipine | `UA/11314/01/01` |
-| ВАРФАРЕКС | Warfarin | `UA/7943/01/01` |
-| ЕЛІКВІС | Apixaban | `UA/13699/01/01` |
-| ДЕКСАМЕТАЗОН-4-ДАРНИЦЯ | Dexamethasone | `UA/20423/01/01` |
-| ОНДАНСЕТРОН | Ondansetron | `UA/10250/01/01` |
+| Product                | INN                                      | Registration     |
+| ---------------------- | ---------------------------------------- | ---------------- |
+| АЛВОКОК                | Ceftriaxone                              | `UA/13141/01/01` |
+| АМОКСИКЛАВ 2Х          | Amoxicillin and beta-lactamase inhibitor | `UA/7064/01/02`  |
+| АПІРОЛ                 | Ibuprofen                                | `UA/20748/01/01` |
+| МЕТФОРМІН              | Metformin                                | `UA/20900/01/01` |
+| ОМЕПРАЗОЛ              | Omeprazole                               | `UA/17985/01/01` |
+| АЛАДИН                 | Amlodipine                               | `UA/11314/01/01` |
+| ВАРФАРЕКС              | Warfarin                                 | `UA/7943/01/01`  |
+| ЕЛІКВІС                | Apixaban                                 | `UA/13699/01/01` |
+| ДЕКСАМЕТАЗОН-4-ДАРНИЦЯ | Dexamethasone                            | `UA/20423/01/01` |
+| ОНДАНСЕТРОН            | Ondansetron                              | `UA/10250/01/01` |
 
 The committed checkpoint contains 50 instructions: 46 full, 4 explicitly partial,
 0 unavailable and 0 `needs_review` records. At least eight supported sections are
@@ -53,7 +53,8 @@ registration number, product metadata and official document URL.
 date and snapshot file. Each snapshot also records:
 
 - the official source document ID;
-- parser version `ua-drlz-mht-v1`;
+- parser version `ua-drlz-mht-v1` for the committed checkpoint or
+  `ua-drlz-mht-v2` for newly parsed documents;
 - checked/document dates and byte length;
 - SHA-256 of the downloaded MHT;
 - exact registration match and MHT `Content-Location` match;
@@ -63,6 +64,22 @@ A snapshot is served only when its product ID, registration number and hash
 match the manifest. `needs_review` and `unavailable` records fail closed. A
 missing section remains `null`; the UI links to the original document instead
 of inventing content.
+
+## Hospital Administration Facts
+
+Parser v2 performs a deterministic second pass over the official sections. It
+does not use an LLM and does not paraphrase medical content. It extracts only
+literal paragraphs for reconstitution, diluents, incompatibilities, infusion
+rate, stability after preparation, renal/hepatic adjustment and maximum daily
+dose. Every quote carries its section key plus UTF-16 `charStart`/`charEnd`
+offsets, and the runtime verifies that
+`section.slice(charStart, charEnd) === quote.text`.
+
+Existing v1 snapshots are enriched from their committed section text at load
+time, so their source files and official document SHA-256 values remain
+unchanged. The `knowledge:quality:report` command reports per-field coverage,
+parenteral-product coverage and exact-offset integrity. Empty fields remain
+empty and the UI explicitly directs the pharmacist to the full section.
 
 ## Commands
 
@@ -93,11 +110,11 @@ number and document hash. Static repository data remains available without
 PostgreSQL and is resolved from both the repository root and the production
 `artifacts/api-server` working directory.
 
-The page is mobile-first and includes all nine sections, in-page search, table
-of contents, missing-section messaging, product/registration metadata,
-document date, attribution and an original-document link. The text is official
-source text, not individualized advice or a recommendation to start, stop or
-change treatment.
+The unified product card is mobile-first and includes the eight hospital facts,
+all nine sections, in-page search, exact quote anchors, missing-fact messaging,
+product/registration metadata, document date, attribution and an
+original-document link. The text is official source text, not individualized
+advice or a recommendation to start, stop or change treatment.
 
 ## Production Activation Plan
 

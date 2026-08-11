@@ -1349,6 +1349,66 @@ export const getProductCardResponseInstructionSectionsOneOverdoseMax = 60000;
 
 export const getProductCardResponseInstructionSectionsOneStorageMax = 60000;
 
+export const getProductCardResponseInstructionAdministrationFactsOneReconstitutionOneTextMax = 8000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneReconstitutionOneCharStartMin = 0;
+export const getProductCardResponseInstructionAdministrationFactsOneReconstitutionOneCharStartMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneReconstitutionOneCharEndMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneDiluentsItemTextMax = 8000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneDiluentsItemCharStartMin = 0;
+export const getProductCardResponseInstructionAdministrationFactsOneDiluentsItemCharStartMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneDiluentsItemCharEndMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneDiluentsMax = 8;
+
+export const getProductCardResponseInstructionAdministrationFactsOneIncompatibilitiesItemTextMax = 8000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneIncompatibilitiesItemCharStartMin = 0;
+export const getProductCardResponseInstructionAdministrationFactsOneIncompatibilitiesItemCharStartMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneIncompatibilitiesItemCharEndMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneIncompatibilitiesMax = 8;
+
+export const getProductCardResponseInstructionAdministrationFactsOneInfusionRateOneTextMax = 8000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneInfusionRateOneCharStartMin = 0;
+export const getProductCardResponseInstructionAdministrationFactsOneInfusionRateOneCharStartMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneInfusionRateOneCharEndMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneStabilityAfterPrepOneTextMax = 8000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneStabilityAfterPrepOneCharStartMin = 0;
+export const getProductCardResponseInstructionAdministrationFactsOneStabilityAfterPrepOneCharStartMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneStabilityAfterPrepOneCharEndMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneRenalAdjustmentOneTextMax = 8000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneRenalAdjustmentOneCharStartMin = 0;
+export const getProductCardResponseInstructionAdministrationFactsOneRenalAdjustmentOneCharStartMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneRenalAdjustmentOneCharEndMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneHepaticAdjustmentOneTextMax = 8000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneHepaticAdjustmentOneCharStartMin = 0;
+export const getProductCardResponseInstructionAdministrationFactsOneHepaticAdjustmentOneCharStartMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneHepaticAdjustmentOneCharEndMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneMaxDailyDoseOneTextMax = 8000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneMaxDailyDoseOneCharStartMin = 0;
+export const getProductCardResponseInstructionAdministrationFactsOneMaxDailyDoseOneCharStartMax = 60000;
+
+export const getProductCardResponseInstructionAdministrationFactsOneMaxDailyDoseOneCharEndMax = 60000;
+
 export const getProductCardResponseInstructionSourceOneUrlMax = 1000;
 
 export const getProductCardResponseInstructionSourceOneDocumentIdRegExp = new RegExp('^[A-F0-9]{32}$');
@@ -1631,6 +1691,56 @@ export const GetProductCardResponse = zod.object({
   "overdose": zod.string().max(getProductCardResponseInstructionSectionsOneOverdoseMax).nullable(),
   "storage": zod.string().max(getProductCardResponseInstructionSectionsOneStorageMax).nullable()
 }),zod.null()]),
+  "administrationFacts": zod.union([zod.object({
+  "reconstitution": zod.union([zod.object({
+  "text": zod.string().min(1).max(getProductCardResponseInstructionAdministrationFactsOneReconstitutionOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getProductCardResponseInstructionAdministrationFactsOneReconstitutionOneCharStartMin).max(getProductCardResponseInstructionAdministrationFactsOneReconstitutionOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getProductCardResponseInstructionAdministrationFactsOneReconstitutionOneCharEndMax)
+}),zod.null()]),
+  "diluents": zod.array(zod.object({
+  "text": zod.string().min(1).max(getProductCardResponseInstructionAdministrationFactsOneDiluentsItemTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getProductCardResponseInstructionAdministrationFactsOneDiluentsItemCharStartMin).max(getProductCardResponseInstructionAdministrationFactsOneDiluentsItemCharStartMax),
+  "charEnd": zod.number().min(1).max(getProductCardResponseInstructionAdministrationFactsOneDiluentsItemCharEndMax)
+})).max(getProductCardResponseInstructionAdministrationFactsOneDiluentsMax),
+  "incompatibilities": zod.array(zod.object({
+  "text": zod.string().min(1).max(getProductCardResponseInstructionAdministrationFactsOneIncompatibilitiesItemTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getProductCardResponseInstructionAdministrationFactsOneIncompatibilitiesItemCharStartMin).max(getProductCardResponseInstructionAdministrationFactsOneIncompatibilitiesItemCharStartMax),
+  "charEnd": zod.number().min(1).max(getProductCardResponseInstructionAdministrationFactsOneIncompatibilitiesItemCharEndMax)
+})).max(getProductCardResponseInstructionAdministrationFactsOneIncompatibilitiesMax),
+  "infusionRate": zod.union([zod.object({
+  "text": zod.string().min(1).max(getProductCardResponseInstructionAdministrationFactsOneInfusionRateOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getProductCardResponseInstructionAdministrationFactsOneInfusionRateOneCharStartMin).max(getProductCardResponseInstructionAdministrationFactsOneInfusionRateOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getProductCardResponseInstructionAdministrationFactsOneInfusionRateOneCharEndMax)
+}),zod.null()]),
+  "stabilityAfterPrep": zod.union([zod.object({
+  "text": zod.string().min(1).max(getProductCardResponseInstructionAdministrationFactsOneStabilityAfterPrepOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getProductCardResponseInstructionAdministrationFactsOneStabilityAfterPrepOneCharStartMin).max(getProductCardResponseInstructionAdministrationFactsOneStabilityAfterPrepOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getProductCardResponseInstructionAdministrationFactsOneStabilityAfterPrepOneCharEndMax)
+}),zod.null()]),
+  "renalAdjustment": zod.union([zod.object({
+  "text": zod.string().min(1).max(getProductCardResponseInstructionAdministrationFactsOneRenalAdjustmentOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getProductCardResponseInstructionAdministrationFactsOneRenalAdjustmentOneCharStartMin).max(getProductCardResponseInstructionAdministrationFactsOneRenalAdjustmentOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getProductCardResponseInstructionAdministrationFactsOneRenalAdjustmentOneCharEndMax)
+}),zod.null()]),
+  "hepaticAdjustment": zod.union([zod.object({
+  "text": zod.string().min(1).max(getProductCardResponseInstructionAdministrationFactsOneHepaticAdjustmentOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getProductCardResponseInstructionAdministrationFactsOneHepaticAdjustmentOneCharStartMin).max(getProductCardResponseInstructionAdministrationFactsOneHepaticAdjustmentOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getProductCardResponseInstructionAdministrationFactsOneHepaticAdjustmentOneCharEndMax)
+}),zod.null()]),
+  "maxDailyDose": zod.union([zod.object({
+  "text": zod.string().min(1).max(getProductCardResponseInstructionAdministrationFactsOneMaxDailyDoseOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getProductCardResponseInstructionAdministrationFactsOneMaxDailyDoseOneCharStartMin).max(getProductCardResponseInstructionAdministrationFactsOneMaxDailyDoseOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getProductCardResponseInstructionAdministrationFactsOneMaxDailyDoseOneCharEndMax)
+}),zod.null()])
+}),zod.null()]),
   "source": zod.union([zod.object({
   "url": zod.string().url().max(getProductCardResponseInstructionSourceOneUrlMax),
   "documentId": zod.string().regex(getProductCardResponseInstructionSourceOneDocumentIdRegExp),
@@ -1638,7 +1748,7 @@ export const GetProductCardResponse = zod.object({
   "checkedAt": zod.coerce.date(),
   "documentHash": zod.string().regex(getProductCardResponseInstructionSourceOneDocumentHashRegExp),
   "contentLength": zod.number().min(1).max(getProductCardResponseInstructionSourceOneContentLengthMax),
-  "parserVersion": zod.enum(['ua-drlz-mht-v1']),
+  "parserVersion": zod.enum(['ua-drlz-mht-v1', 'ua-drlz-mht-v2']),
   "datasetTitle": zod.string().min(1),
   "datasetUrl": zod.string().url(),
   "license": zod.string().min(1)
@@ -1724,6 +1834,66 @@ export const getDrugInstructionResponseSectionsOverdoseMax = 60000;
 
 export const getDrugInstructionResponseSectionsStorageMax = 60000;
 
+export const getDrugInstructionResponseAdministrationFactsReconstitutionOneTextMax = 8000;
+
+export const getDrugInstructionResponseAdministrationFactsReconstitutionOneCharStartMin = 0;
+export const getDrugInstructionResponseAdministrationFactsReconstitutionOneCharStartMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsReconstitutionOneCharEndMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsDiluentsItemTextMax = 8000;
+
+export const getDrugInstructionResponseAdministrationFactsDiluentsItemCharStartMin = 0;
+export const getDrugInstructionResponseAdministrationFactsDiluentsItemCharStartMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsDiluentsItemCharEndMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsDiluentsMax = 8;
+
+export const getDrugInstructionResponseAdministrationFactsIncompatibilitiesItemTextMax = 8000;
+
+export const getDrugInstructionResponseAdministrationFactsIncompatibilitiesItemCharStartMin = 0;
+export const getDrugInstructionResponseAdministrationFactsIncompatibilitiesItemCharStartMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsIncompatibilitiesItemCharEndMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsIncompatibilitiesMax = 8;
+
+export const getDrugInstructionResponseAdministrationFactsInfusionRateOneTextMax = 8000;
+
+export const getDrugInstructionResponseAdministrationFactsInfusionRateOneCharStartMin = 0;
+export const getDrugInstructionResponseAdministrationFactsInfusionRateOneCharStartMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsInfusionRateOneCharEndMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsStabilityAfterPrepOneTextMax = 8000;
+
+export const getDrugInstructionResponseAdministrationFactsStabilityAfterPrepOneCharStartMin = 0;
+export const getDrugInstructionResponseAdministrationFactsStabilityAfterPrepOneCharStartMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsStabilityAfterPrepOneCharEndMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsRenalAdjustmentOneTextMax = 8000;
+
+export const getDrugInstructionResponseAdministrationFactsRenalAdjustmentOneCharStartMin = 0;
+export const getDrugInstructionResponseAdministrationFactsRenalAdjustmentOneCharStartMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsRenalAdjustmentOneCharEndMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsHepaticAdjustmentOneTextMax = 8000;
+
+export const getDrugInstructionResponseAdministrationFactsHepaticAdjustmentOneCharStartMin = 0;
+export const getDrugInstructionResponseAdministrationFactsHepaticAdjustmentOneCharStartMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsHepaticAdjustmentOneCharEndMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsMaxDailyDoseOneTextMax = 8000;
+
+export const getDrugInstructionResponseAdministrationFactsMaxDailyDoseOneCharStartMin = 0;
+export const getDrugInstructionResponseAdministrationFactsMaxDailyDoseOneCharStartMax = 60000;
+
+export const getDrugInstructionResponseAdministrationFactsMaxDailyDoseOneCharEndMax = 60000;
+
 export const getDrugInstructionResponseSourceUrlMax = 1000;
 
 export const getDrugInstructionResponseSourceDocumentIdRegExp = new RegExp('^[A-F0-9]{32}$');
@@ -1768,6 +1938,56 @@ export const GetDrugInstructionResponse = zod.object({
   "overdose": zod.string().max(getDrugInstructionResponseSectionsOverdoseMax).nullable(),
   "storage": zod.string().max(getDrugInstructionResponseSectionsStorageMax).nullable()
 }),
+  "administrationFacts": zod.object({
+  "reconstitution": zod.union([zod.object({
+  "text": zod.string().min(1).max(getDrugInstructionResponseAdministrationFactsReconstitutionOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getDrugInstructionResponseAdministrationFactsReconstitutionOneCharStartMin).max(getDrugInstructionResponseAdministrationFactsReconstitutionOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getDrugInstructionResponseAdministrationFactsReconstitutionOneCharEndMax)
+}),zod.null()]),
+  "diluents": zod.array(zod.object({
+  "text": zod.string().min(1).max(getDrugInstructionResponseAdministrationFactsDiluentsItemTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getDrugInstructionResponseAdministrationFactsDiluentsItemCharStartMin).max(getDrugInstructionResponseAdministrationFactsDiluentsItemCharStartMax),
+  "charEnd": zod.number().min(1).max(getDrugInstructionResponseAdministrationFactsDiluentsItemCharEndMax)
+})).max(getDrugInstructionResponseAdministrationFactsDiluentsMax),
+  "incompatibilities": zod.array(zod.object({
+  "text": zod.string().min(1).max(getDrugInstructionResponseAdministrationFactsIncompatibilitiesItemTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getDrugInstructionResponseAdministrationFactsIncompatibilitiesItemCharStartMin).max(getDrugInstructionResponseAdministrationFactsIncompatibilitiesItemCharStartMax),
+  "charEnd": zod.number().min(1).max(getDrugInstructionResponseAdministrationFactsIncompatibilitiesItemCharEndMax)
+})).max(getDrugInstructionResponseAdministrationFactsIncompatibilitiesMax),
+  "infusionRate": zod.union([zod.object({
+  "text": zod.string().min(1).max(getDrugInstructionResponseAdministrationFactsInfusionRateOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getDrugInstructionResponseAdministrationFactsInfusionRateOneCharStartMin).max(getDrugInstructionResponseAdministrationFactsInfusionRateOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getDrugInstructionResponseAdministrationFactsInfusionRateOneCharEndMax)
+}),zod.null()]),
+  "stabilityAfterPrep": zod.union([zod.object({
+  "text": zod.string().min(1).max(getDrugInstructionResponseAdministrationFactsStabilityAfterPrepOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getDrugInstructionResponseAdministrationFactsStabilityAfterPrepOneCharStartMin).max(getDrugInstructionResponseAdministrationFactsStabilityAfterPrepOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getDrugInstructionResponseAdministrationFactsStabilityAfterPrepOneCharEndMax)
+}),zod.null()]),
+  "renalAdjustment": zod.union([zod.object({
+  "text": zod.string().min(1).max(getDrugInstructionResponseAdministrationFactsRenalAdjustmentOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getDrugInstructionResponseAdministrationFactsRenalAdjustmentOneCharStartMin).max(getDrugInstructionResponseAdministrationFactsRenalAdjustmentOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getDrugInstructionResponseAdministrationFactsRenalAdjustmentOneCharEndMax)
+}),zod.null()]),
+  "hepaticAdjustment": zod.union([zod.object({
+  "text": zod.string().min(1).max(getDrugInstructionResponseAdministrationFactsHepaticAdjustmentOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getDrugInstructionResponseAdministrationFactsHepaticAdjustmentOneCharStartMin).max(getDrugInstructionResponseAdministrationFactsHepaticAdjustmentOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getDrugInstructionResponseAdministrationFactsHepaticAdjustmentOneCharEndMax)
+}),zod.null()]),
+  "maxDailyDose": zod.union([zod.object({
+  "text": zod.string().min(1).max(getDrugInstructionResponseAdministrationFactsMaxDailyDoseOneTextMax),
+  "sectionKey": zod.enum(['indications', 'contraindications', 'adverseReactions', 'interactions', 'specialWarnings', 'pregnancyAndLactation', 'administration', 'overdose', 'storage']),
+  "charStart": zod.number().min(getDrugInstructionResponseAdministrationFactsMaxDailyDoseOneCharStartMin).max(getDrugInstructionResponseAdministrationFactsMaxDailyDoseOneCharStartMax),
+  "charEnd": zod.number().min(1).max(getDrugInstructionResponseAdministrationFactsMaxDailyDoseOneCharEndMax)
+}),zod.null()])
+}),
   "source": zod.object({
   "url": zod.string().url().max(getDrugInstructionResponseSourceUrlMax),
   "documentId": zod.string().regex(getDrugInstructionResponseSourceDocumentIdRegExp),
@@ -1775,7 +1995,7 @@ export const GetDrugInstructionResponse = zod.object({
   "checkedAt": zod.coerce.date(),
   "documentHash": zod.string().regex(getDrugInstructionResponseSourceDocumentHashRegExp),
   "contentLength": zod.number().min(1).max(getDrugInstructionResponseSourceContentLengthMax),
-  "parserVersion": zod.enum(['ua-drlz-mht-v1']),
+  "parserVersion": zod.enum(['ua-drlz-mht-v1', 'ua-drlz-mht-v2']),
   "datasetTitle": zod.string().min(1),
   "datasetUrl": zod.string().url(),
   "license": zod.string().min(1)

@@ -2519,7 +2519,7 @@ components:
     ProductCardInstruction:
       type: object
       required:
-        [available, sourceStatus, sections, source, provenance, warnings]
+        [available, sourceStatus, sections, administrationFacts, source, provenance, warnings]
       properties:
         available: { type: boolean }
         sourceStatus:
@@ -2535,6 +2535,10 @@ components:
         sections:
           oneOf:
             - { $ref: "#/components/schemas/DrugInstructionSections" }
+            - { type: "null" }
+        administrationFacts:
+          oneOf:
+            - { $ref: "#/components/schemas/AdministrationFacts" }
             - { type: "null" }
         source:
           oneOf:
@@ -2647,6 +2651,73 @@ components:
           type: array
           maxItems: 30
           items: { type: string, pattern: "^[a-z0-9:_-]{1,80}$" }
+    InstructionQuote:
+      type: object
+      required: [text, sectionKey, charStart, charEnd]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 8000 }
+        sectionKey:
+          type: string
+          enum:
+            [
+              indications,
+              contraindications,
+              adverseReactions,
+              interactions,
+              specialWarnings,
+              pregnancyAndLactation,
+              administration,
+              overdose,
+              storage,
+            ]
+        charStart: { type: integer, minimum: 0, maximum: 60000 }
+        charEnd: { type: integer, minimum: 1, maximum: 60000 }
+    AdministrationFacts:
+      type: object
+      required:
+        [
+          reconstitution,
+          diluents,
+          incompatibilities,
+          infusionRate,
+          stabilityAfterPrep,
+          renalAdjustment,
+          hepaticAdjustment,
+          maxDailyDose,
+        ]
+      properties:
+        reconstitution:
+          oneOf:
+            - { $ref: "#/components/schemas/InstructionQuote" }
+            - { type: "null" }
+        diluents:
+          type: array
+          maxItems: 8
+          items: { $ref: "#/components/schemas/InstructionQuote" }
+        incompatibilities:
+          type: array
+          maxItems: 8
+          items: { $ref: "#/components/schemas/InstructionQuote" }
+        infusionRate:
+          oneOf:
+            - { $ref: "#/components/schemas/InstructionQuote" }
+            - { type: "null" }
+        stabilityAfterPrep:
+          oneOf:
+            - { $ref: "#/components/schemas/InstructionQuote" }
+            - { type: "null" }
+        renalAdjustment:
+          oneOf:
+            - { $ref: "#/components/schemas/InstructionQuote" }
+            - { type: "null" }
+        hepaticAdjustment:
+          oneOf:
+            - { $ref: "#/components/schemas/InstructionQuote" }
+            - { type: "null" }
+        maxDailyDose:
+          oneOf:
+            - { $ref: "#/components/schemas/InstructionQuote" }
+            - { type: "null" }
     DrugInstructionSections:
       type: object
       required:
@@ -2693,7 +2764,7 @@ components:
         checkedAt: { type: string, format: date-time }
         documentHash: { type: string, pattern: "^[a-f0-9]{64}$" }
         contentLength: { type: integer, minimum: 1, maximum: 3000000 }
-        parserVersion: { type: string, enum: [ua-drlz-mht-v1] }
+        parserVersion: { type: string, enum: [ua-drlz-mht-v1, ua-drlz-mht-v2] }
         datasetTitle: { type: string, minLength: 1 }
         datasetUrl: { type: string, format: uri }
         license: { type: string, minLength: 1 }
@@ -2731,6 +2802,7 @@ components:
           registrationEndDate,
           status,
           sections,
+          administrationFacts,
           source,
           provenance,
           warnings,
@@ -2754,6 +2826,7 @@ components:
             enum: [available, partial, unavailable, needs_review],
           }
         sections: { $ref: "#/components/schemas/DrugInstructionSections" }
+        administrationFacts: { $ref: "#/components/schemas/AdministrationFacts" }
         source: { $ref: "#/components/schemas/DrugInstructionSource" }
         provenance: { $ref: "#/components/schemas/DrugInstructionProvenance" }
         warnings:

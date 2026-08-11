@@ -11,4 +11,5 @@ export type DrugInstructionSourceParserVersion = typeof DrugInstructionSourcePar
 
 export const DrugInstructionSourceParserVersion = {
   'ua-drlz-mht-v1': 'ua-drlz-mht-v1',
+  'ua-drlz-mht-v2': 'ua-drlz-mht-v2',
 } as const;

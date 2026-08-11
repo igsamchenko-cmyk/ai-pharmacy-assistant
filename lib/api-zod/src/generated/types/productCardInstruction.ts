@@ -5,6 +5,7 @@
  * API specification for AI Pharmacy Assistant
  * OpenAPI spec version: 0.1.0
  */
+import type { AdministrationFacts } from './administrationFacts';
 import type { DrugInstructionProvenance } from './drugInstructionProvenance';
 import type { DrugInstructionSections } from './drugInstructionSections';
 import type { DrugInstructionSource } from './drugInstructionSource';
@@ -14,6 +15,7 @@ export interface ProductCardInstruction {
   available: boolean;
   sourceStatus: ProductCardInstructionSourceStatus;
   sections: DrugInstructionSections | null;
+  administrationFacts: AdministrationFacts | null;
   source: DrugInstructionSource | null;
   provenance: DrugInstructionProvenance | null;
   /**

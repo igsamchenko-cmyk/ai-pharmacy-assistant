@@ -4,6 +4,8 @@ import {
   getGetProductCardQueryKey,
   useCheckProductSeriesRestrictions,
   useGetProductCard,
+  type AdministrationFacts,
+  type InstructionQuote,
   type ProductCard,
   type ProductCardFreshnessEntry,
   type SeriesRestrictionCheck,
@@ -236,37 +238,251 @@ function StatusCard({
   );
 }
 
-function OperationalExcerpt({
+const HOSPITAL_FACTS = [
+  {
+    key: "reconstitution",
+    title: "Відновлення / розведення",
+    missing: "Прямої вказівки про відновлення в інструкції не знайдено.",
+  },
+  {
+    key: "diluents",
+    title: "Розчинники",
+    missing: "Прямої вказівки про сумісний розчинник не знайдено.",
+  },
+  {
+    key: "incompatibilities",
+    title: "Несумісності",
+    missing: "Прямої вказівки про несумісність не знайдено.",
+  },
+  {
+    key: "infusionRate",
+    title: "Швидкість введення",
+    missing: "Прямої вказівки про швидкість введення не знайдено.",
+  },
+  {
+    key: "stabilityAfterPrep",
+    title: "Стабільність після приготування",
+    missing: "Прямої вказівки про стабільність розчину не знайдено.",
+  },
+  {
+    key: "renalAdjustment",
+    title: "Корекція при порушенні функції нирок",
+    missing:
+      "Прямої вказівки про корекцію при порушенні функції нирок не знайдено.",
+  },
+  {
+    key: "hepaticAdjustment",
+    title: "Корекція при порушенні функції печінки",
+    missing:
+      "Прямої вказівки про корекцію при порушенні функції печінки не знайдено.",
+  },
+  {
+    key: "maxDailyDose",
+    title: "Максимальна добова доза",
+    missing: "Прямої вказівки про максимальну добову дозу не знайдено.",
+  },
+] as const satisfies ReadonlyArray<{
+  key: keyof AdministrationFacts;
+  title: string;
+  missing: string;
+}>;
+
+function quoteAnchorId(quote: InstructionQuote): string {
+  return `instruction-quote-${quote.sectionKey}-${quote.charStart}-${quote.charEnd}`;
+}
+
+function quotesForFact(
+  facts: AdministrationFacts | null,
+  key: keyof AdministrationFacts,
+): InstructionQuote[] {
+  if (!facts) return [];
+  const value = facts[key];
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+}
+
+function revealInstructionQuote(
+  event: React.MouseEvent<HTMLAnchorElement>,
+  quote: InstructionQuote,
+): void {
+  if (typeof document === "undefined") return;
+  const anchor = document.getElementById(quoteAnchorId(quote));
+  if (!anchor) return;
+  event.preventDefault();
+  const details = anchor.closest("details");
+  if (details instanceof HTMLDetailsElement) details.open = true;
+  if (typeof window !== "undefined") {
+    window.history.replaceState(null, "", `#${quoteAnchorId(quote)}`);
+    window.requestAnimationFrame(() =>
+      anchor.scrollIntoView({ behavior: "smooth", block: "center" }),
+    );
+  }
+}
+
+function QuoteLink({ quote }: { quote: InstructionQuote }) {
+  return (
+    <a
+      href={`#${quoteAnchorId(quote)}`}
+      onClick={(event) => revealInstructionQuote(event, quote)}
+      className="inline-flex min-h-9 items-center text-xs font-semibold text-primary hover:underline"
+    >
+      У тексті
+    </a>
+  );
+}
+
+function HospitalFactCard({
   title,
-  sectionKey,
-  content,
+  missing,
+  quotes,
+  attention = false,
 }: {
   title: string;
-  sectionKey: "administration" | "interactions";
+  missing: string;
+  quotes: InstructionQuote[];
+  attention?: boolean;
+}) {
+  return (
+    <article
+      className={`min-w-0 rounded-xl border p-3 ${
+        attention && quotes.length
+          ? "border-destructive/40 bg-destructive/5"
+          : "bg-card/70"
+      }`}
+    >
+      <h3 className="font-semibold">{title}</h3>
+      {quotes.length ? (
+        <div className="mt-2 space-y-3">
+          {quotes.map((quote) => (
+            <div
+              key={`${quote.sectionKey}:${quote.charStart}:${quote.charEnd}`}
+              className="border-l-2 border-primary/40 pl-3"
+            >
+              <p className="line-clamp-6 whitespace-pre-wrap break-words text-sm leading-6">
+                {quote.text}
+              </p>
+              <QuoteLink quote={quote} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          {missing} Перегляньте відповідний розділ повністю.
+        </p>
+      )}
+    </article>
+  );
+}
+
+function HospitalFactsSection({
+  facts,
+}: {
+  facts: AdministrationFacts | null;
+}) {
+  return (
+    <section
+      className="space-y-3"
+      aria-labelledby="hospital-facts-title"
+      data-testid="hospital-administration-facts"
+    >
+      <div>
+        <h2 id="hospital-facts-title" className="text-xl font-bold">
+          Госпітальні факти з інструкції
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Лише дослівні цитати. Кнопка «У тексті» веде до точного фрагмента
+          офіційної секції.
+        </p>
+      </div>
+      <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {HOSPITAL_FACTS.map((item) => (
+          <HospitalFactCard
+            key={item.key}
+            title={item.title}
+            missing={item.missing}
+            quotes={quotesForFact(facts, item.key)}
+            attention={item.key === "incompatibilities"}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AnchoredInstructionContent({
+  content,
+  quotes,
+}: {
   content: string | null;
+  quotes: InstructionQuote[];
+}) {
+  if (!content) return <InstructionSectionContent content={content} />;
+  const validQuotes = [
+    ...new Map(
+      quotes
+        .filter(
+          (quote) =>
+            quote.charStart >= 0 &&
+            quote.charEnd <= content.length &&
+            content.slice(quote.charStart, quote.charEnd) === quote.text,
+        )
+        .map((quote) => [`${quote.charStart}:${quote.charEnd}`, quote]),
+    ).values(),
+  ].sort((left, right) => left.charStart - right.charStart);
+  if (!validQuotes.length) {
+    return <InstructionSectionContent content={content} />;
+  }
+
+  const fragments: React.ReactNode[] = [];
+  let cursor = 0;
+  for (const quote of validQuotes) {
+    if (quote.charStart < cursor) continue;
+    if (quote.charStart > cursor) {
+      fragments.push(content.slice(cursor, quote.charStart));
+    }
+    fragments.push(
+      <mark
+        key={quoteAnchorId(quote)}
+        id={quoteAnchorId(quote)}
+        data-char-start={quote.charStart}
+        data-char-end={quote.charEnd}
+        className="scroll-mt-28 rounded bg-primary/15 text-inherit ring-1 ring-primary/25"
+      >
+        {quote.text}
+      </mark>,
+    );
+    cursor = quote.charEnd;
+  }
+  if (cursor < content.length) fragments.push(content.slice(cursor));
+  return <p className="whitespace-pre-wrap break-words">{fragments}</p>;
+}
+
+function OperationalExcerpt({
+  title,
+  quote,
+}: {
+  title: string;
+  quote: InstructionQuote | null;
 }) {
   return (
     <article className="min-w-0 rounded-xl border bg-background/60 p-3">
       <h3 className="font-semibold">{title}</h3>
       <p className="mt-1 text-xs text-muted-foreground">
-        Початок відповідного розділу без переказу або доповнень.
+        Дослівна цитата з офіційної інструкції без переказу.
       </p>
-      {content ? (
-        <p className="mt-3 line-clamp-6 whitespace-pre-wrap break-words text-sm leading-6">
-          {content}
-        </p>
+      {quote ? (
+        <>
+          <p className="mt-3 line-clamp-6 whitespace-pre-wrap break-words text-sm leading-6">
+            {quote.text}
+          </p>
+          <QuoteLink quote={quote} />
+        </>
       ) : (
         <p className="mt-3 text-sm text-muted-foreground">
           Прямої структурованої вказівки поки немає — відкрийте повний офіційний
           документ.
         </p>
       )}
-      <a
-        href={`#instruction-${sectionKey}`}
-        className="mt-3 inline-flex text-sm font-medium text-primary hover:underline"
-      >
-        До повного тексту
-      </a>
     </article>
   );
 }
@@ -366,6 +582,13 @@ function InstructionSection({ card }: { card: ProductCard }) {
     () => (sections ? filterInstructionSections(sections, query) : []),
     [query, sections],
   );
+  const instructionQuotes = useMemo(
+    () =>
+      HOSPITAL_FACTS.flatMap((item) =>
+        quotesForFact(card.instruction.administrationFacts, item.key),
+      ),
+    [card.instruction.administrationFacts],
+  );
   const officialUrl =
     card.instruction.source?.url ??
     card.identity.officialInstructionDocumentUrl ??
@@ -423,7 +646,12 @@ function InstructionSection({ card }: { card: ProductCard }) {
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
                 </summary>
                 <div className="pb-5 text-sm leading-7">
-                  <InstructionSectionContent content={sections[key]} />
+                  <AnchoredInstructionContent
+                    content={sections[key]}
+                    quotes={instructionQuotes.filter(
+                      (quote) => quote.sectionKey === key,
+                    )}
+                  />
                 </div>
               </details>
             ))}
@@ -531,7 +759,7 @@ export function ProductCardContent({
   const dispensingStatus = dispensingPresentation(card);
   const seriesStatus = seriesPresentation(card);
   const registrationActive = product.registration.status === "active";
-  const instructionSections = card.instruction.sections;
+  const hospitalFacts = card.instruction.administrationFacts;
 
   return (
     <main
@@ -634,14 +862,16 @@ export function ProductCardContent({
 
           <section className="grid min-w-0 gap-3 lg:grid-cols-2">
             <OperationalExcerpt
-              title="Розведення та введення"
-              sectionKey="administration"
-              content={instructionSections?.administration ?? null}
+              title="Відновлення / розчинник"
+              quote={
+                hospitalFacts?.reconstitution ??
+                hospitalFacts?.diluents[0] ??
+                null
+              }
             />
             <OperationalExcerpt
               title="Взаємодії та несумісність"
-              sectionKey="interactions"
-              content={instructionSections?.interactions ?? null}
+              quote={hospitalFacts?.incompatibilities[0] ?? null}
             />
           </section>
 
@@ -684,6 +914,8 @@ export function ProductCardContent({
           </div>
         </CardContent>
       </Card>
+
+      <HospitalFactsSection facts={hospitalFacts} />
 
       {!registrationActive ? (
         <Alert variant="destructive">

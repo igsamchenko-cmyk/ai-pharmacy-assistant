@@ -1160,11 +1160,59 @@ export interface DrugInstructionSections {
   storage: string | null;
 }
 
+export type InstructionQuoteSectionKey = typeof InstructionQuoteSectionKey[keyof typeof InstructionQuoteSectionKey];
+
+
+export const InstructionQuoteSectionKey = {
+  indications: 'indications',
+  contraindications: 'contraindications',
+  adverseReactions: 'adverseReactions',
+  interactions: 'interactions',
+  specialWarnings: 'specialWarnings',
+  pregnancyAndLactation: 'pregnancyAndLactation',
+  administration: 'administration',
+  overdose: 'overdose',
+  storage: 'storage',
+} as const;
+
+export interface InstructionQuote {
+  /**
+     * @minLength 1
+     * @maxLength 8000
+     */
+  text: string;
+  sectionKey: InstructionQuoteSectionKey;
+  /**
+     * @minimum 0
+     * @maximum 60000
+     */
+  charStart: number;
+  /**
+     * @minimum 1
+     * @maximum 60000
+     */
+  charEnd: number;
+}
+
+export interface AdministrationFacts {
+  reconstitution: InstructionQuote | null;
+  /** @maxItems 8 */
+  diluents: InstructionQuote[];
+  /** @maxItems 8 */
+  incompatibilities: InstructionQuote[];
+  infusionRate: InstructionQuote | null;
+  stabilityAfterPrep: InstructionQuote | null;
+  renalAdjustment: InstructionQuote | null;
+  hepaticAdjustment: InstructionQuote | null;
+  maxDailyDose: InstructionQuote | null;
+}
+
 export type DrugInstructionSourceParserVersion = typeof DrugInstructionSourceParserVersion[keyof typeof DrugInstructionSourceParserVersion];
 
 
 export const DrugInstructionSourceParserVersion = {
   'ua-drlz-mht-v1': 'ua-drlz-mht-v1',
+  'ua-drlz-mht-v2': 'ua-drlz-mht-v2',
 } as const;
 
 export interface DrugInstructionSource {
@@ -1210,6 +1258,7 @@ export interface ProductCardInstruction {
   available: boolean;
   sourceStatus: ProductCardInstructionSourceStatus;
   sections: DrugInstructionSections | null;
+  administrationFacts: AdministrationFacts | null;
   source: DrugInstructionSource | null;
   provenance: DrugInstructionProvenance | null;
   /**
@@ -1467,6 +1516,7 @@ export interface DrugInstruction {
   registrationEndDate: string;
   status: DrugInstructionStatus;
   sections: DrugInstructionSections;
+  administrationFacts: AdministrationFacts;
   source: DrugInstructionSource;
   provenance: DrugInstructionProvenance;
   /**

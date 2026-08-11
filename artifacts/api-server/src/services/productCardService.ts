@@ -9,6 +9,7 @@ import {
   type ProductSeriesRestrictionSummary,
 } from "../knowledge/seriesRestrictions/summary";
 import type { DrugInstructionSnapshot } from "../knowledge/instructions/model";
+import { extractAdministrationFacts } from "../knowledge/instructions/parser";
 import { getOfficialInstructionForProduct } from "./officialInstructionService";
 import {
   loadProfessionalProductProfile,
@@ -319,6 +320,10 @@ export async function loadProductCard(
         available: Boolean(instruction),
         sourceStatus: instructionSourceStatus,
         sections: instruction?.sections ?? null,
+        administrationFacts: instruction
+          ? (instruction.administrationFacts ??
+            extractAdministrationFacts(instruction.sections))
+          : null,
         source: instruction?.source ?? null,
         provenance: instruction?.provenance ?? null,
         warnings: instruction?.warnings ?? [],
