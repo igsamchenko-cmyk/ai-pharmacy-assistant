@@ -5,6 +5,7 @@ import {
   type InstructionSourceProduct,
 } from "./model";
 import {
+  evaluateInstructionFetchQueuePlan,
   instructionFetchFailureTransition,
   type InstructionFetchQueuePlan,
 } from "./fetchQueue";
@@ -94,6 +95,10 @@ function validateCommitPlan(plan: InstructionFetchQueuePlan): void {
   }
   if (!Number.isFinite(Date.parse(plan.registry.checkedAt))) {
     throw new Error("instruction_queue_fresh_registry_required");
+  }
+  const gate = evaluateInstructionFetchQueuePlan(plan);
+  if (!gate.ready) {
+    throw new Error(`instruction_queue_gate_failed:${gate.blockers.join(",")}`);
   }
 }
 

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Audit, profile, metadata reconciliation, or apply"
+        description: "Audit, profile, reconciliation, registry apply, or instruction queue bootstrap"
         required: true
         default: audit
         type: choice
@@ -15,6 +15,7 @@ on:
           - profile
           - reconcile
           - apply
+          - instruction-queue-bootstrap
       confirm_sha256:
         description: "Required for profile/reconcile/apply; exact audited SHA-256"
         required: false
@@ -25,6 +26,10 @@ on:
         type: string
       confirm_production_reconcile:
         description: "Required for reconcile; must match its dedicated environment secret"
+        required: false
+        type: string
+      confirm_instruction_queue_bootstrap:
+        description: "Required for the 20-item instruction queue bootstrap"
         required: false
         type: string
   pull_request:
@@ -47,6 +52,8 @@ on:
       - "artifacts/api-server/src/scripts/knowledge-registry-parity.ts"
       - "artifacts/api-server/src/services/catalogSearchService.ts"
       - "lib/db/src/schema/knowledge.ts"
+      - "artifacts/api-server/src/knowledge/instructions/fetchQueue*.ts"
+      - "artifacts/api-server/src/scripts/knowledge-instructions-queue.ts"
 
 permissions:
   contents: read
@@ -436,3 +443,118 @@ jobs:
         run: |
           echo "Registry apply or protected post-commit verification failed. Review the job summary."
           exit 1
+
+  instruction_queue_bootstrap:
+    name: Confirmed instruction queue schema, seed, and first 20
+    needs: audit
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.mode == 'instruction-queue-bootstrap'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production-registry-sync
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25.8.2
+
+      - name: Enable repository pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Require exact bounded-bootstrap confirmation
+        shell: bash
+        env:
+          CONFIRM_INSTRUCTION_QUEUE_BOOTSTRAP: ${{ inputs.confirm_instruction_queue_bootstrap }}
+          AUDITED_REGISTRY_SHA: ${{ needs.audit.outputs.source_sha256 }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRM_INSTRUCTION_QUEUE_BOOTSTRAP" = "APPLY_INSTRUCTION_QUEUE_BOOTSTRAP_20"
+          test "${#AUDITED_REGISTRY_SHA}" = "64"
+          case "$AUDITED_REGISTRY_SHA" in
+            *[!0-9a-f]*) exit 1 ;;
+          esac
+
+      - name: Apply additive instruction queue schema
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_SSL: "true"
+        run: pnpm db:push
+
+      - name: Verify both queue tables exist
+        shell: bash
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          table_count="$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc \
+            "SELECT COUNT(*) FROM pg_class WHERE relkind = 'r' AND relname IN ('instruction_fetch_queue', 'drug_instruction_documents')")"
+          test "$table_count" = "2"
+
+      - name: Seed audited instruction queue plan
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_SSL: "true"
+        run: >-
+          pnpm knowledge:instructions:queue --
+          --target=2000
+          --sample=0
+          --expected-registry-sha=${{ needs.audit.outputs.source_sha256 }}
+          --commit
+          --require-db
+
+      - name: Capture bounded cohort baseline
+        id: queue_baseline
+        shell: bash
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          attempted_before="$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc \
+            "SELECT COUNT(*) FROM instruction_fetch_queue WHERE attempts > 0")"
+          echo "attempted_before=$attempted_before" >> "$GITHUB_OUTPUT"
+
+      - name: Process the first bounded cohort
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          DATABASE_SSL: "true"
+        run: >-
+          pnpm knowledge:instructions:queue --
+          --work
+          --require-db
+          --limit=20
+          --concurrency=2
+          --min-sections=8
+          --start-interval-ms=300
+          --worker-id=github-bootstrap-${{ github.run_id }}
+
+      - name: Verify queue state without document text
+        shell: bash
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          ATTEMPTED_BEFORE: ${{ steps.queue_baseline.outputs.attempted_before }}
+        run: |
+          set -euo pipefail
+          queue_count="$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc \
+            "SELECT COUNT(*) FROM instruction_fetch_queue")"
+          document_count="$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc \
+            "SELECT COUNT(*) FROM drug_instruction_documents")"
+          attempted_count="$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc \
+            "SELECT COUNT(*) FROM instruction_fetch_queue WHERE attempts > 0")"
+          fetching_count="$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc \
+            "SELECT COUNT(*) FROM instruction_fetch_queue WHERE status = 'fetching')"
+          minimum_attempted="$((ATTEMPTED_BEFORE + 20))"
+          test "$queue_count" -ge 8000
+          test "$document_count" -ge 200
+          test "$attempted_count" -ge "$minimum_attempted"
+          test "$fetching_count" = "0"
+          echo "Queue rows: $queue_count"
+          echo "Validated documents: $document_count"
+          echo "Attempted queue rows: $attempted_count"
+          echo "Newly attempted rows: $((attempted_count - ATTEMPTED_BEFORE))"
+          psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc \
+            "SELECT status || ':' || COUNT(*) FROM instruction_fetch_queue GROUP BY status ORDER BY status"

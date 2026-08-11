@@ -71,6 +71,11 @@ export interface InstructionFetchQueuePlan {
   candidates: InstructionFetchQueueCandidate[];
 }
 
+export interface InstructionFetchQueueGate {
+  ready: boolean;
+  blockers: string[];
+}
+
 function normalized(value: string): string {
   return value
     .normalize("NFKC")
@@ -296,6 +301,37 @@ export function buildInstructionFetchQueuePlan(
     invalidMetadataFieldCounts,
     candidates,
   };
+}
+
+export function evaluateInstructionFetchQueuePlan(
+  plan: InstructionFetchQueuePlan,
+): InstructionFetchQueueGate {
+  const blockers: string[] = [];
+  if (plan.summary.registryRowCount < 16_000) {
+    blockers.push("registry_row_count_below_16000");
+  }
+  if (plan.summary.eligibleQueueCount < 8_000) {
+    blockers.push("eligible_queue_count_below_8000");
+  }
+  if (plan.summary.existingSnapshotCount < 200) {
+    blockers.push("existing_snapshot_count_below_200");
+  }
+  if (plan.summary.existingCurrentSnapshotCount < 190) {
+    blockers.push("existing_current_snapshot_count_below_190");
+  }
+  if (plan.summary.parenteralEligibleCount < 1_000) {
+    blockers.push("parenteral_queue_count_below_1000");
+  }
+  if (plan.summary.nationalListEligibleCount < 1_000) {
+    blockers.push("national_list_queue_count_below_1000");
+  }
+  if (plan.summary.rejectedInvalidMetadataCount > 25) {
+    blockers.push("invalid_metadata_count_above_25");
+  }
+  if (!plan.summary.targetReachable) {
+    blockers.push("instruction_queue_target_unreachable");
+  }
+  return { ready: blockers.length === 0, blockers };
 }
 
 export interface InstructionFetchFailureTransition {

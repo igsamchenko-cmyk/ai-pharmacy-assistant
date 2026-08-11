@@ -4,6 +4,7 @@ import type { NationalListEntry } from "../nationalList";
 import type { DrugInstructionSnapshot } from "./model";
 import {
   buildInstructionFetchQueuePlan,
+  evaluateInstructionFetchQueuePlan,
   instructionFetchFailureTransition,
   isParenteralDosageForm,
 } from "./fetchQueue";
@@ -243,6 +244,58 @@ describe("instruction fetch queue planner", () => {
       3,
     );
     expect(second.candidates).toEqual(first.candidates);
+  });
+
+  it("fails closed when production queue dimensions are anomalous", () => {
+    const base = buildInstructionFetchQueuePlan(
+      [parenteral, nationalList, remainder],
+      [existingSnapshot(parenteral)],
+      [listedEntry("Metformin")],
+      {
+        sourceUrl: "https://example.gov.ua/registry",
+        sha256: "c".repeat(64),
+        checkedAt: "2026-08-11T00:00:00.000Z",
+      },
+      3,
+    );
+    const acceptable = {
+      ...base,
+      summary: {
+        ...base.summary,
+        registryRowCount: 16_000,
+        eligibleQueueCount: 8_000,
+        existingSnapshotCount: 200,
+        existingCurrentSnapshotCount: 190,
+        parenteralEligibleCount: 1_000,
+        nationalListEligibleCount: 1_000,
+        rejectedInvalidMetadataCount: 25,
+        targetReachable: true,
+      },
+    };
+    expect(evaluateInstructionFetchQueuePlan(acceptable)).toEqual({
+      ready: true,
+      blockers: [],
+    });
+
+    const anomalous = {
+      ...acceptable,
+      summary: {
+        ...acceptable.summary,
+        registryRowCount: 15_999,
+        existingCurrentSnapshotCount: 189,
+        rejectedInvalidMetadataCount: 26,
+        targetReachable: false,
+      },
+    };
+    expect(evaluateInstructionFetchQueuePlan(anomalous)).toEqual({
+      ready: false,
+      blockers: [
+        "registry_row_count_below_16000",
+        "existing_current_snapshot_count_below_190",
+        "invalid_metadata_count_above_25",
+        "instruction_queue_target_unreachable",
+      ],
+    });
   });
 });
 

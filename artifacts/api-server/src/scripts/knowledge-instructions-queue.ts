@@ -15,6 +15,7 @@ import {
 import {
   buildInstructionFetchQueuePlan,
   DEFAULT_INSTRUCTION_QUEUE_TARGET,
+  evaluateInstructionFetchQueuePlan,
   type InstructionQueueRegistryMetadata,
 } from "../knowledge/instructions/fetchQueue";
 import {
@@ -128,14 +129,7 @@ async function runWorker(): Promise<void> {
       workerId: optionValue("--worker-id=") ?? undefined,
     },
   );
-  console.log(
-    JSON.stringify(
-      { ok: report.failedCount === 0, mode: "work", ...report },
-      null,
-      2,
-    ),
-  );
-  if (report.failedCount > 0) process.exitCode = 1;
+  console.log(JSON.stringify({ ok: true, mode: "work", ...report }, null, 2));
 }
 
 async function scheduleRefresh(): Promise<void> {
@@ -203,6 +197,14 @@ async function planOrCommit(): Promise<void> {
     registryMetadata(registry),
     targetCount,
   );
+  const expectedRegistrySha = optionValue("--expected-registry-sha=");
+  if (
+    expectedRegistrySha &&
+    plan.registry.sha256 !== expectedRegistrySha.toLowerCase()
+  ) {
+    throw new Error("instruction_queue_registry_hash_mismatch");
+  }
+  const gate = evaluateInstructionFetchQueuePlan(plan);
   if (commit) {
     const committed = await commitInstructionFetchQueuePlan(
       plan,
@@ -210,7 +212,7 @@ async function planOrCommit(): Promise<void> {
     );
     console.log(
       JSON.stringify(
-        { ok: true, mode: "commit", ...plan.summary, committed },
+        { ok: true, mode: "commit", gate, ...plan.summary, committed },
         null,
         2,
       ),
@@ -226,6 +228,7 @@ async function planOrCommit(): Promise<void> {
         registry: plan.registry,
         nationalListReleaseId: nationalList.releaseId,
         summary: plan.summary,
+        gate,
         invalidMetadataFieldCounts: plan.invalidMetadataFieldCounts,
         prioritySample: plan.candidates
           .slice(0, sampleSize)

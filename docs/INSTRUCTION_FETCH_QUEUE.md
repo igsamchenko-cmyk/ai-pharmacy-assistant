@@ -106,6 +106,15 @@ never prints the database URL, raw filesystem paths or document text.
 
 ## Operational rollout
 
+The one-time production bootstrap is exposed as the
+`instruction-queue-bootstrap` mode of the protected
+`official-registry-sync.yml` workflow. It requires the exact confirmation
+`APPLY_INSTRUCTION_QUEUE_BOOTSTRAP_20`, repeats the full official-registry
+audit, pins queue seeding to that audit's SHA-256, applies only the additive
+queue schema, and processes at most 20 rows. The workflow reads the database
+URL from the `production-registry-sync` GitHub environment and reports counts
+and error codes only; it never prints connection details or document text.
+
 1. Run preview and review the counts for parenteral, National List and registry
    remainder tiers.
 2. Apply the two new tables through the existing reviewed `db:push` process.
