@@ -65,6 +65,7 @@
     "knowledge:national-list:db-smoke": "pnpm --filter @workspace/api-server run knowledge:national-list:db-smoke",
     "knowledge:instructions:report": "pnpm --filter @workspace/api-server run knowledge:instructions:report",
     "knowledge:instructions:coverage-report": "pnpm --filter @workspace/api-server run knowledge:instructions:coverage-report",
+    "knowledge:instructions:expand": "pnpm --filter @workspace/api-server run knowledge:instructions:expand --",
     "knowledge:series-restrictions": "pnpm --filter @workspace/api-server run knowledge:series-restrictions --",
     "knowledge:dispensing-categories": "pnpm --filter @workspace/api-server run knowledge:dispensing-categories --",
     "knowledge:price-catalog": "pnpm --filter @workspace/api-server run knowledge:price-catalog --",

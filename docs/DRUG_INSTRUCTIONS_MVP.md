@@ -2,13 +2,13 @@
 
 ## Scope
 
-The MVP exposes structured official Ukrainian drug instructions for 50 exact
+The MVP exposes structured official Ukrainian drug instructions for 200 exact
 State Registry product records. It does not generalize one leaflet to another
 brand, registration, dosage form, strength or manufacturer. It does not use an
 LLM to generate, summarize or complete medical text.
 
 The table below records the original 10-product MVP cohort. The full current
-50-product coverage is pinned in `data/drug-instructions/manifest.json`.
+200-product coverage is pinned in `data/drug-instructions/manifest.json`.
 
 | Product                | INN                                      | Registration     |
 | ---------------------- | ---------------------------------------- | ---------------- |
@@ -23,10 +23,16 @@ The table below records the original 10-product MVP cohort. The full current
 | ДЕКСАМЕТАЗОН-4-ДАРНИЦЯ | Dexamethasone                            | `UA/20423/01/01` |
 | ОНДАНСЕТРОН            | Ondansetron                              | `UA/10250/01/01` |
 
-The committed checkpoint contains 50 instructions: 46 full, 4 explicitly partial,
+The committed checkpoint contains 200 instructions: 185 full, 15 explicitly partial,
 0 unavailable and 0 `needs_review` records. At least eight supported sections are
-present for every product, 46 records contain all nine sections, and exact
+present for every product, 185 records contain all nine sections, and exact
 registration provenance coverage is 100%.
+
+The latest registry comparison resolves 199 of the 200 pinned products. The
+previously verified official snapshot for `UA/18052/01/01` is retained because
+its source record declared unlimited registration, but its row is absent from
+the current export. This delta is explicit in the expansion report and the
+snapshot is not treated as evidence of current registration status.
 
 ## Official Source And Reuse Basis
 
@@ -39,7 +45,7 @@ registration provenance coverage is 100%.
   [Law of Ukraine On Access to Public Information](https://zakon.rada.gov.ua/laws/show/2939-17#Text),
   with source attribution retained in the UI and snapshots.
 - Registry snapshot SHA-256:
-  `228b8a201491de53d85788d398143586cd20fcd461731892d5db4ab2d8f4dd96`.
+  `84dd8e6675f08d20a12bbc9c7907259a35f7e1e0ee9a48181354325884420230`.
 
 Commercial pharmacy aggregators, proprietary compendia and paywalled sources
 are not used. The source allow-list accepts only the official DRLZ instruction
@@ -90,6 +96,22 @@ database:
 pnpm knowledge:instructions:report
 ```
 
+The deterministic expansion command first previews the next cohort without
+downloading documents. It prioritizes missing operational search names and then
+selects one representative for each distinct INN by current registry breadth:
+
+```bash
+pnpm knowledge:instructions:expand --target=200
+```
+
+Document download and repository writes require both explicit flags. The command
+continues past rejected sources and writes only after it has assembled the exact
+target count with verified provenance and at least eight supported sections:
+
+```bash
+pnpm knowledge:instructions:expand --target=200 --download --write
+```
+
 An explicit source refresh is a local repository-data operation, not a DB
 import. It downloads all sources with a 30-second per-document timeout and a
 3 MB limit, validates every record before writing, and requires both flags:
@@ -133,7 +155,7 @@ unified product card, opens the matching section and scrolls to the quote. An
 empty result is shown as missing coverage, not as proof that an interaction or
 warning does not exist.
 
-The current full-text index covers the same 50 exact registry positions as the
+The current full-text index covers the same 200 exact registry positions as the
 MVP snapshots. Expanding official instruction coverage is a separate reviewed
 data checkpoint; the search implementation does not generalize a result to an
 unindexed product.

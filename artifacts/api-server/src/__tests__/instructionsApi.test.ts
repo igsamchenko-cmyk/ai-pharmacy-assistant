@@ -113,7 +113,7 @@ describe("drug instruction API", () => {
         `${baseUrl}/api/catalog/instructions/search?q=${encodeURIComponent("кальцій")}&section=interactions`,
       );
       expect(response.status).toBe(200);
-      expect(response.headers.get("x-instruction-index-count")).toBe("50");
+      expect(response.headers.get("x-instruction-index-count")).toBe("200");
       const body = (await response.json()) as {
         total: number;
         indexedInstructionCount: number;
@@ -129,7 +129,7 @@ describe("drug instruction API", () => {
           highlights: Array<{ charStart: number; charEnd: number }>;
         }>;
       };
-      expect(body.indexedInstructionCount).toBe(50);
+      expect(body.indexedInstructionCount).toBe(200);
       expect(body.total).toBeGreaterThan(0);
       const item = body.items[0]!;
       expect(item.sectionKey).toBe("interactions");

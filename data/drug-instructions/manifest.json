@@ -1,14 +1,14 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-07-15T17:10:39.093Z",
+  "generatedAt": "2026-08-11T13:53:29.059Z",
   "dataset": {
     "title": "Державний реєстр лікарських засобів",
     "publisher": "Міністерство охорони здоров'я України",
     "url": "https://data.gov.ua/dataset/fded13b8-4e2c-4c48-bf14-65d0e3106463",
     "license": "Creative Commons Attribution 4.0",
     "registryUrl": "http://www.drlz.com.ua/ibp/zvity.nsf/all/zvit/$file/reestr.csv",
-    "registrySha256": "228b8a201491de53d85788d398143586cd20fcd461731892d5db4ab2d8f4dd96",
-    "registryCheckedAt": "2026-07-15T16:56:48.000Z"
+    "registrySha256": "84dd8e6675f08d20a12bbc9c7907259a35f7e1e0ee9a48181354325884420230",
+    "registryCheckedAt": "2026-08-11T13:53:10.561Z"
   },
   "products": [
     {
@@ -999,6 +999,2995 @@
         "indications",
         "contraindications",
         "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "81495D305FB13017C2258D1F0029BF02",
+      "registrationNumber": "UA/11525/01/01",
+      "tradeName": "ПАРАЦЕТАМОЛ",
+      "status": "available",
+      "documentHash": "510f725f2513f2289367c3c4f13c7c169bcc56a3e6a854fedf9d053846a198fa",
+      "documentDate": "2025-10-12T17:18:00.000Z",
+      "snapshotFile": "snapshots/ua115250101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "9C8A8FA8FF8EF27AC2258C76003E5015",
+      "registrationNumber": "UA/6313/02/02",
+      "tradeName": "НУРОФЄН®",
+      "status": "available",
+      "documentHash": "65622bd963261d5068197db4513a4880bcb613cb1ca6ad5c2c1d4894880dff44",
+      "documentDate": "2025-04-29T08:02:00.000Z",
+      "snapshotFile": "snapshots/ua63130202.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "B85B568353AA2E00C2258DD80028FBC7",
+      "registrationNumber": "UA/6126/01/01",
+      "tradeName": "ЦЕФТРІАКСОН",
+      "status": "available",
+      "documentHash": "f5af5efd9f8289b85944388dd073468c526d87931c4f829499d3d0472ae7dfae",
+      "documentDate": "2024-11-07T07:42:00.000Z",
+      "snapshotFile": "snapshots/ua61260101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "DC9808950336DD1AC2258CBA003CA515",
+      "registrationNumber": "UA/1427/01/01",
+      "tradeName": "АМЛОДИПІН",
+      "status": "available",
+      "documentHash": "ac13e2696070ec62203f1a321c751303fce23f681362d909b44ee67e78a754bb",
+      "documentDate": "2025-07-07T12:50:00.000Z",
+      "snapshotFile": "snapshots/ua14270101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "643465779CE47CCEC2258D4100440F76",
+      "registrationNumber": "UA/5433/01/01",
+      "tradeName": "СИМБІКОРТ ТУРБУХАЛЕР",
+      "status": "available",
+      "documentHash": "df3875442512f27f61ae35e9c9bb8fd8c9719bf5b1f40be6c975d93b4aecf748",
+      "documentDate": "2024-03-25T09:17:00.000Z",
+      "snapshotFile": "snapshots/ua54330101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "79A2CF83E756AA3BC225897C002E53EE",
+      "registrationNumber": "UA/6993/01/01",
+      "tradeName": "ГЕПТРАЛ®",
+      "status": "available",
+      "documentHash": "c1054a713da06fa437fa2d599338e0aaefdcdba236119b24da31098d415b0324",
+      "documentDate": "2018-10-16T19:56:00.000Z",
+      "snapshotFile": "snapshots/ua69930101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "E16DA33F36832759C2258E0B002E198E",
+      "registrationNumber": "UA/13302/01/01",
+      "tradeName": "ФОРКСІГА",
+      "status": "partial",
+      "documentHash": "4ca941486a14dac2da961277f51a9b3d236b4ca033f4f04445178b7a78b3509e",
+      "documentDate": "2025-07-10T07:15:00.000Z",
+      "snapshotFile": "snapshots/ua133020101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "2BA4A800EE6C4A2AC2258E260047E449",
+      "registrationNumber": "UA/14980/01/01",
+      "tradeName": "ДЖАРДІНС®",
+      "status": "available",
+      "documentHash": "578a5be5861a131578488307e4c001641f44a6368b96e2635aa74eb8b4271c93",
+      "documentDate": "2025-07-29T10:15:00.000Z",
+      "snapshotFile": "snapshots/ua149800101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "54E0007287FB9B75C2258E020027B94E",
+      "registrationNumber": "UA/14813/01/01",
+      "tradeName": "АЙДРІНК®",
+      "status": "available",
+      "documentHash": "10c3b3a6feaf192556c5b893158809a938e977db858f7e549ea50fe09ab2756a",
+      "documentDate": "2025-10-12T15:22:00.000Z",
+      "snapshotFile": "snapshots/ua148130101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "AA42C3682D26F3CFC2258CBB003C0571",
+      "registrationNumber": "UA/17948/01/01",
+      "tradeName": "АФФИДА",
+      "status": "available",
+      "documentHash": "9df3a9e85f5c77199ff11660332c0b9fdf3767f60c16bff6f176c71e3f6e3e0b",
+      "documentDate": "2025-03-03T10:03:00.000Z",
+      "snapshotFile": "snapshots/ua179480101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "E157825BC72CC857C2258D1B0039A49D",
+      "registrationNumber": "UA/14764/01/01",
+      "tradeName": "ГАБАНА®",
+      "status": "available",
+      "documentHash": "62e71449bcf3b049b079a44a3cacb0792ae1dd518491b19603a7e239d3c91fb7",
+      "documentDate": "2025-10-12T15:37:00.000Z",
+      "snapshotFile": "snapshots/ua147640101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "D67D9DE65C31AF89C2258E090040342C",
+      "registrationNumber": "UA/16075/01/01",
+      "tradeName": "ЕВОЙД®",
+      "status": "available",
+      "documentHash": "47ec0a7943fb28ad62227875eaa8ef418042e2200f83cbeb6696896569c5427a",
+      "documentDate": "2023-11-06T17:18:00.000Z",
+      "snapshotFile": "snapshots/ua160750101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "A7B35BE8AA50D28AC2258CF8002C3ECD",
+      "registrationNumber": "UA/9465/01/01",
+      "tradeName": "АЛМІРАЛ®",
+      "status": "available",
+      "documentHash": "f32f833c6fe579c71c7e3c2f3184874a5bc6db9a7840f4216e84d2c5d069dfb7",
+      "documentDate": "2025-09-03T08:24:00.000Z",
+      "snapshotFile": "snapshots/ua94650101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "653B354F9CD2318AC2258D09002378D2",
+      "registrationNumber": "UA/14416/01/01",
+      "tradeName": "АБИФЛОКС®",
+      "status": "available",
+      "documentHash": "140bb542174626a411e6d9aa32ebb2a001c00334e5191bac10c7e33336f3c61d",
+      "documentDate": "2025-10-07T13:02:00.000Z",
+      "snapshotFile": "snapshots/ua144160101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "D181F7C747B9DA64C2258D8500376E85",
+      "registrationNumber": "UA/18574/01/01",
+      "tradeName": "АСТИН®",
+      "status": "available",
+      "documentHash": "f1f1ac62cf0297dd2728d220e0a4f0267f9ef0de077a41071f031843954a14dc",
+      "documentDate": "2026-01-28T19:38:00.000Z",
+      "snapshotFile": "snapshots/ua185740101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "C2EDC0415CE7B2FBC2258BAF003D4B85",
+      "registrationNumber": "UA/13452/01/01",
+      "tradeName": "АЗИБІОТ®",
+      "status": "available",
+      "documentHash": "949b64fe661114c82ecd2363a4c5b3ea536e2a3ab7e47d68450c31421cb37b7e",
+      "documentDate": "2023-05-09T10:02:00.000Z",
+      "snapshotFile": "snapshots/ua134520101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "D55FC73DABEF43DCC2258C8400310DC5",
+      "registrationNumber": "UA/18215/01/01",
+      "tradeName": "АЛВОБАК",
+      "status": "available",
+      "documentHash": "d4c55524a42b2d9774e73746a87e3c994d29aa20283fb9e35497f513d2c45e53",
+      "documentDate": "2025-05-18T18:57:00.000Z",
+      "snapshotFile": "snapshots/ua182150101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "833B133816F20155C2258C42004DA88D",
+      "registrationNumber": "UA/0313/01/02",
+      "tradeName": "ВІАГРА®",
+      "status": "available",
+      "documentHash": "8a43e98856b3f798cd14a31f749995463e03fa22b873ee579e2cacaadc2bd901",
+      "documentDate": "2024-05-14T07:44:00.000Z",
+      "snapshotFile": "snapshots/ua03130102.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "B6D2E6B4FB0AC73EC2258D500039073C",
+      "registrationNumber": "UA/15289/01/01",
+      "tradeName": "АКСОТИЛІН",
+      "status": "available",
+      "documentHash": "5f61353f2128504517b76b81adf135bb73893c43bb41aeb3c627aaf513187d8a",
+      "documentDate": "2022-08-25T11:43:00.000Z",
+      "snapshotFile": "snapshots/ua152890101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "98BEC5806F1605F8C2258C76002D2FEA",
+      "registrationNumber": "UA/16968/01/01",
+      "tradeName": "АЛГЕЗИКАМ®",
+      "status": "available",
+      "documentHash": "4c1c406cc542c0710ffb5195a0bc3f257889e289db87d38fdb120ad412f2b334",
+      "documentDate": "2023-11-26T18:55:00.000Z",
+      "snapshotFile": "snapshots/ua169680101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "FA95A6EC3240F3CDC2258DED004555D9",
+      "registrationNumber": "UA/17588/01/01",
+      "tradeName": "ЕСПА-ПРАЗОЛ®",
+      "status": "available",
+      "documentHash": "c2a25751862398202c3756487bb4debc39942b33a99eddd50d987503082ef4c4",
+      "documentDate": "2025-08-28T18:58:00.000Z",
+      "snapshotFile": "snapshots/ua175880101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "879A5647D433B616C2258DDA002273DF",
+      "registrationNumber": "UA/3994/02/01",
+      "tradeName": "ГЛЮКОФАЖ XR",
+      "status": "available",
+      "documentHash": "0e3be2f84d624845168de9920e19ec61a370587df40c6c01759051abbaec4db4",
+      "documentDate": "2026-04-02T12:03:00.000Z",
+      "snapshotFile": "snapshots/ua39940201.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "125EEC0196F6ACC2C22586730028F8F1",
+      "registrationNumber": "UA/10084/01/01",
+      "tradeName": "АБИПИМ®",
+      "status": "available",
+      "documentHash": "e370c9a9294dd198f419e98a2076a1333247776d142cf4334a002d2e109679ba",
+      "documentDate": "2021-02-11T10:56:00.000Z",
+      "snapshotFile": "snapshots/ua100840101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "A04E88E2D39507AEC2258D6F0031B25B",
+      "registrationNumber": "UA/13805/01/01",
+      "tradeName": "АЛЬФОРТ ДЕКСА",
+      "status": "available",
+      "documentHash": "d570d6e6967a0d5f933c49df835ab97d3e5609df1b2a048b993cc879e17a59ac",
+      "documentDate": "2026-01-06T10:51:00.000Z",
+      "snapshotFile": "snapshots/ua138050101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "15CF574D795303DEC2258B9B002B55A9",
+      "registrationNumber": "UA/2527/01/01",
+      "tradeName": "ДИФЛАЗОН®",
+      "status": "partial",
+      "documentHash": "4df5ca059cdef9c4ed132897805653dd9db84bf524fcc55c185bcec3aa79c456",
+      "documentDate": "2024-09-18T08:33:00.000Z",
+      "snapshotFile": "snapshots/ua25270101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "5F1226A738EDE76FC2258E09003C9445",
+      "registrationNumber": "UA/0401/01/01",
+      "tradeName": "ГАЛАЗОЛІН®",
+      "status": "available",
+      "documentHash": "362a155a46269dc0a439f7933f4fac820d5122acaaa8f20955af3d1e30c8aa9d",
+      "documentDate": "2025-07-14T09:06:00.000Z",
+      "snapshotFile": "snapshots/ua04010101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "F17BC518C693A65CC2258CBA002A2730",
+      "registrationNumber": "UA/10704/01/01",
+      "tradeName": "АРКОКСІЯ®",
+      "status": "available",
+      "documentHash": "dbba46964e001b3114723fdd2da7a9d8ade386d77999e3130050e0b434b0d43f",
+      "documentDate": "2024-06-17T10:58:00.000Z",
+      "snapshotFile": "snapshots/ua107040101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "22719CC3FE896C63C2258B930028FAB1",
+      "registrationNumber": "UA/14270/01/01",
+      "tradeName": "АСИБРОКС",
+      "status": "available",
+      "documentHash": "35d91ad59586b899609b6c840c2c11fc06c26497db506fc3bf447488330eb774",
+      "documentDate": "2024-02-15T15:11:00.000Z",
+      "snapshotFile": "snapshots/ua142700101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "26157BF70A2259E7C2258CBA003D11FA",
+      "registrationNumber": "UA/11661/01/01",
+      "tradeName": "АСІТАЛОКС",
+      "status": "available",
+      "documentHash": "d60c7670f6df1c0d9b0d9d6d54454c0f5a69c62e466d572a38c65b91db08fe9a",
+      "documentDate": "2025-07-07T12:51:00.000Z",
+      "snapshotFile": "snapshots/ua116610101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "46782F33AF983DE5C225812F002DC548",
+      "registrationNumber": "UA/6138/01/01",
+      "tradeName": "АХД 2000",
+      "status": "available",
+      "documentHash": "92e408ccfaf1676c91163820d5fa2ef5c87aed6724be05330eb823e15c026373",
+      "documentDate": "2017-06-06T12:08:00.000Z",
+      "snapshotFile": "snapshots/ua61380101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "E1FC118A5069CB58C2258CF10029677E",
+      "registrationNumber": "UA/14971/01/01",
+      "tradeName": "АНАПІРОН",
+      "status": "available",
+      "documentHash": "7ab38a498620087575510cefbd50496516edcc191cf160169416a516d9920e4c",
+      "documentDate": "2025-08-28T18:47:00.000Z",
+      "snapshotFile": "snapshots/ua149710101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "874E3CA8A75AF6DCC2258D4D0031A094",
+      "registrationNumber": "UA/9928/01/01",
+      "tradeName": "АБРОЛ®",
+      "status": "available",
+      "documentHash": "0ae2a3a7ff95cb8252ff765d1cc533e14cc99a2feba5991565ea1a06cddea9d8",
+      "documentDate": "2025-11-26T19:36:00.000Z",
+      "snapshotFile": "snapshots/ua99280101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "6FFC96C248A9D8F0C2258D53002C082F",
+      "registrationNumber": "UA/16639/01/01",
+      "tradeName": "КВЕНТІАКС®",
+      "status": "available",
+      "documentHash": "093c97ad325af5bfd506578c57bc51ab7552c7b41f796ab0fa93c832098c467d",
+      "documentDate": "2025-03-31T12:36:00.000Z",
+      "snapshotFile": "snapshots/ua166390101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "C03BFAF589AA82C8C2258D1C0031ED39",
+      "registrationNumber": "UA/17127/01/01",
+      "tradeName": "ВАЛМІСАР H",
+      "status": "available",
+      "documentHash": "266caaadb4e4c59ecf35029e3d14881eca9b39f7d5ec8cbe16ce3d15c29068d8",
+      "documentDate": "2025-10-12T15:56:00.000Z",
+      "snapshotFile": "snapshots/ua171270101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "31F999BE754C20A2C2258D09002E34AE",
+      "registrationNumber": "UA/8714/01/01",
+      "tradeName": "АКСЕТИН®",
+      "status": "available",
+      "documentHash": "495d0de69bb19dfddf558b31f64635dc565214298e0fe5b0e9dfb3d4b48124d0",
+      "documentDate": "2025-10-07T13:15:00.000Z",
+      "snapshotFile": "snapshots/ua87140101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "B1BCD2F919DAD84FC2258DF8002617EA",
+      "registrationNumber": "UA/12235/01/01",
+      "tradeName": "АРІС",
+      "status": "available",
+      "documentHash": "d11b274ca06a0df338b112c253343a7f1ec2828d58724c4a389dc8e5998147cd",
+      "documentDate": "2026-05-22T13:00:00.000Z",
+      "snapshotFile": "snapshots/ua122350101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "52AD50A5EF4FBA32C2258D7F00398013",
+      "registrationNumber": "UA/17869/01/01",
+      "tradeName": "ГЛАНДУМ",
+      "status": "available",
+      "documentHash": "63b79f2627323e09d4e43056b3eee2fca9b42e8ddd11f1a70c50921299680012",
+      "documentDate": "2026-01-28T17:51:00.000Z",
+      "snapshotFile": "snapshots/ua178690101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "3A166A73461A34AFC2258D090025D0C2",
+      "registrationNumber": "UA/17492/01/01",
+      "tradeName": "АККОРДИН",
+      "status": "available",
+      "documentHash": "d47df2d642db707754463a5b54220be34756d390e8f3bbc532740cae545ced19",
+      "documentDate": "2024-01-08T15:10:00.000Z",
+      "snapshotFile": "snapshots/ua174920101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "B4693A9991C8287FC2258D090023D68C",
+      "registrationNumber": "UA/17924/01/01",
+      "tradeName": "АКВА СПРЕЙ ОКСІ",
+      "status": "available",
+      "documentHash": "87fdcc2f3d65d5ba4e9e46e92ff22e3827c8e7422d7d4a6af18dd7da6afb5851",
+      "documentDate": "2025-05-08T08:16:00.000Z",
+      "snapshotFile": "snapshots/ua179240101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "8747F0B0402F545EC2258C0C003A0D4F",
+      "registrationNumber": "UA/4903/01/01",
+      "tradeName": "АМПРИЛ®",
+      "status": "partial",
+      "documentHash": "0e70d77f3be747dcdac3a28445796f9acffa256f5849d8aeaf24a8db3a76f1f9",
+      "documentDate": "2021-05-05T07:59:00.000Z",
+      "snapshotFile": "snapshots/ua49030101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "276EB68D385892E6C2258E1A003C91AA",
+      "registrationNumber": "UA/16186/01/03",
+      "tradeName": "ВАЛМІСАР 160",
+      "status": "available",
+      "documentHash": "2894b2a8779d74ad2fbcac86d29e862f6ce64e0d5ed385ac6d98f01da438f133",
+      "documentDate": "2025-11-11T13:26:00.000Z",
+      "snapshotFile": "snapshots/ua161860103.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "823B846D4E38E07BC2258CF1002A9C1A",
+      "registrationNumber": "UA/14663/01/01",
+      "tradeName": "АСТАТОР 10",
+      "status": "available",
+      "documentHash": "0befe92e285539fd1f4c253aed97695a3eb9e70330ff529606dfdf508b7d6bf2",
+      "documentDate": "2025-08-28T18:44:00.000Z",
+      "snapshotFile": "snapshots/ua146630101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "C000FE612875FB24C2258CF8002C09BB",
+      "registrationNumber": "UA/4071/01/01",
+      "tradeName": "АВЕЛОКС®",
+      "status": "available",
+      "documentHash": "fb7e48e08dc5c400de0e32c54a6c7e6455af5c0ba9a795d6fdbafd9b8509411f",
+      "documentDate": "2025-09-03T08:22:00.000Z",
+      "snapshotFile": "snapshots/ua40710101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "E32D899E910E2E69C2258CF8002B65E1",
+      "registrationNumber": "UA/14904/01/01",
+      "tradeName": "МЕДОПЕКСОЛ",
+      "status": "available",
+      "documentHash": "7dbf3c807b2c365b0775d606dfb7b33142c7faef510c87c399a95bc8abb1f626",
+      "documentDate": "2025-09-03T08:18:00.000Z",
+      "snapshotFile": "snapshots/ua149040101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "DE21AED944D98244C2258C7600306230",
+      "registrationNumber": "UA/13165/01/01",
+      "tradeName": "АУРОМІТАЗ",
+      "status": "available",
+      "documentHash": "86ddca9a7f62f5dbf9d8dce80324f6e08fbf60d0ecdd6c9f93d7ee47e82fe037",
+      "documentDate": "2025-04-24T10:43:00.000Z",
+      "snapshotFile": "snapshots/ua131650101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "4CAC34605706C615C2258D2600387BFB",
+      "registrationNumber": "UA/16417/01/01",
+      "tradeName": "АБІЗОЛ",
+      "status": "available",
+      "documentHash": "2d18e01062301cb899a77e5ab7fefe6794f774cf0fee84f3da9ab325e150d179",
+      "documentDate": "2025-10-28T10:00:00.000Z",
+      "snapshotFile": "snapshots/ua164170101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "F0A2660FE0A64A3DC225899F003A8DF3",
+      "registrationNumber": "UA/16801/01/01",
+      "tradeName": "АДВЕЙТ",
+      "status": "available",
+      "documentHash": "d08145e12f2ce25beb4021a4acf2cc74720619b09b072a5a33673d75f837a4c5",
+      "documentDate": "2023-05-09T10:01:00.000Z",
+      "snapshotFile": "snapshots/ua168010101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "4BFCA025C4EA45A2C22588F3003C963E",
+      "registrationNumber": "UA/14777/01/01",
+      "tradeName": "АЛЬФАРЕКІН®",
+      "status": "available",
+      "documentHash": "604ffab4f8ce5298b7069acd104dceeb25178eb17cd706011e9761abe72e0134",
+      "documentDate": "2022-11-14T16:56:00.000Z",
+      "snapshotFile": "snapshots/ua147770101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "536D2795F6D355A3C2258E020035BD15",
+      "registrationNumber": "UA/18315/01/01",
+      "tradeName": "ДІОРЕН",
+      "status": "available",
+      "documentHash": "9bbd18f721eb7ccdb8bf4bd166759934754a72404ea8bf5ff6e044f8016937e4",
+      "documentDate": "2025-07-08T08:02:00.000Z",
+      "snapshotFile": "snapshots/ua183150101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "A4684CEB67619AD9C2258D9D004938BF",
+      "registrationNumber": "UA/11314/01/02",
+      "tradeName": "АЛАДИН®",
+      "status": "available",
+      "documentHash": "f27521828ba2fad01c2b58b0c4c07e11f8ae5cceb1b6b8069d83b12bcc7fba0b",
+      "documentDate": "2023-05-29T11:59:00.000Z",
+      "snapshotFile": "snapshots/ua113140102.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "00548692D5E9B3F4C2258C5700322BDA",
+      "registrationNumber": "UA/10912/01/01",
+      "tradeName": "АВЕРТИД",
+      "status": "available",
+      "documentHash": "fcfe98b1f225f896b1cb83ed52f428caa3152766ae4e36a0f32ad8d68f972344",
+      "documentDate": "2021-04-05T10:24:00.000Z",
+      "snapshotFile": "snapshots/ua109120101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "ED4C49D912F75E7AC2258BAC00279F96",
+      "registrationNumber": "UA/17179/01/01",
+      "tradeName": "АЛЕРГОЗАН®",
+      "status": "available",
+      "documentHash": "02f3d8a50501005a47dea47d05fd2e2410fa3321f98f835f05fa4bf026d6a146",
+      "documentDate": "2023-09-18T14:38:00.000Z",
+      "snapshotFile": "snapshots/ua171790101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "9FCED790B6493AA1C2258E1A003A5270",
+      "registrationNumber": "UA/11903/01/01",
+      "tradeName": "АБИКЛАВ®",
+      "status": "available",
+      "documentHash": "521edf8a63b9e55fcb755e1f5996701b0a676f6931e9de5dd604a47795dd83c6",
+      "documentDate": "2025-07-10T06:49:00.000Z",
+      "snapshotFile": "snapshots/ua119030101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "E6C4DC2109444180C2258B940025FD9B",
+      "registrationNumber": "UA/17834/01/01",
+      "tradeName": "АТРАКСАН",
+      "status": "available",
+      "documentHash": "c1d758edd21cc760d2e9e8d7636716b02b821392b91fbd4225628813dc47aa2f",
+      "documentDate": "2024-09-17T09:58:00.000Z",
+      "snapshotFile": "snapshots/ua178340101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "C588B97A139A78B4C2258B110041B87B",
+      "registrationNumber": "UA/12116/01/01",
+      "tradeName": "ДЕСПАЗОЛ",
+      "status": "available",
+      "documentHash": "ea86861ad36e166e06d7b3f9e1f9773792976ba51b6354cc767059287340178e",
+      "documentDate": "2022-09-07T14:13:00.000Z",
+      "snapshotFile": "snapshots/ua121160101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "260E6EE8A81D3538C2258D57002938A9",
+      "registrationNumber": "UA/7389/01/01",
+      "tradeName": "АМАРИЛ®",
+      "status": "available",
+      "documentHash": "145db4c119c7d687367562735a7906d2d4c7daffe27f893f4cf45489137eb99a",
+      "documentDate": "2025-12-11T10:04:00.000Z",
+      "snapshotFile": "snapshots/ua73890101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "E90C548469A692D4C2258DD90047ACAF",
+      "registrationNumber": "UA/5687/01/01",
+      "tradeName": "АКАРД",
+      "status": "partial",
+      "documentHash": "751010b1ff54cf331d6af12dc8099a353fa1a1ec560705503a40f870e4cc03de",
+      "documentDate": "2025-02-23T17:57:00.000Z",
+      "snapshotFile": "snapshots/ua56870101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "2076BC42153148DDC2258D6F002D7C69",
+      "registrationNumber": "UA/12909/01/01",
+      "tradeName": "АГЕРП",
+      "status": "available",
+      "documentHash": "afc2552e257d1c5ab8effd8a0b7a985c3ab50e40682b3fa83a7da180775f5f2f",
+      "documentDate": "2019-12-03T07:19:00.000Z",
+      "snapshotFile": "snapshots/ua129090101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "95039BF4A21A736BC2258E43004E8C0A",
+      "registrationNumber": "UA/16894/01/01",
+      "tradeName": "ЕРІДОН®",
+      "status": "available",
+      "documentHash": "6e0a36e87973209dbef8df6c57e5871b8ced433bd68dfffeab533e53074c87e1",
+      "documentDate": "2025-12-17T11:40:00.000Z",
+      "snapshotFile": "snapshots/ua168940101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "888AA6209AD63EDDC2258910004CEC2E",
+      "registrationNumber": "UA/3800/01/01",
+      "tradeName": "БІПРОЛОЛ",
+      "status": "available",
+      "documentHash": "1c2dc944bc96f1604346408bb4ec35a3638c63e75394a6549fb4aa948a350869",
+      "documentDate": "2020-06-11T09:36:00.000Z",
+      "snapshotFile": "snapshots/ua38000101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "24CE9C0AA31C4A52C2258B6D0039D496",
+      "registrationNumber": "UA/1984/01/01",
+      "tradeName": "АЗИКЛАР 500",
+      "status": "available",
+      "documentHash": "6fb48cb4ccd5f1e767a8462b43fe1dba0427a30682db7e4ba5ba1a29cadcf9bd",
+      "documentDate": "2024-08-13T13:04:00.000Z",
+      "snapshotFile": "snapshots/ua19840101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "591E2A59EEFE66D3C2258DF700325551",
+      "registrationNumber": "UA/18839/01/01",
+      "tradeName": "ДЕСЕЙЗ®",
+      "status": "available",
+      "documentHash": "52ecd6ad7d79d2080efe52e4a314c2c44f63eeb8582f2d9e0661ed3f88d5ef3b",
+      "documentDate": "2026-05-28T11:06:00.000Z",
+      "snapshotFile": "snapshots/ua188390101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "70AB11D464340B92C2258BF6002B106F",
+      "registrationNumber": "UA/12181/01/01",
+      "tradeName": "ДІАПРАЗОЛ",
+      "status": "available",
+      "documentHash": "44da1d8b3cd0c68beb92691e125f84e5533a042c02a5b208cc9c27955ed3d965",
+      "documentDate": "2023-08-16T11:01:00.000Z",
+      "snapshotFile": "snapshots/ua121810101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "925D2B591EA40ACAC2258D0900247F2D",
+      "registrationNumber": "UA/15369/01/01",
+      "tradeName": "АУРОДАНС",
+      "status": "available",
+      "documentHash": "871b7071e9b120e41120fe4ab509aacf2af9e1e180e2171b6aebe2ba943ddb8c",
+      "documentDate": "2025-10-07T13:03:00.000Z",
+      "snapshotFile": "snapshots/ua153690101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "65CB2A5FB5AF8053C2258B9500463871",
+      "registrationNumber": "UA/14676/01/01",
+      "tradeName": "КО-АМЛЕССА",
+      "status": "partial",
+      "documentHash": "62ec394155c37f05ce10ad18bd9080b2349b1d0b88760074bcec78d1047a37f6",
+      "documentDate": "2024-09-17T10:54:00.000Z",
+      "snapshotFile": "snapshots/ua146760101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "22DCB8F0789F3357C2258DD900474CB0",
+      "registrationNumber": "UA/10400/01/01",
+      "tradeName": "АЗАРГА®",
+      "status": "available",
+      "documentHash": "744098bf61c16b7b16fb8fd66b775185ac3c9b224aa039b92ce208661a792221",
+      "documentDate": "2026-04-02T10:54:00.000Z",
+      "snapshotFile": "snapshots/ua104000101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "03DE02CD994F0E46C2258DCA0043472D",
+      "registrationNumber": "UA/16547/01/01",
+      "tradeName": "ФЛОКСИМЕД",
+      "status": "available",
+      "documentHash": "97fe46c713e3cfd7be9eed138821db7e543bc39d394f5028fb3e84072e534a03",
+      "documentDate": "2023-03-23T08:15:00.000Z",
+      "snapshotFile": "snapshots/ua165470101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "FB528DF4631B61F3C2258C12004B4CEA",
+      "registrationNumber": "UA/1527/01/01",
+      "tradeName": "АСКОРБІНКА®-КВ",
+      "status": "available",
+      "documentHash": "46913b7b3784d6f78624c975effa1098ea98d7450f7fcbbab67923a157f7d0cb",
+      "documentDate": "2020-12-30T10:47:00.000Z",
+      "snapshotFile": "snapshots/ua15270101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "17BFB6E53B34E012C22586BF002477DE",
+      "registrationNumber": "UA/14441/01/01",
+      "tradeName": "АЛЕРГОЛІК",
+      "status": "available",
+      "documentHash": "b1e05f21f3fc96430b13dce26163e681d6116a31435ce1792c6b9eaede509047",
+      "documentDate": "2020-01-21T09:05:00.000Z",
+      "snapshotFile": "snapshots/ua144410101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "061B55C51FB2A2C6C2258B1200296986",
+      "registrationNumber": "UA/6296/01/01",
+      "tradeName": "ЕПІЛЕПТАЛ®",
+      "status": "available",
+      "documentHash": "828db999e727a055b3c6d162b3a652dc574c63e38215d939852b2ecd12df6b8e",
+      "documentDate": "2024-05-14T09:54:00.000Z",
+      "snapshotFile": "snapshots/ua62960101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "4B525EE135A4354AC2258E09003F1637",
+      "registrationNumber": "UA/7679/01/02",
+      "tradeName": "ДИРОТОН®",
+      "status": "available",
+      "documentHash": "5799a7971b5e59962de30f31a1865fc48fcc9edfe7b28155782e6e4ee06aea58",
+      "documentDate": "2023-02-20T11:41:00.000Z",
+      "snapshotFile": "snapshots/ua76790102.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "E21A39BAA9F5198AC2258AE6004654E6",
+      "registrationNumber": "UA/13355/01/01",
+      "tradeName": "ЕНЗИСТАЛ П",
+      "status": "available",
+      "documentHash": "caa15c284119fa30bc1a6b00a1250342bccf5e5e7c14b7bed44dafb74aca4a81",
+      "documentDate": "2024-03-25T11:58:00.000Z",
+      "snapshotFile": "snapshots/ua133550101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "DEFDB77502D8447AC2258D18002B96A1",
+      "registrationNumber": "UA/17391/01/01",
+      "tradeName": "АМ-АЛІТЕР",
+      "status": "available",
+      "documentHash": "f2bc68ea463b3cb36252536f103f15480057da80364df5d6749722cc407fdfee",
+      "documentDate": "2023-11-06T15:32:00.000Z",
+      "snapshotFile": "snapshots/ua173910101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "6EA40306AAF4E85AC225883A00452830",
+      "registrationNumber": "UA/13453/01/01",
+      "tradeName": "АКВАВІТ-Д3",
+      "status": "available",
+      "documentHash": "d9cf84979730de1953319bb909fb1f902a3f4405ab608afa4d50363bd4237493",
+      "documentDate": "2022-05-12T19:10:00.000Z",
+      "snapshotFile": "snapshots/ua134530101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "41D78F0B889C1363C2258CBA0033C725",
+      "registrationNumber": "UA/10236/01/01",
+      "tradeName": "ДЕКСАМЕТАЗОН",
+      "status": "available",
+      "documentHash": "127cf870b42c6aacf2fa645b01b1c4bcca37a44ed1233ba805f6982d8a94dc6d",
+      "documentDate": "2024-06-17T11:33:00.000Z",
+      "snapshotFile": "snapshots/ua102360101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "01599B92C85601A9C2258C76003A1B8F",
+      "registrationNumber": "UA/7553/01/01",
+      "tradeName": "БЕРЛІПРИЛ® 10",
+      "status": "available",
+      "documentHash": "75c5d98a43d6844261ca379722d689dd3e4689e9f008edabf41c52a5c651d4e5",
+      "documentDate": "2024-09-18T08:27:00.000Z",
+      "snapshotFile": "snapshots/ua75530101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "98E5845A1DFF504BC2258E4800319946",
+      "registrationNumber": "UA/18024/01/01",
+      "tradeName": "АМБІТ®",
+      "status": "available",
+      "documentHash": "356a8ae27979d3c627de5c667ca0e58d540d01d89da78edff9409d966f2bcca0",
+      "documentDate": "2024-12-22T16:06:00.000Z",
+      "snapshotFile": "snapshots/ua180240101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "ED870197E06A2440C2258E4100390AA3",
+      "registrationNumber": "UA/4760/01/01",
+      "tradeName": "АБІКСА",
+      "status": "available",
+      "documentHash": "7a0c3cc1cad2131031c5fc03385fd9c159f96c8fa7974f9d02d88b0739413708",
+      "documentDate": "2022-05-12T20:22:00.000Z",
+      "snapshotFile": "snapshots/ua47600101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "3919ACCA87BE2F2AC2258E3600472ED3",
+      "registrationNumber": "UA/16657/01/01",
+      "tradeName": "АМЛОДИПІН/ВАЛСАРТАН АУРОБІНДО",
+      "status": "available",
+      "documentHash": "ed62b0b14746b8b9db9a9ceb05f354f5ffd034cdface903612c757445f7f8f56",
+      "documentDate": "2026-07-22T08:01:00.000Z",
+      "snapshotFile": "snapshots/ua166570101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "6E1C1F2DECE5ACD2C2258CE700336DA9",
+      "registrationNumber": "UA/4880/01/01",
+      "tradeName": "ІКЗИМ",
+      "status": "available",
+      "documentHash": "3a9d5bf086cd77d9abe88bf7f4c4e327136b20ad51c8997cb405a3424e964c21",
+      "documentDate": "2023-12-04T10:39:00.000Z",
+      "snapshotFile": "snapshots/ua48800101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "9D9E722FEAABAC5DC2258DC500471BF8",
+      "registrationNumber": "UA/17428/01/01",
+      "tradeName": "ДЕПРАТАЛ",
+      "status": "available",
+      "documentHash": "d41d5caf05cdcd9773b5051dbb657d000bd8b9ef3947506aa5766f3a1823ac65",
+      "documentDate": "2025-02-23T17:01:00.000Z",
+      "snapshotFile": "snapshots/ua174280101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "8A1D136A9AB914FFC2258DE200407DBD",
+      "registrationNumber": "UA/14933/01/01",
+      "tradeName": "АЛЛЕРТЕК® НАЗО",
+      "status": "available",
+      "documentHash": "16cd699c4f777f719de41f6045d24bfecdee0f15b9afc1525c669ec4dd273e56",
+      "documentDate": "2024-12-08T16:46:00.000Z",
+      "snapshotFile": "snapshots/ua149330101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "6FDD540211189FD7C2258D0000469562",
+      "registrationNumber": "UA/8715/01/01",
+      "tradeName": "АПОНІЛ",
+      "status": "available",
+      "documentHash": "84f7f124cb5e00a80eb0a1fd303a03fcb24ef505cd405c5b56440657b299083b",
+      "documentDate": "2025-09-16T14:39:00.000Z",
+      "snapshotFile": "snapshots/ua87150101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "0FB8375E84EA4EAFC2258D70003BC26C",
+      "registrationNumber": "UA/7764/01/01",
+      "tradeName": "ЕНДОМЕТРИН",
+      "status": "available",
+      "documentHash": "98b355f5a00cf892a8cec5dc8a4668a073a3c99731951f11120e254b8701633d",
+      "documentDate": "2018-04-02T07:58:00.000Z",
+      "snapshotFile": "snapshots/ua77640101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "F1AB2199AFE5B797C2258B6D003B2337",
+      "registrationNumber": "UA/17241/01/01",
+      "tradeName": "АРИСТА",
+      "status": "available",
+      "documentHash": "ab6006e708bcdf9e0eb9fc45b1bbba70c37a4c8e962c673f892a4b1ca1990e68",
+      "documentDate": "2024-08-13T12:13:00.000Z",
+      "snapshotFile": "snapshots/ua172410101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "329FCDAEBD64BAECC2258D5B003FEBCD",
+      "registrationNumber": "UA/4766/01/01",
+      "tradeName": "АЛЬФА-ЛІПОН",
+      "status": "available",
+      "documentHash": "232fd413fbf0dad7f6a9a5a8bbc811fb560c04c31f08babe218c46d15ed40a17",
+      "documentDate": "2020-12-19T19:57:00.000Z",
+      "snapshotFile": "snapshots/ua47660101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "7CD40473385E9689C2258E420025C808",
+      "registrationNumber": "UA/15404/01/01",
+      "tradeName": "ГРОПІВІРІН®",
+      "status": "available",
+      "documentHash": "9c990b000257f1c8faf6560427f4dd2bfa73c39c37159ac88f573fd10e5c5269",
+      "documentDate": "2025-07-08T07:57:00.000Z",
+      "snapshotFile": "snapshots/ua154040101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "8747CB1C7005F115C2258CBA0025CB68",
+      "registrationNumber": "UA/17351/01/01",
+      "tradeName": "МИРОФУРИЛ",
+      "status": "available",
+      "documentHash": "a0290e3e44781faba42885be5ee29cf9cdda2f12e63c8902eecb5f335ea78429",
+      "documentDate": "2024-03-21T14:12:00.000Z",
+      "snapshotFile": "snapshots/ua173510101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "ECE35AD9F4F0E9AFC2258A3C0033FFC4",
+      "registrationNumber": "UA/15719/01/01",
+      "tradeName": "ДЖУБРЕКСА",
+      "status": "available",
+      "documentHash": "416c55f79dc439f03bad238b123f75035ca7152d94812e8540c38c5c97a30df5",
+      "documentDate": "2022-05-28T10:00:00.000Z",
+      "snapshotFile": "snapshots/ua157190101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "CC8658414F2CB44EC2258D8400358C34",
+      "registrationNumber": "UA/17735/01/01",
+      "tradeName": "АЛІТЕР",
+      "status": "available",
+      "documentHash": "b66b2ab6f4cd8dfc22305e864256c7599e8c85e3e29eec0480d22ffbf8e7a661",
+      "documentDate": "2026-01-28T19:15:00.000Z",
+      "snapshotFile": "snapshots/ua177350101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "441D88253B01F4B1C2258BB3002C201B",
+      "registrationNumber": "UA/1678/02/01",
+      "tradeName": "ЕКЗИФІН",
+      "status": "available",
+      "documentHash": "671813302f5c11092eed50b87ee712fa35b958767e9f0a2464e64cf005e02437",
+      "documentDate": "2022-03-18T14:12:00.000Z",
+      "snapshotFile": "snapshots/ua16780201.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "B3E56B6C81C782A2C2258B4000490E9A",
+      "registrationNumber": "UA/17682/01/01",
+      "tradeName": "БЕНОДИЛ",
+      "status": "available",
+      "documentHash": "6146f3ac98612fe7be5a4c9999bea401a9af4c1a7ba81ec9bd71e4603d02bd0b",
+      "documentDate": "2024-07-01T13:40:00.000Z",
+      "snapshotFile": "snapshots/ua176820101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "64B3DE127AF303F6C2258D56003664C6",
+      "registrationNumber": "UA/13553/01/01",
+      "tradeName": "ДЕКРИЗ",
+      "status": "available",
+      "documentHash": "fc582b1730f3b0b4834f569b5ae5d95f8d04354bb90ce8eeec405a9a0d8fc308",
+      "documentDate": "2021-07-23T11:55:00.000Z",
+      "snapshotFile": "snapshots/ua135530101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "E0BAA36A73BE75E1C2258D9D004B190C",
+      "registrationNumber": "UA/12087/01/01",
+      "tradeName": "БІФРЕН®",
+      "status": "available",
+      "documentHash": "93f3757c5d67c288c3f80365fcf861564ced97cc05dd5b3e0c3d0f1f959c3d56",
+      "documentDate": "2025-11-27T15:28:00.000Z",
+      "snapshotFile": "snapshots/ua120870101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "57AC37A6E2566599C2258AC50036F179",
+      "registrationNumber": "UA/2166/01/01",
+      "tradeName": "ГРАВАГІН",
+      "status": "available",
+      "documentHash": "7e3fafe1ad7baab80808a50a41827ebdf9a1f562985136b23e7255711f37be35",
+      "documentDate": "2023-05-18T15:09:00.000Z",
+      "snapshotFile": "snapshots/ua21660101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "73084720B4927474C2258C9000426520",
+      "registrationNumber": "UA/18493/01/01",
+      "tradeName": "АЛАКОР",
+      "status": "available",
+      "documentHash": "123ccfa13ea80a764996f5bf9fc4c43d7438793f03ce56b51fc28f6902147c96",
+      "documentDate": "2025-06-02T07:57:00.000Z",
+      "snapshotFile": "snapshots/ua184930101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "0BE827D5FF77871BC2258D85004C97D9",
+      "registrationNumber": "UA/17135/01/01",
+      "tradeName": "ІН-АЛІТЕР",
+      "status": "available",
+      "documentHash": "5c08b29b7071da1f03df6baced7ca196cf8818220427720fddcab936e4de5b15",
+      "documentDate": "2026-01-28T20:04:00.000Z",
+      "snapshotFile": "snapshots/ua171350101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "68CA911FB394061AC2258CCF003BC196",
+      "registrationNumber": "UA/11769/01/01",
+      "tradeName": "АЦЕСОЛЬ",
+      "status": "available",
+      "documentHash": "ca00b3bbf2dcf26676da030ab7776f499ca9284720ce2b6ba3a5a057ec4950eb",
+      "documentDate": "2018-03-20T18:24:00.000Z",
+      "snapshotFile": "snapshots/ua117690101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "37309645C71EA556C2258DB70030A92B",
+      "registrationNumber": "UA/8388/01/01",
+      "tradeName": "ЕУТИРОКС",
+      "status": "available",
+      "documentHash": "72a300b8ea109856d787c799641eddd265e072cf6a0e93c718dcc3b8634a779d",
+      "documentDate": "2024-04-19T08:10:00.000Z",
+      "snapshotFile": "snapshots/ua83880101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "57D79ED4E98236D4C2258ACC003F4ADE",
+      "registrationNumber": "UA/0065/01/01",
+      "tradeName": "КИСЕНЬ МЕДИЧНИЙ ГАЗОПОДІБНИЙ",
+      "status": "available",
+      "documentHash": "ab32b1ec868b1d08d57d704f3f8eac365d941098483f412063484e901020d24d",
+      "documentDate": "2024-03-01T13:46:00.000Z",
+      "snapshotFile": "snapshots/ua00650101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "A4530BF3A2664BF1C2258DED00444E27",
+      "registrationNumber": "UA/12679/01/01",
+      "tradeName": "ЕКСФОРЖ Н",
+      "status": "available",
+      "documentHash": "9d25f36fe341c0fd93e1412a78e9c850d25e4e52b0abe09af0ee12fd56600f80",
+      "documentDate": "2025-12-17T11:46:00.000Z",
+      "snapshotFile": "snapshots/ua126790101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "CF53057EFFB8E1CCC2258E020030B20F",
+      "registrationNumber": "UA/10507/01/01",
+      "tradeName": "ВІТАКСОН®",
+      "status": "available",
+      "documentHash": "c8500aedc438d676f8690de9c272db998055a406df6e4c259bfa5203550fb322",
+      "documentDate": "2021-09-29T08:38:00.000Z",
+      "snapshotFile": "snapshots/ua105070101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "3D41CB167315C1AEC2258D49003EDBBD",
+      "registrationNumber": "UA/15095/01/01",
+      "tradeName": "АПСИБИН",
+      "status": "available",
+      "documentHash": "495d2a6908a5d0b16369728b7f32c9c973247b867a578aff829e097db9b134a8",
+      "documentDate": "2025-11-26T19:14:00.000Z",
+      "snapshotFile": "snapshots/ua150950101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "4C42F00E38FA90D5C2258BAF0048ACFE",
+      "registrationNumber": "UA/8463/01/01",
+      "tradeName": "ГЕДЕЛИКС® КРАПЛІ БЕЗ СПИРТУ",
+      "status": "available",
+      "documentHash": "7ab8846d59f2a8a8e8c2ffb0b9ce599384a500ef863403ecc032a8351ae63e4e",
+      "documentDate": "2018-03-14T15:33:00.000Z",
+      "snapshotFile": "snapshots/ua84630101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "28AC2A2C7012D6ECC2258E0200291E84",
+      "registrationNumber": "UA/0325/01/02",
+      "tradeName": "АКТРАПІД® НМ",
+      "status": "available",
+      "documentHash": "e533749beb91991088830ca406c2bccc62e7fd73ac37e8c7ea59d9be31b47050",
+      "documentDate": "2025-01-12T17:39:00.000Z",
+      "snapshotFile": "snapshots/ua03250102.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "20BD2A8E7F4BF7A4C2258DA7002B8AF8",
+      "registrationNumber": "UA/14118/01/01",
+      "tradeName": "АРТРОКОЛ",
+      "status": "available",
+      "documentHash": "d7265cbe025b132a66d52ee506b8396759d88ddf8ffafd73eef364e647defd1f",
+      "documentDate": "2023-06-19T08:35:00.000Z",
+      "snapshotFile": "snapshots/ua141180101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "4A12167DD4608D1FC2258CF10031F7D6",
+      "registrationNumber": "UA/1969/02/01",
+      "tradeName": "ЗИВОКС",
+      "status": "available",
+      "documentHash": "3a8490974e63f9be3c02de0febd0d1b522cf2597127a0d0b5f33137adf781e0f",
+      "documentDate": "2025-05-18T20:19:00.000Z",
+      "snapshotFile": "snapshots/ua19690201.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "94550C931BCE1463C2258CF100307D33",
+      "registrationNumber": "UA/8765/01/01",
+      "tradeName": "КЛОСАРТ®",
+      "status": "available",
+      "documentHash": "3f5192319201dd444a164cfc909bb34244bcb15bb5ca288b8fee21a3a92e2c7e",
+      "documentDate": "2025-08-28T19:15:00.000Z",
+      "snapshotFile": "snapshots/ua87650101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "B4FB6D7E2DAF89B4C2258A68004D66B7",
+      "registrationNumber": "UA/17183/01/01",
+      "tradeName": "ЕКЗІК",
+      "status": "available",
+      "documentHash": "ef2c63a4e2359dd0d22573a182b75bf820d7347f6d2bf1c198fab613abcb91c4",
+      "documentDate": "2023-11-21T08:47:00.000Z",
+      "snapshotFile": "snapshots/ua171830101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "A82DF4B1D2CAB9E2C2258DFE00225FB2",
+      "registrationNumber": "UA/9687/01/01",
+      "tradeName": "АДВАГРАФ®",
+      "status": "available",
+      "documentHash": "bbad2dfeeb67e6e277dfb152f5f887b0d23f489537d720b1b4b7086b8b92214e",
+      "documentDate": "2026-04-16T19:14:00.000Z",
+      "snapshotFile": "snapshots/ua96870101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "2891E58D31AED35AC2258D8400434C34",
+      "registrationNumber": "UA/18379/01/01",
+      "tradeName": "АРБИТЕЛЬ",
+      "status": "available",
+      "documentHash": "36856511cd5c22f7867d26b1f489af795da940f5f980f12efc243cfc5d4cd5ae",
+      "documentDate": "2026-01-28T19:24:00.000Z",
+      "snapshotFile": "snapshots/ua183790101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "8D192910CB73CD16C2258B7A0026ED63",
+      "registrationNumber": "UA/17917/01/01",
+      "tradeName": "АЛЬФАХОЛІН®",
+      "status": "available",
+      "documentHash": "96e6fa235def73a2ecdd8870463a5eb3870a1bf0f7595141c98802aedd03ebb4",
+      "documentDate": "2024-08-20T18:17:00.000Z",
+      "snapshotFile": "snapshots/ua179170101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "809F1C23BF98BFA2C2258C12004C8966",
+      "registrationNumber": "UA/8209/01/01",
+      "tradeName": "КАНДІД",
+      "status": "available",
+      "documentHash": "e3a7a1943761ede1e2f37af6f07c7dad0fef138a0deeb8b1194fbd5da6442550",
+      "documentDate": "2021-03-24T11:29:00.000Z",
+      "snapshotFile": "snapshots/ua82090101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "F313EDD2D4A070C5C2258D8C004E71AC",
+      "registrationNumber": "UA/18714/01/01",
+      "tradeName": "ЕРЛОТИНІБ КРКА",
+      "status": "available",
+      "documentHash": "33ef0ce304375d7c88345d33b2b6b037db846269e3160354936791f4746c1a39",
+      "documentDate": "2026-01-29T13:24:00.000Z",
+      "snapshotFile": "snapshots/ua187140101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "53207A9BCE1480ADC2258E2C003B46CE",
+      "registrationNumber": "UA/12383/01/01",
+      "tradeName": "БІНОКРИТ®",
+      "status": "available",
+      "documentHash": "5f9ed190bea022895f339f07faa0db1da5f8a3b80e60d0a02a569348689719cc",
+      "documentDate": "2024-11-18T10:30:00.000Z",
+      "snapshotFile": "snapshots/ua123830101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "4B35615656C076ADC2258B1700307642",
+      "registrationNumber": "UA/17466/01/01",
+      "tradeName": "ЛЕНАЛІДОМІД-ВІСТА",
+      "status": "available",
+      "documentHash": "20c92e75d03e967385584329c7b92daa918745c3d866a9fb32dd9c96467a6a57",
+      "documentDate": "2024-05-14T18:18:00.000Z",
+      "snapshotFile": "snapshots/ua174660101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "7B4364FE8897AB54C2258D410033F068",
+      "registrationNumber": "UA/11554/01/01",
+      "tradeName": "АГВАНТАР",
+      "status": "available",
+      "documentHash": "6f7eb7a23af63f4229e501542b0ed8171c147bb960a1e1309dbd1fd4bd9c8146",
+      "documentDate": "2025-11-26T18:28:00.000Z",
+      "snapshotFile": "snapshots/ua115540101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "C60D3731B0CD125AC2258E41004624DA",
+      "registrationNumber": "UA/4770/01/01",
+      "tradeName": "АСАКОЛ®",
+      "status": "partial",
+      "documentHash": "a2583678d932fba232a65ce784d2f70e9d317e45e6fc23945b0ba9802f31d3a3",
+      "documentDate": "2024-03-20T09:17:00.000Z",
+      "snapshotFile": "snapshots/ua47700101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "5459E849DDD5A727C2258DAB0029A779",
+      "registrationNumber": "UA/6807/01/01",
+      "tradeName": "БЕТАДИН®",
+      "status": "available",
+      "documentHash": "ad5e7fcfc1904e078b49f3a858757b0cab64cbb1396c16e584e615e88caa43e0",
+      "documentDate": "2017-08-21T12:56:00.000Z",
+      "snapshotFile": "snapshots/ua68070101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "82DDF6085794FA52C2258D6F002FE48F",
+      "registrationNumber": "UA/4290/01/01",
+      "tradeName": "АЛЛЕСТА®",
+      "status": "available",
+      "documentHash": "14c0270a248cca8bbb9f35e0ff79b24272a9f6ebe41624a0c5dac2eb4242895e",
+      "documentDate": "2023-12-25T09:04:00.000Z",
+      "snapshotFile": "snapshots/ua42900101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "85D6CCD9F0298F9EC22586F80028EE47",
+      "registrationNumber": "UA/4404/02/01",
+      "tradeName": "ВАЛЕРИКА",
+      "status": "available",
+      "documentHash": "2f15a9933a6576e78bfaf2402fc1929bb2efc633cc97ebd3de2c12d2c8d389c5",
+      "documentDate": "2021-07-01T07:19:00.000Z",
+      "snapshotFile": "snapshots/ua44040201.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "226407887C1197DEC2258B410023F1E3",
+      "registrationNumber": "UA/9695/01/01",
+      "tradeName": "БЕЛОДЕРМ",
+      "status": "available",
+      "documentHash": "2e640bde4340a04445d570092bcbe131c2093b6d1b713450aa081d6ab3cf1a6d",
+      "documentDate": "2019-10-09T18:48:00.000Z",
+      "snapshotFile": "snapshots/ua96950101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "5387BE05BF343720C2258D8B0040F1D0",
+      "registrationNumber": "UA/10899/01/01",
+      "tradeName": "ВАГІКАЛЬ",
+      "status": "partial",
+      "documentHash": "21a443c25120039d7bcd9261dfebc237526724b1265722f7fccebcd604775a1c",
+      "documentDate": "2020-09-07T08:40:00.000Z",
+      "snapshotFile": "snapshots/ua108990101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "6C70A8E4DDB5F803C2258C570036584C",
+      "registrationNumber": "UA/15796/01/01",
+      "tradeName": "КАРВЕДИЛОЛ АУРОБІНДО",
+      "status": "available",
+      "documentHash": "9a11a6c9072c547b194c0f6bd9af9fc300af546c47082a9aedda37bbd5cbcfe3",
+      "documentDate": "2021-11-25T10:53:00.000Z",
+      "snapshotFile": "snapshots/ua157960101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "5B717BC8F44472E7C2258D9B002EB0E9",
+      "registrationNumber": "UA/13403/01/01",
+      "tradeName": "АУРОПОДОКС",
+      "status": "available",
+      "documentHash": "f8d9a754534d272e2fba569c331734403bbbd7b61e77f0fa1ee4d45e3a63a312",
+      "documentDate": "2026-02-17T11:10:00.000Z",
+      "snapshotFile": "snapshots/ua134030101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "E40279D64AAFB33FC2258D8500327E09",
+      "registrationNumber": "UA/13404/01/01",
+      "tradeName": "ВІДОРА",
+      "status": "available",
+      "documentHash": "cd799b3ac0e1a07870c9c3dec0077c8e5a9cd69b5dd22c3af5205d731a47eaf7",
+      "documentDate": "2025-09-03T08:25:00.000Z",
+      "snapshotFile": "snapshots/ua134040101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "8E8B25EA2A45364EC2258E48003F87F2",
+      "registrationNumber": "UA/8165/01/01",
+      "tradeName": "ЛУЦЕТАМ®",
+      "status": "available",
+      "documentHash": "7fbe6c3a2e72964a357cea66da190bcac2b2be158b14b502fe26f2cf5036f2d6",
+      "documentDate": "2018-02-28T11:02:00.000Z",
+      "snapshotFile": "snapshots/ua81650101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "BA5C9975554ED2D1C2258E09003A791A",
+      "registrationNumber": "UA/4903/02/01",
+      "tradeName": "АМПРИЛ® HD",
+      "status": "available",
+      "documentHash": "a6e38bcadb7afdf023fd095660478b8ce946ab1bf8c58970acb170c09f105442",
+      "documentDate": "2023-09-27T18:23:00.000Z",
+      "snapshotFile": "snapshots/ua49030201.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "D3F6B2AA27969F68C2258D42003066F2",
+      "registrationNumber": "UA/16806/01/01",
+      "tradeName": "РОЗУЛІП® ПЛЮС",
+      "status": "available",
+      "documentHash": "8aff1b0213eaac3c8d1e6fea939103872f57281f5c1c4553fc720e4c2c86e8de",
+      "documentDate": "2025-10-28T09:38:00.000Z",
+      "snapshotFile": "snapshots/ua168060101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "D61FE1C6EE12E89BC2258CD000234AB4",
+      "registrationNumber": "UA/8791/01/01",
+      "tradeName": "АСКОФЕН Л",
+      "status": "available",
+      "documentHash": "41b6622e8d11bc78c9fe16c8d654abaff31b5bbe1bca1583801fe31f878f0980",
+      "documentDate": "2025-07-29T09:06:00.000Z",
+      "snapshotFile": "snapshots/ua87910101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "039F59D7C33F91A3C2258DC5003F6449",
+      "registrationNumber": "UA/1196/01/01",
+      "tradeName": "БАРБОВАЛ®",
+      "status": "available",
+      "documentHash": "fbaed3c418e1a70cd79480cae9fdc65e1064edcc46cef697efb35c7efc10c80e",
+      "documentDate": "2023-05-09T08:13:00.000Z",
+      "snapshotFile": "snapshots/ua11960101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "ADF87418702A390FC2258B7000417D95",
+      "registrationNumber": "UA/13416/01/01",
+      "tradeName": "БУПІВАКАЇН",
+      "status": "partial",
+      "documentHash": "ba9b39b42d0e52b70aac40b7770f68eb0bdfb61357942f6ce265dbf87e5d62b0",
+      "documentDate": "2024-03-21T11:48:00.000Z",
+      "snapshotFile": "snapshots/ua134160101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "1DB78440FADC5DF3C2258C120050E620",
+      "registrationNumber": "UA/16720/01/01",
+      "tradeName": "ГЛОД-ВІШФА",
+      "status": "available",
+      "documentHash": "5f8f8ed6c6a32f595fd11598bbe4924d85dbf7b95b6c5eecd9027f6e007dac95",
+      "documentDate": "2024-12-08T18:38:00.000Z",
+      "snapshotFile": "snapshots/ua167200101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "2F6A5E823315894DC2258DED003B1A82",
+      "registrationNumber": "UA/13527/01/01",
+      "tradeName": "АДЕНУРІК® 120МГ",
+      "status": "available",
+      "documentHash": "23758214550aecbd78e778ef70fd125f2403c598148d5843289b0ca15ecebc2a",
+      "documentDate": "2024-03-25T12:00:00.000Z",
+      "snapshotFile": "snapshots/ua135270101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "1B472E045E94D0E8C2258CD50025BA84",
+      "registrationNumber": "UA/3433/01/01",
+      "tradeName": "КАРДОСАЛ® 10 МГ",
+      "status": "available",
+      "documentHash": "e78b4cf848dfc67aaa101a22fa9e41052bf9a90abdfa21efcdd5d4ebe295fa09",
+      "documentDate": "2025-07-29T10:20:00.000Z",
+      "snapshotFile": "snapshots/ua34330101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "573F476114869DBCC2258D65004327B4",
+      "registrationNumber": "UA/8770/01/01",
+      "tradeName": "АСЕНТРА®",
+      "status": "available",
+      "documentHash": "80ca410f049aeffcbce958c5981b2864bd58e215233d987c4103b770777253cf",
+      "documentDate": "2025-12-24T08:08:00.000Z",
+      "snapshotFile": "snapshots/ua87700101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "7227F101F1BAF7AFC2258C12004C71E7",
+      "registrationNumber": "UA/17176/01/01",
+      "tradeName": "АФЛЕТИН",
+      "status": "available",
+      "documentHash": "3efb76cce24045db681f4ec879a18a221ac3975beb8c9c22ba11abd8f2ed4aaf",
+      "documentDate": "2023-11-06T15:37:00.000Z",
+      "snapshotFile": "snapshots/ua171760101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "7D1942347D6F1DFCC2258D84004516C3",
+      "registrationNumber": "UA/18380/01/03",
+      "tradeName": "АРБИТЕЛЬ Н",
+      "status": "available",
+      "documentHash": "a0fb6b3b814163978d959987577de2b190c78f6a7054fc96a9d2de9edbaecbc2",
+      "documentDate": "2026-01-28T19:26:00.000Z",
+      "snapshotFile": "snapshots/ua183800103.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "DD68EBA272944082C2258DD50024E1FB",
+      "registrationNumber": "UA/13832/01/01",
+      "tradeName": "ГЛІОЗОМІД",
+      "status": "available",
+      "documentHash": "801f6380d4f3814fd328848cdc37e767e4a725cbe88de9115e2cfc291df89a3a",
+      "documentDate": "2024-07-11T10:16:00.000Z",
+      "snapshotFile": "snapshots/ua138320101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "F7775D6D68FF1832C2258E09003B69A8",
+      "registrationNumber": "UA/12164/01/01",
+      "tradeName": "БРИЛІНТА",
+      "status": "partial",
+      "documentHash": "d8c1717d16753fe24899c294aa74b76b7cc8cead6ab62d1c468273c8ef789ef9",
+      "documentDate": "2025-10-12T15:20:00.000Z",
+      "snapshotFile": "snapshots/ua121640101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "746E4F599F1FA24BC225891E00390B10",
+      "registrationNumber": "UA/16621/01/01",
+      "tradeName": "БОРТЕЗОВІСТА",
+      "status": "available",
+      "documentHash": "d2b7ea415fbffb6d35ced0e78b764bfc12bf6e2d7f1d8e2358494794a50093b1",
+      "documentDate": "2024-02-16T10:42:00.000Z",
+      "snapshotFile": "snapshots/ua166210101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "004CF6A05C60C343C22588D00023A1DC",
+      "registrationNumber": "UA/2952/01/01",
+      "tradeName": "ЛЕВОМІЦЕТИН",
+      "status": "available",
+      "documentHash": "73960a6012f9e65dc8bedd4d1a98e32ff96f5b417883938cd7b0b9089a45409f",
+      "documentDate": "2021-10-20T11:03:00.000Z",
+      "snapshotFile": "snapshots/ua29520101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "421A57925E516DE6C2258DC70040E375",
+      "registrationNumber": "UA/15693/01/01",
+      "tradeName": "ГЕКСИТЕКС",
+      "status": "partial",
+      "documentHash": "2cc960370de0580673e5c56319d79b6bc0ebd7eb2a022e7189f7a49af97ec783",
+      "documentDate": "2026-04-02T11:51:00.000Z",
+      "snapshotFile": "snapshots/ua156930101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "87A3D76BD5C59FC3C2258D1C0043E9E7",
+      "registrationNumber": "UA/14782/01/01",
+      "tradeName": "ЕСПА-ФОЦИН®",
+      "status": "available",
+      "documentHash": "45f7b3914d08ed66997455e61643d9c84feb5d5cb3d23679eb34e08c4a24918c",
+      "documentDate": "2023-12-25T13:37:00.000Z",
+      "snapshotFile": "snapshots/ua147820101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "1E864BBCBA1C4D26C2258D370028F2DD",
+      "registrationNumber": "UA/0784/01/01",
+      "tradeName": "АДВАНТАН®",
+      "status": "available",
+      "documentHash": "3252141d734af950015f38de7c98463d59bfb1038d48560484cdd6cd8d971fc7",
+      "documentDate": "2022-10-07T17:19:00.000Z",
+      "snapshotFile": "snapshots/ua07840101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "620D92FA2A93A415C2258DA7004EAEC7",
+      "registrationNumber": "UA/7785/01/01",
+      "tradeName": "СУТЕНТ",
+      "status": "available",
+      "documentHash": "29243d83af287d5a0afb56325fedb85f7c4fd31955113b4a0e2981ee5ea444cf",
+      "documentDate": "2024-12-08T17:47:00.000Z",
+      "snapshotFile": "snapshots/ua77850101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "73E8C42E64F552E1C2258C12004885D0",
+      "registrationNumber": "UA/6709/01/01",
+      "tradeName": "АДЕНОРМ",
+      "status": "available",
+      "documentHash": "ba0a0a98f51e9866fa506291515850cd83e5febd3847a48bea8fd0dd8aa207c9",
+      "documentDate": "2018-05-22T07:12:00.000Z",
+      "snapshotFile": "snapshots/ua67090101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "D2008B5425141156C2258DD9004EAA72",
+      "registrationNumber": "UA/10752/01/01",
+      "tradeName": "ГЕПАЦЕФ КОМБІ",
+      "status": "available",
+      "documentHash": "99f322fa9d97fd455f7b953c84ddb5b5ee65d249c60d9c9c9c7d5b3b33a59868",
+      "documentDate": "2022-06-05T14:03:00.000Z",
+      "snapshotFile": "snapshots/ua107520101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "ADE3BC44E49FAD43C2258D800041FB2D",
+      "registrationNumber": "UA/4157/01/01",
+      "tradeName": "БЕПАНТЕН®",
+      "status": "available",
+      "documentHash": "b0f3f12ca63be5c6641b6507bdc41797b2e4a7796962ad3d193f9b35e7df02b7",
+      "documentDate": "2020-12-19T19:59:00.000Z",
+      "snapshotFile": "snapshots/ua41570101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
+        "adverseReactions",
+        "interactions",
+        "specialWarnings",
+        "pregnancyAndLactation",
+        "administration",
+        "overdose",
+        "storage"
+      ]
+    },
+    {
+      "registryProductId": "EE51264E892C0A9CC2258D8F002F975C",
+      "registrationNumber": "UA/10344/01/01",
+      "tradeName": "ДРОТАВЕРИН",
+      "status": "partial",
+      "documentHash": "4b4a12a68a2c7e6567e651d9a6602c41a231ee42c9103d8bef9da28104f402e5",
+      "documentDate": "2026-01-31T19:55:00.000Z",
+      "snapshotFile": "snapshots/ua103440101.json",
+      "availableSections": [
+        "indications",
+        "contraindications",
         "interactions",
         "specialWarnings",
         "pregnancyAndLactation",
