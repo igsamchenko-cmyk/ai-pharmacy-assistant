@@ -58,10 +58,16 @@ describe("protected registry audit reconciliation", () => {
     ).toThrow(/refused/);
   });
 
-  it("allows only the Render host after the full context gate", () => {
+  it("allows approved Render and Neon hosts after the full context gate", () => {
     expect(
       authorizeRegistryAuditReconciliationDatabase(
         "postgresql://example.render.com/db",
+        protectedEnvironment(),
+      ),
+    ).toBe(SHA);
+    expect(
+      authorizeRegistryAuditReconciliationDatabase(
+        "postgresql://example.pooler.us-east-2.aws.neon.tech/db",
         protectedEnvironment(),
       ),
     ).toBe(SHA);
@@ -70,7 +76,7 @@ describe("protected registry audit reconciliation", () => {
         "postgresql://localhost/db",
         protectedEnvironment(),
       ),
-    ).toThrow(/Render production host/);
+    ).toThrow(/approved production database host/);
   });
 
   it("requires exact current/searchable parity while allowing stale history", () => {

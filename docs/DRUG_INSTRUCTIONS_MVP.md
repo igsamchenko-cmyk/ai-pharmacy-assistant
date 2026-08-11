@@ -123,6 +123,17 @@ pnpm knowledge:instructions:report -- --download --write
 Do not refresh automatically during build or deployment. Review every hash
 change in a feature branch and rerun the full Node 24 gate.
 
+The next coverage stage uses a managed PostgreSQL queue instead of committing
+thousands of additional JSON files. Its default command is a read-only preview;
+database writes and bounded worker execution require explicit flags:
+
+```bash
+pnpm knowledge:instructions:queue --target=2000
+```
+
+See [Official Instruction Fetch Queue](./INSTRUCTION_FETCH_QUEUE.md) for queue
+states, parenteral/National List priority, retries and the staged rollout.
+
 ## Runtime And UI
 
 Catalog search returns only `instructionAvailable`; it never includes leaflet

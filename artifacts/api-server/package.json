@@ -58,6 +58,7 @@
     "knowledge:instructions:report": "tsx src/scripts/knowledge-instructions-report.ts",
     "knowledge:instructions:coverage-report": "tsx src/scripts/knowledge-instructions-coverage-report.ts",
     "knowledge:instructions:expand": "tsx src/scripts/knowledge-instructions-expand.ts",
+    "knowledge:instructions:queue": "tsx src/scripts/knowledge-instructions-queue.ts",
     "knowledge:series-restrictions": "tsx src/scripts/knowledge-series-restrictions.ts",
     "knowledge:dispensing-categories": "tsx src/scripts/knowledge-dispensing-categories.ts",
     "knowledge:price-catalog": "tsx src/scripts/knowledge-price-catalog.ts",

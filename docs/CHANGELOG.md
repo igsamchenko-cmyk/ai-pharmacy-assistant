@@ -7,6 +7,15 @@
 
 ### Added
 
+- Added the managed official-instruction fetch queue for scaling the exact
+  reference catalog toward 2,000+ registry positions. The deterministic planner
+  prioritizes explicit parenteral forms, then National List matches, and reports
+  current coverage before any write. Separate queue/document tables, worker
+  leases, bounded retries, rate and size limits, strict provenance/section gates,
+  terminal error states and seven-day hash refresh scheduling ensure that failed
+  downloads cannot replace validated instruction snapshots. Preview is read-only;
+  every database mutation requires an explicit `--require-db` mode.
+
 - Expanded the reproducible official-instruction checkpoint from 50 to 200 exact
   registry positions across at least 160 distinct INNs. The deterministic
   expansion pipeline validates newly selected current-registry identities,

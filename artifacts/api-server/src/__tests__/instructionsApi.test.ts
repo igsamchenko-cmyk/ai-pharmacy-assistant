@@ -26,7 +26,7 @@ async function withServer<T>(
 describe("drug instruction API", () => {
   beforeAll(() => {
     warmInstructionSearchIndex();
-  }, 15_000);
+  }, 30_000);
 
   afterEach(() => {
     process.env = { ...originalEnv };

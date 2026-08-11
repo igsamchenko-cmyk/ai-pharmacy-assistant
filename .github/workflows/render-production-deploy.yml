@@ -11,6 +11,7 @@ on:
         options:
           - deploy
           - inspect
+          - configure-database
           - enable-auto-deploy
 
 permissions:
@@ -153,6 +154,29 @@ jobs:
             ([.id, .name, (.autoDeploy // "unknown")] | @tsv)
           ' <<<"$service_json"
 
+          postgres_json="$(curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --header "Accept: application/json" \
+            --header "Authorization: Bearer ${RENDER_API_KEY}" \
+            "https://api.render.com/v1/postgres?limit=100")"
+
+          jq -r '
+            (["POSTGRES_ID", "NAME", "REGION", "PLAN", "SUSPENDED", "STATUS", "SUSPENDERS", "CREATED_AT", "UPDATED_AT"] | @tsv),
+            (.[] | (.postgres // .) as $postgres | [
+              ($postgres.id // "-"),
+              ($postgres.name // "-"),
+              ($postgres.region // "-"),
+              ($postgres.plan // "-"),
+              ($postgres.suspended // "unknown"),
+              ($postgres.status // "unknown"),
+              (($postgres.suspenders // []) | join(",")),
+              ($postgres.createdAt // "-"),
+              ($postgres.updatedAt // "-")
+            ] | @tsv)
+          ' <<<"$postgres_json"
+
           deploys_json="$(curl \
             --fail-with-body \
             --silent \
@@ -172,6 +196,80 @@ jobs:
               (.deploy.updatedAt // "-")
             ] | @tsv)
           ' <<<"$deploys_json"
+
+  configure_database:
+    name: Configure Render to use Neon Postgres
+    if: github.event_name == 'workflow_dispatch' && inputs.operation == 'configure-database'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: production
+      url: https://farmassist-private-beta.onrender.com
+    steps:
+      - name: Validate protected Neon and Render configuration
+        shell: bash
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$PRODUCTION_DATABASE_URL"
+          test -n "$RENDER_API_KEY"
+          test -n "$RENDER_DEPLOY_HOOK_URL"
+          node -e '
+            const host = new URL(process.env.PRODUCTION_DATABASE_URL).hostname.toLowerCase();
+            if (host !== "neon.tech" && !host.endsWith(".neon.tech")) process.exit(1);
+          '
+          case "$RENDER_DEPLOY_HOOK_URL" in
+            https://api.render.com/deploy/*) ;;
+            *) exit 1 ;;
+          esac
+
+      - name: Update Render database runtime variables without logging values
+        shell: bash
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          hook_path="${RENDER_DEPLOY_HOOK_URL%%\?*}"
+          service_id="${hook_path##*/}"
+          case "$service_id" in
+            srv-[a-z0-9]*) ;;
+            *) exit 1 ;;
+          esac
+
+          keys=(DATABASE_URL DATABASE_SSL KNOWLEDGE_DB_RUNTIME)
+          values=("$PRODUCTION_DATABASE_URL" "true" "true")
+          for index in "${!keys[@]}"; do
+            key="${keys[$index]}"
+            value="${values[$index]}"
+            response_file="$RUNNER_TEMP/render-env-${index}.json"
+            http_status="$(jq -cn --arg value "$value" '{value:$value}' | curl \
+              --silent \
+              --show-error \
+              --output "$response_file" \
+              --write-out "%{http_code}" \
+              --request PUT \
+              --header "Accept: application/json" \
+              --header "Content-Type: application/json" \
+              --header "Authorization: Bearer ${RENDER_API_KEY}" \
+              --data-binary @- \
+              "https://api.render.com/v1/services/${service_id}/env-vars/${key}")"
+            if [[ "$http_status" != "200" ]]; then
+              echo "::error::Render rejected environment key ${key} with HTTP ${http_status}."
+              exit 1
+            fi
+            if ! jq -e --arg value "$value" '.value == $value' "$response_file" >/dev/null; then
+              echo "::error::Render did not confirm environment key ${key}."
+              exit 1
+            fi
+          done
+
+          echo "Render database runtime variables updated: DATABASE_URL, DATABASE_SSL, KNOWLEDGE_DB_RUNTIME."
+          echo "No environment values were printed."
 
   enable_auto_deploy:
     name: Enable Render Auto-Deploy
