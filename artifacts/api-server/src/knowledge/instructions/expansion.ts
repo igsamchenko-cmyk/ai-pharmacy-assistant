@@ -71,7 +71,9 @@ function normalized(value: string): string {
     .trim();
 }
 
-function hasSpecificInn(row: Pick<RegistryRawRow, "inn">): boolean {
+export function hasSpecificInstructionInn(
+  row: Pick<RegistryRawRow, "inn">,
+): boolean {
   const key = normalized(row.inn);
   return key.length >= 3 && !NON_SPECIFIC_INN_KEYS.has(key);
 }
@@ -105,9 +107,9 @@ export function literalStrengthFromRegistryRow(
   return null;
 }
 
-function sourceFromRegistryRow(
+export function instructionSourceFromRegistryRow(
   row: RegistryRawRow,
-  invalidMetadataFieldCounts: Record<string, number>,
+  invalidMetadataFieldCounts: Record<string, number> = {},
 ): InstructionSourceProduct | null {
   const parsed = InstructionSourceProductSchema.safeParse({
     registryProductId: row.registryId,
@@ -201,11 +203,14 @@ export function buildInstructionExpansionPlan(
       rejectedNonStructuredSourceCount += 1;
       continue;
     }
-    if (!hasSpecificInn(row)) {
+    if (!hasSpecificInstructionInn(row)) {
       rejectedNonSpecificInnCount += 1;
       continue;
     }
-    const source = sourceFromRegistryRow(row, invalidMetadataFieldCounts);
+    const source = instructionSourceFromRegistryRow(
+      row,
+      invalidMetadataFieldCounts,
+    );
     if (!source) {
       rejectedInvalidMetadataCount += 1;
       continue;

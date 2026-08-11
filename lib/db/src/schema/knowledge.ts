@@ -24,6 +24,7 @@ import {
   uuid,
   timestamp,
   integer,
+  jsonb,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -313,6 +314,24 @@ export const NATIONAL_LIST_MATCH_STATUSES = [
 export type NationalListMatchStatusValue =
   (typeof NATIONAL_LIST_MATCH_STATUSES)[number];
 
+export const INSTRUCTION_FETCH_QUEUE_STATUSES = [
+  "pending",
+  "fetching",
+  "fetched",
+  "parse_failed",
+  "source_changed",
+] as const;
+export type InstructionFetchQueueStatusValue =
+  (typeof INSTRUCTION_FETCH_QUEUE_STATUSES)[number];
+
+export const INSTRUCTION_FETCH_PRIORITY_REASONS = [
+  "parenteral",
+  "national_list",
+  "registry_remainder",
+] as const;
+export type InstructionFetchPriorityReasonValue =
+  (typeof INSTRUCTION_FETCH_PRIORITY_REASONS)[number];
+
 /** Immutable metadata for one official National Medicines List publication. */
 export const nationalListReleasesTable = pgTable(
   "national_list_releases",
@@ -411,6 +430,91 @@ export const nationalListMatchResultsTable = pgTable(
     ),
     index("national_list_match_status_idx").on(t.releaseId, t.status),
     index("national_list_match_entry_idx").on(t.releaseId, t.entryStableKey),
+  ],
+);
+
+/** Managed exact-product queue for fetching and validating official instructions. */
+export const instructionFetchQueueTable = pgTable(
+  "instruction_fetch_queue",
+  {
+    registryProductId: text("registry_product_id").primaryKey(),
+    registrationNumber: text("registration_number").notNull(),
+    tradeName: text("trade_name").notNull(),
+    inn: text("inn").notNull(),
+    dosageForm: text("dosage_form").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    sourceProductJson: jsonb("source_product_json")
+      .$type<Record<string, unknown>>()
+      .notNull(),
+    priorityTier: integer("priority_tier").notNull(),
+    priorityReason: text("priority_reason").notNull(),
+    status: text("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(3),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lockedBy: text("locked_by"),
+    registrySourceUrl: text("registry_source_url").notNull(),
+    sourceSnapshotHash: text("source_snapshot_hash").notNull(),
+    sourceSnapshotCheckedAt: timestamp("source_snapshot_checked_at", {
+      withTimezone: true,
+    }).notNull(),
+    fetchedDocumentHash: text("fetched_document_hash"),
+    lastErrorCode: text("last_error_code"),
+    lastCheckedAt: timestamp("last_checked_at", { withTimezone: true }),
+    lastSuccessAt: timestamp("last_success_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("instruction_fetch_queue_ready_idx").on(
+      t.status,
+      t.nextAttemptAt,
+      t.priorityTier,
+    ),
+    index("instruction_fetch_queue_registration_idx").on(t.registrationNumber),
+    index("instruction_fetch_queue_lock_idx").on(t.lockedAt),
+  ],
+);
+
+/** Validated instruction snapshots persisted separately from queue mechanics. */
+export const drugInstructionDocumentsTable = pgTable(
+  "drug_instruction_documents",
+  {
+    registryProductId: text("registry_product_id").primaryKey(),
+    registrationNumber: text("registration_number").notNull(),
+    tradeName: text("trade_name").notNull(),
+    status: text("status").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    documentHash: text("document_hash").notNull(),
+    documentDate: timestamp("document_date", { withTimezone: true }),
+    checkedAt: timestamp("checked_at", { withTimezone: true }).notNull(),
+    parserVersion: text("parser_version").notNull(),
+    availableSectionCount: integer("available_section_count").notNull(),
+    coveragePct: integer("coverage_pct").notNull(),
+    sourceSnapshotHash: text("source_snapshot_hash").notNull(),
+    snapshotJson: jsonb("snapshot_json")
+      .$type<Record<string, unknown>>()
+      .notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("drug_instruction_documents_registration_idx").on(
+      t.registrationNumber,
+    ),
+    index("drug_instruction_documents_hash_idx").on(t.documentHash),
+    index("drug_instruction_documents_status_idx").on(t.status),
   ],
 );
 
@@ -513,6 +617,11 @@ export type NationalListRelease = typeof nationalListReleasesTable.$inferSelect;
 export type NationalListEntry = typeof nationalListEntriesTable.$inferSelect;
 export type NationalListMatchResult =
   typeof nationalListMatchResultsTable.$inferSelect;
+
+export type InstructionFetchQueueItem =
+  typeof instructionFetchQueueTable.$inferSelect;
+export type DrugInstructionDocument =
+  typeof drugInstructionDocumentsTable.$inferSelect;
 
 export const insertKnowledgeAtcCodeSchema = createInsertSchema(
   knowledgeAtcCodesTable,
