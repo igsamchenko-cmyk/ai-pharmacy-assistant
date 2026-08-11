@@ -51,7 +51,7 @@ export const InstructionSourcesSchema = z.object({
     registrySha256: z.string().regex(/^[a-f0-9]{64}$/u),
     registryCheckedAt: z.string().datetime(),
   }),
-  products: z.array(InstructionSourceProductSchema).min(5).max(120),
+  products: z.array(InstructionSourceProductSchema).min(5).max(2_500),
 });
 
 export type InstructionSources = z.infer<typeof InstructionSourcesSchema>;
@@ -177,7 +177,7 @@ export const InstructionManifestSchema = z.object({
       }),
     )
     .min(5)
-    .max(120),
+    .max(2_500),
 });
 
 export type InstructionManifest = z.infer<typeof InstructionManifestSchema>;

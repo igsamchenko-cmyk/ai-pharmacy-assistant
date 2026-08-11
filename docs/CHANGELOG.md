@@ -7,6 +7,14 @@
 
 ### Added
 
+- Expanded the reproducible official-instruction checkpoint from 50 to 200 exact
+  registry positions across at least 160 distinct INNs. The deterministic
+  expansion pipeline validates newly selected current-registry identities,
+  official source URLs, registration provenance and section coverage before an all-or-nothing write.
+  The checkpoint contains 185 full and 15 explicitly partial instructions, zero
+  unavailable/review records, and a machine-readable acceptance/rejection audit
+  report.
+
 - Added a contextual pharmacovigilance draft assistant for an exact registry
   product. It pre-fills trade name, INN, active ingredient, dosage form,
   strength, manufacturer and registration number, validates five clinical

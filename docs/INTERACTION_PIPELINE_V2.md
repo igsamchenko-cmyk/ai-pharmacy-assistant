@@ -7,18 +7,19 @@ it never publishes extracted medical content automatically.
 
 ## Current baseline
 
-The committed Ukrainian instruction catalog contains 50 exact registry
-products. Forty-nine snapshots contain an interaction section. The first v2
-pipeline run produces:
+The committed Ukrainian instruction catalog contains 200 exact registry
+products. One hundred ninety-seven snapshots contain an interaction section.
+The current v2 pipeline run produces:
 
-- 49 resolved subject documents;
-- 5 atomic official INNs admitted as candidate-only vocabulary;
-- 1 partially resolved combination document explicitly marked for review;
-- 299 unique evidence candidates from 339 bounded evidence records;
-- 254 exact ingredient-to-ingredient candidates;
-- 45 ingredient-to-class candidates;
-- 24 candidates already represented by approved runtime rules;
-- 275 candidates requiring clinical review;
+- 195 resolved subject documents;
+- 70 documents resolved through exact atomic official-INN fallback vocabulary;
+- 13 partially resolved combination documents explicitly marked for review;
+- 2 unresolved subject documents excluded from candidate extraction;
+- 650 unique evidence candidates from 979 bounded evidence records;
+- 541 exact ingredient-to-ingredient candidates;
+- 109 ingredient-to-class candidates;
+- 25 candidates already represented by approved runtime rules;
+- 625 candidates requiring clinical review;
 - a deterministic top-100 review queue.
 
 These values are generated from the repository data. Reproduce them with:
@@ -113,7 +114,7 @@ only the instruction cross-check and does not remove the approved-rule result.
 The on-demand path removes the need to pre-import thousands of packages before
 the checker is useful: any current DB-backed registry product with an allowed
 official instruction URL can participate when selected. The committed
-50-document checkpoint remains the reproducible offline quality baseline and
+200-document checkpoint remains the reproducible offline quality baseline and
 feeds the deterministic global review report.
 
 A future background refresh may widen that offline baseline by document hash,

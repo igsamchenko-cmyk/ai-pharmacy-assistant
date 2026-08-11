@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "registryProductId": "5387BE05BF343720C2258D8B0040F1D0",
+  "registrationNumber": "UA/10899/01/01",
+  "tradeName": "ВАГІКАЛЬ",
+  "inn": "Calendula officinalis**",
+  "activeIngredient": "1 супозиторій містить Calendula officinalis  150 мг",
+  "dosageForm": "супозиторії вагінальні по 150 мг; по 5 супозиторіїв у стрипі; по 2 стрипи у картонній упаковці",
+  "strength": "150 мг",
+  "manufacturer": "Фарміна Лтд",
+  "manufacturerCountry": "Польща",
+  "registrationStartDate": "25.08.2020",
+  "registrationEndDate": "необмежений",
+  "status": "partial",
+  "sections": {
+    "indications": "Запальні захворювання піхви, які супроводжуються виділеннями, свербежем, печінням, почервонінням.",
+    "contraindications": "Підвищена чутливість до будь-якого з компонентів лікарського засобу. Підвищена чутливість до рослин родини Asteraceae (складноцвітих), таких як ромашка, ехінацея, арніка (можлива перехресна реакція).",
+    "adverseReactions": "Лікарський засіб, як правило, переноситься добре, проте при індивідуальній підвищеній чутливості можливий розвиток алергічних реакцій.\n\nПри застосуванні препарату можливі подразнення слизової оболонки піхви і статевих губ.\n\nУ разі виникнення будь-яких побічних реакцій слід припинити застосування препарату та звернутися до лікаря.\n\nТермін придатності. 3 роки.",
+    "interactions": "Не вивчалася.\n\nУ разі необхідності одночасного застосування будь-яких інших лікарських засобів слід проконсультуватися з лікарем.",
+    "specialWarnings": null,
+    "pregnancyAndLactation": "Немає достатніх даних щодо застосування лікарського засобу у період вагітності або годування груддю.",
+    "administration": "Супозиторії застосовують інтравагінально 2–3 рази на добу. Перед застосуванням супозиторій слід зволожити прокип’яченою охолодженою водою.\n\nТривалість лікування визначає лікар індивідуально. Якщо протягом 3–4 днів від початку лікування симптоми не зникають або відмічається погіршення стану, необхідно проконсультуватися з лікарем.",
+    "overdose": "Повідомлення ві дсутні.",
+    "storage": "Зберігати при температурі не вище 25 °С.\n\nЗберігати у недоступному для дітей місці."
+  },
+  "administrationFacts": {
+    "reconstitution": null,
+    "diluents": [],
+    "incompatibilities": [],
+    "infusionRate": null,
+    "stabilityAfterPrep": null,
+    "renalAdjustment": null,
+    "hepaticAdjustment": null,
+    "maxDailyDose": null
+  },
+  "source": {
+    "url": "http://www.drlz.com.ua/ibp/lz_www.nsf/id/608C995CB3BE53E142258D8E0039BF44/$file/UA108990101_5387.mht",
+    "documentId": "608C995CB3BE53E142258D8E0039BF44",
+    "documentDate": "2020-09-07T08:40:00.000Z",
+    "checkedAt": "2026-08-11T13:53:29.059Z",
+    "documentHash": "21a443c25120039d7bcd9261dfebc237526724b1265722f7fccebcd604775a1c",
+    "contentLength": 94615,
+    "parserVersion": "ua-drlz-mht-v2",
+    "datasetTitle": "Державний реєстр лікарських засобів",
+    "datasetUrl": "https://data.gov.ua/dataset/fded13b8-4e2c-4c48-bf14-65d0e3106463",
+    "license": "Creative Commons Attribution 4.0"
+  },
+  "provenance": {
+    "sourceAllowed": true,
+    "registrationMatched": true,
+    "contentLocationMatched": true,
+    "availableSectionCount": 8,
+    "coveragePct": 89
+  },
+  "warnings": [
+    "missing_section:special_warnings"
+  ]
+}

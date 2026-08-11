@@ -157,6 +157,11 @@ interface TextToken {
   charEnd: number;
 }
 
+interface TokenForm {
+  normalized: string;
+  latin: string;
+}
+
 interface IndexedPassage {
   id: number;
   snapshot: DrugInstructionSnapshot;
@@ -207,7 +212,7 @@ interface ScoredPassage {
 function normalizeToken(value: string): string {
   return value
     .normalize("NFKC")
-    .toLocaleLowerCase("uk-UA")
+    .toLowerCase()
     .replace(/[’ʼ'`]/gu, "")
     .replace(/[^\p{L}\p{N}]+/gu, "");
 }
@@ -215,23 +220,41 @@ function normalizeToken(value: string): string {
 export function normalizeInstructionSearchQuery(value: string): string {
   return value
     .normalize("NFKC")
-    .toLocaleLowerCase("uk-UA")
+    .toLowerCase()
     .replace(/[’ʼ'`]/gu, "")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .replace(/\s+/gu, " ")
     .trim();
 }
 
-function tokenize(value: string, offset = 0): TextToken[] {
+function tokenForm(text: string, cache?: Map<string, TokenForm>): TokenForm {
+  const cached = cache?.get(text);
+  if (cached) return cached;
+  const normalized = normalizeToken(text);
+  const form = {
+    normalized,
+    latin: /[а-яіїєґ]/iu.test(normalized)
+      ? normalizeToken(transliterateUkrainianToLatin(normalized))
+      : normalized,
+  };
+  cache?.set(text, form);
+  return form;
+}
+
+function tokenize(
+  value: string,
+  offset = 0,
+  cache?: Map<string, TokenForm>,
+): TextToken[] {
   return [...value.matchAll(/[\p{L}\p{N}]+/gu)]
     .map((match) => {
       const text = match[0];
-      const normalized = normalizeToken(text);
+      const form = tokenForm(text, cache);
       const start = offset + (match.index ?? 0);
       return {
         text,
-        normalized,
-        latin: normalizeToken(transliterateUkrainianToLatin(text)),
+        normalized: form.normalized,
+        latin: form.latin,
         charStart: start,
         charEnd: start + text.length,
       };
@@ -321,7 +344,10 @@ function indexSearchKey(
   index.vocabulary.add(value);
 }
 
-function metadataTokens(snapshot: DrugInstructionSnapshot): TextToken[] {
+function metadataTokens(
+  snapshot: DrugInstructionSnapshot,
+  cache: Map<string, TokenForm>,
+): TextToken[] {
   return tokenize(
     [
       snapshot.tradeName,
@@ -331,6 +357,8 @@ function metadataTokens(snapshot: DrugInstructionSnapshot): TextToken[] {
       snapshot.strength,
       snapshot.registrationNumber,
     ].join(" "),
+    0,
+    cache,
   );
 }
 
@@ -347,9 +375,10 @@ export function buildInstructionSearchIndex(
     generatedAt,
     instructionCount: snapshots.length,
   };
+  const tokenForms = new Map<string, TokenForm>();
 
   for (const snapshot of snapshots) {
-    const metadata = metadataTokens(snapshot);
+    const metadata = metadataTokens(snapshot, tokenForms);
     for (const sectionKey of INSTRUCTION_SECTION_KEYS) {
       const section = snapshot.sections[sectionKey];
       if (!section) continue;
@@ -367,7 +396,11 @@ export function buildInstructionSearchIndex(
           text: section.slice(span.start, span.end),
           charStart: span.start,
           charEnd: span.end,
-          tokens: tokenize(section.slice(span.start, span.end), span.start),
+          tokens: tokenize(
+            section.slice(span.start, span.end),
+            span.start,
+            tokenForms,
+          ),
           metadataTokens: metadata,
         };
         index.passages.push(passage);
@@ -391,9 +424,7 @@ function convertKeyboard(
   layout: Readonly<Record<string, string>>,
 ) {
   return [...value]
-    .map(
-      (character) => layout[character.toLocaleLowerCase("uk-UA")] ?? character,
-    )
+    .map((character) => layout[character.toLowerCase()] ?? character)
     .join("");
 }
 

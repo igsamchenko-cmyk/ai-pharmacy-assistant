@@ -161,7 +161,7 @@ describe("deterministic hospital administration facts", () => {
     });
     const report = buildAdministrationFactsCoverageReport(snapshots);
 
-    expect(report.counts.structuredSnapshots).toBe(50);
+    expect(report.counts.structuredSnapshots).toBe(200);
     expect(report.counts.snapshotsWithAnyFact).toBeGreaterThan(0);
     expect(report.counts.parenteralSnapshots).toBeGreaterThan(0);
     expect(report.counts.parenteralSnapshotsWithAnyFact).toBeGreaterThan(0);

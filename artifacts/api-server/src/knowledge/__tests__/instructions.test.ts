@@ -23,16 +23,23 @@ const source: InstructionSourceProduct = {
   manufacturerCountry: "Україна",
   registrationStartDate: "01.01.2026",
   registrationEndDate: "необмежений",
-  sourceUrl: "https://www.drlz.com.ua/ibp/lz_www.nsf/id/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB/$file/UA123450101_ABCD.mht",
+  sourceUrl:
+    "https://www.drlz.com.ua/ibp/lz_www.nsf/id/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB/$file/UA123450101_ABCD.mht",
 };
 
 const sectionParagraphs = [
   ["Показання", "Офіційний текст показань."],
   ["Протипоказання", "Офіційний текст протипоказань."],
   ["Побічні реакції", "Офіційний текст побічних реакцій."],
-  ["Взаємодія з іншими лікарськими засобами та інші види взаємодій", "Офіційний текст взаємодій."],
+  [
+    "Взаємодія з іншими лікарськими засобами та інші види взаємодій",
+    "Офіційний текст взаємодій.",
+  ],
   ["Особливості застосування", "Офіційний текст особливих застережень."],
-  ["Застосування у період вагітності або годування груддю", "Офіційний текст для вагітності й годування."],
+  [
+    "Застосування у період вагітності або годування груддю",
+    "Офіційний текст для вагітності й годування.",
+  ],
   ["Спосіб застосування та дози", "Офіційний текст способу застосування."],
   ["Передозування", "Офіційний текст передозування."],
   ["Умови зберігання", "Офіційний текст умов зберігання."],
@@ -50,18 +57,21 @@ function syntheticMht(
     ]),
     "</body></html>",
   ].join("");
-  return Buffer.from([
-    "MIME-Version: 1.0",
-    'Content-Type: multipart/related; boundary="FARMASSIST_TEST"',
-    "",
-    "--FARMASSIST_TEST",
-    "Content-Type: text/html; charset=utf-8",
-    "Content-Transfer-Encoding: base64",
-    `Content-Location: ${contentLocation}`,
-    "",
-    Buffer.from(html, "utf8").toString("base64"),
-    "--FARMASSIST_TEST--",
-  ].join("\r\n"), "latin1");
+  return Buffer.from(
+    [
+      "MIME-Version: 1.0",
+      'Content-Type: multipart/related; boundary="FARMASSIST_TEST"',
+      "",
+      "--FARMASSIST_TEST",
+      "Content-Type: text/html; charset=utf-8",
+      "Content-Transfer-Encoding: base64",
+      `Content-Location: ${contentLocation}`,
+      "",
+      Buffer.from(html, "utf8").toString("base64"),
+      "--FARMASSIST_TEST--",
+    ].join("\r\n"),
+    "latin1",
+  );
 }
 
 function parse(raw = syntheticMht(), product = source) {
@@ -88,7 +98,9 @@ describe("official drug instruction parser", () => {
       coveragePct: 100,
     });
     expect(result.sections.indications).toBe("Офіційний текст показань.");
-    expect(result.sections.contraindications).toBe("Офіційний текст протипоказань.");
+    expect(result.sections.contraindications).toBe(
+      "Офіційний текст протипоказань.",
+    );
     expect(result.source.documentDate).toBe("2026-07-01T00:00:00.000Z");
     expect(result.source.documentHash).toMatch(/^[a-f0-9]{64}$/u);
   });
@@ -119,46 +131,66 @@ describe("official drug instruction parser", () => {
   });
 
   it("reports an unavailable document without inventing medical text", () => {
-    const result = parse(syntheticMht([["Загальна інформація", "Немає підтримуваних розділів."]]));
+    const result = parse(
+      syntheticMht([["Загальна інформація", "Немає підтримуваних розділів."]]),
+    );
     expect(result.status).toBe("unavailable");
     expect(Object.values(result.sections)).toEqual(Array(9).fill(null));
     expect(result.provenance.availableSectionCount).toBe(0);
   });
 
   it("does not mistake dosage-table subheadings for the indications section", () => {
-    const result = parse(syntheticMht([
-      ["П оказання", "Правильний текст показань."],
-      ["Протипоказання", "Правильний текст протипоказань."],
-      ["Спосіб застосування та дози", "Початок офіційного дозування."],
-      ["Показання у новонароджених, що потребують особливих схем дозування", "Продовження офіційного дозування."],
-      ["Показання", "Табличний стовпчик дозування, а не розділ показань."],
-      ["Передозування", "Офіційний текст передозування."],
-    ]));
+    const result = parse(
+      syntheticMht([
+        ["П оказання", "Правильний текст показань."],
+        ["Протипоказання", "Правильний текст протипоказань."],
+        ["Спосіб застосування та дози", "Початок офіційного дозування."],
+        [
+          "Показання у новонароджених, що потребують особливих схем дозування",
+          "Продовження офіційного дозування.",
+        ],
+        ["Показання", "Табличний стовпчик дозування, а не розділ показань."],
+        ["Передозування", "Офіційний текст передозування."],
+      ]),
+    );
     expect(result.sections.indications).toBe("Правильний текст показань.");
-    expect(result.sections.administration).toContain("Показання у новонароджених");
-    expect(result.sections.administration).toContain("Продовження офіційного дозування.");
-    expect(result.sections.administration).toContain("Табличний стовпчик дозування");
+    expect(result.sections.administration).toContain(
+      "Показання у новонароджених",
+    );
+    expect(result.sections.administration).toContain(
+      "Продовження офіційного дозування.",
+    );
+    expect(result.sections.administration).toContain(
+      "Табличний стовпчик дозування",
+    );
   });
 
   it("changes the document hash when official content changes", () => {
     const original = parse();
-    const changed = parse(syntheticMht([
-      ...sectionParagraphs.slice(0, -1),
-      ["Умови зберігання", "Змінений офіційний текст."],
-    ]));
+    const changed = parse(
+      syntheticMht([
+        ...sectionParagraphs.slice(0, -1),
+        ["Умови зберігання", "Змінений офіційний текст."],
+      ]),
+    );
     expect(changed.source.documentHash).not.toBe(original.source.documentHash);
   });
 
   it("rejects an unsupported document format without producing a snapshot", () => {
-    expect(() => parse(Buffer.from("<html>not an MHT document</html>", "utf8")))
-      .toThrowError("unsupported_mht_boundary");
+    expect(() =>
+      parse(Buffer.from("<html>not an MHT document</html>", "utf8")),
+    ).toThrowError("unsupported_mht_boundary");
   });
   it("blocks an unapproved source with a sanitized error", () => {
-    expect(isAllowedInstructionSource("https://example.com/instruction.mht")).toBe(false);
-    expect(() => parse(syntheticMht(), {
-      ...source,
-      sourceUrl: "https://example.com/instruction.mht",
-    })).toThrowError("instruction_source_not_allowed");
+    expect(
+      isAllowedInstructionSource("https://example.com/instruction.mht"),
+    ).toBe(false);
+    expect(() =>
+      parse(syntheticMht(), {
+        ...source,
+        sourceUrl: "https://example.com/instruction.mht",
+      }),
+    ).toThrowError("instruction_source_not_allowed");
   });
 });
 
@@ -166,37 +198,57 @@ describe("committed instruction catalog", () => {
   it("binds every snapshot to one exact product and registration", () => {
     const sources = loadInstructionSources();
     const manifest = loadInstructionManifest();
-    expect(sources.products).toHaveLength(50);
-    expect(manifest.products).toHaveLength(50);
-    expect(new Set(sources.products.map((product) => product.registryProductId)).size).toBe(50);
-    expect(new Set(sources.products.map((product) => product.registrationNumber)).size).toBe(50);
-    expect(new Set(sources.products.map((product) => product.inn)).size).toBe(50);
+    expect(sources.products).toHaveLength(200);
+    expect(manifest.products).toHaveLength(200);
+    expect(
+      new Set(sources.products.map((product) => product.registryProductId))
+        .size,
+    ).toBe(200);
+    expect(
+      new Set(sources.products.map((product) => product.registrationNumber))
+        .size,
+    ).toBe(200);
+    expect(
+      new Set(sources.products.map((product) => product.inn)).size,
+    ).toBeGreaterThanOrEqual(160);
 
     const snapshots = sources.products.map((product) =>
-      getInstructionForProduct(product.registryProductId)
+      getInstructionForProduct(product.registryProductId),
     );
     expect(snapshots.every((snapshot) => snapshot !== null)).toBe(true);
-    expect(snapshots.filter((snapshot) => snapshot?.status === "available")).toHaveLength(46);
-    expect(snapshots.filter((snapshot) => snapshot?.status === "partial")).toHaveLength(4);
-    expect(snapshots.every((snapshot) =>
-      snapshot !== null &&
-      snapshot.provenance.sourceAllowed &&
-      snapshot.provenance.registrationMatched &&
-      snapshot.provenance.contentLocationMatched &&
-      Object.values(snapshot.sections).filter(Boolean).length >= 8
-    )).toBe(true);
-    expect(new Set(snapshots.map((snapshot) => snapshot?.source.documentId)).size).toBe(50);
-    expect(new Set(snapshots.map((snapshot) => snapshot?.source.documentHash)).size).toBe(50);
+    expect(
+      snapshots.filter((snapshot) => snapshot?.status === "available"),
+    ).toHaveLength(185);
+    expect(
+      snapshots.filter((snapshot) => snapshot?.status === "partial"),
+    ).toHaveLength(15);
+    expect(
+      snapshots.every(
+        (snapshot) =>
+          snapshot !== null &&
+          snapshot.provenance.sourceAllowed &&
+          snapshot.provenance.registrationMatched &&
+          snapshot.provenance.contentLocationMatched &&
+          Object.values(snapshot.sections).filter(Boolean).length >= 8,
+      ),
+    ).toBe(true);
+    expect(
+      new Set(snapshots.map((snapshot) => snapshot?.source.documentId)).size,
+    ).toBe(200);
+    expect(
+      new Set(snapshots.map((snapshot) => snapshot?.source.documentHash)).size,
+    ).toBe(200);
 
     for (const product of sources.products) {
-      expect(hasInstructionForProduct(
-        product.registryProductId,
-        product.registrationNumber,
-      )).toBe(true);
-      expect(hasInstructionForProduct(
-        product.registryProductId,
-        "UA/99999/99/99",
-      )).toBe(false);
+      expect(
+        hasInstructionForProduct(
+          product.registryProductId,
+          product.registrationNumber,
+        ),
+      ).toBe(true);
+      expect(
+        hasInstructionForProduct(product.registryProductId, "UA/99999/99/99"),
+      ).toBe(false);
       const snapshot = getInstructionForProduct(product.registryProductId);
       expect(snapshot?.registrationNumber).toBe(product.registrationNumber);
       expect(snapshot?.registryProductId).toBe(product.registryProductId);
@@ -205,6 +257,8 @@ describe("committed instruction catalog", () => {
   });
 
   it("does not reuse one instruction for a different product", () => {
-    expect(getInstructionForProduct("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")).toBeNull();
+    expect(
+      getInstructionForProduct("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"),
+    ).toBeNull();
   });
 });
