@@ -116,6 +116,28 @@ product/registration metadata, document date, attribution and an
 original-document link. The text is official source text, not individualized
 advice or a recommendation to start, stop or change treatment.
 
+## Full-Text Search
+
+`GET /api/catalog/instructions/search` searches the verified committed
+instruction snapshots from two entered characters. The in-memory section index
+is prepared in the background when the API starts and is reused between
+requests. Search supports product/INN metadata, Ukrainian morphology by prefix,
+Latin transliteration, the wrong keyboard layout and a one-character spelling
+error. The endpoint does not call an LLM and does not invent synonyms or
+medical conclusions.
+
+Every result is a literal slice of one official section with its section key,
+UTF-16 `charStart`/`charEnd` offsets, highlighted token offsets, registration
+number, document date and source URL. The UI links that exact range back to the
+unified product card, opens the matching section and scrolls to the quote. An
+empty result is shown as missing coverage, not as proof that an interaction or
+warning does not exist.
+
+The current full-text index covers the same 50 exact registry positions as the
+MVP snapshots. Expanding official instruction coverage is a separate reviewed
+data checkpoint; the search implementation does not generalize a result to an
+unindexed product.
+
 ## Production Activation Plan
 
 No production DB write or import is required. After PR approval:

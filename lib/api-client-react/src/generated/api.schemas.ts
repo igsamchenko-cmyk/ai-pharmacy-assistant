@@ -1446,6 +1446,136 @@ export interface ProductCard {
   warnings: string[];
 }
 
+export interface InstructionSearchHighlight {
+  /**
+     * @minimum 0
+     * @maximum 60000
+     */
+  charStart: number;
+  /**
+     * @minimum 1
+     * @maximum 60000
+     */
+  charEnd: number;
+}
+
+export interface InstructionSearchSource {
+  /** @maxLength 1000 */
+  url: string;
+  /** @nullable */
+  documentDate: string | null;
+  checkedAt: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  coveragePct: number;
+}
+
+export type InstructionSearchResultSectionKey = typeof InstructionSearchResultSectionKey[keyof typeof InstructionSearchResultSectionKey];
+
+
+export const InstructionSearchResultSectionKey = {
+  indications: 'indications',
+  contraindications: 'contraindications',
+  adverseReactions: 'adverseReactions',
+  interactions: 'interactions',
+  specialWarnings: 'specialWarnings',
+  pregnancyAndLactation: 'pregnancyAndLactation',
+  administration: 'administration',
+  overdose: 'overdose',
+  storage: 'storage',
+} as const;
+
+export type InstructionSearchResultMatchMode = typeof InstructionSearchResultMatchMode[keyof typeof InstructionSearchResultMatchMode];
+
+
+export const InstructionSearchResultMatchMode = {
+  exact_phrase: 'exact_phrase',
+  all_terms: 'all_terms',
+  transliteration: 'transliteration',
+  keyboard_layout: 'keyboard_layout',
+  approximate: 'approximate',
+} as const;
+
+export interface InstructionSearchResult {
+  /** @pattern ^[A-F0-9]{32}$ */
+  registryProductId: string;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  tradeName: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  inn: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  dosageForm: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  strength: string;
+  sectionKey: InstructionSearchResultSectionKey;
+  quote: InstructionQuote;
+  /** @maxItems 12 */
+  highlights: InstructionSearchHighlight[];
+  /**
+     * @maxItems 12
+     * @items.minLength 1
+     * @items.maxLength 120
+     */
+  matchedTerms: string[];
+  matchMode: InstructionSearchResultMatchMode;
+  source: InstructionSearchSource;
+}
+
+export type InstructionSearchResponseSection = typeof InstructionSearchResponseSection[keyof typeof InstructionSearchResponseSection];
+
+
+export const InstructionSearchResponseSection = {
+  all: 'all',
+  indications: 'indications',
+  contraindications: 'contraindications',
+  adverseReactions: 'adverseReactions',
+  interactions: 'interactions',
+  specialWarnings: 'specialWarnings',
+  pregnancyAndLactation: 'pregnancyAndLactation',
+  administration: 'administration',
+  overdose: 'overdose',
+  storage: 'storage',
+} as const;
+
+export interface InstructionSearchResponse {
+  /**
+     * @minLength 2
+     * @maxLength 160
+     */
+  query: string;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  normalizedQuery: string;
+  section: InstructionSearchResponseSection;
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 0 */
+  indexedInstructionCount: number;
+  snapshotGeneratedAt: string;
+  /** @minimum 0 */
+  durationMs: number;
+  /** @maxItems 30 */
+  items: InstructionSearchResult[];
+}
+
 export type DrugInstructionVersion = typeof DrugInstructionVersion[keyof typeof DrugInstructionVersion];
 
 
@@ -3473,6 +3603,36 @@ reimbursementPackageKey?: string;
  */
 priceCatalogId?: string;
 };
+
+export type SearchDrugInstructionsParams = {
+/**
+ * @minLength 2
+ * @maxLength 160
+ */
+q: string;
+section?: SearchDrugInstructionsSection;
+/**
+ * @minimum 1
+ * @maximum 30
+ */
+limit?: number;
+};
+
+export type SearchDrugInstructionsSection = typeof SearchDrugInstructionsSection[keyof typeof SearchDrugInstructionsSection];
+
+
+export const SearchDrugInstructionsSection = {
+  all: 'all',
+  indications: 'indications',
+  contraindications: 'contraindications',
+  adverseReactions: 'adverseReactions',
+  interactions: 'interactions',
+  specialWarnings: 'specialWarnings',
+  pregnancyAndLactation: 'pregnancyAndLactation',
+  administration: 'administration',
+  overdose: 'overdose',
+  storage: 'storage',
+} as const;
 
 export type CheckProductDispensingCategoryParams = {
 /**

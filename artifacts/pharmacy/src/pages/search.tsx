@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "wouter";
 import {
   getSearchCatalogQueryKey,
   getSearchCatalogQueryOptions,
@@ -1813,6 +1814,18 @@ export default function SearchPage() {
           виробником, реєстраційним номером, формою чи дозуванням.
         </p>
       </header>
+
+      <div
+        className="grid grid-cols-2 gap-1 rounded-xl border bg-muted/30 p-1"
+        aria-label="Режим пошуку"
+      >
+        <Button type="button" className="min-h-11 whitespace-normal">
+          За назвою або МНН
+        </Button>
+        <Button asChild variant="ghost" className="min-h-11 whitespace-normal">
+          <Link href="/instruction-search">У текстах інструкцій</Link>
+        </Button>
+      </div>
 
       <Alert className="bg-muted/30">
         <ShieldAlert className="h-4 w-4" />

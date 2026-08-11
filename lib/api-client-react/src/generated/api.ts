@@ -54,6 +54,7 @@ import type {
   HistoryEntry,
   HistoryInput,
   ImportPreview,
+  InstructionSearchResponse,
   InteractionInstructionSignalsResult,
   KnowledgeRuntimeStatus,
   KnowledgeSearchParams,
@@ -76,6 +77,7 @@ import type {
   ReviewQueueResponse,
   ReviewStats,
   SearchCatalogParams,
+  SearchDrugInstructionsParams,
   SearchDrugsParams,
   SeriesRestrictionCheck
 } from './api.schemas';
@@ -1102,6 +1104,91 @@ export function useGetProductCard<TData = Awaited<ReturnType<typeof getProductCa
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetProductCardQueryOptions(registryProductId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSearchDrugInstructionsUrl = (params: SearchDrugInstructionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/catalog/instructions/search?${stringifiedParams}` : `/api/catalog/instructions/search`
+}
+
+/**
+ * Searches only verified structured DRLZ instruction snapshots. Results contain literal source passages with exact section offsets and highlight ranges. No medical text is generated or paraphrased.
+ * @summary Search literal text across verified official instructions
+ */
+export const searchDrugInstructions = async (params: SearchDrugInstructionsParams, options?: RequestInit): Promise<InstructionSearchResponse> => {
+
+  return customFetch<InstructionSearchResponse>(getSearchDrugInstructionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchDrugInstructionsQueryKey = (params?: SearchDrugInstructionsParams,) => {
+    return [
+    `/api/catalog/instructions/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchDrugInstructionsQueryOptions = <TData = Awaited<ReturnType<typeof searchDrugInstructions>>, TError = ErrorType<ErrorResponse>>(params: SearchDrugInstructionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchDrugInstructions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchDrugInstructionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchDrugInstructions>>> = ({ signal }) => searchDrugInstructions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchDrugInstructions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchDrugInstructionsQueryResult = NonNullable<Awaited<ReturnType<typeof searchDrugInstructions>>>
+export type SearchDrugInstructionsQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Search literal text across verified official instructions
+ */
+
+export function useSearchDrugInstructions<TData = Awaited<ReturnType<typeof searchDrugInstructions>>, TError = ErrorType<ErrorResponse>>(
+ params: SearchDrugInstructionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchDrugInstructions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchDrugInstructionsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

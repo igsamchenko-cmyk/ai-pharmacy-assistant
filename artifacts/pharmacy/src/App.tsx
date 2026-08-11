@@ -15,6 +15,7 @@ import { ProtectedRoute } from "@/components/protected-route";
 const LoginPage = lazy(() => import("@/pages/login"));
 const Dispensing = lazy(() => import("@/pages/dispensing"));
 const SearchPage = lazy(() => import("@/pages/search"));
+const InstructionSearch = lazy(() => import("@/pages/instruction-search"));
 const DrugDetail = lazy(() => import("@/pages/drug-detail"));
 const Analogs = lazy(() => import("@/pages/analogs"));
 const Interactions = lazy(() => import("@/pages/interactions"));
@@ -34,6 +35,9 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 const queryClient = new QueryClient();
 const ProtectedDispensing = () => <ProtectedRoute component={Dispensing} />;
 const ProtectedSearch = () => <ProtectedRoute component={SearchPage} />;
+const ProtectedInstructionSearch = () => (
+  <ProtectedRoute component={InstructionSearch} />
+);
 const ProtectedDrugDetail = () => <ProtectedRoute component={DrugDetail} />;
 const ProtectedAnalogs = () => <ProtectedRoute component={Analogs} />;
 const ProtectedInteractions = () => <ProtectedRoute component={Interactions} />;
@@ -91,6 +95,10 @@ function Router() {
               component={ProtectedRegulatoryRadar}
             />
             <Route path="/search" component={ProtectedSearch} />
+            <Route
+              path="/instruction-search"
+              component={ProtectedInstructionSearch}
+            />
             <Route
               path="/instructions/:productId"
               component={ProtectedProductCard}

@@ -15,6 +15,7 @@ import {
   PRODUCT_CARD_PAGE_CLASS,
   PRODUCT_CARD_TITLE_CLASS,
   ProductCardContent,
+  instructionQuoteFromHash,
 } from "./product-card";
 
 const PRODUCT_ID = "A".repeat(32);
@@ -321,5 +322,28 @@ describe("operational product card UI", () => {
     expect(html).toContain("Свіжість кожного джерела");
     expect(html).toContain("Розпорядження Держлікслужби");
     expect(html).toContain("Повідомити про проблему");
+  });
+
+  it("resolves a search-result hash only when it points to exact section text", () => {
+    const sections = card().instruction.sections;
+    const valid = instructionQuoteFromHash(
+      `#instruction-quote-interactions-0-${INTERACTIONS_TEXT.length}`,
+      sections,
+    );
+    expect(valid).toEqual({
+      text: INTERACTIONS_TEXT,
+      sectionKey: "interactions",
+      charStart: 0,
+      charEnd: INTERACTIONS_TEXT.length,
+    });
+    expect(
+      instructionQuoteFromHash(
+        "#instruction-quote-interactions-0-99999",
+        sections,
+      ),
+    ).toBeNull();
+    expect(
+      instructionQuoteFromHash("#instruction-quote-unknown-0-4", sections),
+    ).toBeNull();
   });
 });

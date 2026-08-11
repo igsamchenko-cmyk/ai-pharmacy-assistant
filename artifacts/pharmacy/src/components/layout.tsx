@@ -30,7 +30,7 @@ export const MOBILE_BOTTOM_NAV_CLASS =
 export const REFERENCE_NAV_ITEMS = [
   {
     href: "/",
-    activeHrefs: ["/dispense", "/search"],
+    activeHrefs: ["/dispense", "/search", "/instruction-search"],
     activePrefixes: [
       "/products",
       "/instructions",

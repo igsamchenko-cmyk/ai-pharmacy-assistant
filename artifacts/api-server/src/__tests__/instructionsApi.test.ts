@@ -1,8 +1,10 @@
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "../app";
 import { loadInstructionSources } from "../knowledge/instructions/catalog";
+import { getInstructionForProduct } from "../knowledge/instructions/catalog";
+import { warmInstructionSearchIndex } from "../services/instructionSearchService";
 
 const originalEnv = { ...process.env };
 
@@ -22,6 +24,10 @@ async function withServer<T>(
 }
 
 describe("drug instruction API", () => {
+  beforeAll(() => {
+    warmInstructionSearchIndex();
+  }, 15_000);
+
   afterEach(() => {
     process.env = { ...originalEnv };
   });
@@ -99,6 +105,61 @@ describe("drug instruction API", () => {
       }
     });
   });
+  it("searches verified instruction text and returns exact source offsets", async () => {
+    process.env.AUTH_REQUIRED = "false";
+    const app = createApp({ nodeEnv: "test" });
+    await withServer(createServer(app), async (baseUrl) => {
+      const response = await fetch(
+        `${baseUrl}/api/catalog/instructions/search?q=${encodeURIComponent("кальцій")}&section=interactions`,
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("x-instruction-index-count")).toBe("50");
+      const body = (await response.json()) as {
+        total: number;
+        indexedInstructionCount: number;
+        items: Array<{
+          registryProductId: string;
+          sectionKey: string;
+          quote: {
+            text: string;
+            sectionKey: string;
+            charStart: number;
+            charEnd: number;
+          };
+          highlights: Array<{ charStart: number; charEnd: number }>;
+        }>;
+      };
+      expect(body.indexedInstructionCount).toBe(50);
+      expect(body.total).toBeGreaterThan(0);
+      const item = body.items[0]!;
+      expect(item.sectionKey).toBe("interactions");
+      const snapshot = getInstructionForProduct(item.registryProductId);
+      expect(snapshot).not.toBeNull();
+      const section = snapshot?.sections.interactions;
+      expect(section?.slice(item.quote.charStart, item.quote.charEnd)).toBe(
+        item.quote.text,
+      );
+      expect(item.highlights.length).toBeGreaterThan(0);
+      for (const highlight of item.highlights) {
+        expect(highlight.charStart).toBeGreaterThanOrEqual(
+          item.quote.charStart,
+        );
+        expect(highlight.charEnd).toBeLessThanOrEqual(item.quote.charEnd);
+      }
+    });
+  });
+
+  it("rejects blank and one-character instruction queries", async () => {
+    process.env.AUTH_REQUIRED = "false";
+    const app = createApp({ nodeEnv: "test" });
+    await withServer(createServer(app), async (baseUrl) => {
+      const response = await fetch(
+        `${baseUrl}/api/catalog/instructions/search?q=%20`,
+      );
+      expect(response.status).toBe(400);
+    });
+  });
+
   it("returns sanitized 400 and 404 responses", async () => {
     process.env.AUTH_REQUIRED = "false";
     const app = createApp({ nodeEnv: "test" });
