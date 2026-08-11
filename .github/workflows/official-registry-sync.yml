@@ -54,6 +54,7 @@ on:
       - "lib/db/src/schema/knowledge.ts"
       - "artifacts/api-server/src/knowledge/instructions/fetchQueue*.ts"
       - "artifacts/api-server/src/scripts/knowledge-instructions-queue.ts"
+      - "lib/db/sql/instruction-queue-bootstrap.sql"
 
 permissions:
   contents: read
@@ -127,6 +128,11 @@ jobs:
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
       - name: Initialize ephemeral CI schema
         run: pnpm db:push
+
+      - name: Validate idempotent instruction queue schema SQL in CI
+        run: >-
+          psql "$DATABASE_URL" --no-psqlrc -X -v ON_ERROR_STOP=1
+          --file=lib/db/sql/instruction-queue-bootstrap.sql
 
       - name: Import every fresh official row into ephemeral CI DB
         run: >-
@@ -479,13 +485,27 @@ jobs:
             *[!0-9a-f]*) exit 1 ;;
           esac
 
-      - name: Apply additive instruction queue schema
-        env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
-          DATABASE_SSL: "true"
-        run: pnpm db:push
+      - name: Validate exact additive instruction queue schema
+        id: queue_schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          sql="lib/db/sql/instruction-queue-bootstrap.sql"
+          test -f "$sql"
+          test "$(grep -Ec '^CREATE TABLE IF NOT EXISTS ' "$sql")" -eq 2
+          test "$(grep -Ec '^CREATE INDEX IF NOT EXISTS ' "$sql")" -eq 6
+          ! grep -Eiq '(^|[^[:alpha:]])(ALTER|DROP|DELETE|TRUNCATE|INSERT|UPDATE)([^[:alpha:]]|$)' "$sql"
+          echo "path=$sql" >> "$GITHUB_OUTPUT"
+          echo "Schema diff: exactly two additive tables and six indexes" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Verify both queue tables exist
+      - name: Apply exact additive instruction queue schema
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: >-
+          psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -v ON_ERROR_STOP=1
+          --file="${{ steps.queue_schema.outputs.path }}"
+
+      - name: Verify exact queue tables, columns, and indexes
         shell: bash
         env:
           PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
@@ -494,6 +514,15 @@ jobs:
           table_count="$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc \
             "SELECT COUNT(*) FROM pg_class WHERE relkind = 'r' AND relname IN ('instruction_fetch_queue', 'drug_instruction_documents')")"
           test "$table_count" = "2"
+          column_count="$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc \
+            "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name IN ('instruction_fetch_queue', 'drug_instruction_documents')")"
+          test "$column_count" = "39"
+          index_count="$(psql "$PRODUCTION_DATABASE_URL" --no-psqlrc -X -Atc \
+            "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname IN ('instruction_fetch_queue_ready_idx', 'instruction_fetch_queue_registration_idx', 'instruction_fetch_queue_lock_idx', 'drug_instruction_documents_registration_idx', 'drug_instruction_documents_hash_idx', 'drug_instruction_documents_status_idx')")"
+          test "$index_count" = "6"
+          echo "Instruction queue tables verified: 2"
+          echo "Instruction queue columns verified: 39"
+          echo "Instruction queue indexes verified: 6"
 
       - name: Seed audited instruction queue plan
         env:

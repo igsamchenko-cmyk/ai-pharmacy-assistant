@@ -111,7 +111,9 @@ The one-time production bootstrap is exposed as the
 `official-registry-sync.yml` workflow. It requires the exact confirmation
 `APPLY_INSTRUCTION_QUEUE_BOOTSTRAP_20`, repeats the full official-registry
 audit, pins queue seeding to that audit's SHA-256, applies only the additive
-queue schema, and processes at most 20 rows. The workflow reads the database
+queue schema through the reviewed `instruction-queue-bootstrap.sql` file
+(exactly two tables and six indexes), and processes at most 20 rows. The
+workflow reads the database
 URL from the `production-registry-sync` GitHub environment and reports counts
 and error codes only; it never prints connection details or document text.
 
