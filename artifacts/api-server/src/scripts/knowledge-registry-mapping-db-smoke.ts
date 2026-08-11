@@ -10,6 +10,7 @@ import {
   type ReviewableImportPlan,
   type ReviewableImportRow,
 } from "../knowledge/ingestion";
+import { isProtectedProductionDatabaseHost } from "../knowledge/productionDatabaseHost";
 
 function argValue(prefix: string): string | null {
   return (
@@ -71,7 +72,7 @@ function assertNonProductionDatabaseUrl(): void {
   const explicitlyAllowed =
     process.env.ALLOW_REGISTRY_MAPPING_DB_SMOKE_NONLOCAL === "true";
 
-  if (host.includes("render.com") || host.includes("render-postgres")) {
+  if (isProtectedProductionDatabaseHost(host)) {
     throw new Error(
       "Registry mapping DB smoke refuses production database hosts.",
     );

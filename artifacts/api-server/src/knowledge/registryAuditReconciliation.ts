@@ -1,3 +1,5 @@
+import { isProtectedProductionDatabaseHost } from "./productionDatabaseHost";
+
 const EXPECTED_WORKFLOW = "Official registry parity and gated sync";
 const EXPECTED_REPOSITORY = "igsamchenko-cmyk/ai-pharmacy-assistant";
 const EXPECTED_PURPOSE = "production-registry-audit-reconciliation";
@@ -83,9 +85,9 @@ export function authorizeRegistryAuditReconciliationDatabase(
     throw new Error("Production database configuration is required.");
   }
   const host = new URL(rawDatabaseUrl).hostname.toLowerCase();
-  if (!host.includes("render.com") && !host.includes("render-postgres")) {
+  if (!isProtectedProductionDatabaseHost(host)) {
     throw new Error(
-      "Registry audit reconciliation requires the Render production host.",
+      "Registry audit reconciliation requires an approved production database host.",
     );
   }
   return assertProtectedRegistryAuditReconciliationContext(env);

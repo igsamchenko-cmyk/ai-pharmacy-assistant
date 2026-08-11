@@ -1,3 +1,5 @@
+import { isProtectedProductionDatabaseHost } from "./productionDatabaseHost";
+
 const EXPECTED_WORKFLOW = "Official registry parity and gated sync";
 const EXPECTED_REPOSITORY = "igsamchenko-cmyk/ai-pharmacy-assistant";
 const EXPECTED_PURPOSE = "post-apply-registry-search-smoke";
@@ -53,10 +55,6 @@ export function assertCatalogProfileSnapshot(
   ) {
     throw new Error("Production profile snapshot gate failed.");
   }
-}
-
-function isRenderHost(host: string): boolean {
-  return host.includes("render.com") || host.includes("render-postgres");
 }
 
 function assertProtectedProductionContext(env: CatalogSmokeEnvironment): void {
@@ -133,8 +131,10 @@ export function authorizeCatalogProfileDatabase(
     );
   }
   const host = new URL(rawDatabaseUrl).hostname.toLowerCase();
-  if (!isRenderHost(host)) {
-    throw new Error("Registry production profiling requires the Render host.");
+  if (!isProtectedProductionDatabaseHost(host)) {
+    throw new Error(
+      "Registry production profiling requires an approved production database host.",
+    );
   }
   assertProtectedProductionProfileContext(env);
   return {
@@ -152,7 +152,7 @@ export function authorizeCatalogSmokeDatabase(
   }
   const host = new URL(rawDatabaseUrl).hostname.toLowerCase();
   const local = new Set(["localhost", "127.0.0.1", "::1"]);
-  if (isRenderHost(host)) {
+  if (isProtectedProductionDatabaseHost(host)) {
     assertProtectedProductionContext(env);
     return {
       protectedProduction: true,

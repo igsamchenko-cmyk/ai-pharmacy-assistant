@@ -21,6 +21,8 @@ import {
 } from "../registrySyncWorkflowState";
 
 const RENDER_URL = "postgresql://db.render.com:5432/farmassist";
+const NEON_URL =
+  "postgresql://db.pooler.us-east-2.aws.neon.tech:5432/farmassist";
 const SHA = "228b8a201491de53d85788d398143586cd20fcd461731892d5db4ab2d8f4dd96";
 
 function protectedContext(
@@ -82,6 +84,18 @@ describe("protected production catalog smoke authorization", () => {
     ).toThrow(/approved post-apply/);
   });
 
+  it("protects Neon hosts with the same fail-closed gate", () => {
+    expect(() => authorizeCatalogSmokeDatabase(NEON_URL, {})).toThrow(
+      /refuses the production host/,
+    );
+    expect(authorizeCatalogSmokeDatabase(NEON_URL, protectedContext())).toEqual(
+      {
+        protectedProduction: true,
+        databaseLabel: "protected-production-read-only",
+      },
+    );
+  });
+
   it("blocks a wrong audited SHA", () => {
     expect(() =>
       authorizeCatalogSmokeDatabase(
@@ -132,6 +146,15 @@ describe("protected production search profile authorization", () => {
         profileContext({ CONFIRM_PRODUCTION_REGISTRY_APPLY: "a".repeat(64) }),
       ),
     ).toThrow(/approved read-only/);
+  });
+
+  it("allows Neon only with the complete protected profile context", () => {
+    expect(authorizeCatalogProfileDatabase(NEON_URL, profileContext())).toEqual(
+      {
+        protectedProduction: true,
+        databaseLabel: "protected-production-read-only",
+      },
+    );
   });
 
   it("blocks wrong mode, workflow and branch markers", () => {
@@ -434,7 +457,10 @@ describe("post-commit workflow state", () => {
 
   it("keeps the production profile moving-count and read-only diagnostics", () => {
     const profilePath = fileURLToPath(
-      new URL("../../scripts/knowledge-registry-search-profile.ts", import.meta.url),
+      new URL(
+        "../../scripts/knowledge-registry-search-profile.ts",
+        import.meta.url,
+      ),
     );
     const profile = readFileSync(profilePath, "utf8");
     expect(profile).not.toContain("16_533");
