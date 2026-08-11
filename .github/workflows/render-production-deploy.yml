@@ -162,7 +162,7 @@ jobs:
             "https://api.render.com/v1/postgres?limit=100")"
 
           jq -r '
-            (["POSTGRES_ID", "NAME", "REGION", "PLAN", "SUSPENDED", "STATUS", "UPDATED_AT"] | @tsv),
+            (["POSTGRES_ID", "NAME", "REGION", "PLAN", "SUSPENDED", "STATUS", "SUSPENDERS", "CREATED_AT", "UPDATED_AT"] | @tsv),
             (.[] | (.postgres // .) as $postgres | [
               ($postgres.id // "-"),
               ($postgres.name // "-"),
@@ -170,6 +170,8 @@ jobs:
               ($postgres.plan // "-"),
               ($postgres.suspended // "unknown"),
               ($postgres.status // "unknown"),
+              (($postgres.suspenders // []) | join(",")),
+              ($postgres.createdAt // "-"),
               ($postgres.updatedAt // "-")
             ] | @tsv)
           ' <<<"$postgres_json"
