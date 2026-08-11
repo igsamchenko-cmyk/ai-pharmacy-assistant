@@ -1035,6 +1035,83 @@ export interface ProfessionalProductProfile {
   warnings: string[];
 }
 
+export type ProductCardDispensingStatus = typeof ProductCardDispensingStatus[keyof typeof ProductCardDispensingStatus];
+
+
+export const ProductCardDispensingStatus = {
+  otc: 'otc',
+  prescription: 'prescription',
+  conditional: 'conditional',
+  unknown: 'unknown',
+  conflict: 'conflict',
+  not_found: 'not_found',
+} as const;
+
+export type ProductCardDispensingConfidence = typeof ProductCardDispensingConfidence[keyof typeof ProductCardDispensingConfidence];
+
+
+export const ProductCardDispensingConfidence = {
+  verified: 'verified',
+  requires_review: 'requires_review',
+  unavailable: 'unavailable',
+} as const;
+
+export interface ProductCardDispensing {
+  status: ProductCardDispensingStatus;
+  confidence: ProductCardDispensingConfidence;
+  check: DispensingCategoryCheck | null;
+}
+
+export type ProductCardNationalListStatus = typeof ProductCardNationalListStatus[keyof typeof ProductCardNationalListStatus];
+
+
+export const ProductCardNationalListStatus = {
+  exact: 'exact',
+  ingredient_only: 'ingredient_only',
+  uncertain: 'uncertain',
+  not_listed: 'not_listed',
+  not_applicable: 'not_applicable',
+} as const;
+
+export interface ProductCardNationalList {
+  status: ProductCardNationalListStatus;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  release: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  matchReason: string;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  section: string | null;
+  source: NationalListSource | null;
+  /** @nullable */
+  checkedAt: string | null;
+}
+
+export interface ProductCardEconomics {
+  nationalList: ProductCardNationalList;
+  reimbursement: ReimbursementCheck | null;
+  price: PriceCatalogCheck | null;
+}
+
+export type ProductCardInstructionSourceStatus = typeof ProductCardInstructionSourceStatus[keyof typeof ProductCardInstructionSourceStatus];
+
+
+export const ProductCardInstructionSourceStatus = {
+  structured: 'structured',
+  official_document: 'official_document',
+  not_published: 'not_published',
+  invalid_source: 'invalid_source',
+  temporarily_unavailable: 'temporarily_unavailable',
+} as const;
+
 export interface DrugInstructionSections {
   /**
      * @maxLength 60000
@@ -1129,84 +1206,25 @@ export interface DrugInstructionProvenance {
   coveragePct: number;
 }
 
-export type DrugInstructionVersion = typeof DrugInstructionVersion[keyof typeof DrugInstructionVersion];
-
-
-export const DrugInstructionVersion = {
-  '10': '1.0',
-} as const;
-
-export type DrugInstructionStatus = typeof DrugInstructionStatus[keyof typeof DrugInstructionStatus];
-
-
-export const DrugInstructionStatus = {
-  available: 'available',
-  partial: 'partial',
-  unavailable: 'unavailable',
-  needs_review: 'needs_review',
-} as const;
-
-export interface DrugInstruction {
-  version: DrugInstructionVersion;
-  /** @pattern ^[A-F0-9]{32}$ */
-  registryProductId: string;
-  /** @pattern ^UA/\d+/\d+/\d+$ */
-  registrationNumber: string;
-  /**
-     * @minLength 1
-     * @maxLength 300
-     */
-  tradeName: string;
-  /**
-     * @minLength 1
-     * @maxLength 300
-     */
-  inn: string;
-  /**
-     * @minLength 1
-     * @maxLength 2000
-     */
-  activeIngredient: string;
-  /**
-     * @minLength 1
-     * @maxLength 2000
-     */
-  dosageForm: string;
-  /**
-     * @minLength 1
-     * @maxLength 120
-     */
-  strength: string;
-  /**
-     * @minLength 1
-     * @maxLength 1000
-     */
-  manufacturer: string;
-  /**
-     * @minLength 1
-     * @maxLength 120
-     */
-  manufacturerCountry: string;
-  /**
-     * @minLength 1
-     * @maxLength 40
-     */
-  registrationStartDate: string;
-  /**
-     * @minLength 1
-     * @maxLength 40
-     */
-  registrationEndDate: string;
-  status: DrugInstructionStatus;
-  sections: DrugInstructionSections;
-  source: DrugInstructionSource;
-  provenance: DrugInstructionProvenance;
+export interface ProductCardInstruction {
+  available: boolean;
+  sourceStatus: ProductCardInstructionSourceStatus;
+  sections: DrugInstructionSections | null;
+  source: DrugInstructionSource | null;
+  provenance: DrugInstructionProvenance | null;
   /**
      * @maxItems 20
      * @items.pattern ^[a-z0-9:_-]{1,80}$
      */
   warnings: string[];
 }
+
+export type ProductSeriesRestrictionSummaryVersion = typeof ProductSeriesRestrictionSummaryVersion[keyof typeof ProductSeriesRestrictionSummaryVersion];
+
+
+export const ProductSeriesRestrictionSummaryVersion = {
+  '10': '1.0',
+} as const;
 
 export type SeriesRestrictionEventEventType = typeof SeriesRestrictionEventEventType[keyof typeof SeriesRestrictionEventEventType];
 
@@ -1291,6 +1309,171 @@ export interface SeriesRestrictionSource {
   /** @pattern ^[a-f0-9]{64}$ */
   sha256: string;
   freshness: SeriesRestrictionSourceFreshness;
+}
+
+export interface ProductSeriesRestrictionSummary {
+  version: ProductSeriesRestrictionSummaryVersion;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  /** Whether at least one prohibition document exists for this registration number */
+  hasAnyRestriction: boolean;
+  /** A conservative signal to enter the exact series before making a conclusion */
+  requiresSeriesCheck: boolean;
+  /**
+     * @minimum 0
+     * @maximum 250000
+     */
+  eventCount: number;
+  /**
+     * Series explicitly named by prohibition documents; exact current status still requires a series check
+     * @maxItems 100
+     * @items.minLength 1
+     * @items.maxLength 160
+     */
+  restrictedSeries: string[];
+  allSeriesAffected: boolean;
+  unspecifiedSeriesAffected: boolean;
+  /** @maxItems 50 */
+  events: SeriesRestrictionEvent[];
+  source: SeriesRestrictionSource;
+}
+
+export type ProductCardFreshnessEntryKey = typeof ProductCardFreshnessEntryKey[keyof typeof ProductCardFreshnessEntryKey];
+
+
+export const ProductCardFreshnessEntryKey = {
+  registry: 'registry',
+  national_list: 'national_list',
+  dispensing_category: 'dispensing_category',
+  instruction: 'instruction',
+  reimbursement: 'reimbursement',
+  price: 'price',
+  interactions: 'interactions',
+  series_restrictions: 'series_restrictions',
+} as const;
+
+export type ProductCardFreshnessEntryStatus = typeof ProductCardFreshnessEntryStatus[keyof typeof ProductCardFreshnessEntryStatus];
+
+
+export const ProductCardFreshnessEntryStatus = {
+  current: 'current',
+  stale: 'stale',
+  incomplete: 'incomplete',
+  unknown: 'unknown',
+  unavailable: 'unavailable',
+} as const;
+
+export interface ProductCardFreshnessEntry {
+  key: ProductCardFreshnessEntryKey;
+  status: ProductCardFreshnessEntryStatus;
+  checkedAt: string | null;
+  sourceUrl: string | null;
+}
+
+export type ProductCardVersion = typeof ProductCardVersion[keyof typeof ProductCardVersion];
+
+
+export const ProductCardVersion = {
+  '10': '1.0',
+} as const;
+
+export interface ProductCard {
+  version: ProductCardVersion;
+  identity: RegistryProductResult;
+  dispensing: ProductCardDispensing;
+  economics: ProductCardEconomics;
+  seriesStatus: ProductSeriesRestrictionSummary | null;
+  instruction: ProductCardInstruction;
+  /**
+     * @minItems 8
+     * @maxItems 8
+     */
+  freshness: ProductCardFreshnessEntry[];
+  coverage: ProfessionalProfileCoverage;
+  /**
+     * @maxItems 30
+     * @items.pattern ^[a-z0-9:_-]{1,80}$
+     */
+  warnings: string[];
+}
+
+export type DrugInstructionVersion = typeof DrugInstructionVersion[keyof typeof DrugInstructionVersion];
+
+
+export const DrugInstructionVersion = {
+  '10': '1.0',
+} as const;
+
+export type DrugInstructionStatus = typeof DrugInstructionStatus[keyof typeof DrugInstructionStatus];
+
+
+export const DrugInstructionStatus = {
+  available: 'available',
+  partial: 'partial',
+  unavailable: 'unavailable',
+  needs_review: 'needs_review',
+} as const;
+
+export interface DrugInstruction {
+  version: DrugInstructionVersion;
+  /** @pattern ^[A-F0-9]{32}$ */
+  registryProductId: string;
+  /** @pattern ^UA/\d+/\d+/\d+$ */
+  registrationNumber: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  tradeName: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  inn: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  activeIngredient: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  dosageForm: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  strength: string;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  manufacturer: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  manufacturerCountry: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  registrationStartDate: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  registrationEndDate: string;
+  status: DrugInstructionStatus;
+  sections: DrugInstructionSections;
+  source: DrugInstructionSource;
+  provenance: DrugInstructionProvenance;
+  /**
+     * @maxItems 20
+     * @items.pattern ^[a-z0-9:_-]{1,80}$
+     */
+  warnings: string[];
 }
 
 export type SeriesRestrictionCheckVersion = typeof SeriesRestrictionCheckVersion[keyof typeof SeriesRestrictionCheckVersion];

@@ -9,6 +9,8 @@ import {
   GetDrugInstructionResponse,
   GetProfessionalProductProfileQueryParams,
   GetProfessionalProductProfileResponse,
+  GetProductCardParams,
+  GetProductCardResponse,
   SearchCatalogQueryParams,
   SearchCatalogResponse,
 } from "@workspace/api-zod";
@@ -18,6 +20,7 @@ import { getOfficialInstructionForProduct } from "../services/officialInstructio
 import { loadCatalogClientIndex } from "../services/catalogClientIndexService";
 import { searchCatalog } from "../services/catalogSearchService";
 import { loadProfessionalProductProfile } from "../services/professionalProductProfileService";
+import { loadProductCard } from "../services/productCardService";
 import { checkSeriesRestrictions } from "../knowledge/seriesRestrictions/catalog";
 
 const PAGE_SIZE_QUERY_KEYS = [
@@ -108,6 +111,31 @@ router.get("/catalog/professional-profile", async (req, res): Promise<void> => {
 
   res.json(GetProfessionalProductProfileResponse.parse(result.profile));
 });
+
+router.get(
+  "/catalog/product/:registryProductId/card",
+  async (req, res): Promise<void> => {
+    const parsed = GetProductCardParams.safeParse(req.params);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid registry product identifier" });
+      return;
+    }
+
+    const result = await loadProductCard(parsed.data.registryProductId);
+    if (result.status === "not_found") {
+      res.status(404).json({ error: "Exact registry product was not found" });
+      return;
+    }
+    if (result.status === "unavailable") {
+      res.status(503).json({
+        error: "Exact production registry card is unavailable",
+      });
+      return;
+    }
+
+    res.json(GetProductCardResponse.parse(result.card));
+  },
+);
 
 router.get(
   "/catalog/products/:productId/instruction",

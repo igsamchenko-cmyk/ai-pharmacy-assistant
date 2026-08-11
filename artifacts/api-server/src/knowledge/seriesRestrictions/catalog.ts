@@ -97,7 +97,7 @@ export function setRuntimeSeriesRestrictionSnapshot(
   return runtimeSnapshot;
 }
 
-function freshness(
+export function seriesRestrictionFreshness(
   snapshot: SeriesRestrictionSnapshot,
   now: Date,
 ): "current" | "stale" | "incomplete" {
@@ -187,7 +187,10 @@ export function checkSeriesRestrictions(
           : status === "needs_review"
             ? "Знайдено пов'язаний документ, який не змінює стан автоматично. Потрібна ручна перевірка."
             : "Точного збігу в локальному знімку не знайдено. Це не підтверджує відсутність заборони.";
-  const sourceFreshness = freshness(snapshot, options.now ?? new Date());
+  const sourceFreshness = seriesRestrictionFreshness(
+    snapshot,
+    options.now ?? new Date(),
+  );
 
   return {
     version: "1.0",

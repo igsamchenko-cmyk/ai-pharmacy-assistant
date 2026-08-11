@@ -480,6 +480,47 @@ describe("catalog search service", () => {
     expect(flat).not.toHaveBeenCalled();
   });
 
+  it("resolves an exact product ID without requiring a registration query", async () => {
+    const productId = "A".repeat(32);
+    const item = {
+      ...assembleRegistryProducts(
+        [productRow],
+        [manufacturer],
+        [approvedMapping],
+      )[0],
+      id: productId,
+    };
+    const exact = vi.fn(async () => ({
+      catalogTotal: 16_533,
+      filteredTotal: 1,
+      items: [item],
+    }));
+    const grouped = vi.fn();
+    const flat = vi.fn();
+
+    const result = await searchCatalog(
+      input({
+        q: "",
+        productId,
+        type: "registry_products",
+        view: "grouped",
+      }),
+      store({
+        findUniqueExactProduct: exact,
+        searchProductsForGrouping: grouped,
+        searchProducts: flat,
+      }),
+    );
+
+    expect(
+      isExactFastPathEligible(input({ q: "", productId, view: "grouped" })),
+    ).toBe(true);
+    expect(result.registryProducts.items[0]?.id).toBe(productId);
+    expect(exact).toHaveBeenCalledOnce();
+    expect(grouped).not.toHaveBeenCalled();
+    expect(flat).not.toHaveBeenCalled();
+  });
+
   it("fails closed when productId and registration do not match", async () => {
     const exact = vi.fn(async () => null);
     const grouped = vi.fn();
@@ -698,6 +739,7 @@ describe("catalog search service", () => {
       .map(([sql]) => sql)
       .find((sql) => sql.includes("WITH exact_candidates"));
     expect(exactSql).toContain("p.registry_id = $1");
+    expect(exactSql).toContain("NULLIF($2::text, '') IS NULL");
     expect(exactSql).toContain("p.registration_number = $2");
     expect(exactSql).toContain("p.normalized_trade_name = ANY($3::text[])");
     expect(exactSql).toContain("p.review_status <> 'stale'");

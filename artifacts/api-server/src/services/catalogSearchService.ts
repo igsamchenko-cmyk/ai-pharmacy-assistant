@@ -1136,7 +1136,7 @@ export async function createPostgresRegistryCatalogStore(
                  WHERE p.review_status <> 'stale'
                    AND $1::text IS NOT NULL
                    AND p.registry_id = $1
-                   AND p.registration_number = $2
+                   AND (NULLIF($2::text, '') IS NULL OR p.registration_number = $2)
                  UNION ALL
                  SELECT p.registry_id, 1 AS priority
                  FROM knowledge_registry_products p
@@ -1434,9 +1434,9 @@ export function isExactFastPathEligible(input: CatalogSearchInput): boolean {
   const resolved = resolveSourceBackedDictionaryQuery(input.q);
   const ingredientLevelQuery =
     resolved?.kind !== undefined && resolved.kind !== "brand";
+  const exactProductId = Boolean(input.productId);
   return (
-    Boolean(input.q.trim()) &&
-    !ingredientLevelQuery &&
+    (exactProductId || (Boolean(input.q.trim()) && !ingredientLevelQuery)) &&
     input.type !== "ingredients" &&
     resolveCatalogView(input) === "grouped" &&
     input.page === 1 &&

@@ -493,6 +493,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /catalog/product/{registryProductId}/card:
+    get:
+      operationId: getProductCard
+      tags: [drugs]
+      summary: Get one aggregated operational card for an exact registry product
+      description: >-
+        Resolves an exact registry product by its immutable identifier and returns
+        identity, dispensing, economic, instruction and series-restriction evidence
+        in one response. Missing sources remain explicit and never become a positive
+        dispensing or safety conclusion.
+      parameters:
+        - name: registryProductId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-F0-9]{32}$"
+      responses:
+        "200":
+          description: Aggregated exact-product operational card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductCard"
+        "400":
+          description: Invalid registry product identifier
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Exact registry product was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: The exact production registry card is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /catalog/products/{productId}/instruction:
     get:
       operationId: getDrugInstruction
@@ -2430,6 +2472,180 @@ components:
         warnings:
           type: array
           maxItems: 20
+          items: { type: string, pattern: "^[a-z0-9:_-]{1,80}$" }
+    ProductCardDispensing:
+      type: object
+      required: [status, confidence, check]
+      properties:
+        status:
+          type: string
+          enum: [otc, prescription, conditional, unknown, conflict, not_found]
+        confidence:
+          type: string
+          enum: [verified, requires_review, unavailable]
+        check:
+          oneOf:
+            - { $ref: "#/components/schemas/DispensingCategoryCheck" }
+            - { type: "null" }
+    ProductCardNationalList:
+      type: object
+      required:
+        [status, release, matchReason, section, source, checkedAt]
+      properties:
+        status:
+          type: string
+          enum: [exact, ingredient_only, uncertain, not_listed, not_applicable]
+        release: { type: ["string", "null"], maxLength: 120 }
+        matchReason: { type: string, minLength: 1, maxLength: 2000 }
+        section: { type: ["string", "null"], maxLength: 1000 }
+        source:
+          oneOf:
+            - { $ref: "#/components/schemas/NationalListSource" }
+            - { type: "null" }
+        checkedAt: { type: ["string", "null"], format: date-time }
+    ProductCardEconomics:
+      type: object
+      required: [nationalList, reimbursement, price]
+      properties:
+        nationalList: { $ref: "#/components/schemas/ProductCardNationalList" }
+        reimbursement:
+          oneOf:
+            - { $ref: "#/components/schemas/ReimbursementCheck" }
+            - { type: "null" }
+        price:
+          oneOf:
+            - { $ref: "#/components/schemas/PriceCatalogCheck" }
+            - { type: "null" }
+    ProductCardInstruction:
+      type: object
+      required:
+        [available, sourceStatus, sections, source, provenance, warnings]
+      properties:
+        available: { type: boolean }
+        sourceStatus:
+          type: string
+          enum:
+            [
+              structured,
+              official_document,
+              not_published,
+              invalid_source,
+              temporarily_unavailable,
+            ]
+        sections:
+          oneOf:
+            - { $ref: "#/components/schemas/DrugInstructionSections" }
+            - { type: "null" }
+        source:
+          oneOf:
+            - { $ref: "#/components/schemas/DrugInstructionSource" }
+            - { type: "null" }
+        provenance:
+          oneOf:
+            - { $ref: "#/components/schemas/DrugInstructionProvenance" }
+            - { type: "null" }
+        warnings:
+          type: array
+          maxItems: 20
+          items: { type: string, pattern: "^[a-z0-9:_-]{1,80}$" }
+    ProductSeriesRestrictionSummary:
+      type: object
+      required:
+        [
+          version,
+          registrationNumber,
+          hasAnyRestriction,
+          requiresSeriesCheck,
+          eventCount,
+          restrictedSeries,
+          allSeriesAffected,
+          unspecifiedSeriesAffected,
+          events,
+          source,
+        ]
+      properties:
+        version: { type: string, enum: ["1.0"] }
+        registrationNumber: { type: string, pattern: '^UA/\d+/\d+/\d+$' }
+        hasAnyRestriction:
+          type: boolean
+          description: Whether at least one prohibition document exists for this registration number
+        requiresSeriesCheck:
+          type: boolean
+          description: A conservative signal to enter the exact series before making a conclusion
+        eventCount: { type: integer, minimum: 0, maximum: 250000 }
+        restrictedSeries:
+          type: array
+          maxItems: 100
+          description: Series explicitly named by prohibition documents; exact current status still requires a series check
+          items: { type: string, minLength: 1, maxLength: 160 }
+        allSeriesAffected: { type: boolean }
+        unspecifiedSeriesAffected: { type: boolean }
+        events:
+          type: array
+          maxItems: 50
+          items: { $ref: "#/components/schemas/SeriesRestrictionEvent" }
+        source: { $ref: "#/components/schemas/SeriesRestrictionSource" }
+    ProductCardFreshnessEntry:
+      type: object
+      required: [key, status, checkedAt, sourceUrl]
+      properties:
+        key:
+          type: string
+          enum:
+            [
+              registry,
+              national_list,
+              dispensing_category,
+              instruction,
+              reimbursement,
+              price,
+              interactions,
+              series_restrictions,
+            ]
+        status:
+          type: string
+          enum: [current, stale, incomplete, unknown, unavailable]
+        checkedAt:
+          oneOf:
+            - { type: string, format: date-time }
+            - { type: "null" }
+        sourceUrl:
+          oneOf:
+            - { type: string, format: uri, maxLength: 1000 }
+            - { type: "null" }
+    ProductCard:
+      type: object
+      required:
+        [
+          version,
+          identity,
+          dispensing,
+          economics,
+          seriesStatus,
+          instruction,
+          freshness,
+          coverage,
+          warnings,
+        ]
+      properties:
+        version: { type: string, enum: ["1.0"] }
+        identity: { $ref: "#/components/schemas/RegistryProductResult" }
+        dispensing: { $ref: "#/components/schemas/ProductCardDispensing" }
+        economics: { $ref: "#/components/schemas/ProductCardEconomics" }
+        seriesStatus:
+          oneOf:
+            - { $ref: "#/components/schemas/ProductSeriesRestrictionSummary" }
+            - { type: "null" }
+        instruction: { $ref: "#/components/schemas/ProductCardInstruction" }
+        freshness:
+          type: array
+          minItems: 8
+          maxItems: 8
+          items: { $ref: "#/components/schemas/ProductCardFreshnessEntry" }
+        coverage: { $ref: "#/components/schemas/ProfessionalProfileCoverage" }
+        warnings:
+          type: array
+          maxItems: 30
           items: { type: string, pattern: "^[a-z0-9:_-]{1,80}$" }
     DrugInstructionSections:
       type: object

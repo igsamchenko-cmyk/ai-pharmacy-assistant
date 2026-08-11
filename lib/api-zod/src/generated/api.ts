@@ -1143,6 +1143,539 @@ export const GetProfessionalProductProfileResponse = zod.object({
 
 
 /**
+ * Resolves an exact registry product by its immutable identifier and returns identity, dispensing, economic, instruction and series-restriction evidence in one response. Missing sources remain explicit and never become a positive dispensing or safety conclusion.
+ * @summary Get one aggregated operational card for an exact registry product
+ */
+export const getProductCardPathRegistryProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+
+
+export const GetProductCardParams = zod.object({
+  "registryProductId": zod.coerce.string().regex(getProductCardPathRegistryProductIdRegExp)
+})
+
+
+export const getProductCardResponseIdentityNationalListMatchDetailsOneIngredientsMax = 12;
+
+export const getProductCardResponseIdentityNationalListMatchDetailsOneDosageFormsMax = 20;
+
+export const getProductCardResponseIdentityNationalListMatchDetailsOneRoutesMax = 12;
+
+export const getProductCardResponseIdentityNationalListMatchDetailsOneStrengthsMax = 30;
+
+export const getProductCardResponseDispensingCheckOneProductIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getProductCardResponseDispensingCheckOneRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProductCardResponseDispensingCheckOneSummaryMax = 1000;
+
+export const getProductCardResponseDispensingCheckOneConditionsItemMax = 1000;
+
+export const getProductCardResponseDispensingCheckOneConditionsMax = 20;
+
+export const getProductCardResponseDispensingCheckOneSourceTitleMax = 300;
+
+export const getProductCardResponseDispensingCheckOneSourceOfficialRowCountMax = 250000;
+
+export const getProductCardResponseDispensingCheckOneSourceRecordCountMax = 250000;
+
+export const getProductCardResponseDispensingCheckOneSourceSha256RegExp = new RegExp('^[a-f0-9]{64}$');
+export const getProductCardResponseDispensingCheckOneSourceLegalBasisTitleMax = 500;
+
+export const getProductCardResponseDispensingCheckOneSourceLegalBasisRevisionDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getProductCardResponseEconomicsNationalListReleaseMax = 120;
+
+export const getProductCardResponseEconomicsNationalListMatchReasonMax = 2000;
+
+export const getProductCardResponseEconomicsNationalListSectionMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProductCardResponseEconomicsReimbursementOneSelectedOnePackageKeyRegExp = new RegExp('^nszu-[a-f0-9]{24}$');
+export const getProductCardResponseEconomicsReimbursementOneSelectedOneRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProductCardResponseEconomicsReimbursementOneSelectedOneInnMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneSelectedOneTradeNameMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneSelectedOneDosageFormMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneSelectedOneStrengthMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneSelectedOnePackageQuantityMax = 300;
+
+export const getProductCardResponseEconomicsReimbursementOneSelectedOneAtcCodeMax = 100;
+
+export const getProductCardResponseEconomicsReimbursementOneSelectedOneCopayUahRegExp = new RegExp('^\\d+(\\.\\d{1,2})?$');
+export const getProductCardResponseEconomicsReimbursementOneSelectedOneSourcePageMin = 3;
+export const getProductCardResponseEconomicsReimbursementOneSelectedOneSourcePageMax = 82;
+
+export const getProductCardResponseEconomicsReimbursementOneSelectedOneSourceRowMax = 10000;
+
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemPackageKeyRegExp = new RegExp('^nszu-[a-f0-9]{24}$');
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemInnMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemTradeNameMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemDosageFormMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemStrengthMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemPackageQuantityMax = 300;
+
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemAtcCodeMax = 100;
+
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemCopayUahRegExp = new RegExp('^\\d+(\\.\\d{1,2})?$');
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemSourcePageMin = 3;
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemSourcePageMax = 82;
+
+export const getProductCardResponseEconomicsReimbursementOneCandidatesItemSourceRowMax = 10000;
+
+export const getProductCardResponseEconomicsReimbursementOneCandidatesMax = 20;
+
+export const getProductCardResponseEconomicsReimbursementOneSummaryMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneSourceTitleMax = 300;
+
+export const getProductCardResponseEconomicsReimbursementOneSourceUrlMax = 1000;
+
+export const getProductCardResponseEconomicsReimbursementOneSourceRecordCountMax = 10000;
+
+export const getProductCardResponseEconomicsReimbursementOneSourceSha256RegExp = new RegExp('^[a-f0-9]{64}$');
+export const getProductCardResponseEconomicsReimbursementOneSourceWarningsItemMax = 300;
+
+export const getProductCardResponseEconomicsReimbursementOneSourceWarningsMax = 100;
+
+export const getProductCardResponseEconomicsPriceOneRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProductCardResponseEconomicsPriceOneSelectedOneCatalogIdRegExp = new RegExp('^UA-\\d{9}-\\d{9}-\\d{9}$');
+export const getProductCardResponseEconomicsPriceOneSelectedOneRegistrationNumberMax = 100;
+
+export const getProductCardResponseEconomicsPriceOneSelectedOneInnMax = 20000;
+
+export const getProductCardResponseEconomicsPriceOneSelectedOneTradeNameMax = 5000;
+
+export const getProductCardResponseEconomicsPriceOneSelectedOneDosageFormMax = 5000;
+
+export const getProductCardResponseEconomicsPriceOneSelectedOneStrengthMax = 20000;
+
+export const getProductCardResponseEconomicsPriceOneSelectedOnePackageDescriptionMax = 5000;
+
+export const getProductCardResponseEconomicsPriceOneSelectedOneDeclaredPriceUahOneRegExp = new RegExp('^\\d+(\\.\\d{1,3})?$');
+export const getProductCardResponseEconomicsPriceOneSelectedOneMaximumRetailPriceUahOneRegExp = new RegExp('^\\d+(\\.\\d{1,3})?$');
+export const getProductCardResponseEconomicsPriceOneSelectedOneSourceRowMin = 6;
+export const getProductCardResponseEconomicsPriceOneSelectedOneSourceRowMax = 250000;
+
+export const getProductCardResponseEconomicsPriceOneCandidatesItemCatalogIdRegExp = new RegExp('^UA-\\d{9}-\\d{9}-\\d{9}$');
+export const getProductCardResponseEconomicsPriceOneCandidatesItemRegistrationNumberMax = 100;
+
+export const getProductCardResponseEconomicsPriceOneCandidatesItemInnMax = 20000;
+
+export const getProductCardResponseEconomicsPriceOneCandidatesItemTradeNameMax = 5000;
+
+export const getProductCardResponseEconomicsPriceOneCandidatesItemDosageFormMax = 5000;
+
+export const getProductCardResponseEconomicsPriceOneCandidatesItemStrengthMax = 20000;
+
+export const getProductCardResponseEconomicsPriceOneCandidatesItemPackageDescriptionMax = 5000;
+
+export const getProductCardResponseEconomicsPriceOneCandidatesItemDeclaredPriceUahOneRegExp = new RegExp('^\\d+(\\.\\d{1,3})?$');
+export const getProductCardResponseEconomicsPriceOneCandidatesItemMaximumRetailPriceUahOneRegExp = new RegExp('^\\d+(\\.\\d{1,3})?$');
+export const getProductCardResponseEconomicsPriceOneCandidatesItemSourceRowMin = 6;
+export const getProductCardResponseEconomicsPriceOneCandidatesItemSourceRowMax = 250000;
+
+export const getProductCardResponseEconomicsPriceOneCandidatesMax = 20;
+
+export const getProductCardResponseEconomicsPriceOneSummaryMax = 1000;
+
+export const getProductCardResponseEconomicsPriceOneSourceTitleMax = 300;
+
+export const getProductCardResponseEconomicsPriceOneSourceUrlMax = 1000;
+
+export const getProductCardResponseEconomicsPriceOneSourceRecordCountMax = 250000;
+
+export const getProductCardResponseEconomicsPriceOneSourceSha256RegExp = new RegExp('^[a-f0-9]{64}$');
+export const getProductCardResponseEconomicsPriceOneSourceScopeNoteMax = 1000;
+
+export const getProductCardResponseSeriesStatusOneRegistrationNumberRegExp = new RegExp('^UA/\\d+/\\d+/\\d+$');
+export const getProductCardResponseSeriesStatusOneEventCountMin = 0;
+export const getProductCardResponseSeriesStatusOneEventCountMax = 250000;
+
+export const getProductCardResponseSeriesStatusOneRestrictedSeriesItemMax = 160;
+
+export const getProductCardResponseSeriesStatusOneRestrictedSeriesMax = 100;
+
+export const getProductCardResponseSeriesStatusOneEventsItemDocumentDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getProductCardResponseSeriesStatusOneEventsItemDocumentNumberMax = 180;
+
+export const getProductCardResponseSeriesStatusOneEventsItemRegistrationNumberMax = 120;
+
+export const getProductCardResponseSeriesStatusOneEventsItemMedicineNameMax = 500;
+
+export const getProductCardResponseSeriesStatusOneEventsItemDosageFormMax = 4000;
+
+export const getProductCardResponseSeriesStatusOneEventsItemSeriesRawMax = 1000;
+
+export const getProductCardResponseSeriesStatusOneEventsItemSeriesValuesItemMax = 160;
+
+export const getProductCardResponseSeriesStatusOneEventsItemSeriesValuesMax = 100;
+
+export const getProductCardResponseSeriesStatusOneEventsItemManufacturerMax = 4000;
+
+export const getProductCardResponseSeriesStatusOneEventsItemCountryMax = 500;
+
+export const getProductCardResponseSeriesStatusOneEventsItemAdditionalInfoMax = 8000;
+
+export const getProductCardResponseSeriesStatusOneEventsMax = 50;
+
+export const getProductCardResponseSeriesStatusOneSourceTitleMax = 300;
+
+export const getProductCardResponseSeriesStatusOneSourceLatestDocumentDateOneRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getProductCardResponseSeriesStatusOneSourceCoverageStartDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getProductCardResponseSeriesStatusOneSourceRecordCountMin = 0;
+export const getProductCardResponseSeriesStatusOneSourceRecordCountMax = 250000;
+
+export const getProductCardResponseSeriesStatusOneSourceSha256RegExp = new RegExp('^[a-f0-9]{64}$');
+export const getProductCardResponseInstructionSectionsOneIndicationsMax = 60000;
+
+export const getProductCardResponseInstructionSectionsOneContraindicationsMax = 60000;
+
+export const getProductCardResponseInstructionSectionsOneAdverseReactionsMax = 60000;
+
+export const getProductCardResponseInstructionSectionsOneInteractionsMax = 60000;
+
+export const getProductCardResponseInstructionSectionsOneSpecialWarningsMax = 60000;
+
+export const getProductCardResponseInstructionSectionsOnePregnancyAndLactationMax = 60000;
+
+export const getProductCardResponseInstructionSectionsOneAdministrationMax = 60000;
+
+export const getProductCardResponseInstructionSectionsOneOverdoseMax = 60000;
+
+export const getProductCardResponseInstructionSectionsOneStorageMax = 60000;
+
+export const getProductCardResponseInstructionSourceOneUrlMax = 1000;
+
+export const getProductCardResponseInstructionSourceOneDocumentIdRegExp = new RegExp('^[A-F0-9]{32}$');
+export const getProductCardResponseInstructionSourceOneDocumentHashRegExp = new RegExp('^[a-f0-9]{64}$');
+export const getProductCardResponseInstructionSourceOneContentLengthMax = 3000000;
+
+
+
+export const getProductCardResponseInstructionProvenanceOneAvailableSectionCountMin = 0;
+export const getProductCardResponseInstructionProvenanceOneAvailableSectionCountMax = 9;
+
+export const getProductCardResponseInstructionProvenanceOneCoveragePctMin = 0;
+export const getProductCardResponseInstructionProvenanceOneCoveragePctMax = 100;
+
+export const getProductCardResponseInstructionWarningsItemRegExp = new RegExp('^[a-z0-9:_-]{1,80}$');
+export const getProductCardResponseInstructionWarningsMax = 20;
+
+export const getProductCardResponseFreshnessItemSourceUrlOneMax = 1000;
+
+export const getProductCardResponseFreshnessMin = 8;
+export const getProductCardResponseFreshnessMax = 8;
+
+export const getProductCardResponseCoverageConnectedSourcesMin = 0;
+export const getProductCardResponseCoverageConnectedSourcesMax = 8;
+
+export const getProductCardResponseCoverageSourcesItemLabelMax = 300;
+
+export const getProductCardResponseCoverageSourcesItemDetailMax = 1000;
+
+export const getProductCardResponseCoverageSourcesItemSourceUrlOneMax = 1000;
+
+export const getProductCardResponseCoverageSourcesMin = 8;
+export const getProductCardResponseCoverageSourcesMax = 8;
+
+export const getProductCardResponseWarningsItemRegExp = new RegExp('^[a-z0-9:_-]{1,80}$');
+export const getProductCardResponseWarningsMax = 30;
+
+
+
+export const GetProductCardResponse = zod.object({
+  "version": zod.enum(['1.0']),
+  "identity": zod.object({
+  "resultType": zod.enum(['registry_product']),
+  "id": zod.string(),
+  "tradeName": zod.string(),
+  "inn": zod.string(),
+  "activeIngredient": zod.string(),
+  "atcCode": zod.string().nullable(),
+  "dosageForm": zod.string(),
+  "strength": zod.string().nullable(),
+  "manufacturers": zod.array(zod.object({
+  "name": zod.string(),
+  "country": zod.string().nullable()
+})),
+  "registration": zod.object({
+  "number": zod.string(),
+  "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
+  "status": zod.enum(['active', 'terminated', 'unknown'])
+}),
+  "source": zod.object({
+  "key": zod.string(),
+  "label": zod.string()
+}),
+  "mappingStatus": zod.enum(['approved', 'unmapped', 'ambiguous']),
+  "approvedMapping": zod.union([zod.object({
+  "ingredientId": zod.string(),
+  "inn": zod.string(),
+  "latin": zod.string(),
+  "english": zod.string(),
+  "atcCode": zod.string().nullable()
+}),zod.null()]),
+  "sourceRecordCount": zod.number().min(1),
+  "nationalListStatus": zod.enum(['exact', 'ingredient_only', 'uncertain', 'not_listed', 'not_applicable']),
+  "nationalListRelease": zod.string().nullable(),
+  "nationalListMatchReason": zod.string(),
+  "nationalListSection": zod.string().nullable(),
+  "nationalListSource": zod.union([zod.object({
+  "title": zod.string(),
+  "actNumber": zod.string(),
+  "actDate": zod.string(),
+  "revisionDate": zod.string(),
+  "effectiveDate": zod.string(),
+  "url": zod.string()
+}),zod.null()]),
+  "nationalListCheckedAt": zod.string().nullable(),
+  "nationalListMatchDetails": zod.union([zod.object({
+  "officialName": zod.string(),
+  "ingredients": zod.array(zod.string()).max(getProductCardResponseIdentityNationalListMatchDetailsOneIngredientsMax),
+  "dosageForms": zod.array(zod.string()).max(getProductCardResponseIdentityNationalListMatchDetailsOneDosageFormsMax),
+  "routes": zod.array(zod.string()).max(getProductCardResponseIdentityNationalListMatchDetailsOneRoutesMax),
+  "strengths": zod.array(zod.string()).max(getProductCardResponseIdentityNationalListMatchDetailsOneStrengthsMax),
+  "ingredientMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "formMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "routeMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable']),
+  "strengthMatch": zod.enum(['match', 'mismatch', 'unknown', 'not_applicable'])
+}),zod.null()]),
+  "instructionAvailable": zod.boolean().describe('Whether a committed snapshot or exact-product official DRLZ document is available'),
+  "instructionSourceStatus": zod.enum(['structured', 'official_document', 'not_published', 'invalid_source']).optional().describe('Exact-product DRLZ source state; no registration fallback is used'),
+  "officialInstructionDocumentUrl": zod.string().url().nullish().describe('Validated exact-registration DRLZ document URL, when published')
+}),
+  "dispensing": zod.object({
+  "status": zod.enum(['otc', 'prescription', 'conditional', 'unknown', 'conflict', 'not_found']),
+  "confidence": zod.enum(['verified', 'requires_review', 'unavailable']),
+  "check": zod.union([zod.object({
+  "version": zod.enum(['1.0']),
+  "productId": zod.string().regex(getProductCardResponseDispensingCheckOneProductIdRegExp),
+  "registrationNumber": zod.string().regex(getProductCardResponseDispensingCheckOneRegistrationNumberRegExp),
+  "status": zod.enum(['otc', 'prescription', 'conditional', 'unknown', 'conflict', 'not_found']),
+  "action": zod.enum(['otc_with_professional_checks', 'prescription_required', 'verify_exact_package', 'manual_review']),
+  "matchStatus": zod.enum(['product_and_registration', 'registration', 'not_found']),
+  "summary": zod.string().min(1).max(getProductCardResponseDispensingCheckOneSummaryMax),
+  "conditions": zod.array(zod.string().min(1).max(getProductCardResponseDispensingCheckOneConditionsItemMax)).max(getProductCardResponseDispensingCheckOneConditionsMax),
+  "packageDependent": zod.boolean(),
+  "restrictedSetting": zod.boolean(),
+  "source": zod.object({
+  "title": zod.string().min(1).max(getProductCardResponseDispensingCheckOneSourceTitleMax),
+  "url": zod.string().url(),
+  "checkedAt": zod.coerce.date(),
+  "generatedAt": zod.coerce.date(),
+  "complete": zod.boolean(),
+  "officialRowCount": zod.number().min(1).max(getProductCardResponseDispensingCheckOneSourceOfficialRowCountMax),
+  "recordCount": zod.number().min(1).max(getProductCardResponseDispensingCheckOneSourceRecordCountMax),
+  "sha256": zod.string().regex(getProductCardResponseDispensingCheckOneSourceSha256RegExp),
+  "freshness": zod.enum(['current', 'stale', 'incomplete']),
+  "legalBasisTitle": zod.string().min(1).max(getProductCardResponseDispensingCheckOneSourceLegalBasisTitleMax),
+  "legalBasisUrl": zod.string().url(),
+  "legalBasisRevisionDate": zod.string().regex(getProductCardResponseDispensingCheckOneSourceLegalBasisRevisionDateRegExp)
+})
+}),zod.null()])
+}),
+  "economics": zod.object({
+  "nationalList": zod.object({
+  "status": zod.enum(['exact', 'ingredient_only', 'uncertain', 'not_listed', 'not_applicable']),
+  "release": zod.string().max(getProductCardResponseEconomicsNationalListReleaseMax).nullable(),
+  "matchReason": zod.string().min(1).max(getProductCardResponseEconomicsNationalListMatchReasonMax),
+  "section": zod.string().max(getProductCardResponseEconomicsNationalListSectionMax).nullable(),
+  "source": zod.union([zod.object({
+  "title": zod.string(),
+  "actNumber": zod.string(),
+  "actDate": zod.string(),
+  "revisionDate": zod.string(),
+  "effectiveDate": zod.string(),
+  "url": zod.string()
+}),zod.null()]),
+  "checkedAt": zod.coerce.date().nullable()
+}),
+  "reimbursement": zod.union([zod.object({
+  "version": zod.enum(['1.0']),
+  "registrationNumber": zod.string().regex(getProductCardResponseEconomicsReimbursementOneRegistrationNumberRegExp),
+  "status": zod.enum(['listed', 'requires_package', 'not_listed']),
+  "selected": zod.union([zod.object({
+  "packageKey": zod.string().regex(getProductCardResponseEconomicsReimbursementOneSelectedOnePackageKeyRegExp),
+  "section": zod.enum(['standard_medicines', 'insulin', 'combination_medicines']),
+  "registrationNumber": zod.string().regex(getProductCardResponseEconomicsReimbursementOneSelectedOneRegistrationNumberRegExp),
+  "inn": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneSelectedOneInnMax),
+  "tradeName": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneSelectedOneTradeNameMax),
+  "dosageForm": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneSelectedOneDosageFormMax),
+  "strength": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneSelectedOneStrengthMax),
+  "packageQuantity": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneSelectedOnePackageQuantityMax),
+  "atcCode": zod.string().max(getProductCardResponseEconomicsReimbursementOneSelectedOneAtcCodeMax),
+  "copayUah": zod.string().regex(getProductCardResponseEconomicsReimbursementOneSelectedOneCopayUahRegExp),
+  "sourcePage": zod.number().min(getProductCardResponseEconomicsReimbursementOneSelectedOneSourcePageMin).max(getProductCardResponseEconomicsReimbursementOneSelectedOneSourcePageMax),
+  "sourceRow": zod.number().min(1).max(getProductCardResponseEconomicsReimbursementOneSelectedOneSourceRowMax)
+}),zod.null()]),
+  "candidates": zod.array(zod.object({
+  "packageKey": zod.string().regex(getProductCardResponseEconomicsReimbursementOneCandidatesItemPackageKeyRegExp),
+  "section": zod.enum(['standard_medicines', 'insulin', 'combination_medicines']),
+  "registrationNumber": zod.string().regex(getProductCardResponseEconomicsReimbursementOneCandidatesItemRegistrationNumberRegExp),
+  "inn": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneCandidatesItemInnMax),
+  "tradeName": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneCandidatesItemTradeNameMax),
+  "dosageForm": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneCandidatesItemDosageFormMax),
+  "strength": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneCandidatesItemStrengthMax),
+  "packageQuantity": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneCandidatesItemPackageQuantityMax),
+  "atcCode": zod.string().max(getProductCardResponseEconomicsReimbursementOneCandidatesItemAtcCodeMax),
+  "copayUah": zod.string().regex(getProductCardResponseEconomicsReimbursementOneCandidatesItemCopayUahRegExp),
+  "sourcePage": zod.number().min(getProductCardResponseEconomicsReimbursementOneCandidatesItemSourcePageMin).max(getProductCardResponseEconomicsReimbursementOneCandidatesItemSourcePageMax),
+  "sourceRow": zod.number().min(1).max(getProductCardResponseEconomicsReimbursementOneCandidatesItemSourceRowMax)
+})).max(getProductCardResponseEconomicsReimbursementOneCandidatesMax),
+  "summary": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneSummaryMax),
+  "source": zod.object({
+  "title": zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneSourceTitleMax),
+  "url": zod.string().url().max(getProductCardResponseEconomicsReimbursementOneSourceUrlMax),
+  "checkedAt": zod.coerce.date(),
+  "releaseDate": zod.coerce.date(),
+  "recordCount": zod.number().min(1).max(getProductCardResponseEconomicsReimbursementOneSourceRecordCountMax),
+  "sha256": zod.string().regex(getProductCardResponseEconomicsReimbursementOneSourceSha256RegExp),
+  "freshness": zod.enum(['current', 'stale', 'incomplete']),
+  "warnings": zod.array(zod.string().min(1).max(getProductCardResponseEconomicsReimbursementOneSourceWarningsItemMax)).max(getProductCardResponseEconomicsReimbursementOneSourceWarningsMax)
+})
+}),zod.null()]),
+  "price": zod.union([zod.object({
+  "version": zod.enum(['1.0']),
+  "registrationNumber": zod.string().regex(getProductCardResponseEconomicsPriceOneRegistrationNumberRegExp),
+  "status": zod.enum(['priced', 'requires_package', 'not_in_catalog']),
+  "selected": zod.union([zod.object({
+  "catalogId": zod.string().regex(getProductCardResponseEconomicsPriceOneSelectedOneCatalogIdRegExp),
+  "registrationNumber": zod.string().min(1).max(getProductCardResponseEconomicsPriceOneSelectedOneRegistrationNumberMax),
+  "inn": zod.string().max(getProductCardResponseEconomicsPriceOneSelectedOneInnMax),
+  "tradeName": zod.string().min(1).max(getProductCardResponseEconomicsPriceOneSelectedOneTradeNameMax),
+  "dosageForm": zod.string().max(getProductCardResponseEconomicsPriceOneSelectedOneDosageFormMax),
+  "strength": zod.string().max(getProductCardResponseEconomicsPriceOneSelectedOneStrengthMax),
+  "packageDescription": zod.string().max(getProductCardResponseEconomicsPriceOneSelectedOnePackageDescriptionMax),
+  "declaredPriceUah": zod.union([zod.string().regex(getProductCardResponseEconomicsPriceOneSelectedOneDeclaredPriceUahOneRegExp),zod.null()]),
+  "maximumRetailPriceUah": zod.union([zod.string().regex(getProductCardResponseEconomicsPriceOneSelectedOneMaximumRetailPriceUahOneRegExp),zod.null()]),
+  "sourceRow": zod.number().min(getProductCardResponseEconomicsPriceOneSelectedOneSourceRowMin).max(getProductCardResponseEconomicsPriceOneSelectedOneSourceRowMax)
+}),zod.null()]),
+  "candidates": zod.array(zod.object({
+  "catalogId": zod.string().regex(getProductCardResponseEconomicsPriceOneCandidatesItemCatalogIdRegExp),
+  "registrationNumber": zod.string().min(1).max(getProductCardResponseEconomicsPriceOneCandidatesItemRegistrationNumberMax),
+  "inn": zod.string().max(getProductCardResponseEconomicsPriceOneCandidatesItemInnMax),
+  "tradeName": zod.string().min(1).max(getProductCardResponseEconomicsPriceOneCandidatesItemTradeNameMax),
+  "dosageForm": zod.string().max(getProductCardResponseEconomicsPriceOneCandidatesItemDosageFormMax),
+  "strength": zod.string().max(getProductCardResponseEconomicsPriceOneCandidatesItemStrengthMax),
+  "packageDescription": zod.string().max(getProductCardResponseEconomicsPriceOneCandidatesItemPackageDescriptionMax),
+  "declaredPriceUah": zod.union([zod.string().regex(getProductCardResponseEconomicsPriceOneCandidatesItemDeclaredPriceUahOneRegExp),zod.null()]),
+  "maximumRetailPriceUah": zod.union([zod.string().regex(getProductCardResponseEconomicsPriceOneCandidatesItemMaximumRetailPriceUahOneRegExp),zod.null()]),
+  "sourceRow": zod.number().min(getProductCardResponseEconomicsPriceOneCandidatesItemSourceRowMin).max(getProductCardResponseEconomicsPriceOneCandidatesItemSourceRowMax)
+})).max(getProductCardResponseEconomicsPriceOneCandidatesMax),
+  "summary": zod.string().min(1).max(getProductCardResponseEconomicsPriceOneSummaryMax),
+  "source": zod.object({
+  "title": zod.string().min(1).max(getProductCardResponseEconomicsPriceOneSourceTitleMax),
+  "url": zod.string().url().max(getProductCardResponseEconomicsPriceOneSourceUrlMax),
+  "checkedAt": zod.coerce.date(),
+  "releaseDate": zod.coerce.date(),
+  "recordCount": zod.number().min(1).max(getProductCardResponseEconomicsPriceOneSourceRecordCountMax),
+  "sha256": zod.string().regex(getProductCardResponseEconomicsPriceOneSourceSha256RegExp),
+  "freshness": zod.enum(['current', 'stale', 'incomplete']),
+  "scopeNote": zod.string().min(1).max(getProductCardResponseEconomicsPriceOneSourceScopeNoteMax)
+})
+}),zod.null()])
+}),
+  "seriesStatus": zod.union([zod.object({
+  "version": zod.enum(['1.0']),
+  "registrationNumber": zod.string().regex(getProductCardResponseSeriesStatusOneRegistrationNumberRegExp),
+  "hasAnyRestriction": zod.boolean().describe('Whether at least one prohibition document exists for this registration number'),
+  "requiresSeriesCheck": zod.boolean().describe('A conservative signal to enter the exact series before making a conclusion'),
+  "eventCount": zod.number().min(getProductCardResponseSeriesStatusOneEventCountMin).max(getProductCardResponseSeriesStatusOneEventCountMax),
+  "restrictedSeries": zod.array(zod.string().min(1).max(getProductCardResponseSeriesStatusOneRestrictedSeriesItemMax)).max(getProductCardResponseSeriesStatusOneRestrictedSeriesMax).describe('Series explicitly named by prohibition documents; exact current status still requires a series check'),
+  "allSeriesAffected": zod.boolean(),
+  "unspecifiedSeriesAffected": zod.boolean(),
+  "events": zod.array(zod.object({
+  "documentDate": zod.string().regex(getProductCardResponseSeriesStatusOneEventsItemDocumentDateRegExp),
+  "documentNumber": zod.string().min(1).max(getProductCardResponseSeriesStatusOneEventsItemDocumentNumberMax),
+  "eventType": zod.enum(['temporary_ban', 'permanent_ban', 'restore_temporary', 'restore_permanent', 'partial_cancellation', 'supplement']),
+  "registrationNumber": zod.string().max(getProductCardResponseSeriesStatusOneEventsItemRegistrationNumberMax).nullable(),
+  "medicineName": zod.string().min(1).max(getProductCardResponseSeriesStatusOneEventsItemMedicineNameMax),
+  "dosageForm": zod.string().max(getProductCardResponseSeriesStatusOneEventsItemDosageFormMax),
+  "seriesRaw": zod.string().min(1).max(getProductCardResponseSeriesStatusOneEventsItemSeriesRawMax),
+  "seriesValues": zod.array(zod.string().min(1).max(getProductCardResponseSeriesStatusOneEventsItemSeriesValuesItemMax)).max(getProductCardResponseSeriesStatusOneEventsItemSeriesValuesMax),
+  "allSeries": zod.boolean(),
+  "seriesUnspecified": zod.boolean(),
+  "manufacturer": zod.string().max(getProductCardResponseSeriesStatusOneEventsItemManufacturerMax),
+  "country": zod.string().max(getProductCardResponseSeriesStatusOneEventsItemCountryMax),
+  "additionalInfo": zod.string().max(getProductCardResponseSeriesStatusOneEventsItemAdditionalInfoMax)
+})).max(getProductCardResponseSeriesStatusOneEventsMax),
+  "source": zod.object({
+  "title": zod.string().min(1).max(getProductCardResponseSeriesStatusOneSourceTitleMax),
+  "url": zod.string().url(),
+  "generatedAt": zod.coerce.date(),
+  "latestDocumentDate": zod.union([zod.string().regex(getProductCardResponseSeriesStatusOneSourceLatestDocumentDateOneRegExp),zod.null()]),
+  "coverageStartDate": zod.string().regex(getProductCardResponseSeriesStatusOneSourceCoverageStartDateRegExp),
+  "complete": zod.boolean(),
+  "recordCount": zod.number().min(getProductCardResponseSeriesStatusOneSourceRecordCountMin).max(getProductCardResponseSeriesStatusOneSourceRecordCountMax),
+  "sha256": zod.string().regex(getProductCardResponseSeriesStatusOneSourceSha256RegExp),
+  "freshness": zod.enum(['current', 'stale', 'incomplete'])
+})
+}),zod.null()]),
+  "instruction": zod.object({
+  "available": zod.boolean(),
+  "sourceStatus": zod.enum(['structured', 'official_document', 'not_published', 'invalid_source', 'temporarily_unavailable']),
+  "sections": zod.union([zod.object({
+  "indications": zod.string().max(getProductCardResponseInstructionSectionsOneIndicationsMax).nullable(),
+  "contraindications": zod.string().max(getProductCardResponseInstructionSectionsOneContraindicationsMax).nullable(),
+  "adverseReactions": zod.string().max(getProductCardResponseInstructionSectionsOneAdverseReactionsMax).nullable(),
+  "interactions": zod.string().max(getProductCardResponseInstructionSectionsOneInteractionsMax).nullable(),
+  "specialWarnings": zod.string().max(getProductCardResponseInstructionSectionsOneSpecialWarningsMax).nullable(),
+  "pregnancyAndLactation": zod.string().max(getProductCardResponseInstructionSectionsOnePregnancyAndLactationMax).nullable(),
+  "administration": zod.string().max(getProductCardResponseInstructionSectionsOneAdministrationMax).nullable(),
+  "overdose": zod.string().max(getProductCardResponseInstructionSectionsOneOverdoseMax).nullable(),
+  "storage": zod.string().max(getProductCardResponseInstructionSectionsOneStorageMax).nullable()
+}),zod.null()]),
+  "source": zod.union([zod.object({
+  "url": zod.string().url().max(getProductCardResponseInstructionSourceOneUrlMax),
+  "documentId": zod.string().regex(getProductCardResponseInstructionSourceOneDocumentIdRegExp),
+  "documentDate": zod.coerce.date().nullable(),
+  "checkedAt": zod.coerce.date(),
+  "documentHash": zod.string().regex(getProductCardResponseInstructionSourceOneDocumentHashRegExp),
+  "contentLength": zod.number().min(1).max(getProductCardResponseInstructionSourceOneContentLengthMax),
+  "parserVersion": zod.enum(['ua-drlz-mht-v1']),
+  "datasetTitle": zod.string().min(1),
+  "datasetUrl": zod.string().url(),
+  "license": zod.string().min(1)
+}),zod.null()]),
+  "provenance": zod.union([zod.object({
+  "sourceAllowed": zod.boolean(),
+  "registrationMatched": zod.boolean(),
+  "contentLocationMatched": zod.boolean(),
+  "availableSectionCount": zod.number().min(getProductCardResponseInstructionProvenanceOneAvailableSectionCountMin).max(getProductCardResponseInstructionProvenanceOneAvailableSectionCountMax),
+  "coveragePct": zod.number().min(getProductCardResponseInstructionProvenanceOneCoveragePctMin).max(getProductCardResponseInstructionProvenanceOneCoveragePctMax)
+}),zod.null()]),
+  "warnings": zod.array(zod.string().regex(getProductCardResponseInstructionWarningsItemRegExp)).max(getProductCardResponseInstructionWarningsMax)
+}),
+  "freshness": zod.array(zod.object({
+  "key": zod.enum(['registry', 'national_list', 'dispensing_category', 'instruction', 'reimbursement', 'price', 'interactions', 'series_restrictions']),
+  "status": zod.enum(['current', 'stale', 'incomplete', 'unknown', 'unavailable']),
+  "checkedAt": zod.union([zod.coerce.date(),zod.null()]),
+  "sourceUrl": zod.union([zod.string().url().max(getProductCardResponseFreshnessItemSourceUrlOneMax),zod.null()])
+})).min(getProductCardResponseFreshnessMin).max(getProductCardResponseFreshnessMax),
+  "coverage": zod.object({
+  "connectedSources": zod.number().min(getProductCardResponseCoverageConnectedSourcesMin).max(getProductCardResponseCoverageConnectedSourcesMax),
+  "totalSources": zod.literal(8),
+  "complete": zod.boolean(),
+  "sources": zod.array(zod.object({
+  "key": zod.enum(['registry', 'national_list', 'dispensing_category', 'instruction', 'reimbursement', 'price', 'interactions', 'series_restrictions']),
+  "label": zod.string().min(1).max(getProductCardResponseCoverageSourcesItemLabelMax),
+  "status": zod.enum(['ready', 'attention', 'requires_input', 'not_connected', 'unavailable']),
+  "detail": zod.string().min(1).max(getProductCardResponseCoverageSourcesItemDetailMax),
+  "sourceUrl": zod.union([zod.string().url().max(getProductCardResponseCoverageSourcesItemSourceUrlOneMax),zod.null()]),
+  "checkedAt": zod.union([zod.coerce.date(),zod.null()])
+})).min(getProductCardResponseCoverageSourcesMin).max(getProductCardResponseCoverageSourcesMax)
+}),
+  "warnings": zod.array(zod.string().regex(getProductCardResponseWarningsItemRegExp)).max(getProductCardResponseWarningsMax)
+})
+
+
+/**
  * Lazily returns a bounded structured snapshot parsed from the official Ukrainian registry document for this exact registry product. Missing sections remain null. The response contains no generated clinical text, secrets, raw environment values or server filesystem paths.
  * @summary Get a structured official instruction for one registry product
  */
