@@ -752,6 +752,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /regulatory-radar/events:
+    get:
+      operationId: searchRegulatoryEvents
+      tags: [regulatory]
+      summary: Search the verified DLS disposition journal
+      description: >-
+        Without a query, returns the latest 30-day journal. With a query, searches
+        the complete verified DLS snapshot so older prohibitions and restorations
+        remain discoverable by medicine, registration number, series, manufacturer,
+        or document number.
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+            maxLength: 160
+        - in: query
+          name: filter
+          schema:
+            $ref: "#/components/schemas/RegulatoryEventSearchFilter"
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 50
+      responses:
+        "200":
+          description: Bounded page from the verified DLS disposition journal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegulatoryEventSearch"
+        "400":
+          description: Invalid event-search parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Verified local DLS snapshot is unavailable or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /regulatory-radar/refresh:
     post:
       operationId: refreshRegulatoryRadar
@@ -5282,6 +5334,58 @@ components:
         sourceUrl:
           type: string
           format: uri
+    RegulatoryEventSearchFilter:
+      type: string
+      enum: [all, temporary_ban, permanent_ban, restored, review]
+    RegulatoryEventSearch:
+      type: object
+      required:
+        - version
+        - query
+        - filter
+        - scope
+        - total
+        - page
+        - pageSize
+        - pageCount
+        - coverageStartDate
+        - latestDocumentDate
+        - events
+      properties:
+        version:
+          type: string
+          enum: ["1.0"]
+        query:
+          type: string
+        filter:
+          $ref: "#/components/schemas/RegulatoryEventSearchFilter"
+        scope:
+          type: string
+          enum: [recent, full_history]
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 50
+        pageCount:
+          type: integer
+          minimum: 0
+        coverageStartDate:
+          type: string
+          format: date
+        latestDocumentDate:
+          type: [string, "null"]
+          format: date
+        events:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/RegulatoryEvent"
     RegulatoryEventCounts:
       type: object
       required:

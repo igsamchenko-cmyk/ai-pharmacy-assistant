@@ -16,6 +16,9 @@ import {
 import {
   useGetRegulatoryRadar,
   getGetRegulatoryRadarQueryKey,
+  useSearchRegulatoryEvents,
+  getSearchRegulatoryEventsQueryKey,
+  type RegulatoryEventSearchFilter,
   type RegulatoryEvent,
   type RegulatorySource,
   type RegulatoryRadarRefresh,
@@ -25,15 +28,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useRegulatoryRadarRefresh } from "@/lib/regulatory-radar-refresh";
 
-type EventFilter =
-  | "all"
-  | "new"
-  | "temporary_ban"
-  | "permanent_ban"
-  | "restored"
-  | "review";
+type EventFilter = "new" | RegulatoryEventSearchFilter;
 
 const SEEN_EVENTS_STORAGE_KEY = "farmassist:regulatory-radar:seen-events:v1";
 
@@ -381,6 +379,7 @@ function LoadingState() {
 export default function RegulatoryRadarPage() {
   const [query, setQuery] = useState(initialRadarQuery);
   const [filter, setFilter] = useState<EventFilter>("all");
+  const [eventPage, setEventPage] = useState(1);
   const [seenEventIds, setSeenEventIds] = useState<Set<string>>(new Set());
   const [seenStateReady, setSeenStateReady] = useState(false);
   const radar = useGetRegulatoryRadar({
@@ -390,8 +389,36 @@ export default function RegulatoryRadarPage() {
       refetchOnWindowFocus: false,
     },
   });
+  const debouncedQuery = useDebounce(query.trim(), 180);
+  const serverFilter: RegulatoryEventSearchFilter =
+    filter === "new" ? "all" : filter;
+  const eventJournal = useSearchRegulatoryEvents(
+    {
+      q: debouncedQuery || undefined,
+      filter: serverFilter,
+      page: filter === "new" ? 1 : eventPage,
+      limit: 50,
+    },
+    {
+      query: {
+        queryKey: getSearchRegulatoryEventsQueryKey({
+          q: debouncedQuery || undefined,
+          filter: serverFilter,
+          page: filter === "new" ? 1 : eventPage,
+          limit: 50,
+        }),
+        staleTime: 60_000,
+        refetchOnWindowFocus: false,
+      },
+    },
+  );
   const automaticRefresh = useRegulatoryRadarRefresh();
-  const isRefreshing = automaticRefresh.isRefreshing || radar.isFetching;
+  const isRefreshing =
+    automaticRefresh.isRefreshing ||
+    radar.isFetching ||
+    eventJournal.isFetching;
+
+  useEffect(() => setEventPage(1), [query, filter]);
 
   useEffect(() => {
     if (!radar.data || seenStateReady) return;
@@ -412,16 +439,12 @@ export default function RegulatoryRadarPage() {
       ),
     [radar.data?.events, seenEventIds, seenStateReady],
   );
-  const events = useMemo(
-    () =>
-      filterRegulatoryEvents(
-        radar.data?.events ?? [],
-        query,
-        filter,
-        newEventIds,
-      ),
-    [radar.data?.events, query, filter, newEventIds],
-  );
+  const events =
+    filter === "new"
+      ? (eventJournal.data?.events ?? []).filter((event) =>
+          newEventIds.has(event.id),
+        )
+      : (eventJournal.data?.events ?? []);
   const seriesSource = radar.data?.sources.find(
     (source) => source.key === "series_restrictions",
   );
@@ -466,6 +489,7 @@ export default function RegulatoryRadarPage() {
           onClick={() => {
             void automaticRefresh.refresh().then(() => {
               void radar.refetch();
+              void eventJournal.refetch();
             });
           }}
           disabled={isRefreshing}
@@ -580,12 +604,23 @@ export default function RegulatoryRadarPage() {
                 </div>
                 <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
                   <CalendarDays className="h-4 w-4" />
-                  {formatDate(radar.data.window.from)} —{" "}
-                  {formatDate(radar.data.window.to)}
+                  {eventJournal.data?.scope === "full_history" ? (
+                    <>
+                      {formatDate(eventJournal.data.coverageStartDate)} —{" "}
+                      {formatDate(eventJournal.data.latestDocumentDate)}
+                    </>
+                  ) : (
+                    <>
+                      {formatDate(radar.data.window.from)} —{" "}
+                      {formatDate(radar.data.window.to)}
+                    </>
+                  )}
                 </p>
               </div>
               <p className="text-xs text-muted-foreground">
-                Показано до 50 найновіших записів
+                {eventJournal.data
+                  ? `${eventJournal.data.total.toLocaleString("uk-UA")} записів ${eventJournal.data.scope === "full_history" ? "у повній базі" : "за 30 днів"}`
+                  : "Завантаження журналу…"}
               </p>
             </div>
 
@@ -654,6 +689,11 @@ export default function RegulatoryRadarPage() {
                     aria-label="Пошук у журналі розпоряджень"
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Пошук виконується по всьому перевіреному журналу
+                  Держлікслужби, включно з історичними заборонами та
+                  поновленнями.
+                </p>
                 <div
                   className="flex flex-wrap gap-2"
                   role="group"
@@ -729,6 +769,26 @@ export default function RegulatoryRadarPage() {
               </button>
             </div>
             <div className="space-y-3">
+              {eventJournal.isLoading ? (
+                <div
+                  className="space-y-3"
+                  aria-label="Завантаження розпоряджень"
+                >
+                  <Skeleton className="h-40 w-full rounded-2xl" />
+                  <Skeleton className="h-40 w-full rounded-2xl" />
+                </div>
+              ) : null}
+              {eventJournal.isError ? (
+                <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-sm">
+                  <p className="font-semibold text-destructive">
+                    Не вдалося завантажити журнал розпоряджень
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    Дані про відсутність заборони за такого стану не можна
+                    вважати підтвердженими.
+                  </p>
+                </div>
+              ) : null}
               {events.map((event) => (
                 <EventCard
                   key={event.id}
@@ -736,9 +796,44 @@ export default function RegulatoryRadarPage() {
                   isNew={newEventIds.has(event.id)}
                 />
               ))}
-              {events.length === 0 ? (
+              {!eventJournal.isLoading &&
+              !eventJournal.isError &&
+              events.length === 0 ? (
                 <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-                  За цим пошуком у завантаженому журналі збігів немає.
+                  {debouncedQuery
+                    ? "У повному перевіреному журналі збігів за цим пошуком немає."
+                    : "За вибраним типом у журналі за останні 30 днів записів немає."}
+                </div>
+              ) : null}
+              {eventJournal.data &&
+              filter !== "new" &&
+              eventJournal.data.pageCount > 1 ? (
+                <div className="flex flex-col items-center justify-between gap-3 rounded-2xl border p-3 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={eventPage <= 1 || eventJournal.isFetching}
+                    onClick={() =>
+                      setEventPage((value) => Math.max(1, value - 1))
+                    }
+                  >
+                    Попередня
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Сторінка {eventJournal.data.page} з{" "}
+                    {eventJournal.data.pageCount}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={
+                      eventPage >= eventJournal.data.pageCount ||
+                      eventJournal.isFetching
+                    }
+                    onClick={() => setEventPage((value) => value + 1)}
+                  >
+                    Наступна
+                  </Button>
                 </div>
               ) : null}
             </div>

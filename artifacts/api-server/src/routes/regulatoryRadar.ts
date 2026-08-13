@@ -2,9 +2,14 @@ import { Router, type IRouter } from "express";
 import {
   GetRegulatoryRadarResponse,
   RefreshRegulatoryRadarResponse,
+  SearchRegulatoryEventsQueryParams,
+  SearchRegulatoryEventsResponse,
 } from "@workspace/api-zod";
 import { requireReferenceAccess } from "../auth";
-import { loadRegulatoryRadar } from "../services/regulatoryRadarService";
+import {
+  loadRegulatoryRadar,
+  searchRegulatoryEvents,
+} from "../services/regulatoryRadarService";
 import { refreshRegulatoryRadarIfDue } from "../services/regulatoryRadarRefreshService";
 
 const router: IRouter = Router();
@@ -21,6 +26,28 @@ router.get("/regulatory-radar", (_req, res): void => {
   } catch {
     res.status(503).json({
       error: "Verified regulatory source snapshots are unavailable",
+    });
+  }
+});
+
+router.get("/regulatory-radar/events", (req, res): void => {
+  const parsed = SearchRegulatoryEventsQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res
+      .status(400)
+      .json({ error: "Invalid regulatory event search parameters" });
+    return;
+  }
+
+  try {
+    const payload = SearchRegulatoryEventsResponse.parse(
+      searchRegulatoryEvents(parsed.data),
+    );
+    res.set("Cache-Control", "private, max-age=60, stale-while-revalidate=120");
+    res.json(payload);
+  } catch {
+    res.status(503).json({
+      error: "Verified DLS disposition journal is unavailable",
     });
   }
 });

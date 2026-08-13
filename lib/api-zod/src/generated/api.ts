@@ -2354,6 +2354,68 @@ export const GetRegulatoryRadarResponse = zod.object({
 
 
 /**
+ * Without a query, returns the latest 30-day journal. With a query, searches the complete verified DLS snapshot so older prohibitions and restorations remain discoverable by medicine, registration number, series, manufacturer, or document number.
+ * @summary Search the verified DLS disposition journal
+ */
+export const searchRegulatoryEventsQueryQMax = 160;
+
+export const searchRegulatoryEventsQueryPageDefault = 1;
+
+export const searchRegulatoryEventsQueryLimitDefault = 50;
+export const searchRegulatoryEventsQueryLimitMax = 50;
+
+
+
+export const SearchRegulatoryEventsQueryParams = zod.object({
+  "q": zod.coerce.string().max(searchRegulatoryEventsQueryQMax).optional(),
+  "filter": zod.enum(['all', 'temporary_ban', 'permanent_ban', 'restored', 'review']).optional(),
+  "page": zod.coerce.number().min(1).default(searchRegulatoryEventsQueryPageDefault),
+  "limit": zod.coerce.number().min(1).max(searchRegulatoryEventsQueryLimitMax).default(searchRegulatoryEventsQueryLimitDefault)
+})
+
+export const searchRegulatoryEventsResponseTotalMin = 0;
+
+
+export const searchRegulatoryEventsResponsePageSizeMax = 50;
+
+export const searchRegulatoryEventsResponsePageCountMin = 0;
+
+export const searchRegulatoryEventsResponseEventsItemAdditionalInfoMax = 8000;
+
+export const searchRegulatoryEventsResponseEventsMax = 50;
+
+
+
+export const SearchRegulatoryEventsResponse = zod.object({
+  "version": zod.enum(['1.0']),
+  "query": zod.string(),
+  "filter": zod.enum(['all', 'temporary_ban', 'permanent_ban', 'restored', 'review']),
+  "scope": zod.enum(['recent', 'full_history']),
+  "total": zod.number().min(searchRegulatoryEventsResponseTotalMin),
+  "page": zod.number().min(1),
+  "pageSize": zod.number().min(1).max(searchRegulatoryEventsResponsePageSizeMax),
+  "pageCount": zod.number().min(searchRegulatoryEventsResponsePageCountMin),
+  "coverageStartDate": zod.coerce.date(),
+  "latestDocumentDate": zod.coerce.date().nullable(),
+  "events": zod.array(zod.object({
+  "id": zod.string(),
+  "date": zod.coerce.date(),
+  "documentNumber": zod.string(),
+  "type": zod.enum(['temporary_ban', 'permanent_ban', 'restore_temporary', 'restore_permanent', 'partial_cancellation', 'supplement']),
+  "severity": zod.enum(['critical', 'review', 'info']),
+  "label": zod.string(),
+  "registrationNumber": zod.string().nullable(),
+  "medicineName": zod.string(),
+  "dosageForm": zod.string(),
+  "series": zod.string(),
+  "manufacturer": zod.string(),
+  "additionalInfo": zod.string().max(searchRegulatoryEventsResponseEventsItemAdditionalInfoMax),
+  "sourceUrl": zod.string().url()
+})).max(searchRegulatoryEventsResponseEventsMax)
+})
+
+
+/**
  * Performs at most one official DLS refresh per 24 hours for the running server process. Concurrent app openings share one in-flight refresh. Invalid or unavailable upstream data never replaces the last verified snapshot.
  * @summary Refresh DLS regulatory data when the verified snapshot is due
  */

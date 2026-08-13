@@ -1,5 +1,6 @@
 import {
   getGetRegulatoryRadarQueryKey,
+  getSearchRegulatoryEventsQueryKey,
   useRefreshRegulatoryRadar,
   type RegulatoryRadarRefresh,
 } from "@workspace/api-client-react";
@@ -45,6 +46,9 @@ export function RegulatoryRadarRefreshProvider({
       if (result.status === "updated" || result.status === "unchanged") {
         await queryClient.invalidateQueries({
           queryKey: getGetRegulatoryRadarQueryKey(),
+        });
+        await queryClient.invalidateQueries({
+          queryKey: getSearchRegulatoryEventsQueryKey(),
         });
       }
       return result;

@@ -70,6 +70,7 @@ import type {
   ProvenanceSourceList,
   RegistryInteractionCheckInput,
   RegistryInteractionResult,
+  RegulatoryEventSearch,
   RegulatoryRadar,
   RegulatoryRadarRefresh,
   ReviewActionBody,
@@ -79,6 +80,7 @@ import type {
   SearchCatalogParams,
   SearchDrugInstructionsParams,
   SearchDrugsParams,
+  SearchRegulatoryEventsParams,
   SeriesRestrictionCheck
 } from './api.schemas';
 
@@ -1515,6 +1517,91 @@ export function useGetRegulatoryRadar<TData = Awaited<ReturnType<typeof getRegul
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetRegulatoryRadarQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSearchRegulatoryEventsUrl = (params?: SearchRegulatoryEventsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/regulatory-radar/events?${stringifiedParams}` : `/api/regulatory-radar/events`
+}
+
+/**
+ * Without a query, returns the latest 30-day journal. With a query, searches the complete verified DLS snapshot so older prohibitions and restorations remain discoverable by medicine, registration number, series, manufacturer, or document number.
+ * @summary Search the verified DLS disposition journal
+ */
+export const searchRegulatoryEvents = async (params?: SearchRegulatoryEventsParams, options?: RequestInit): Promise<RegulatoryEventSearch> => {
+
+  return customFetch<RegulatoryEventSearch>(getSearchRegulatoryEventsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchRegulatoryEventsQueryKey = (params?: SearchRegulatoryEventsParams,) => {
+    return [
+    `/api/regulatory-radar/events`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchRegulatoryEventsQueryOptions = <TData = Awaited<ReturnType<typeof searchRegulatoryEvents>>, TError = ErrorType<ErrorResponse>>(params?: SearchRegulatoryEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchRegulatoryEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchRegulatoryEventsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchRegulatoryEvents>>> = ({ signal }) => searchRegulatoryEvents(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchRegulatoryEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchRegulatoryEventsQueryResult = NonNullable<Awaited<ReturnType<typeof searchRegulatoryEvents>>>
+export type SearchRegulatoryEventsQueryError = ErrorType<ErrorResponse>
+
+
+/**
+ * @summary Search the verified DLS disposition journal
+ */
+
+export function useSearchRegulatoryEvents<TData = Awaited<ReturnType<typeof searchRegulatoryEvents>>, TError = ErrorType<ErrorResponse>>(
+ params?: SearchRegulatoryEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchRegulatoryEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchRegulatoryEventsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
