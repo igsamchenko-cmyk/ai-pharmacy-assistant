@@ -132,4 +132,39 @@ describe("series restriction API", () => {
       });
     });
   });
+
+  it("returns historical prohibition cards by registration number", async () => {
+    process.env.AUTH_REQUIRED = "false";
+    const app = createApp({ nodeEnv: "test" });
+    await withServer(createServer(app), async (baseUrl) => {
+      const params = new URLSearchParams({
+        q: "UA/3924/01/01",
+        filter: "permanent_ban",
+        page: "1",
+        limit: "50",
+      });
+      const response = await fetch(
+        `${baseUrl}/api/regulatory-radar/events?${params}`,
+      );
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toContain("max-age=60");
+      expect(await response.json()).toMatchObject({
+        version: "1.0",
+        query: "UA/3924/01/01",
+        filter: "permanent_ban",
+        scope: "full_history",
+        total: 1,
+        page: 1,
+        events: [
+          {
+            registrationNumber: "UA/3924/01/01",
+            medicineName: "КЛОПІДОГРЕЛЬ",
+            type: "permanent_ban",
+            series: "10212",
+          },
+        ],
+      });
+    });
+  });
 });

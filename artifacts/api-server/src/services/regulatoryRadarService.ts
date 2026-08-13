@@ -100,6 +100,27 @@ export interface RegulatoryRadarPayload {
   notices: string[];
 }
 
+export type RegulatoryEventSearchFilter =
+  | "all"
+  | "temporary_ban"
+  | "permanent_ban"
+  | "restored"
+  | "review";
+
+export interface RegulatoryEventSearchPayload {
+  version: "1.0";
+  query: string;
+  filter: RegulatoryEventSearchFilter;
+  scope: "recent" | "full_history";
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+  coverageStartDate: Date;
+  latestDocumentDate: Date | null;
+  events: RegulatoryRadarEvent[];
+}
+
 interface RadarSnapshots {
   series: SeriesRestrictionSnapshot;
   dispensing: DispensingCategorySnapshot;
@@ -258,6 +279,138 @@ function recentEvents(
     };
   });
   return { all, visible };
+}
+
+function normalizedEventSearchValue(value: string): string {
+  return value
+    .normalize("NFKC")
+    .toLocaleLowerCase("uk-UA")
+    .replace(/[\u2019\u02bc'`]/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim();
+}
+
+function matchesRegulatoryEventFilter(
+  type: SeriesRestrictionEventType,
+  filter: RegulatoryEventSearchFilter,
+): boolean {
+  if (filter === "all") return true;
+  if (filter === "temporary_ban") return type === "temporary_ban";
+  if (filter === "permanent_ban") return type === "permanent_ban";
+  if (filter === "restored") {
+    return type === "restore_temporary" || type === "restore_permanent";
+  }
+  return type === "partial_cancellation" || type === "supplement";
+}
+
+function regulatoryEventFromRecord(
+  record: SeriesRestrictionSnapshot["records"][number],
+): RegulatoryRadarEvent {
+  const presentation = eventPresentation(record.eventType);
+  const id = createHash("sha256")
+    .update(
+      `${record.documentDate}|${record.documentNumber}|${record.sourceOrder}`,
+    )
+    .digest("hex")
+    .slice(0, 20);
+  return {
+    id,
+    date: dateOnly(record.documentDate),
+    documentNumber: record.documentNumber,
+    type: record.eventType,
+    severity: presentation.severity,
+    label: presentation.label,
+    registrationNumber: record.registrationNumber,
+    medicineName: record.medicineName,
+    dosageForm: record.dosageForm,
+    series: record.seriesRaw,
+    manufacturer: record.manufacturer,
+    additionalInfo: record.additionalInfo,
+    sourceUrl: DLS_QUALITY_DOCUMENTS_URL,
+  };
+}
+
+export function searchRegulatoryEvents(
+  input: {
+    q?: string;
+    filter?: RegulatoryEventSearchFilter;
+    page?: number;
+    limit?: number;
+  } = {},
+  options: { snapshot?: SeriesRestrictionSnapshot } = {},
+): RegulatoryEventSearchPayload {
+  const snapshot = options.snapshot ?? loadSeriesRestrictionSnapshot();
+  const query = input.q?.trim() ?? "";
+  const normalizedQuery = normalizedEventSearchValue(query);
+  const compactQuery = normalizedQuery.replace(/[^\p{L}\p{N}]+/gu, "");
+  const filter = input.filter ?? "all";
+  const page = Math.max(1, Math.trunc(input.page ?? 1));
+  const pageSize = Math.max(1, Math.min(50, Math.trunc(input.limit ?? 50)));
+  const latestDocumentDate = snapshot.source.latestDocumentDate;
+  const recentFrom = latestDocumentDate
+    ? dateOnly(latestDocumentDate)
+    : dateOnly(snapshot.source.coverageStartDate);
+  recentFrom.setUTCDate(recentFrom.getUTCDate() - (EVENT_WINDOW_DAYS - 1));
+  const recentFromValue = recentFrom.toISOString().slice(0, 10);
+
+  const matches = snapshot.records
+    .filter((record) => {
+      if (!matchesRegulatoryEventFilter(record.eventType, filter)) return false;
+      if (
+        !normalizedQuery &&
+        latestDocumentDate &&
+        (record.documentDate < recentFromValue ||
+          record.documentDate > latestDocumentDate)
+      ) {
+        return false;
+      }
+      if (!normalizedQuery) return true;
+      const haystack = normalizedEventSearchValue(
+        [
+          record.medicineName,
+          record.registrationNumber ?? "",
+          record.seriesRaw,
+          record.manufacturer,
+          record.additionalInfo,
+          record.documentNumber,
+          record.dosageForm,
+        ].join(" "),
+      );
+      if (haystack.includes(normalizedQuery)) return true;
+      return (
+        compactQuery.length >= 3 &&
+        haystack.replace(/[^\p{L}\p{N}]+/gu, "").includes(compactQuery)
+      );
+    })
+    .sort(
+      (left, right) =>
+        right.documentDate.localeCompare(left.documentDate) ||
+        right.documentNumber.localeCompare(left.documentNumber, "uk-UA", {
+          numeric: true,
+        }) ||
+        right.sourceOrder - left.sourceOrder,
+    );
+
+  const total = matches.length;
+  const pageCount = total === 0 ? 0 : Math.ceil(total / pageSize);
+  const offset = (page - 1) * pageSize;
+  return {
+    version: "1.0",
+    query,
+    filter,
+    scope: normalizedQuery ? "full_history" : "recent",
+    total,
+    page,
+    pageSize,
+    pageCount,
+    coverageStartDate: dateOnly(snapshot.source.coverageStartDate),
+    latestDocumentDate: latestDocumentDate
+      ? dateOnly(latestDocumentDate)
+      : null,
+    events: matches
+      .slice(offset, offset + pageSize)
+      .map(regulatoryEventFromRecord),
+  };
 }
 
 export function buildRegulatoryRadar(

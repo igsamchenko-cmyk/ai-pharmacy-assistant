@@ -3321,6 +3321,55 @@ export interface RegulatoryEvent {
   sourceUrl: string;
 }
 
+export type RegulatoryEventSearchFilter = typeof RegulatoryEventSearchFilter[keyof typeof RegulatoryEventSearchFilter];
+
+
+export const RegulatoryEventSearchFilter = {
+  all: 'all',
+  temporary_ban: 'temporary_ban',
+  permanent_ban: 'permanent_ban',
+  restored: 'restored',
+  review: 'review',
+} as const;
+
+export type RegulatoryEventSearchVersion = typeof RegulatoryEventSearchVersion[keyof typeof RegulatoryEventSearchVersion];
+
+
+export const RegulatoryEventSearchVersion = {
+  '10': '1.0',
+} as const;
+
+export type RegulatoryEventSearchScope = typeof RegulatoryEventSearchScope[keyof typeof RegulatoryEventSearchScope];
+
+
+export const RegulatoryEventSearchScope = {
+  recent: 'recent',
+  full_history: 'full_history',
+} as const;
+
+export interface RegulatoryEventSearch {
+  version: RegulatoryEventSearchVersion;
+  query: string;
+  filter: RegulatoryEventSearchFilter;
+  scope: RegulatoryEventSearchScope;
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 1 */
+  page: number;
+  /**
+     * @minimum 1
+     * @maximum 50
+     */
+  pageSize: number;
+  /** @minimum 0 */
+  pageCount: number;
+  coverageStartDate: string;
+  /** @nullable */
+  latestDocumentDate: string | null;
+  /** @maxItems 50 */
+  events: RegulatoryEvent[];
+}
+
 export interface RegulatoryEventCounts {
   /** @minimum 0 */
   temporaryBan: number;
@@ -3660,6 +3709,23 @@ registrationNumber: string;
  * @pattern ^[^\r\n]+$
  */
 series: string;
+};
+
+export type SearchRegulatoryEventsParams = {
+/**
+ * @maxLength 160
+ */
+q?: string;
+filter?: RegulatoryEventSearchFilter;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+limit?: number;
 };
 
 export type GetExternalDrugReferenceParams = {

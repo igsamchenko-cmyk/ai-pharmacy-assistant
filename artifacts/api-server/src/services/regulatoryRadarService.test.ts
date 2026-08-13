@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   evaluateRegulatorySourceStatus,
   loadRegulatoryRadar,
+  searchRegulatoryEvents,
 } from "./regulatoryRadarService";
 
 describe("regulatory radar service", () => {
@@ -75,5 +76,41 @@ describe("regulatory radar service", () => {
           event.type === "restore_temporary",
       )?.additionalInfo,
     ).toContain("160-001.2/002.0/17-26");
+  });
+
+  it("searches historical prohibitions across the complete verified journal", () => {
+    const allEvents = searchRegulatoryEvents({
+      q: "UA/3924/01/01",
+      filter: "all",
+    });
+    const permanent = searchRegulatoryEvents({
+      q: "ua39240101",
+      filter: "permanent_ban",
+    });
+
+    expect(allEvents).toMatchObject({
+      scope: "full_history",
+      total: 6,
+      page: 1,
+      pageCount: 1,
+    });
+    expect(allEvents.events.map((event) => event.type)).toEqual([
+      "restore_temporary",
+      "temporary_ban",
+      "restore_temporary",
+      "temporary_ban",
+      "permanent_ban",
+      "temporary_ban",
+    ]);
+    expect(permanent).toMatchObject({
+      scope: "full_history",
+      total: 1,
+    });
+    expect(permanent.events[0]).toMatchObject({
+      registrationNumber: "UA/3924/01/01",
+      medicineName: "КЛОПІДОГРЕЛЬ",
+      type: "permanent_ban",
+      series: "10212",
+    });
   });
 });
