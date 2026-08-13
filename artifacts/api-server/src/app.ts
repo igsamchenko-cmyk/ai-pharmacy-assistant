@@ -121,6 +121,7 @@ export function createApp(options: AppOptions = {}): Express {
             id: req.id,
             method: req.method,
             url: req.url?.split("?")[0],
+            cfRay: req.headers["cf-ray"] ?? null,
           };
         },
         res(res) {

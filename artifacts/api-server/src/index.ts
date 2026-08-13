@@ -1,7 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { configureHttpServer } from "./serverRuntime";
 import { warmCatalogClientIndexCache } from "./services/catalogClientIndexService";
-import { warmInstructionSearchIndex } from "./services/instructionSearchService";
 
 const rawPort = process.env["PORT"];
 
@@ -17,18 +17,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const instructionPrewarmStartedAt = Date.now();
-try {
-  warmInstructionSearchIndex();
-  logger.info(
-    { durationMs: Date.now() - instructionPrewarmStartedAt },
-    "Instruction search index prewarmed",
-  );
-} catch (error) {
-  logger.warn({ err: error }, "Instruction search index prewarm unavailable");
-}
-
-app.listen(port, (err) => {
+const server = app.listen(port, "0.0.0.0", (err) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
     process.exit(1);
@@ -53,3 +42,5 @@ app.listen(port, (err) => {
       logger.warn("Catalog client index prewarm unavailable");
     });
 });
+
+configureHttpServer(server);
