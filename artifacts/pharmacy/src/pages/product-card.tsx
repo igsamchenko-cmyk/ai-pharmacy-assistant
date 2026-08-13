@@ -854,6 +854,19 @@ export function ProductCardContent({
                 </span>{" "}
                 {product.inn || product.activeIngredient || "Не зазначено"}
               </p>
+              <Button
+                asChild
+                size="lg"
+                className="mt-3 min-h-12 w-full whitespace-normal shadow-md ring-2 ring-primary/20 sm:w-auto"
+              >
+                <a
+                  href="#instruction"
+                  data-testid="product-card-instruction-quick-action"
+                >
+                  <BookOpenText className="h-5 w-5 shrink-0" />
+                  Відкрити інструкцію
+                </a>
+              </Button>
             </div>
           </header>
 
@@ -918,13 +931,7 @@ export function ProductCardContent({
             />
           </section>
 
-          <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4">
-            <Button asChild className="min-h-11 min-w-0 whitespace-normal">
-              <a href="#instruction">
-                <BookOpenText className="h-4 w-4 shrink-0" />
-                Інструкція
-              </a>
-            </Button>
+          <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
             <Button
               asChild
               variant="outline"
@@ -943,7 +950,7 @@ export function ProductCardContent({
             <Button
               type="button"
               variant="outline"
-              className="min-h-11 min-w-0 whitespace-normal"
+              className="col-span-2 min-h-11 min-w-0 whitespace-normal sm:col-span-1"
               onClick={onToggleFavorite}
               aria-pressed={favorite}
             >

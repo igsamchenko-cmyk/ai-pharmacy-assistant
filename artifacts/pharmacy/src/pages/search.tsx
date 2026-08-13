@@ -247,7 +247,7 @@ export function InstructionAction({
     <Button
       asChild
       size="sm"
-      className="w-full min-w-0 max-w-full justify-center whitespace-normal sm:w-auto"
+      className="min-h-11 w-full min-w-0 max-w-full justify-center whitespace-normal shadow-sm ring-1 ring-primary/25 sm:w-auto"
     >
       <a
         href={`/instructions/${product.id}`}
@@ -262,15 +262,17 @@ export function InstructionAction({
 
 export function ProductActions({
   product,
+  showInstruction = true,
 }: {
   product: RegistryProductResult;
+  showInstruction?: boolean;
 }) {
   return (
     <div
       className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap"
       data-testid={`product-actions-${product.id}`}
     >
-      {product.instructionAvailable ? (
+      {showInstruction && product.instructionAvailable ? (
         <div className="col-span-2 min-w-0 sm:col-auto">
           <InstructionAction product={product} />
         </div>
@@ -398,6 +400,15 @@ export function RegistryProductCard({
           </Badge>
         </div>
 
+        {product.instructionAvailable ? (
+          <div
+            className="min-w-0"
+            data-testid={`instruction-discovery-${product.id}`}
+          >
+            <InstructionAction product={product} />
+          </div>
+        ) : null}
+
         <div
           className="flex min-w-0 flex-wrap gap-1.5"
           aria-label="Форма та дозування"
@@ -431,9 +442,7 @@ export function RegistryProductCard({
           {manufacturerText}
         </p>
 
-        <div data-testid={`instruction-discovery-${product.id}`}>
-          <ProductActions product={product} />
-        </div>
+        <ProductActions product={product} showInstruction={false} />
 
         <details
           className="group max-w-full overflow-hidden rounded-lg border border-border/70 bg-muted/20"

@@ -337,6 +337,15 @@ describe("registry catalog UI", () => {
     expect(html).toContain("Є інструкція");
     expect(html).toContain(`data-testid="instruction-action-${product.id}"`);
     expect(html).toContain(`data-testid="dosage-chip-${product.id}"`);
+    const instructionIndex = html.indexOf(
+      `data-testid="instruction-action-${product.id}"`,
+    );
+    expect(instructionIndex).toBeGreaterThan(
+      html.indexOf(`data-testid="registry-product-detail-link-${product.id}"`),
+    );
+    expect(instructionIndex).toBeLessThan(
+      html.indexOf(`data-testid="dosage-chip-${product.id}"`),
+    );
     expect(html).toContain(`data-testid="form-badge-${product.id}"`);
     expect(html).toContain(`data-testid="product-actions-${product.id}"`);
     expect(html).toContain(
