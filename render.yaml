@@ -5,6 +5,7 @@ services:
     plan: free
     buildCommand: corepack enable && pnpm install --frozen-lockfile && PORT=5173 BASE_PATH=/ pnpm run build
     startCommand: cd artifacts/api-server && node --enable-source-maps ./dist/index.mjs
+    healthCheckPath: /api/healthz
     envVars:
       - key: NODE_VERSION
         value: 24.14.1
