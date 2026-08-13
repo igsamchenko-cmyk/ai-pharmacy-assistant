@@ -16,9 +16,15 @@ describe("Render startup stability", () => {
       `${repositoryRoot}/artifacts/api-server/src/index.ts`,
       "utf8",
     );
+    const instructionSearchService = readFileSync(
+      `${repositoryRoot}/artifacts/api-server/src/services/instructionSearchService.ts`,
+      "utf8",
+    );
 
     expect(renderBlueprint).toContain("healthCheckPath: /api/healthz");
     expect(serverEntrypoint).toContain('app.listen(port, "0.0.0.0"');
     expect(serverEntrypoint).not.toContain("warmInstructionSearchIndex");
+    expect(instructionSearchService).not.toContain("cachedIndex");
+    expect(instructionSearchService).toContain("await yieldToEventLoop()");
   });
 });

@@ -91,7 +91,7 @@ router.get("/catalog/instructions/search", async (req, res): Promise<void> => {
   }
 
   try {
-    const result = searchOfficialInstructions({
+    const result = await searchOfficialInstructions({
       q: parsed.data.q,
       section: parsed.data.section,
       limit: parsed.data.limit,

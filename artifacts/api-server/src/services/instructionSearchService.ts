@@ -209,6 +209,9 @@ interface ScoredPassage {
   matches: TokenMatch[];
 }
 
+const yieldToEventLoop = () =>
+  new Promise<void>((resolve) => setImmediate(resolve));
+
 function normalizeToken(value: string): string {
   return value
     .normalize("NFKC")
@@ -749,34 +752,110 @@ export function searchInstructionIndex(
   };
 }
 
-let cachedIndex: InstructionSearchIndex | null = null;
-
-function loadInstructionSearchIndex(): InstructionSearchIndex {
-  if (cachedIndex) return cachedIndex;
-  const manifest = loadInstructionManifest();
-  const snapshots = manifest.products
-    .filter(
-      (product) =>
-        product.status === "available" || product.status === "partial",
-    )
-    .map((product) => getInstructionForProduct(product.registryProductId))
-    .filter((snapshot): snapshot is DrugInstructionSnapshot =>
-      Boolean(snapshot),
-    );
-  cachedIndex = buildInstructionSearchIndex(snapshots, manifest.generatedAt);
-  return cachedIndex;
+function compareScoredPassages(left: ScoredPassage, right: ScoredPassage) {
+  return (
+    left.score - right.score ||
+    left.passage.snapshot.tradeName.localeCompare(
+      right.passage.snapshot.tradeName,
+      "uk-UA",
+    ) ||
+    left.passage.charStart - right.passage.charStart
+  );
 }
 
-export function searchOfficialInstructions(
+function scoreInstructionSnapshot(
+  snapshot: DrugInstructionSnapshot,
+  plans: readonly QueryPlan[],
+  sectionFilter: InstructionSearchSection,
+): ScoredPassage[] {
+  const tokenForms = new Map<string, TokenForm>();
+  const metadata = metadataTokens(snapshot, tokenForms);
+  const results: ScoredPassage[] = [];
+
+  for (const sectionKey of INSTRUCTION_SECTION_KEYS) {
+    if (sectionFilter !== "all" && sectionFilter !== sectionKey) continue;
+    const section = snapshot.sections[sectionKey];
+    if (!section) continue;
+
+    let best: ScoredPassage | null = null;
+    for (const span of splitIntoPassages(section)) {
+      const passage: IndexedPassage = {
+        id: 0,
+        snapshot,
+        sectionKey,
+        text: section.slice(span.start, span.end),
+        charStart: span.start,
+        charEnd: span.end,
+        tokens: tokenize(
+          section.slice(span.start, span.end),
+          span.start,
+          tokenForms,
+        ),
+        metadataTokens: metadata,
+      };
+      for (const plan of plans) {
+        const scored = scorePassage(passage, plan);
+        if (scored && (!best || compareScoredPassages(scored, best) < 0)) {
+          best = scored;
+        }
+      }
+    }
+    if (best) results.push(best);
+  }
+
+  return results;
+}
+
+export async function searchOfficialInstructions(
   input: InstructionSearchInput,
-): InstructionSearchResponse {
-  return searchInstructionIndex(loadInstructionSearchIndex(), input);
+): Promise<InstructionSearchResponse> {
+  const startedAt = performance.now();
+  const manifest = loadInstructionManifest();
+  const normalizedQuery = normalizeInstructionSearchQuery(input.q);
+  const section = input.section ?? "all";
+  const limit = Math.max(1, Math.min(MAX_RESULTS, input.limit ?? 20));
+  const plans = queryPlans(input.q);
+  const bestResults: ScoredPassage[] = [];
+  let total = 0;
+  let indexedInstructionCount = 0;
+
+  for (const product of manifest.products) {
+    if (product.status !== "available" && product.status !== "partial") {
+      continue;
+    }
+    const snapshot = getInstructionForProduct(product.registryProductId);
+    if (!snapshot) continue;
+    indexedInstructionCount++;
+
+    const scored = scoreInstructionSnapshot(snapshot, plans, section);
+    total += scored.length;
+    bestResults.push(...scored);
+    bestResults.sort(compareScoredPassages);
+    if (bestResults.length > limit) bestResults.length = limit;
+
+    // Render's free instance has little memory and a single CPU. Yield after
+    // every document so health checks and ordinary catalog requests stay live.
+    await yieldToEventLoop();
+  }
+
+  return {
+    query: input.q.trim(),
+    normalizedQuery,
+    section,
+    total,
+    indexedInstructionCount,
+    snapshotGeneratedAt: manifest.generatedAt,
+    durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
+    items: bestResults.map(scoredItem),
+  };
 }
 
+// Retained for compatibility with maintenance scripts. Only the tiny manifest
+// is warmed; the former all-document in-memory index exceeded Render's 512 MB.
 export function warmInstructionSearchIndex(): void {
-  loadInstructionSearchIndex();
+  loadInstructionManifest();
 }
 
 export function clearInstructionSearchIndex(): void {
-  cachedIndex = null;
+  // The low-memory implementation intentionally keeps no global search index.
 }
