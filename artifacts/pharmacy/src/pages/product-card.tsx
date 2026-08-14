@@ -1,14 +1,11 @@
 import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
-  getCheckProductSeriesRestrictionsQueryKey,
   getGetProductCardQueryKey,
-  useCheckProductSeriesRestrictions,
   useGetProductCard,
   type AdministrationFacts,
   type InstructionQuote,
   type ProductCard,
   type ProductCardFreshnessEntry,
-  type SeriesRestrictionCheck,
 } from "@workspace/api-client-react";
 import { Link, useParams } from "wouter";
 import {
@@ -28,7 +25,6 @@ import {
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
-  Stethoscope,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +34,6 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCompareButton } from "@/components/product-compare-button";
 import { ReportIssueButton } from "@/components/report-issue-button";
-import { SeriesRestrictionCheckPanel } from "@/components/series-restriction-check";
 import {
   recordRecentlyViewed,
   removeStaleDrugRef,
@@ -797,26 +792,12 @@ export interface ProductCardContentProps {
   card: ProductCard;
   favorite: boolean;
   onToggleFavorite: () => void;
-  draftSeries: string;
-  submittedSeries: string;
-  seriesResult?: SeriesRestrictionCheck;
-  seriesLoading: boolean;
-  seriesError: boolean;
-  onDraftSeriesChange: (value: string) => void;
-  onSubmitSeries: () => void;
 }
 
 export function ProductCardContent({
   card,
   favorite,
   onToggleFavorite,
-  draftSeries,
-  submittedSeries,
-  seriesResult,
-  seriesLoading,
-  seriesError,
-  onDraftSeriesChange,
-  onSubmitSeries,
 }: ProductCardContentProps) {
   const product = card.identity;
   const displayForm = conciseDosageForm(product.dosageForm);
@@ -1006,42 +987,9 @@ export function ProductCardContent({
         </Alert>
       ) : null}
 
-      {card.seriesStatus?.requiresSeriesCheck ? (
-        <SeriesRestrictionCheckPanel
-          product={product}
-          draftSeries={draftSeries}
-          submittedSeries={submittedSeries}
-          result={seriesResult}
-          isLoading={seriesLoading}
-          isError={seriesError}
-          onDraftSeriesChange={onDraftSeriesChange}
-          onSubmit={onSubmitSeries}
-        />
-      ) : null}
-
       <EconomicsSection card={card} />
       <InstructionSection card={card} />
       <FreshnessSection entries={card.freshness} />
-
-      <section className="flex flex-col gap-3 rounded-2xl border bg-card/70 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <Stethoscope className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-          <div>
-            <p className="font-semibold">Фармаконагляд</p>
-            <p className="text-sm text-muted-foreground">
-              Підготуйте повідомлення з автоматично підставленою точною
-              реєстровою позицією.
-            </p>
-          </div>
-        </div>
-        <Button asChild variant="outline">
-          <Link
-            href={`/pharmacovigilance?productId=${encodeURIComponent(product.id)}&registration=${encodeURIComponent(product.registration.number)}`}
-          >
-            Відкрити майстер
-          </Link>
-        </Button>
-      </section>
 
       <ReportIssueButton
         type="safety_issue"
@@ -1099,16 +1047,9 @@ export default function ProductCardPage() {
   const { productId = "" } = useParams<{ productId: string }>();
   const validProductId = REGISTRY_PRODUCT_ID_PATTERN.test(productId);
   const { isFavorite, toggleFavorite } = useFavorites();
-  const [draftSeries, setDraftSeries] = useState("");
-  const [submittedSeries, setSubmittedSeries] = useState("");
 
   useLayoutEffect(() => {
     resetRegistryProductPageScroll(window);
-  }, [productId]);
-
-  useEffect(() => {
-    setDraftSeries("");
-    setSubmittedSeries("");
   }, [productId]);
 
   const cardQuery = useGetProductCard(productId, {
@@ -1121,25 +1062,6 @@ export default function ProductCardPage() {
     },
   });
   const product = cardQuery.data?.identity;
-  const seriesParams = useMemo(
-    () => ({
-      productId,
-      registrationNumber: product?.registration.number ?? "UA/0/0/0",
-      series: submittedSeries || "pending",
-    }),
-    [product?.registration.number, productId, submittedSeries],
-  );
-  const seriesQuery = useCheckProductSeriesRestrictions(seriesParams, {
-    query: {
-      enabled: Boolean(
-        product &&
-        cardQuery.data?.seriesStatus?.requiresSeriesCheck &&
-        submittedSeries,
-      ),
-      queryKey: getCheckProductSeriesRestrictionsQueryKey(seriesParams),
-      retry: false,
-    },
-  });
 
   useEffect(() => {
     if (!product) return;
@@ -1216,16 +1138,6 @@ export default function ProductCardPage() {
       card={cardQuery.data}
       favorite={isFavorite(product.id)}
       onToggleFavorite={() => toggleFavorite(registryProductDrugRef(product))}
-      draftSeries={draftSeries}
-      submittedSeries={submittedSeries}
-      seriesResult={seriesQuery.data}
-      seriesLoading={seriesQuery.isLoading || seriesQuery.isFetching}
-      seriesError={seriesQuery.isError}
-      onDraftSeriesChange={setDraftSeries}
-      onSubmitSeries={() => {
-        const exact = draftSeries.trim();
-        if (exact) setSubmittedSeries(exact);
-      }}
     />
   );
 }
