@@ -379,11 +379,12 @@ export function createCatalogClientIndexNormalizedSearcher(
   };
 
   return {
-    search(query, options) {
+    async search(query, options) {
       // Cloning the 9 MB compiled index into a persistent Worker can occupy a
-      // throttled mobile CPU for hundreds of milliseconds. Initialize only
-      // after the synchronous exact result has rendered and asks for the
-      // correction layer, keeping exact TTFR on its established hot path.
+      // throttled mobile CPU for hundreds of milliseconds. Yield one task so
+      // React can commit the synchronous exact result and its TTFR effect
+      // before initializing the correction layer.
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
       return getInitialized().search(query, options);
     },
     terminate() {
