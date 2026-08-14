@@ -13,6 +13,7 @@ import {
   registryProductDetailSearchParams,
 } from "./registry-product-detail";
 import {
+  correctedQueryFromSearch,
   registrationFromSearch,
   registryProductDetailHref,
 } from "@/lib/registry-product-route";
@@ -327,6 +328,12 @@ describe("registry product mobile detail UI", () => {
       "UA/13699/01/01",
     );
     expect(registrationFromSearch("?registration=../../secret")).toBe("");
+    expect(
+      correctedQueryFromSearch(
+        "?correctedQuery=%D0%BF%D0%B0%D1%80%D0%B0%D1%86%D0%B5%D1%82%D0%B0%D0%BC%D0%BE%D0%BB",
+      ),
+    ).toBe("парацетамол");
+    expect(correctedQueryFromSearch("?correctedQuery=%00unsafe")).toBe("");
     expect(
       drugRefHref({
         id: product.id,

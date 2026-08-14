@@ -1,3 +1,11 @@
+import { convertCatalogKeyboardLayout } from "./layout-map";
+
+export {
+  convertCatalogKeyboardLayout,
+  LATIN_TO_UKRAINIAN_LAYOUT,
+  UKRAINIAN_TO_LATIN_LAYOUT,
+} from "./layout-map";
+
 export const CATALOG_CLIENT_INDEX_VERSION = 1 as const;
 export const CATALOG_CLIENT_INDEX_MAX_PRODUCTS = 20_000;
 export const CATALOG_CLIENT_INDEX_MAX_ALIASES = 5_000;
@@ -104,6 +112,29 @@ export interface CatalogClientIndexSearchResult {
   query: string;
   total: number;
   items: CatalogClientIndexSearchItem[];
+  durationMs: number;
+}
+
+export type CatalogNormalizedMatchType =
+  | "exact"
+  | "translit"
+  | "layout"
+  | "fuzzy";
+
+export interface CatalogNormalizedCandidate extends CatalogClientIndexSearchItem {
+  drugId: string;
+  registration: string;
+  matchType: CatalogNormalizedMatchType;
+  matchedToken: string;
+  correctedQuery?: string;
+  /** Internal rank for diagnostics; larger values are better. */
+  score: number;
+}
+
+export interface CatalogNormalizedSearchResult {
+  query: string;
+  primary: CatalogNormalizedCandidate[];
+  suggested: CatalogNormalizedCandidate[];
   durationMs: number;
 }
 
@@ -465,6 +496,325 @@ export function searchCatalogClientIndex(
   };
 }
 
+interface CatalogSymSpellIndex {
+  deletes: Map<string, Set<string>>;
+}
+
+const catalogSymSpellIndexes = new WeakMap<
+  CompiledCatalogClientIndex,
+  CatalogSymSpellIndex
+>();
+const FUZZY_MIN_TOKEN_LENGTH = 4;
+const FUZZY_SUGGESTION_LIMIT = 5;
+
+/**
+ * Normalization used by the layout and fuzzy layers. It intentionally keeps
+ * Ukrainian и/і and е/є distinct. The legacy exact matcher above remains
+ * unchanged so its established registry ranking and compatibility stay intact.
+ */
+export function normalizeCatalogSearchTokenText(value: string): string {
+  return value
+    .replace(/[\u00ae\u2122]/gu, "")
+    .normalize("NFKD")
+    .toLocaleLowerCase("uk-UA")
+    .replace(/[\u0300-\u036f]/gu, "")
+    .replace(/ґ/gu, "г")
+    .replace(/[\u2019\u02bc\u2018\u0060\u00b4\u02b9\u2032']/gu, "")
+    .replace(/[\-\u2010\u2011\u2012\u2013\u2014\u2015]/gu, "")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .replace(/\s+/gu, " ")
+    .trim();
+}
+
+function catalogSearchTokens(value: string): string[] {
+  const normalized = normalizeCatalogSearchTokenText(value);
+  if (!normalized) return [];
+  const parts = normalized.split(" ").filter(Boolean);
+  return [...new Set([...parts, parts.join("")].filter(Boolean))];
+}
+
+function deletionVariants(token: string): string[] {
+  const characters = [...token];
+  return characters.map((_, index) =>
+    characters
+      .filter((__, candidateIndex) => candidateIndex !== index)
+      .join(""),
+  );
+}
+
+function addSymSpellToken(
+  deletes: Map<string, Set<string>>,
+  token: string,
+): void {
+  if ([...token].length < FUZZY_MIN_TOKEN_LENGTH) return;
+  for (const variant of [token, ...deletionVariants(token)]) {
+    const originals = deletes.get(variant);
+    if (originals) originals.add(token);
+    else deletes.set(variant, new Set([token]));
+  }
+}
+
+function buildCatalogSymSpellIndex(
+  index: CompiledCatalogClientIndex,
+): CatalogSymSpellIndex {
+  const deletes = new Map<string, Set<string>>();
+  const uniqueTokens = new Set<string>();
+  for (const product of index.products) {
+    for (const token of catalogSearchTokens(product.tradeName))
+      uniqueTokens.add(token);
+    for (const token of catalogSearchTokens(product.inn))
+      uniqueTokens.add(token);
+  }
+  for (const token of uniqueTokens) addSymSpellToken(deletes, token);
+  return { deletes };
+}
+
+function getCatalogSymSpellIndex(
+  index: CompiledCatalogClientIndex,
+): CatalogSymSpellIndex {
+  const cached = catalogSymSpellIndexes.get(index);
+  if (cached) return cached;
+  const built = buildCatalogSymSpellIndex(index);
+  catalogSymSpellIndexes.set(index, built);
+  return built;
+}
+
+function isDamerauLevenshteinAtMostOne(left: string, right: string): boolean {
+  const leftCharacters = [...left];
+  const rightCharacters = [...right];
+  const difference = leftCharacters.length - rightCharacters.length;
+  if (Math.abs(difference) > 1) return false;
+  if (left === right) return true;
+
+  if (difference === 0) {
+    const mismatches: number[] = [];
+    for (let index = 0; index < leftCharacters.length; index += 1) {
+      if (leftCharacters[index] !== rightCharacters[index])
+        mismatches.push(index);
+      if (mismatches.length > 2) return false;
+    }
+    if (mismatches.length === 1) return true;
+    if (mismatches.length !== 2) return false;
+    const [first, second] = mismatches;
+    return (
+      second === first + 1 &&
+      leftCharacters[first] === rightCharacters[second] &&
+      leftCharacters[second] === rightCharacters[first]
+    );
+  }
+
+  const longer = difference > 0 ? leftCharacters : rightCharacters;
+  const shorter = difference > 0 ? rightCharacters : leftCharacters;
+  let longerIndex = 0;
+  let shorterIndex = 0;
+  let skipped = false;
+  while (longerIndex < longer.length && shorterIndex < shorter.length) {
+    if (longer[longerIndex] === shorter[shorterIndex]) {
+      longerIndex += 1;
+      shorterIndex += 1;
+      continue;
+    }
+    if (skipped) return false;
+    skipped = true;
+    longerIndex += 1;
+  }
+  return true;
+}
+
+function commonPrefixLength(left: string, right: string): number {
+  const leftCharacters = [...left];
+  const rightCharacters = [...right];
+  let length = 0;
+  while (
+    length < leftCharacters.length &&
+    length < rightCharacters.length &&
+    leftCharacters[length] === rightCharacters[length]
+  ) {
+    length += 1;
+  }
+  return length;
+}
+
+function isRegistrationOrProductIdentifier(value: string): boolean {
+  const trimmed = value.trim();
+  return (
+    /^[a-f0-9]{32}$/iu.test(trimmed) ||
+    (/^(?:[a-zа-яіїєґ]{1,4}\/)?[a-zа-яіїєґ0-9.-]*\d[a-zа-яіїєґ0-9./-]*$/iu.test(
+      trimmed,
+    ) &&
+      trimmed.includes("/"))
+  );
+}
+
+function candidateIdentity(candidate: CatalogNormalizedCandidate): string {
+  return `${candidate.product.productId}\u0000${candidate.product.registration}`;
+}
+
+function matchedTokenForItem(
+  item: CatalogClientIndexSearchItem,
+  query: string,
+): string {
+  if (item.matchedBy.startsWith("trade_"))
+    return catalogSearchTokens(item.product.tradeName)[0] ?? "";
+  if (item.matchedBy.startsWith("inn_"))
+    return catalogSearchTokens(item.product.inn)[0] ?? "";
+  if (item.matchedBy === "registration_exact")
+    return normalizeCatalogSearchTokenText(item.product.registration);
+  if (item.matchedBy === "product_exact")
+    return normalizeCatalogSearchTokenText(item.product.productId);
+  if (item.matchedBy === "form_prefix")
+    return catalogSearchTokens(item.product.form)[0] ?? "";
+  if (item.matchedBy === "strength_prefix")
+    return normalizeCatalogSearchTokenText(item.product.strength);
+  return normalizeCatalogSearchTokenText(query);
+}
+
+function normalizedCandidate(
+  item: CatalogClientIndexSearchItem,
+  matchType: CatalogNormalizedMatchType,
+  position: number,
+  query: string,
+  correctedQuery?: string,
+  scoreBase = 1_000_000,
+): CatalogNormalizedCandidate {
+  return {
+    ...item,
+    drugId: item.product.productId,
+    registration: item.product.registration,
+    matchType,
+    matchedToken: matchedTokenForItem(item, correctedQuery ?? query),
+    ...(correctedQuery ? { correctedQuery } : {}),
+    score: scoreBase - item.rank * 1_000 - position,
+  };
+}
+
+function directMatchType(
+  matchedBy: CatalogClientIndexMatchKind,
+): CatalogNormalizedMatchType {
+  return matchedBy.includes("transliteration") ? "translit" : "exact";
+}
+
+function fuzzyCorrectedTokens(
+  index: CompiledCatalogClientIndex,
+  rawQuery: string,
+): string[] {
+  if (isRegistrationOrProductIdentifier(rawQuery)) return [];
+  const queryTokens = catalogSearchTokens(rawQuery);
+  if (
+    queryTokens.length !== 1 ||
+    [...(queryTokens[0] ?? "")].length < FUZZY_MIN_TOKEN_LENGTH
+  ) {
+    return [];
+  }
+  const queryToken = queryTokens[0]!;
+  const symSpell = getCatalogSymSpellIndex(index);
+  const candidates = new Set<string>();
+  for (const variant of [queryToken, ...deletionVariants(queryToken)]) {
+    for (const token of symSpell.deletes.get(variant) ?? []) {
+      if (
+        token !== queryToken &&
+        isDamerauLevenshteinAtMostOne(queryToken, token)
+      ) {
+        candidates.add(token);
+      }
+    }
+  }
+  return [...candidates].sort(
+    (left, right) =>
+      commonPrefixLength(right, queryToken) -
+        commonPrefixLength(left, queryToken) ||
+      left.localeCompare(right, "uk-UA"),
+  );
+}
+
+/**
+ * Safety-preserving query layer used by the catalog search Worker.
+ * Existing direct ranking remains authoritative; layout matches follow it,
+ * while fuzzy suggestions are returned only when primary is empty.
+ */
+export function normalizeAndSearchCatalogClientIndex(
+  index: CompiledCatalogClientIndex,
+  rawQuery: string,
+  options: CatalogClientIndexSearchOptions = {},
+): CatalogNormalizedSearchResult {
+  const startedAt = performance.now();
+  const limit = Math.max(
+    1,
+    Math.min(options.limit ?? CATALOG_CLIENT_INDEX_DEFAULT_LIMIT, 250),
+  );
+  const searchOptions = { ...options, limit };
+  const direct = searchCatalogClientIndex(index, rawQuery, searchOptions);
+  const primary: CatalogNormalizedCandidate[] = direct.items.map(
+    (item, position) =>
+      normalizedCandidate(
+        item,
+        directMatchType(item.matchedBy),
+        position,
+        rawQuery,
+      ),
+  );
+  const seen = new Set(primary.map(candidateIdentity));
+
+  const correctedLayout = convertCatalogKeyboardLayout(rawQuery);
+  if (correctedLayout && primary.length < limit) {
+    const layout = searchCatalogClientIndex(
+      index,
+      correctedLayout,
+      searchOptions,
+    );
+    for (const [position, item] of layout.items.entries()) {
+      const candidate = normalizedCandidate(
+        item,
+        "layout",
+        position,
+        rawQuery,
+        correctedLayout,
+        100_000,
+      );
+      const identity = candidateIdentity(candidate);
+      if (seen.has(identity)) continue;
+      seen.add(identity);
+      primary.push(candidate);
+      if (primary.length >= limit) break;
+    }
+  }
+
+  const suggested: CatalogNormalizedCandidate[] = [];
+  if (!primary.length) {
+    for (const correctedToken of fuzzyCorrectedTokens(index, rawQuery)) {
+      const fuzzyResult = searchCatalogClientIndex(index, correctedToken, {
+        ...searchOptions,
+        limit: FUZZY_SUGGESTION_LIMIT,
+      });
+      for (const [position, item] of fuzzyResult.items.entries()) {
+        const candidate = normalizedCandidate(
+          item,
+          "fuzzy",
+          position,
+          rawQuery,
+          correctedToken,
+          commonPrefixLength(
+            normalizeCatalogSearchTokenText(rawQuery),
+            correctedToken,
+          ) * 10_000,
+        );
+        const identity = candidateIdentity(candidate);
+        if (seen.has(identity)) continue;
+        seen.add(identity);
+        suggested.push(candidate);
+        if (suggested.length >= FUZZY_SUGGESTION_LIMIT) break;
+      }
+      if (suggested.length >= FUZZY_SUGGESTION_LIMIT) break;
+    }
+  }
+
+  return {
+    query: rawQuery,
+    primary,
+    suggested,
+    durationMs: performance.now() - startedAt,
+  };
+}
 export function catalogClientIndexWireBytes(
   payload: CatalogClientIndexPayload,
 ): number {

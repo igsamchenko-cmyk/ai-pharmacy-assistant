@@ -23,6 +23,7 @@ import {
   Heart,
   Pill,
   RefreshCw,
+  Search,
   ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
@@ -40,6 +41,7 @@ import {
   useFavorites,
 } from "@/hooks/use-favorites";
 import {
+  correctedQueryFromSearch,
   REGISTRY_PRODUCT_ID_PATTERN,
   registrationFromSearch,
   registryProductDetailHref,
@@ -1050,6 +1052,9 @@ export default function ProductCardPage() {
     },
   });
   const product = cardQuery.data?.identity;
+  const correctedQuery = correctedQueryFromSearch(
+    typeof window === "undefined" ? "" : window.location.search,
+  );
 
   useEffect(() => {
     if (!product) return;
@@ -1123,10 +1128,22 @@ export default function ProductCardPage() {
   }
 
   return (
-    <ProductCardContent
-      card={cardQuery.data}
-      favorite={isFavorite(product.id)}
-      onToggleFavorite={() => toggleFavorite(registryProductDrugRef(product))}
-    />
+    <div className="space-y-3">
+      {correctedQuery ? (
+        <Alert className="border-primary/30 bg-primary/5">
+          <Search className="h-4 w-4" />
+          <AlertTitle>Пошуковий запит було виправлено</AlertTitle>
+          <AlertDescription>
+            Знайдено за виправленим запитом: “{correctedQuery}”. Перевірте
+            торгову назву, форму, дозування і реєстраційний номер.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      <ProductCardContent
+        card={cardQuery.data}
+        favorite={isFavorite(product.id)}
+        onToggleFavorite={() => toggleFavorite(registryProductDrugRef(product))}
+      />
+    </div>
   );
 }

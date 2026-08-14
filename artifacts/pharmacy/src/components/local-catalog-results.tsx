@@ -4,6 +4,9 @@ import {
   normalizeCatalogIndexText,
   type CatalogClientIndexSearchItem,
   type CatalogClientIndexSearchResult,
+  type CatalogNormalizedCandidate,
+  type CatalogNormalizedMatchType,
+  type CatalogNormalizedSearchResult,
 } from "@workspace/catalog-index";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +20,21 @@ interface LocalCatalogGroup {
   inn: string;
   bestRank: number;
   variants: CatalogClientIndexSearchItem[];
+  matchType?: CatalogNormalizedMatchType;
+  correctedQuery?: string;
+}
+
+function normalizedMetadata(item: CatalogClientIndexSearchItem): {
+  matchType?: CatalogNormalizedMatchType;
+  correctedQuery?: string;
+} {
+  const candidate = item as Partial<CatalogNormalizedCandidate>;
+  return {
+    ...(candidate.matchType ? { matchType: candidate.matchType } : {}),
+    ...(candidate.correctedQuery
+      ? { correctedQuery: candidate.correctedQuery }
+      : {}),
+  };
 }
 
 export function registeredVariantsLabel(count: number): string {
@@ -43,7 +61,10 @@ export function groupLocalCatalogResults(
     const existing = groups.get(key);
     if (existing) {
       existing.variants.push(item);
-      existing.bestRank = Math.min(existing.bestRank, item.rank);
+      if (item.rank < existing.bestRank) {
+        existing.bestRank = item.rank;
+        Object.assign(existing, normalizedMetadata(item));
+      }
       continue;
     }
     groups.set(key, {
@@ -52,6 +73,7 @@ export function groupLocalCatalogResults(
       inn: item.product.inn,
       bestRank: item.rank,
       variants: [item],
+      ...normalizedMetadata(item),
     });
   }
   return [...groups.values()].sort(
@@ -61,14 +83,134 @@ export function groupLocalCatalogResults(
   );
 }
 
+function productHref(
+  product: CatalogClientIndexSearchItem["product"],
+  correctedQuery?: string,
+): string {
+  const href = registryProductDetailHref({
+    id: product.productId,
+    registration: { number: product.registration },
+  });
+  return correctedQuery
+    ? `${href}&correctedQuery=${encodeURIComponent(correctedQuery)}`
+    : href;
+}
+
+function LocalCatalogGroupCards({
+  groups,
+  suggested = false,
+}: {
+  groups: LocalCatalogGroup[];
+  suggested?: boolean;
+}) {
+  return (
+    <div className="space-y-3">
+      {groups.map((group) => (
+        <Card
+          key={group.key}
+          className="max-w-full overflow-hidden"
+          data-testid={
+            suggested
+              ? `suggested-brand-${group.key}`
+              : `local-brand-${group.key}`
+          }
+        >
+          <CardContent className="space-y-3 p-4">
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="break-words text-lg font-bold text-primary">
+                  {group.tradeName}
+                </h3>
+                {!suggested && group.bestRank === 0 ? (
+                  <Badge>Точний збіг</Badge>
+                ) : null}
+                {group.correctedQuery ? (
+                  <Badge
+                    variant={suggested ? "secondary" : "outline"}
+                    className="max-w-full whitespace-normal break-all text-left"
+                  >
+                    {suggested ? "Виправлено" : "Розкладку виправлено"}:{" "}
+                    {group.correctedQuery}
+                  </Badge>
+                ) : null}
+                <Badge
+                  variant="outline"
+                  className="max-w-full whitespace-normal text-left"
+                >
+                  {registeredVariantsLabel(group.variants.length)}
+                </Badge>
+              </div>
+              <p className="break-words text-sm text-muted-foreground">
+                МНН/склад: {group.inn || "Не вказано"}
+              </p>
+            </div>
+            <div className="divide-y rounded-xl border">
+              {group.variants.map(({ product }, index) => (
+                <div
+                  key={`${product.productId}:${product.registration}`}
+                  className="grid min-w-0 gap-3 p-3 sm:grid-cols-[1fr_auto] sm:items-center"
+                >
+                  <div className="min-w-0 space-y-2">
+                    {group.variants.length > 1 ? (
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                        Реєстровий варіант {index + 1}
+                      </p>
+                    ) : null}
+                    <div className="flex flex-wrap gap-2">
+                      {product.strength ? (
+                        <Badge variant="secondary">{product.strength}</Badge>
+                      ) : null}
+                      {product.form ? (
+                        <Badge
+                          variant="outline"
+                          className="max-w-full whitespace-normal text-left"
+                        >
+                          {product.form}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <p className="break-all text-xs text-muted-foreground">
+                      <span className="font-medium">Реєстрація:</span>{" "}
+                      {product.registration}
+                    </p>
+                  </div>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="min-h-11 w-full sm:w-auto"
+                  >
+                    <Link
+                      href={productHref(product, group.correctedQuery)}
+                      data-navigation="spa"
+                      data-testid={"local-product-open-" + product.productId}
+                    >
+                      Відкрити
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export function LocalCatalogResults({
   result,
+  normalizedResult,
   mode = "catalog",
 }: {
   result: CatalogClientIndexSearchResult;
+  normalizedResult?: CatalogNormalizedSearchResult | null;
   mode?: "catalog" | "ingredients";
 }) {
-  const groups = groupLocalCatalogResults(result.items);
+  const primaryItems = normalizedResult?.primary ?? result.items;
+  const suggestedItems = normalizedResult?.suggested ?? [];
+  const groups = groupLocalCatalogResults(primaryItems);
+  const suggestedGroups = groupLocalCatalogResults(suggestedItems);
   const ingredientMode = mode === "ingredients";
   if (!result.query.trim()) {
     return (
@@ -88,7 +230,7 @@ export function LocalCatalogResults({
       </div>
     );
   }
-  if (!groups.length) {
+  if (!groups.length && !suggestedGroups.length) {
     return (
       <div
         className="space-y-2 border-y py-10 text-center"
@@ -104,110 +246,55 @@ export function LocalCatalogResults({
       </div>
     );
   }
+  const total = Math.max(result.total, primaryItems.length);
+  const durationMs = normalizedResult?.durationMs ?? result.durationMs;
   return (
     <section
-      className="max-w-full space-y-3 overflow-x-hidden"
+      className="max-w-full space-y-5 overflow-x-hidden"
       data-testid="local-catalog-results"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-lg font-semibold">
-            {ingredientMode
-              ? "Препарати та їхні діючі речовини"
-              : "Зареєстровані препарати"}
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            {ingredientMode ? "За збігом МНН · " : "Знайдено "}
-            {result.total.toLocaleString("uk-UA")} позицій
-          </p>
-        </div>
-        <Badge variant="secondary" className="gap-1">
-          <Database className="h-3.5 w-3.5" />
-          Локально · {result.durationMs.toFixed(1)} мс
-        </Badge>
-      </div>
-      <div className="space-y-3">
-        {groups.map((group) => (
-          <Card
-            key={group.key}
-            className="max-w-full overflow-hidden"
-            data-testid={`local-brand-${group.key}`}
-          >
-            <CardContent className="space-y-3 p-4">
-              <div className="min-w-0 space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="break-words text-lg font-bold text-primary">
-                    {group.tradeName}
-                  </h3>
-                  {group.bestRank === 0 ? <Badge>Точний збіг</Badge> : null}
-                  <Badge
-                    variant="outline"
-                    className="max-w-full whitespace-normal text-left"
-                  >
-                    {registeredVariantsLabel(group.variants.length)}
-                  </Badge>
-                </div>
-                <p className="break-words text-sm text-muted-foreground">
-                  МНН/склад: {group.inn || "Не вказано"}
-                </p>
-              </div>
-              <div className="divide-y rounded-xl border">
-                {group.variants.map(({ product }, index) => (
-                  <div
-                    key={`${product.productId}:${product.registration}`}
-                    className="grid min-w-0 gap-3 p-3 sm:grid-cols-[1fr_auto] sm:items-center"
-                  >
-                    <div className="min-w-0 space-y-2">
-                      {group.variants.length > 1 ? (
-                        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                          Реєстровий варіант {index + 1}
-                        </p>
-                      ) : null}
-                      <div className="flex flex-wrap gap-2">
-                        {product.strength ? (
-                          <Badge variant="secondary">{product.strength}</Badge>
-                        ) : null}
-                        {product.form ? (
-                          <Badge
-                            variant="outline"
-                            className="max-w-full whitespace-normal text-left"
-                          >
-                            {product.form}
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <p className="break-all text-xs text-muted-foreground">
-                        <span className="font-medium">Реєстрація:</span>{" "}
-                        {product.registration}
-                      </p>
-                    </div>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="min-h-11 w-full sm:w-auto"
-                    >
-                      <Link
-                        href={registryProductDetailHref({
-                          id: product.productId,
-                          registration: { number: product.registration },
-                        })}
-                        data-navigation="spa"
-                        data-testid={"local-product-open-" + product.productId}
-                      >
-                        Відкрити
-                        <ChevronRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      {result.total > result.items.length ? (
+      {groups.length ? (
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-semibold">
+                {ingredientMode
+                  ? "Препарати та їхні діючі речовини"
+                  : "Зареєстровані препарати"}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {ingredientMode ? "За збігом МНН · " : "Знайдено "}
+                {total.toLocaleString("uk-UA")} позицій
+              </p>
+            </div>
+            <Badge variant="secondary" className="gap-1">
+              <Database className="h-3.5 w-3.5" />
+              Локально · {durationMs.toFixed(1)} мс
+            </Badge>
+          </div>
+          <LocalCatalogGroupCards groups={groups} />
+        </section>
+      ) : null}
+
+      {suggestedGroups.length ? (
+        <section
+          className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-3 sm:p-4"
+          data-testid="suggested-results"
+        >
+          <div>
+            <h2 className="text-lg font-semibold">Можливо, ви шукали:</h2>
+            <p className="text-xs text-muted-foreground">
+              Виправлений варіант не відкривається автоматично — перевірте й
+              оберіть точну реєстрову позицію.
+            </p>
+          </div>
+          <LocalCatalogGroupCards groups={suggestedGroups} suggested />
+        </section>
+      ) : null}
+
+      {total > primaryItems.length && groups.length ? (
         <p className="text-center text-xs text-muted-foreground">
-          Показано перші {result.items.length.toLocaleString("uk-UA")} позицій.
+          Показано перші {primaryItems.length.toLocaleString("uk-UA")} позицій.
           Уточніть запит, щоб звузити результат.
         </p>
       ) : null}
