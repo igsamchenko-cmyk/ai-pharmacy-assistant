@@ -1,0 +1,54 @@
+export const SEARCH_URL_SYNC_DEBOUNCE_MS = 300;
+
+function normalizedSearch(search: string): string {
+  if (!search) return "";
+  return search.startsWith("?") ? search : `?${search}`;
+}
+
+export function searchAliasTarget(search: string): string {
+  return `/${normalizedSearch(search)}`;
+}
+
+export function instructionAliasTarget(
+  productId: string,
+  search: string,
+  hash = "",
+): string {
+  const params = new URLSearchParams(search);
+  if (!params.has("tab")) params.set("tab", "instruction");
+  const targetHash = hash || "#instruction";
+  return `/products/${encodeURIComponent(productId)}?${params.toString()}${targetHash}`;
+}
+
+export function legacyDrugSearchTarget(name?: string | null): string {
+  const normalizedName = name?.trim();
+  return normalizedName
+    ? `/search?q=${encodeURIComponent(normalizedName)}`
+    : "/search";
+}
+
+export function searchUrlWithQuery(currentHref: string, query: string): string {
+  const url = new URL(currentHref, "https://farmassist.local");
+  const normalizedQuery = query.trim();
+  if (normalizedQuery) url.searchParams.set("q", normalizedQuery);
+  else url.searchParams.delete("q");
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+export function scanOpenFromSearch(search: string): boolean {
+  return new URLSearchParams(search).get("scan") === "1";
+}
+
+export function searchUrlWithScan(currentHref: string, open: boolean): string {
+  const url = new URL(currentHref, "https://farmassist.local");
+  if (open) url.searchParams.set("scan", "1");
+  else url.searchParams.delete("scan");
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+export function ocrSearchText(result: {
+  detectedName?: string | null;
+  text?: string | null;
+}): string {
+  return (result.detectedName || result.text || "").trim();
+}

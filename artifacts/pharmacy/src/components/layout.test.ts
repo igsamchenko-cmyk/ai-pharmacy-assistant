@@ -1,68 +1,87 @@
-import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { Router } from "wouter";
+import { describe, expect, it, vi } from "vitest";
 import {
   APP_CONTENT_CLASS,
-  DESKTOP_SIDEBAR_CLASS,
-  DESKTOP_SIDEBAR_FOOTER_CLASS,
-  DESKTOP_SIDEBAR_NAV_CLASS,
+  DESKTOP_HEADER_CLASS,
+  Layout,
   MOBILE_BOTTOM_NAV_CLASS,
   REFERENCE_NAV_ITEMS,
+  isNavigationItemActive,
 } from "./layout";
 
-describe("desktop sidebar layout", () => {
-  it("uses one bounded scroll flow instead of overlaying the auth card", () => {
-    expect(DESKTOP_SIDEBAR_CLASS).toContain("h-[100dvh]");
-    expect(DESKTOP_SIDEBAR_CLASS).toContain("overflow-y-auto");
-    expect(DESKTOP_SIDEBAR_CLASS).toContain("overscroll-contain");
-    expect(DESKTOP_SIDEBAR_NAV_CLASS).not.toContain("overflow-y-auto");
-    expect(DESKTOP_SIDEBAR_FOOTER_CLASS).toContain("shrink-0");
-    expect(DESKTOP_SIDEBAR_FOOTER_CLASS).toContain("mt-auto");
-  });
+vi.mock("./theme-provider", () => ({
+  useThemeContext: () => ({ theme: "dark", setTheme: vi.fn() }),
+}));
+vi.mock("./auth-status", () => ({ AuthStatus: () => null }));
+vi.mock("@/components/service-warmup-status", () => ({
+  ServiceWarmupStatus: () => null,
+}));
 
-  it("keeps tablets fluid and uses available width on large displays", () => {
-    expect(DESKTOP_SIDEBAR_CLASS).toContain("lg:flex");
-    expect(DESKTOP_SIDEBAR_CLASS).not.toContain("md:flex");
-    expect(APP_CONTENT_CLASS).toContain("max-w-[1600px]");
-    expect(APP_CONTENT_CLASS).toContain("safe-area-inset-left");
-    expect(APP_CONTENT_CLASS).toContain("safe-area-inset-right");
-    expect(APP_CONTENT_CLASS).toContain("2xl:pl-[max(3rem");
-  });
-
-  it("protects mobile navigation from notches and the home indicator", () => {
-    expect(MOBILE_BOTTOM_NAV_CLASS).toContain("grid-cols-4");
-    expect(MOBILE_BOTTOM_NAV_CLASS).toContain("safe-area-inset-bottom");
-    expect(MOBILE_BOTTOM_NAV_CLASS).toContain("safe-area-inset-left");
-    expect(MOBILE_BOTTOM_NAV_CLASS).toContain("safe-area-inset-right");
-    expect(MOBILE_BOTTOM_NAV_CLASS).toContain("lg:hidden");
-  });
-
-  it("keeps only practical reference sections in the primary navigation", () => {
+describe("navigation v3 layout", () => {
+  it("renders the same three practical destinations on desktop and mobile", () => {
     expect(
       REFERENCE_NAV_ITEMS.map(({ href, label }) => ({ href, label })),
     ).toEqual([
-      { href: "/", label: "Довідник ЛЗ" },
+      { href: "/", label: "Пошук" },
       { href: "/interactions", label: "Взаємодії" },
-      { href: "/regulatory-radar", label: "Заборони та оновлення" },
-      { href: "/favorites", label: "Обране" },
+      { href: "/history", label: "Збережене" },
     ]);
     expect(REFERENCE_NAV_ITEMS.map((item) => item.mobileLabel)).toEqual([
-      "Довідник",
-      "Взаємодії",
-      "Заборони",
-      "Обране",
-    ]);
-
-    const labels = REFERENCE_NAV_ITEMS.map((item) => item.label);
-    for (const hiddenLabel of [
-      "Головна",
       "Пошук",
-      "Порівняння",
-      "AI-довідка",
-      "Історія",
-      "Beta Dashboard",
-      "Якість даних",
-      "Черга рев'ю",
+      "Взаємодії",
+      "Збережене",
+    ]);
+  });
+
+  it("keeps secondary and operator pages out of primary navigation", () => {
+    const hrefs = REFERENCE_NAV_ITEMS.map((item) => item.href);
+    for (const hiddenHref of [
+      "/about",
+      "/review",
+      "/beta-dashboard",
+      "/regulatory-radar",
+      "/favorites",
+      "/dispense",
+      "/instruction-search",
+      "/compare",
     ]) {
-      expect(labels).not.toContain(hiddenLabel);
+      expect(hrefs).not.toContain(hiddenHref);
     }
+  });
+
+  it("treats product cards as search context and favorites as saved context", () => {
+    expect(
+      isNavigationItemActive("/products/ABC", REFERENCE_NAV_ITEMS[0]),
+    ).toBe(true);
+    expect(isNavigationItemActive("/favorites", REFERENCE_NAV_ITEMS[2])).toBe(
+      true,
+    );
+  });
+
+  it("uses the desktop header from 768px and protects mobile safe areas", () => {
+    expect(DESKTOP_HEADER_CLASS).toContain("md:flex");
+    expect(DESKTOP_HEADER_CLASS).toContain("safe-area-inset-left");
+    expect(MOBILE_BOTTOM_NAV_CLASS).toContain("grid-cols-3");
+    expect(MOBILE_BOTTOM_NAV_CLASS).toContain("safe-area-inset-bottom");
+    expect(MOBILE_BOTTOM_NAV_CLASS).toContain("safe-area-inset-left");
+    expect(MOBILE_BOTTOM_NAV_CLASS).toContain("safe-area-inset-right");
+    expect(MOBILE_BOTTOM_NAV_CLASS).toContain("md:hidden");
+    expect(APP_CONTENT_CLASS).toContain("max-w-[1600px]");
+  });
+  it("renders exactly three links in each primary navigation", () => {
+    const html = renderToStaticMarkup(
+      createElement(
+        Router,
+        { ssrPath: "/" },
+        createElement(Layout, null, createElement("div", null, "content")),
+      ),
+    );
+    expect(html.match(/data-testid="nav-/gu)).toHaveLength(3);
+    expect(html.match(/data-testid="mobile-nav-/gu)).toHaveLength(3);
+    expect(html).not.toContain('href="/about"');
+    expect(html).not.toContain('href="/review"');
+    expect(html).not.toContain('href="/beta-dashboard"');
   });
 });
