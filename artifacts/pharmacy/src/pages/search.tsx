@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link } from "wouter";
 import {
   getSearchCatalogQueryKey,
@@ -49,6 +55,11 @@ import {
   useCatalogClientNormalizedSearch,
 } from "@/lib/catalog-client-index";
 import { markFirstResult } from "@/lib/search-metrics";
+import {
+  readSearchQueryHistory,
+  recordSearchQuery,
+} from "@/lib/search-query-history";
+import { visualViewportKeyboardInset } from "@/lib/visual-viewport";
 import { nationalListVerdict } from "@/lib/national-list-status";
 import {
   conciseManufacturerNames,
@@ -1489,6 +1500,72 @@ export default function SearchPage() {
   const [tradePage, setTradePage] = useState(1);
   const [variantPage, setVariantPage] = useState(1);
   const [effectiveQ, setEffectiveQ] = useState(initial.q.trim());
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [recentQueries, setRecentQueries] = useState(readSearchQueryHistory);
+  const [mobileKeyboardInset, setMobileKeyboardInset] = useState(0);
+  const rememberQuery = useCallback((value: string) => {
+    setRecentQueries(recordSearchQuery(value));
+  }, []);
+
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 768px)");
+    if (desktop.matches) {
+      searchInputRef.current?.focus({ preventScroll: true });
+    }
+
+    const handleGlobalTyping = (event: KeyboardEvent) => {
+      if (
+        !desktop.matches ||
+        event.defaultPrevented ||
+        event.isComposing ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        event.key.length !== 1
+      ) {
+        return;
+      }
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      searchInputRef.current?.focus({ preventScroll: true });
+      setQ((current) => current + event.key);
+    };
+
+    document.addEventListener("keydown", handleGlobalTyping);
+    return () => document.removeEventListener("keydown", handleGlobalTyping);
+  }, []);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const updateInset = () => {
+      setMobileKeyboardInset(
+        visualViewportKeyboardInset(
+          window.innerHeight,
+          viewport.height,
+          viewport.offsetTop,
+        ),
+      );
+    };
+
+    updateInset();
+    viewport.addEventListener("resize", updateInset);
+    viewport.addEventListener("scroll", updateInset);
+    return () => {
+      viewport.removeEventListener("resize", updateInset);
+      viewport.removeEventListener("scroll", updateInset);
+    };
+  }, []);
 
   const queryClient = useQueryClient();
   const clientCatalog = useCatalogClientIndex();
@@ -1853,8 +1930,133 @@ export default function SearchPage() {
     shouldUseLocalCatalog,
   ]);
 
+  useEffect(() => {
+    if (renderedResultCount <= 0 || shortQuery || q.trim() !== effectiveQ) {
+      return;
+    }
+    const timer = window.setTimeout(() => rememberQuery(q), 750);
+    return () => window.clearTimeout(timer);
+  }, [effectiveQ, q, rememberQuery, renderedResultCount, shortQuery]);
+
   return (
-    <div className="max-w-full space-y-5 overflow-x-hidden pb-8 animate-in motion-reduce:animate-none fade-in duration-300">
+    <div
+      className="max-w-full space-y-5 overflow-x-hidden pb-8 animate-in motion-reduce:animate-none fade-in duration-300"
+      style={{
+        paddingBottom:
+          mobileKeyboardInset > 0
+            ? "calc(2rem + " + mobileKeyboardInset + "px)"
+            : undefined,
+      }}
+      data-keyboard-inset={mobileKeyboardInset}
+    >
+      <div className={SEARCH_STICKY_CLASS} data-testid="sticky-search">
+        <form
+          className="relative block"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const nextQ = q.trim();
+            if (
+              !shouldUseLocalCatalog &&
+              nextQ === effectiveQ &&
+              isCatalogQueryEnabled(nextQ)
+            ) {
+              void refetch();
+            } else {
+              setEffectiveQ(nextQ);
+            }
+          }}
+        >
+          <label>
+            <span className="sr-only">
+              Пошук за назвою, МНН, виробником або реєстраційним номером
+            </span>
+            <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              ref={searchInputRef}
+              type="search"
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              placeholder="Назва, МНН, виробник, реєстраційний номер..."
+              className="min-h-12 bg-card pl-9 pr-20"
+              value={q}
+              onChange={(event) => setQ(event.target.value)}
+              onFocus={() => {
+                if (window.matchMedia("(max-width: 767px)").matches) {
+                  window.requestAnimationFrame(() => {
+                    searchInputRef.current?.scrollIntoView({
+                      block: "center",
+                      behavior: "smooth",
+                    });
+                  });
+                }
+              }}
+              onPaste={(event) => {
+                const next = applyPastedQuery(
+                  q,
+                  event.currentTarget.selectionStart,
+                  event.currentTarget.selectionEnd,
+                  event.clipboardData.getData("text"),
+                );
+                event.preventDefault();
+                setQ(next);
+                setEffectiveQ(next.trim());
+              }}
+              aria-label="Пошук у каталозі препаратів"
+              data-testid="input-search-q"
+            />
+            {shouldShowPrimarySearchSpinner(
+              shouldUseLocalCatalog ? false : isUpdating,
+              shouldUseLocalCatalog ? false : isBaseFetching,
+              shouldUseLocalCatalog ? false : isVariantFetching,
+            ) && (
+              <LoaderCircle className="absolute right-12 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+            )}
+          </label>
+          <Button
+            type="submit"
+            size="icon"
+            className="absolute right-1 top-1/2 h-10 w-10 -translate-y-1/2"
+            title="Шукати"
+            aria-label="Шукати"
+          >
+            <SearchIcon className="h-4 w-4" />
+          </Button>
+        </form>
+        {recentQueries.length ? (
+          <div
+            className="mt-2 flex items-center gap-2 overflow-x-auto pb-1"
+            aria-label="Останні пошукові запити"
+            data-testid="recent-search-queries"
+          >
+            <span className="shrink-0 text-xs text-muted-foreground">
+              Останні:
+            </span>
+            {recentQueries.map((query) => (
+              <Button
+                key={query.toLocaleLowerCase("uk-UA")}
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="h-9 shrink-0 rounded-full px-3 text-xs"
+                onPointerDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  searchInputRef.current?.blur();
+                  setQ(query);
+                  setEffectiveQ(query);
+                }}
+                data-testid="recent-search-query"
+              >
+                {query}
+              </Button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
       <header className="space-y-2">
         <h1 className="text-2xl font-bold text-primary">Пошук препаратів</h1>
         <p className="text-sm text-muted-foreground">
@@ -1912,67 +2114,6 @@ export default function SearchPage() {
       </section>
 
       <div className="space-y-3">
-        <div className={SEARCH_STICKY_CLASS} data-testid="sticky-search">
-          <form
-            className="relative block"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const nextQ = q.trim();
-              if (
-                !shouldUseLocalCatalog &&
-                nextQ === effectiveQ &&
-                isCatalogQueryEnabled(nextQ)
-              ) {
-                void refetch();
-              } else {
-                setEffectiveQ(nextQ);
-              }
-            }}
-          >
-            <label>
-              <span className="sr-only">
-                Пошук за назвою, МНН, виробником або реєстраційним номером
-              </span>
-              <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Назва, МНН, виробник, реєстраційний номер..."
-                className="min-h-11 bg-card pl-9 pr-20"
-                value={q}
-                onChange={(event) => setQ(event.target.value)}
-                onPaste={(event) => {
-                  const next = applyPastedQuery(
-                    q,
-                    event.currentTarget.selectionStart,
-                    event.currentTarget.selectionEnd,
-                    event.clipboardData.getData("text"),
-                  );
-                  event.preventDefault();
-                  setQ(next);
-                  setEffectiveQ(next.trim());
-                }}
-                aria-label="Пошук у каталозі препаратів"
-                data-testid="input-search-q"
-              />
-              {shouldShowPrimarySearchSpinner(
-                shouldUseLocalCatalog ? false : isUpdating,
-                shouldUseLocalCatalog ? false : isBaseFetching,
-                shouldUseLocalCatalog ? false : isVariantFetching,
-              ) && (
-                <LoaderCircle className="absolute right-12 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-              )}
-            </label>
-            <Button
-              type="submit"
-              size="icon"
-              className="absolute right-1 top-1/2 h-10 w-10 -translate-y-1/2"
-              title="Шукати"
-              aria-label="Шукати"
-            >
-              <SearchIcon className="h-4 w-4" />
-            </Button>
-          </form>
-        </div>
-
         <div
           className="grid grid-cols-3 gap-1 rounded-xl border bg-muted/30 p-1"
           role="tablist"

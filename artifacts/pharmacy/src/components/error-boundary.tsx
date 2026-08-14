@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, WifiOff } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -8,6 +8,19 @@ interface Props {
 
 interface State {
   hasError: boolean;
+  isOfflineChunkFailure: boolean;
+}
+
+export function isLazyChunkLoadError(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? `${error.name} ${error.message}`
+      : typeof error === "string"
+        ? error
+        : "";
+  return /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/iu.test(
+    message,
+  );
 }
 
 /**
@@ -15,10 +28,16 @@ interface State {
  * takes down the whole app. Shows a Ukrainian recovery message.
  */
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false };
+  state: State = { hasError: false, isOfflineChunkFailure: false };
 
-  static getDerivedStateFromError(): State {
-    return { hasError: true };
+  static getDerivedStateFromError(error: unknown): State {
+    return {
+      hasError: true,
+      isOfflineChunkFailure:
+        isLazyChunkLoadError(error) &&
+        typeof navigator !== "undefined" &&
+        navigator.onLine === false,
+    };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
@@ -26,23 +45,30 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private handleReset = (): void => {
-    this.setState({ hasError: false });
+    this.setState({ hasError: false, isOfflineChunkFailure: false });
   };
 
   render(): ReactNode {
     if (!this.state.hasError) return this.props.children;
 
+    const offlineChunk = this.state.isOfflineChunkFailure;
+    const Icon = offlineChunk ? WifiOff : AlertTriangle;
+
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-20 px-4 text-center">
-        <div className="w-16 h-16 bg-destructive/10 text-destructive rounded-full flex items-center justify-center">
-          <AlertTriangle className="w-8 h-8" />
+      <div className="flex flex-col items-center justify-center gap-4 px-4 py-20 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+          <Icon className="h-8 w-8" />
         </div>
         <div className="space-y-1">
           <h2 className="text-lg font-bold text-foreground">
-            Щось пішло не так
+            {offlineChunk
+              ? "Службовий розділ недоступний офлайн"
+              : "Щось пішло не так"}
           </h2>
-          <p className="text-sm text-muted-foreground max-w-sm">
-            Сталася неочікувана помилка інтерфейсу. Спробуйте оновити сторінку.
+          <p className="max-w-sm text-sm text-muted-foreground">
+            {offlineChunk
+              ? "Цей розділ не зберігається на пристрої. Підключіться до інтернету й повторіть спробу. Пошук і збережені картки залишаються доступними."
+              : "Сталася неочікувана помилка інтерфейсу. Спробуйте оновити сторінку."}
           </p>
         </div>
         <div className="flex gap-2">

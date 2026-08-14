@@ -8,9 +8,11 @@ import {
   CheckCircle2,
   CircleDashed,
   CircleSlash,
+  Smartphone,
 } from "lucide-react";
 import { useListDataSources } from "@workspace/api-client-react";
 import type { DataSourceStatus } from "@workspace/api-client-react";
+import { isIosSafariInstallCandidate } from "@/lib/pwa-environment";
 
 const STATUS_META: Record<
   DataSourceStatus["status"],
@@ -66,6 +68,7 @@ function SourceRow({ source }: { source: DataSourceStatus }) {
 export default function About() {
   const { data, isLoading, isError } = useListDataSources();
   const sources = data?.sources ?? [];
+  const showIosInstallHelp = isIosSafariInstallCandidate();
 
   return (
     <div className="space-y-6 animate-in fade-in pb-10">
@@ -78,6 +81,27 @@ export default function About() {
           Інформаційний помічник фармацевта
         </p>
       </div>
+
+      {showIosInstallHelp ? (
+        <Card
+          className="border-primary/40 bg-primary/5"
+          data-testid="ios-install-help"
+        >
+          <CardContent className="flex gap-4 p-5">
+            <Smartphone className="mt-1 h-6 w-6 shrink-0 text-primary" />
+            <div className="space-y-1">
+              <h2 className="font-bold text-foreground">
+                Встановити FarmAssist на iPhone
+              </h2>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                У Safari натисніть «Поділитися», потім «На початковий екран».
+                Пошук відкриватиметься як окремий застосунок і працюватиме з
+                локально збереженим каталогом без мережі.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <GlobalDisclaimer />
 
