@@ -11,16 +11,20 @@ import { AuthProvider } from "@/lib/auth";
 import { CatalogClientIndexProvider } from "@/lib/catalog-client-index";
 import { RegulatoryRadarRefreshProvider } from "@/lib/regulatory-radar-refresh";
 import { ProtectedRoute } from "@/components/protected-route";
+import {
+  InstructionAliasRedirect,
+  LegacyDrugRedirect,
+  RootRedirect,
+  ScanRedirect,
+  SearchAliasRedirect,
+} from "@/components/route-redirects";
 
 const LoginPage = lazy(() => import("@/pages/login"));
 const Dispensing = lazy(() => import("@/pages/dispensing"));
 const SearchPage = lazy(() => import("@/pages/search"));
 const InstructionSearch = lazy(() => import("@/pages/instruction-search"));
-const DrugDetail = lazy(() => import("@/pages/drug-detail"));
-const Analogs = lazy(() => import("@/pages/analogs"));
 const Interactions = lazy(() => import("@/pages/interactions"));
 const Compare = lazy(() => import("@/pages/compare"));
-const AiReference = lazy(() => import("@/pages/ai-reference"));
 const History = lazy(() => import("@/pages/history"));
 const Favorites = lazy(() => import("@/pages/favorites"));
 const About = lazy(() => import("@/pages/about"));
@@ -39,16 +43,9 @@ const ProtectedSearch = () => <ProtectedRoute component={SearchPage} />;
 const ProtectedInstructionSearch = () => (
   <ProtectedRoute component={InstructionSearch} />
 );
-const ProtectedDrugDetail = () => <ProtectedRoute component={DrugDetail} />;
-const ProtectedAnalogs = () => <ProtectedRoute component={Analogs} />;
 const ProtectedInteractions = () => <ProtectedRoute component={Interactions} />;
 const ProtectedCompare = () => <ProtectedRoute component={Compare} />;
-const ProtectedAiReference = () => (
-  <ProtectedRoute component={AiReference} minRole="reviewer" />
-);
-const ProtectedHistory = () => (
-  <ProtectedRoute component={History} minRole="reviewer" />
-);
+const ProtectedHistory = () => <ProtectedRoute component={History} />;
 const ProtectedFavorites = () => <ProtectedRoute component={Favorites} />;
 const ProtectedDataQuality = () => (
   <ProtectedRoute component={DataQuality} minRole="reviewer" />
@@ -87,7 +84,7 @@ function Router() {
       <ErrorBoundary>
         <Suspense fallback={<RouteLoadingFallback />}>
           <Switch>
-            <Route path="/" component={ProtectedDispensing} />
+            <Route path="/" component={ProtectedSearch} />
             <Route path="/login" component={LoginPage} />
             <Route path="/access-denied" component={AccessDeniedRoute} />
             <Route path="/dispense" component={ProtectedDispensing} />
@@ -95,14 +92,14 @@ function Router() {
               path="/regulatory-radar"
               component={ProtectedRegulatoryRadar}
             />
-            <Route path="/search" component={ProtectedSearch} />
+            <Route path="/search" component={SearchAliasRedirect} />
             <Route
               path="/instruction-search"
               component={ProtectedInstructionSearch}
             />
             <Route
               path="/instructions/:productId"
-              component={ProtectedProductCard}
+              component={InstructionAliasRedirect}
             />
             <Route
               path="/products/:productId"
@@ -112,11 +109,16 @@ function Router() {
               path="/pharmacovigilance"
               component={ProtectedPharmacovigilance}
             />
-            <Route path="/drug/:id" component={ProtectedDrugDetail} />
-            <Route path="/analogs/:id" component={ProtectedAnalogs} />
+            {/* TODO(PR-E): remove legacy page components after their content is
+                available from the canonical ProductCard hub. */}
+            <Route path="/drug/:id" component={LegacyDrugRedirect} />
+            <Route path="/analogs/:id" component={LegacyDrugRedirect} />
+            <Route path="/analogs" component={RootRedirect} />
             <Route path="/interactions" component={ProtectedInteractions} />
             <Route path="/compare" component={ProtectedCompare} />
-            <Route path="/ai" component={ProtectedAiReference} />
+            <Route path="/ai" component={RootRedirect} />
+            <Route path="/ai-reference" component={RootRedirect} />
+            <Route path="/scan" component={ScanRedirect} />
             <Route path="/history" component={ProtectedHistory} />
             <Route path="/favorites" component={ProtectedFavorites} />
             <Route path="/data-quality" component={ProtectedDataQuality} />

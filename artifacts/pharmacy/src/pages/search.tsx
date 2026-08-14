@@ -27,6 +27,8 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertTriangle,
+  Camera,
+  ClipboardCheck,
   ArrowLeft,
   ArrowRight,
   BookOpenText,
@@ -65,6 +67,18 @@ import {
   conciseManufacturerNames,
   conciseManufacturerText,
 } from "@/lib/manufacturer-display";
+import {
+  SEARCH_URL_SYNC_DEBOUNCE_MS,
+  scanOpenFromSearch,
+  searchUrlWithQuery,
+  searchUrlWithScan,
+} from "@/lib/navigation-v3";
+
+const SearchOcrDialog = React.lazy(() =>
+  import("@/components/search-ocr-dialog").then((module) => ({
+    default: module.SearchOcrDialog,
+  })),
+);
 
 type SearchType = "all" | "ingredients" | "registry_products";
 type RegistrationStatus = "active" | "terminated" | "unknown";
@@ -1477,6 +1491,11 @@ export function GroupedRegistryResults({
 export default function SearchPage() {
   const initial = useMemo(initialSearchState, []);
   const [q, setQ] = useState(initial.q);
+  const [ocrOpen, setOcrOpen] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      scanOpenFromSearch(window.location.search),
+  );
   const [type, setType] = useState<SearchType>(initial.type);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<PageSize>(25);
@@ -1505,6 +1524,34 @@ export default function SearchPage() {
   const [mobileKeyboardInset, setMobileKeyboardInset] = useState(0);
   const rememberQuery = useCallback((value: string) => {
     setRecentQueries(recordSearchQuery(value));
+  }, []);
+  const updateOcrOpen = useCallback((open: boolean) => {
+    setOcrOpen(open);
+    const nextUrl = searchUrlWithScan(window.location.href, open);
+    window.history.replaceState(window.history.state, "", nextUrl);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const nextUrl = searchUrlWithQuery(window.location.href, q);
+      const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (nextUrl !== currentUrl) {
+        window.history.replaceState(window.history.state, "", nextUrl);
+      }
+    }, SEARCH_URL_SYNC_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [q]);
+
+  useEffect(() => {
+    const syncFromLocation = () => {
+      const nextQuery =
+        new URLSearchParams(window.location.search).get("q") ?? "";
+      setQ(nextQuery);
+      setEffectiveQ(nextQuery.trim());
+      setOcrOpen(scanOpenFromSearch(window.location.search));
+    };
+    window.addEventListener("popstate", syncFromLocation);
+    return () => window.removeEventListener("popstate", syncFromLocation);
   }, []);
 
   useEffect(() => {
@@ -1981,7 +2028,7 @@ export default function SearchPage() {
               autoCapitalize="off"
               spellCheck={false}
               placeholder="Назва, МНН, виробник, реєстраційний номер..."
-              className="min-h-12 bg-card pl-9 pr-20"
+              className="min-h-12 bg-card pl-9 pr-28"
               value={q}
               onChange={(event) => setQ(event.target.value)}
               onFocus={() => {
@@ -2013,9 +2060,21 @@ export default function SearchPage() {
               shouldUseLocalCatalog ? false : isBaseFetching,
               shouldUseLocalCatalog ? false : isVariantFetching,
             ) && (
-              <LoaderCircle className="absolute right-12 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+              <LoaderCircle className="absolute right-[5.75rem] top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
             )}
           </label>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="absolute right-12 top-1/2 h-11 w-11 -translate-y-1/2"
+            title="Розпізнати назву з упаковки"
+            aria-label="Розпізнати назву з упаковки"
+            onClick={() => updateOcrOpen(true)}
+            data-testid="open-ocr-search"
+          >
+            <Camera className="h-5 w-5" />
+          </Button>
           <Button
             type="submit"
             size="icon"
@@ -2056,6 +2115,46 @@ export default function SearchPage() {
           </div>
         ) : null}
       </div>
+
+      {ocrOpen ? (
+        <React.Suspense
+          fallback={
+            <div
+              className="fixed inset-0 z-[80] grid place-items-center bg-black/60 text-sm text-white"
+              role="status"
+            >
+              Відкриваємо розпізнавання…
+            </div>
+          }
+        >
+          <SearchOcrDialog
+            open
+            onOpenChange={updateOcrOpen}
+            onRecognized={(text) => {
+              setQ(text);
+              window.requestAnimationFrame(() =>
+                searchInputRef.current?.focus({ preventScroll: true }),
+              );
+            }}
+            onManualFallback={() => searchInputRef.current?.focus()}
+          />
+        </React.Suspense>
+      ) : null}
+
+      <Button
+        asChild
+        size="lg"
+        className="min-h-14 w-full justify-between px-5"
+        data-testid="dispensing-shortcut"
+      >
+        <Link href="/dispense">
+          <span className="flex items-center gap-3">
+            <ClipboardCheck className="h-5 w-5" />
+            Перевірка відпуску
+          </span>
+          <ArrowRight className="h-5 w-5" />
+        </Link>
+      </Button>
 
       <header className="space-y-2">
         <h1 className="text-2xl font-bold text-primary">Пошук препаратів</h1>
@@ -2507,6 +2606,21 @@ export default function SearchPage() {
           )}
         </div>
       )}
+
+      <footer className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t pt-5 text-sm text-muted-foreground">
+        <Link
+          href="/regulatory-radar"
+          className="min-h-11 py-3 hover:text-foreground hover:underline"
+        >
+          Заборони та оновлення
+        </Link>
+        <Link
+          href="/about"
+          className="min-h-11 py-3 hover:text-foreground hover:underline"
+        >
+          Про застосунок
+        </Link>
+      </footer>
     </div>
   );
 }
