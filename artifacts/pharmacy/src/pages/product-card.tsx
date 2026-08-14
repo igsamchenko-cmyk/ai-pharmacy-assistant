@@ -410,6 +410,12 @@ function HospitalFactsSection({
 }: {
   facts: AdministrationFacts | null;
 }) {
+  const visibleFacts = HOSPITAL_FACTS.map((item) => ({
+    item,
+    quotes: quotesForFact(facts, item.key),
+  })).filter(({ quotes }) => quotes.length > 0);
+  if (!visibleFacts.length) return null;
+
   return (
     <section
       className="space-y-3"
@@ -426,12 +432,12 @@ function HospitalFactsSection({
         </p>
       </div>
       <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {HOSPITAL_FACTS.map((item) => (
+        {visibleFacts.map(({ item, quotes }) => (
           <HospitalFactCard
             key={item.key}
             title={item.title}
             missing={item.missing}
-            quotes={quotesForFact(facts, item.key)}
+            quotes={quotes}
             attention={item.key === "incompatibilities"}
           />
         ))}
@@ -803,6 +809,11 @@ export function ProductCardContent({
   const seriesStatus = seriesPresentation(card);
   const registrationActive = product.registration.status === "active";
   const hospitalFacts = card.instruction.administrationFacts;
+  const reconstitutionQuote =
+    hospitalFacts?.reconstitution ?? hospitalFacts?.diluents[0] ?? null;
+  const incompatibilityQuote = hospitalFacts?.incompatibilities[0] ?? null;
+  const hasOperationalExcerpt =
+    Boolean(reconstitutionQuote) || Boolean(incompatibilityQuote);
 
   return (
     <main
@@ -916,20 +927,22 @@ export function ProductCardContent({
             />
           </section>
 
-          <section className="grid min-w-0 gap-3 lg:grid-cols-2">
-            <OperationalExcerpt
-              title="Відновлення / розчинник"
-              quote={
-                hospitalFacts?.reconstitution ??
-                hospitalFacts?.diluents[0] ??
-                null
-              }
-            />
-            <OperationalExcerpt
-              title="Взаємодії та несумісність"
-              quote={hospitalFacts?.incompatibilities[0] ?? null}
-            />
-          </section>
+          {hasOperationalExcerpt ? (
+            <section className="grid min-w-0 gap-3 lg:grid-cols-2">
+              {reconstitutionQuote ? (
+                <OperationalExcerpt
+                  title="Відновлення / розчинник"
+                  quote={reconstitutionQuote}
+                />
+              ) : null}
+              {incompatibilityQuote ? (
+                <OperationalExcerpt
+                  title="Взаємодії та несумісність"
+                  quote={incompatibilityQuote}
+                />
+              ) : null}
+            </section>
+          ) : null}
 
           <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
             <Button

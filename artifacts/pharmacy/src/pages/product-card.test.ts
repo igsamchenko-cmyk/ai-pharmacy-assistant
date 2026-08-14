@@ -321,15 +321,41 @@ describe("operational product card UI", () => {
       `id="instruction-quote-administration-0-${ADMINISTRATION_TEXT.length}"`,
     );
     expect(html).toContain(`data-char-end="${ADMINISTRATION_TEXT.length}"`);
-    expect(html).toContain(
+    expect(html).not.toContain(
       "Прямої вказівки про швидкість введення не знайдено",
     );
+    expect(html).not.toContain("Швидкість введення");
     expect(html).toContain("У тексті");
     expect(html).toContain('id="instruction-administration"');
     expect(html).toContain("Переліки та ціна");
     expect(html).toContain("Свіжість кожного джерела");
     expect(html).toContain("Розпорядження Держлікслужби");
     expect(html).toContain("Повідомити про проблему");
+  });
+
+  it("omits hospital facts entirely when no verified quotes exist", () => {
+    const base = card();
+    const html = renderCard(
+      card({
+        instruction: {
+          ...base.instruction,
+          administrationFacts: {
+            reconstitution: null,
+            diluents: [],
+            incompatibilities: [],
+            infusionRate: null,
+            stabilityAfterPrep: null,
+            renalAdjustment: null,
+            hepaticAdjustment: null,
+            maxDailyDose: null,
+          },
+        },
+      }),
+    );
+
+    expect(html).not.toContain("Госпітальні факти з інструкції");
+    expect(html).not.toContain("Прямої структурованої вказівки поки немає");
+    expect(html).not.toContain("Відновлення / розчинник");
   });
 
   it("resolves a search-result hash only when it points to exact section text", () => {
