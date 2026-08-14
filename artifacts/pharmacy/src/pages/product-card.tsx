@@ -152,38 +152,12 @@ function dispensingPresentation(card: ProductCard) {
       icon: ShieldCheck,
     };
   }
-  return {
-    label: "Категорію не підтверджено",
-    detail: [
-      card.dispensing.check?.summary,
-      "Не трактуйте відсутні або неповні дані як безрецептурний статус.",
-    ]
-      .filter(Boolean)
-      .join(" "),
-    className: "border-muted-foreground/30 bg-muted/20",
-    icon: CircleHelp,
-  };
+  return null;
 }
 
 function seriesPresentation(card: ProductCard) {
   const series = card.seriesStatus;
-  if (!series) {
-    return {
-      label: "Перевірка заборон недоступна",
-      detail: "Звірте дані безпосередньо в реєстрі Держлікслужби.",
-      className: "border-destructive/40 bg-destructive/5",
-      icon: AlertTriangle,
-    };
-  }
-  if (series.source.freshness !== "current") {
-    return {
-      label: "Знімок заборон потребує оновлення",
-      detail:
-        "Автоматичний результат не є достатнім; відкрийте офіційний реєстр.",
-      className: "border-amber-500/50 bg-amber-500/5",
-      icon: AlertTriangle,
-    };
-  }
+  if (!series || series.source.freshness !== "current") return null;
   if (series.requiresSeriesCheck) {
     return {
       label: "Є розпорядження — перевірте серію",
@@ -910,18 +884,31 @@ export function ProductCardContent({
             </div>
           </dl>
 
-          <section className="grid min-w-0 gap-3 sm:grid-cols-2">
-            <StatusCard
-              title="Категорія відпуску"
-              {...dispensingStatus}
-              testId="product-card-dispensing-status"
-            />
-            <StatusCard
-              title="Заборони серій"
-              {...seriesStatus}
-              testId="product-card-series-status"
-            />
-          </section>
+          {dispensingStatus || seriesStatus ? (
+            <section
+              className={`grid min-w-0 gap-3 ${
+                dispensingStatus && seriesStatus
+                  ? "sm:grid-cols-2"
+                  : "max-w-4xl"
+              }`}
+              data-testid="product-card-key-statuses"
+            >
+              {dispensingStatus ? (
+                <StatusCard
+                  title="Категорія відпуску"
+                  {...dispensingStatus}
+                  testId="product-card-dispensing-status"
+                />
+              ) : null}
+              {seriesStatus ? (
+                <StatusCard
+                  title="Заборони серій"
+                  {...seriesStatus}
+                  testId="product-card-series-status"
+                />
+              ) : null}
+            </section>
+          ) : null}
 
           {hasOperationalExcerpt ? (
             <section className="grid min-w-0 gap-3 lg:grid-cols-2">
