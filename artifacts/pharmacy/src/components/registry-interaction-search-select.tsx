@@ -144,10 +144,14 @@ export function RegistryInteractionSearchSelect({
       }),
     [clientCatalog, query],
   );
-  const normalizedLocalResult = useCatalogClientNormalizedSearch(query.trim(), {
-    limit: 25,
-    scope: "registry_products",
-  });
+  const normalizedLocalResult = useCatalogClientNormalizedSearch(
+    query.trim(),
+    {
+      limit: 25,
+      scope: "registry_products",
+    },
+    localResult.items.length,
+  );
   const primaryCandidates = normalizedLocalResult?.primary ?? [];
   const primaryCorrections = useMemo(
     () => candidateCorrections(primaryCandidates),

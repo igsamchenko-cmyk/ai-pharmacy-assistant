@@ -733,18 +733,30 @@ export function CatalogClientIndexProvider({
   );
 }
 
+export function catalogCorrectionFallbackQuery(
+  query: string,
+  directResultCount: number,
+): string {
+  return directResultCount > 0 ? "" : query.trim();
+}
+
 export function useCatalogClientNormalizedSearch(
   query: string,
   options: CatalogClientIndexSearchOptions = {},
+  directResultCount = 0,
 ): CatalogNormalizedSearchResult | null {
   const catalog = useCatalogClientIndex();
+  const correctionQuery = catalogCorrectionFallbackQuery(
+    query,
+    directResultCount,
+  );
   const limit = options.limit;
   const form = options.form;
   const strength = options.strength;
   const compositionType = options.compositionType;
   const scope = options.scope;
   const requestKey = [
-    query,
+    correctionQuery,
     limit ?? "",
     form ?? "",
     strength ?? "",
@@ -760,14 +772,14 @@ export function useCatalogClientNormalizedSearch(
     if (
       catalog.status !== "ready" ||
       !catalog.normalizationReady ||
-      !query.trim()
+      !correctionQuery
     ) {
       setResolved(null);
       return;
     }
     let active = true;
     void catalog
-      .normalizeAndSearch(query, {
+      .normalizeAndSearch(correctionQuery, {
         limit,
         form,
         strength,
@@ -786,9 +798,9 @@ export function useCatalogClientNormalizedSearch(
   }, [
     catalog,
     compositionType,
+    correctionQuery,
     form,
     limit,
-    query,
     requestKey,
     scope,
     strength,

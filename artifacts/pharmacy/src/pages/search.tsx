@@ -1528,13 +1528,17 @@ export default function SearchPage() {
       localQuery,
     ],
   );
-  const normalizedLocalResult = useCatalogClientNormalizedSearch(localQuery, {
-    limit: 100,
-    scope: type,
-    form: debouncedForm,
-    strength: debouncedStrength,
-    compositionType,
-  });
+  const normalizedLocalResult = useCatalogClientNormalizedSearch(
+    localQuery,
+    {
+      limit: 100,
+      scope: type,
+      form: debouncedForm,
+      strength: debouncedStrength,
+      compositionType,
+    },
+    localResult.items.length,
+  );
   const criteriaKey = useMemo(
     () =>
       JSON.stringify([

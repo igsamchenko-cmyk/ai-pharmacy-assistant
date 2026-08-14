@@ -14,6 +14,7 @@ import {
 } from "@workspace/catalog-index";
 import { LocalCatalogResults } from "@/components/local-catalog-results";
 import {
+  catalogCorrectionFallbackQuery,
   createCatalogClientIndexNormalizedSearcher,
   type CatalogClientIndexSearchWorkerLike,
 } from "@/lib/catalog-client-index";
@@ -61,6 +62,10 @@ const safetyProducts = [
 ];
 
 describe("catalog normalized search safety", () => {
+  it("keeps correction work out of the direct-result hot path", () => {
+    expect(catalogCorrectionFallbackQuery("  креон  ", 1)).toBe("");
+    expect(catalogCorrectionFallbackQuery("  креон  ", 0)).toBe("креон");
+  });
   it("finds a wrong-layout name as layout while keeping the exact spelling exact", () => {
     const index = compileCatalogClientIndex(payload(safetyProducts));
     const layout = normalizeAndSearchCatalogClientIndex(index, "yehjaty");
