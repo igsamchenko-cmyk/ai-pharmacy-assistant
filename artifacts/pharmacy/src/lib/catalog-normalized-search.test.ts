@@ -211,6 +211,7 @@ describe("catalog normalized search safety", () => {
       index,
       () => worker,
     );
+    expect(worker.postMessage).not.toHaveBeenCalled();
     const result = await searcher.search("yehjaty");
     expect(result.primary[0]?.matchType).toBe("layout");
     expect(worker.postMessage).toHaveBeenNthCalledWith(1, {

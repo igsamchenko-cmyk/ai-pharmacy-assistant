@@ -255,7 +255,7 @@ function inProcessNormalizedSearcher(
   };
 }
 
-export function createCatalogClientIndexNormalizedSearcher(
+function createInitializedCatalogClientIndexNormalizedSearcher(
   index: CompiledCatalogClientIndex,
   workerFactory?: CatalogClientIndexSearchWorkerFactory,
 ): CatalogClientIndexNormalizedSearcher {
@@ -361,6 +361,34 @@ export function createCatalogClientIndexNormalizedSearcher(
     terminate() {
       worker.terminate();
       fail(new Error("Catalog search Worker terminated."));
+    },
+  };
+}
+
+export function createCatalogClientIndexNormalizedSearcher(
+  index: CompiledCatalogClientIndex,
+  workerFactory?: CatalogClientIndexSearchWorkerFactory,
+): CatalogClientIndexNormalizedSearcher {
+  let initialized: CatalogClientIndexNormalizedSearcher | null = null;
+  const getInitialized = () => {
+    initialized ??= createInitializedCatalogClientIndexNormalizedSearcher(
+      index,
+      workerFactory,
+    );
+    return initialized;
+  };
+
+  return {
+    search(query, options) {
+      // Cloning the 9 MB compiled index into a persistent Worker can occupy a
+      // throttled mobile CPU for hundreds of milliseconds. Initialize only
+      // after the synchronous exact result has rendered and asks for the
+      // correction layer, keeping exact TTFR on its established hot path.
+      return getInitialized().search(query, options);
+    },
+    terminate() {
+      initialized?.terminate();
+      initialized = null;
     },
   };
 }
