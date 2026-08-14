@@ -375,21 +375,24 @@ function HospitalFactCard({
 }) {
   return (
     <article
-      className={`min-w-0 rounded-xl border p-3 ${
+      className={`min-w-0 rounded-xl border p-4 sm:p-5 ${
         attention && quotes.length
           ? "border-destructive/40 bg-destructive/5"
           : "bg-card/70"
       }`}
     >
-      <h3 className="font-semibold">{title}</h3>
+      <h3 className="text-lg font-semibold">{title}</h3>
       {quotes.length ? (
         <div className="mt-2 space-y-3">
           {quotes.map((quote) => (
             <div
               key={`${quote.sectionKey}:${quote.charStart}:${quote.charEnd}`}
-              className="border-l-2 border-primary/40 pl-3"
+              className="border-l-2 border-primary/40 pl-4"
             >
-              <p className="line-clamp-6 whitespace-pre-wrap break-words text-sm leading-6">
+              <p
+                data-testid="hospital-fact-quote"
+                className="max-w-4xl whitespace-pre-wrap break-words text-base leading-7"
+              >
                 {quote.text}
               </p>
               <QuoteLink quote={quote} />
@@ -415,6 +418,18 @@ function HospitalFactsSection({
     quotes: quotesForFact(facts, item.key),
   })).filter(({ quotes }) => quotes.length > 0);
   if (!visibleFacts.length) return null;
+  const layout =
+    visibleFacts.length === 1
+      ? "single"
+      : visibleFacts.length === 2
+        ? "double"
+        : "multiple";
+  const gridClassName =
+    layout === "single"
+      ? "grid min-w-0 gap-3 lg:max-w-5xl"
+      : layout === "double"
+        ? "grid min-w-0 gap-3 lg:grid-cols-2"
+        : "grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-3";
 
   return (
     <section
@@ -431,7 +446,7 @@ function HospitalFactsSection({
           офіційної секції.
         </p>
       </div>
-      <div className="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className={gridClassName} data-layout={layout}>
         {visibleFacts.map(({ item, quotes }) => (
           <HospitalFactCard
             key={item.key}

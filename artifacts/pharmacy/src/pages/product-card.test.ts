@@ -358,6 +358,44 @@ describe("operational product card UI", () => {
     expect(html).not.toContain("Відновлення / розчинник");
   });
 
+  it("uses a wide unclamped layout for one verified hospital fact", () => {
+    const base = card();
+    const maxDoseText =
+      "Дозу слід встановлювати індивідуально, поступово збільшуючи її під контролем частоти серцевих скорочень.";
+    const html = renderCard(
+      card({
+        instruction: {
+          ...base.instruction,
+          sections: {
+            ...base.instruction.sections,
+            administration: maxDoseText,
+          },
+          administrationFacts: {
+            reconstitution: null,
+            diluents: [],
+            incompatibilities: [],
+            infusionRate: null,
+            stabilityAfterPrep: null,
+            renalAdjustment: null,
+            hepaticAdjustment: null,
+            maxDailyDose: {
+              text: maxDoseText,
+              sectionKey: "administration",
+              charStart: 0,
+              charEnd: maxDoseText.length,
+            },
+          },
+        },
+      }),
+    );
+
+    expect(html).toContain('data-layout="single"');
+    expect(html).toContain('data-testid="hospital-fact-quote"');
+    expect(html).toContain("lg:max-w-5xl");
+    expect(html).toContain("max-w-4xl");
+    expect(html).toContain(maxDoseText);
+  });
+
   it("resolves a search-result hash only when it points to exact section text", () => {
     const sections = card().instruction.sections;
     const valid = instructionQuoteFromHash(
