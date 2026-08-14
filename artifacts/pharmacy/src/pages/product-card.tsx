@@ -24,6 +24,7 @@ import {
   Pill,
   RefreshCw,
   Search,
+  WifiOff,
   ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
@@ -48,6 +49,11 @@ import {
 } from "@/lib/registry-product-route";
 import { nationalListVerdict } from "@/lib/national-list-status";
 import { markCardOpen } from "@/lib/search-metrics";
+import {
+  cacheOfflineProductIdentity,
+  readOfflineProductIdentity,
+  type OfflineProductIdentity,
+} from "@/lib/offline-product-card";
 import {
   conciseManufacturerText,
   manufacturerHeading,
@@ -1033,9 +1039,99 @@ function ProductCardError({ invalid = false }: { invalid?: boolean }) {
   );
 }
 
+function OfflineProductCardFallback({
+  identity,
+  onRetry,
+}: {
+  identity: OfflineProductIdentity;
+  onRetry: () => void;
+}) {
+  return (
+    <main
+      className={PRODUCT_CARD_PAGE_CLASS}
+      data-testid="offline-product-card"
+    >
+      <nav className="flex min-h-11 min-w-0 items-center gap-3 border-b pb-2">
+        <Link
+          href="/search?type=registry_products"
+          className="flex min-w-0 items-center gap-2 text-sm font-semibold text-primary"
+        >
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          <span>До пошуку</span>
+        </Link>
+        <span className="min-w-0 flex-1 truncate text-right text-xs text-muted-foreground">
+          {identity.registration}
+        </span>
+      </nav>
+
+      <Alert className="border-primary/30 bg-primary/5">
+        <WifiOff className="h-4 w-4" />
+        <AlertTitle>Основні дані доступні офлайн</AlertTitle>
+        <AlertDescription>
+          Показано збережену реєстрову позицію. Інструкція, статуси та інші
+          актуальні дані потребують підключення до мережі.
+        </AlertDescription>
+      </Alert>
+
+      <Card className={PRODUCT_CARD_HERO_CLASS}>
+        <CardContent className="min-w-0 space-y-5 p-4 sm:p-6">
+          <header className="flex min-w-0 items-start gap-3">
+            <div className="shrink-0 rounded-xl bg-primary/10 p-2.5">
+              <Pill className="h-6 w-6 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className={PRODUCT_CARD_TITLE_CLASS}>{identity.tradeName}</h1>
+              <p className="mt-2 break-words text-base text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  МНН / склад:
+                </span>{" "}
+                {identity.inn || "Не зазначено"}
+              </p>
+            </div>
+          </header>
+
+          <div className="flex min-w-0 flex-wrap gap-2">
+            {identity.strength ? (
+              <Badge className="max-w-full whitespace-normal px-3 py-1 text-sm">
+                {identity.strength}
+              </Badge>
+            ) : null}
+            {identity.form ? (
+              <Badge
+                variant="secondary"
+                className="max-w-full whitespace-normal px-3 py-1 text-sm"
+              >
+                {identity.form}
+              </Badge>
+            ) : null}
+          </div>
+
+          <dl className="rounded-xl border bg-background/60 p-3 text-sm">
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              Реєстраційний номер
+            </dt>
+            <dd className="mt-1 break-words font-medium">
+              {identity.registration}
+            </dd>
+          </dl>
+
+          <Button type="button" variant="outline" onClick={onRetry}>
+            <RefreshCw className="h-4 w-4" />
+            Оновити після підключення
+          </Button>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}
+
 export default function ProductCardPage() {
   const { productId = "" } = useParams<{ productId: string }>();
   const validProductId = REGISTRY_PRODUCT_ID_PATTERN.test(productId);
+  const offlineIdentity = useMemo(
+    () => (validProductId ? readOfflineProductIdentity(productId) : null),
+    [productId, validProductId],
+  );
   const { isFavorite, toggleFavorite } = useFavorites();
 
   useLayoutEffect(() => {
@@ -1059,9 +1155,26 @@ export default function ProductCardPage() {
   useEffect(() => {
     if (!product) return;
     recordRecentlyViewed(registryProductDrugRef(product));
+    cacheOfflineProductIdentity({
+      productId: product.id,
+      registration: product.registration.number,
+      tradeName: product.tradeName,
+      inn: product.inn || product.activeIngredient || "",
+      form: conciseDosageForm(product.dosageForm),
+      strength: product.strength ?? "",
+    });
     markCardOpen(product.id);
   }, [product]);
 
+  useEffect(() => {
+    if (
+      offlineIdentity &&
+      !cardQuery.isLoading &&
+      (cardQuery.isError || !cardQuery.data)
+    ) {
+      markCardOpen(offlineIdentity.productId);
+    }
+  }, [cardQuery.data, cardQuery.isError, cardQuery.isLoading, offlineIdentity]);
   useEffect(() => {
     if (!cardQuery.data) return;
     const legacyInstructionRoute =
@@ -1110,6 +1223,14 @@ export default function ProductCardPage() {
   if (!validProductId) return <ProductCardError invalid />;
   if (cardQuery.isLoading) return <ProductCardSkeleton />;
   if (cardQuery.isError || !cardQuery.data || !product) {
+    if (offlineIdentity) {
+      return (
+        <OfflineProductCardFallback
+          identity={offlineIdentity}
+          onRetry={() => void cardQuery.refetch()}
+        />
+      );
+    }
     return (
       <div className="space-y-4">
         <ProductCardError />

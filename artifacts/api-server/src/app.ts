@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import express, {
   type Express,
@@ -173,6 +173,14 @@ export function createApp(options: AppOptions = {}): Express {
       express.static(frontendDist, {
         index: false,
         maxAge: "1h",
+        setHeaders(res, filePath) {
+          if (
+            basename(filePath) === "sw.js" ||
+            basename(filePath) === "manifest.webmanifest"
+          ) {
+            res.setHeader("Cache-Control", "no-cache");
+          }
+        },
       }),
     );
     app.use((req: Request, res: Response, next: NextFunction) => {

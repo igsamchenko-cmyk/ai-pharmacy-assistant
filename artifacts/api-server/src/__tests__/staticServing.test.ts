@@ -31,6 +31,8 @@ async function createFrontendDist(): Promise<string> {
     '<!doctype html><html><body><div id="root">FarmAssist</div></body></html>',
   );
   await writeFile(join(dir, "assets", "app.js"), "console.log('farmassist');");
+  await writeFile(join(dir, "sw.js"), "self.skipWaiting();");
+  await writeFile(join(dir, "manifest.webmanifest"), "{}");
   return dir;
 }
 
@@ -93,6 +95,19 @@ describe("production static frontend serving", () => {
       expect(response.status).toBe(200);
       expect(response.headers.get("cache-control")).toContain("max-age=3600");
       expect(response.headers.get("cache-control")).not.toContain("immutable");
+    });
+  });
+
+  it("never HTTP-caches the service worker or web manifest", async () => {
+    const frontendDist = await createFrontendDist();
+    const app = createApp({ nodeEnv: "production", frontendDist });
+
+    await withServer(createServer(app), async (baseUrl) => {
+      for (const file of ["sw.js", "manifest.webmanifest"]) {
+        const response = await fetch(baseUrl + "/" + file);
+        expect(response.status).toBe(200);
+        expect(response.headers.get("cache-control")).toBe("no-cache");
+      }
     });
   });
 

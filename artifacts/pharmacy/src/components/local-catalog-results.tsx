@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, Database, Search } from "lucide-react";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
+import { cacheOfflineProductIdentity } from "@/lib/offline-product-card";
 
 interface LocalCatalogGroup {
   key: string;
@@ -182,6 +183,16 @@ function LocalCatalogGroupCards({
                     <Link
                       href={productHref(product, group.correctedQuery)}
                       data-navigation="spa"
+                      onClick={() =>
+                        cacheOfflineProductIdentity({
+                          productId: product.productId,
+                          registration: product.registration,
+                          tradeName: product.tradeName,
+                          inn: product.inn,
+                          form: product.form,
+                          strength: product.strength,
+                        })
+                      }
                       data-testid={"local-product-open-" + product.productId}
                     >
                       Відкрити

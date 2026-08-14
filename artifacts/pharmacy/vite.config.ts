@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import { VitePWA } from "vite-plugin-pwa";
 
 const rawPort = process.env.PORT;
 
@@ -26,12 +27,101 @@ if (!basePath) {
   );
 }
 
+const normalizedBasePath = basePath.endsWith("/") ? basePath : `${basePath}/`;
+
 export default defineConfig({
   base: basePath,
   plugins: [
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
+    VitePWA({
+      registerType: "autoUpdate",
+      injectRegister: null,
+      manifest: {
+        name: "FarmAssist — довідник лікарських засобів",
+        short_name: "ФармАсист",
+        description:
+          "Оперативний довідник зареєстрованих лікарських засобів України.",
+        lang: "uk",
+        start_url: `${normalizedBasePath}search`,
+        scope: normalizedBasePath,
+        display: "standalone",
+        background_color: "#122629",
+        theme_color: "#122629",
+        icons: [
+          {
+            src: "pwa-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+          {
+            src: "pwa-maskable-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ["**/*.{html,js,css,svg,png,ico,woff,woff2}"],
+        globIgnores: [
+          "**/review-*.js",
+          "**/beta-dashboard-*.js",
+          "**/data-quality-*.js",
+          "**/perf-metrics-*.js",
+          "**/import-*.js",
+          "**/about-*.js",
+          "**/ai-reference-*.js",
+          "**/analogs-*.js",
+          "**/compare-*.js",
+          "**/dispensing-*.js",
+          "**/drug-detail-*.js",
+          "**/favorites-*.js",
+          "**/history-*.js",
+          "**/instruction-search-*.js",
+          "**/interactions-*.js",
+          "**/login-*.js",
+          "**/not-found-*.js",
+          "**/pharmacovigilance-*.js",
+          "**/regulatory-radar-*.js",
+        ],
+        navigateFallback: "index.html",
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        runtimeCaching: [
+          {
+            urlPattern: /\/api\/catalog(?:\/|$)/,
+            handler: "NetworkOnly",
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\//,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "google-fonts-stylesheets",
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\//,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts-webfonts",
+              expiration: {
+                maxEntries: 8,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      },
+    }),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
       ? [
