@@ -45,6 +45,7 @@ import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
 import { LocalCatalogResults } from "@/components/local-catalog-results";
 import { useCatalogClientIndex } from "@/lib/catalog-client-index";
+import { markFirstResult } from "@/lib/search-metrics";
 import { nationalListVerdict } from "@/lib/national-list-status";
 import {
   conciseManufacturerNames,
@@ -1813,6 +1814,27 @@ export default function SearchPage() {
     queryIsCurrent && isError,
     hasResults,
   );
+  const renderedResultCount = shouldUseLocalCatalog
+    ? localResult.items.length
+    : hasResults
+      ? 1
+      : 0;
+
+  useEffect(() => {
+    if (
+      renderedResultCount > 0 &&
+      !shortQuery &&
+      (shouldUseLocalCatalog || queryIsCurrent)
+    ) {
+      markFirstResult(q);
+    }
+  }, [
+    q,
+    queryIsCurrent,
+    renderedResultCount,
+    shortQuery,
+    shouldUseLocalCatalog,
+  ]);
 
   return (
     <div className="max-w-full space-y-5 overflow-x-hidden pb-8 animate-in motion-reduce:animate-none fade-in duration-300">

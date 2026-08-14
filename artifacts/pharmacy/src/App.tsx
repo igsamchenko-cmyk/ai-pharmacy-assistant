@@ -30,6 +30,7 @@ const BetaDashboard = lazy(() => import("@/pages/beta-dashboard"));
 const RegulatoryRadar = lazy(() => import("@/pages/regulatory-radar"));
 const Pharmacovigilance = lazy(() => import("@/pages/pharmacovigilance"));
 const ProductCard = lazy(() => import("@/pages/product-card"));
+const PerfMetrics = lazy(() => import("@/pages/perf-metrics"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient();
@@ -122,6 +123,7 @@ function Router() {
             <Route path="/review" component={ProtectedReviewQueue} />
             <Route path="/beta-dashboard" component={ProtectedBetaDashboard} />
             <Route path="/about" component={About} />
+            <Route path="/perf" component={PerfMetrics} />
             <Route component={NotFound} />
           </Switch>
         </Suspense>
