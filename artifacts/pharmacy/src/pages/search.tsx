@@ -44,7 +44,10 @@ import { ProductCompareButton } from "@/components/product-compare-button";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
 import { LocalCatalogResults } from "@/components/local-catalog-results";
-import { useCatalogClientIndex } from "@/lib/catalog-client-index";
+import {
+  useCatalogClientIndex,
+  useCatalogClientNormalizedSearch,
+} from "@/lib/catalog-client-index";
 import { markFirstResult } from "@/lib/search-metrics";
 import { nationalListVerdict } from "@/lib/national-list-status";
 import {
@@ -1525,6 +1528,13 @@ export default function SearchPage() {
       localQuery,
     ],
   );
+  const normalizedLocalResult = useCatalogClientNormalizedSearch(localQuery, {
+    limit: 100,
+    scope: type,
+    form: debouncedForm,
+    strength: debouncedStrength,
+    compositionType,
+  });
   const criteriaKey = useMemo(
     () =>
       JSON.stringify([
@@ -1815,7 +1825,10 @@ export default function SearchPage() {
     hasResults,
   );
   const renderedResultCount = shouldUseLocalCatalog
-    ? localResult.items.length
+    ? normalizedLocalResult
+      ? normalizedLocalResult.primary.length +
+        normalizedLocalResult.suggested.length
+      : localResult.items.length
     : hasResults
       ? 1
       : 0;
@@ -2163,6 +2176,7 @@ export default function SearchPage() {
         ) : (
           <LocalCatalogResults
             result={localResult}
+            normalizedResult={normalizedLocalResult}
             mode={type === "ingredients" ? "ingredients" : "catalog"}
           />
         )

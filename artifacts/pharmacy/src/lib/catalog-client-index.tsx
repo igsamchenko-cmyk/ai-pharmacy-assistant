@@ -6,12 +6,14 @@ import {
   CATALOG_CLIENT_INDEX_VERSION,
   catalogClientIndexWireBytes,
   compileCatalogClientIndex,
+  normalizeAndSearchCatalogClientIndex,
   searchCatalogClientIndex,
   type CatalogClientIndexAliasRow,
   type CatalogClientIndexPayload,
   type CatalogClientIndexRow,
   type CatalogClientIndexSearchOptions,
   type CatalogClientIndexSearchResult,
+  type CatalogNormalizedSearchResult,
   type CompiledCatalogClientIndex,
 } from "@workspace/catalog-index";
 import { getGetCatalogClientIndexUrl } from "@workspace/api-client-react";
@@ -29,7 +31,10 @@ import {
   createIndexedDbCatalogIndexStorage,
   type CatalogClientIndexStorage,
 } from "@/lib/catalog-client-index-storage";
-import type { CatalogClientIndexWorkerResponse } from "@/lib/catalog-client-index.worker";
+import type {
+  CatalogClientIndexWorkerRequest,
+  CatalogClientIndexWorkerResponse,
+} from "@/lib/catalog-client-index.worker";
 import { markIndexReady } from "@/lib/search-metrics";
 
 export type CatalogClientIndexStatus = "idle" | "loading" | "ready" | "error";
@@ -213,6 +218,152 @@ export async function compileCatalogClientIndexOffMainThread(
     }
   });
 }
+export interface CatalogClientIndexSearchWorkerLike {
+  onmessage:
+    | ((event: MessageEvent<CatalogClientIndexWorkerResponse>) => void)
+    | null;
+  onerror: ((event: Event) => void) | null;
+  postMessage(payload: CatalogClientIndexWorkerRequest): void;
+  terminate(): void;
+}
+
+export type CatalogClientIndexSearchWorkerFactory =
+  () => CatalogClientIndexSearchWorkerLike;
+
+export interface CatalogClientIndexNormalizedSearcher {
+  search(
+    query: string,
+    options?: CatalogClientIndexSearchOptions,
+  ): Promise<CatalogNormalizedSearchResult>;
+  terminate(): void;
+}
+
+function createCatalogClientIndexSearchWorker(): CatalogClientIndexSearchWorkerLike {
+  return new Worker(
+    new URL("./catalog-client-index.worker.ts", import.meta.url),
+    { type: "module" },
+  ) as unknown as CatalogClientIndexSearchWorkerLike;
+}
+
+function inProcessNormalizedSearcher(
+  index: CompiledCatalogClientIndex,
+): CatalogClientIndexNormalizedSearcher {
+  return {
+    search: async (query, options) =>
+      normalizeAndSearchCatalogClientIndex(index, query, options),
+    terminate: () => undefined,
+  };
+}
+
+export function createCatalogClientIndexNormalizedSearcher(
+  index: CompiledCatalogClientIndex,
+  workerFactory?: CatalogClientIndexSearchWorkerFactory,
+): CatalogClientIndexNormalizedSearcher {
+  const factory =
+    workerFactory ??
+    (typeof Worker === "undefined"
+      ? null
+      : createCatalogClientIndexSearchWorker);
+  if (!factory) return inProcessNormalizedSearcher(index);
+
+  let worker: CatalogClientIndexSearchWorkerLike;
+  try {
+    worker = factory();
+  } catch {
+    return inProcessNormalizedSearcher(index);
+  }
+
+  let requestId = 0;
+  let readySettled = false;
+  let resolveReady: () => void = () => undefined;
+  let rejectReady: (error: Error) => void = () => undefined;
+  const ready = new Promise<void>((resolve, reject) => {
+    resolveReady = resolve;
+    rejectReady = reject;
+  });
+  const pending = new Map<
+    number,
+    {
+      resolve: (result: CatalogNormalizedSearchResult) => void;
+      reject: (error: Error) => void;
+    }
+  >();
+  const fail = (error: Error) => {
+    if (!readySettled) {
+      readySettled = true;
+      rejectReady(error);
+    }
+    for (const request of pending.values()) request.reject(error);
+    pending.clear();
+  };
+
+  worker.onmessage = (event) => {
+    const message = event.data;
+    if (message.status === "search-ready") {
+      if (!readySettled) {
+        readySettled = true;
+        resolveReady();
+      }
+      return;
+    }
+    if (message.status === "search-result") {
+      const request = pending.get(message.requestId);
+      if (!request) return;
+      pending.delete(message.requestId);
+      request.resolve(message.result);
+      return;
+    }
+    if (message.status === "error") {
+      if (message.requestId !== undefined) {
+        const request = pending.get(message.requestId);
+        if (request) {
+          pending.delete(message.requestId);
+          request.reject(new Error("Catalog normalized search failed."));
+        }
+        return;
+      }
+      fail(new Error("Catalog search Worker initialization failed."));
+    }
+  };
+  worker.onerror = () => fail(new Error("Catalog search Worker failed."));
+
+  try {
+    worker.postMessage({ type: "initialize-search", index });
+  } catch {
+    worker.terminate();
+    return inProcessNormalizedSearcher(index);
+  }
+
+  return {
+    async search(query, options) {
+      await ready;
+      requestId += 1;
+      const activeRequestId = requestId;
+      return new Promise<CatalogNormalizedSearchResult>((resolve, reject) => {
+        pending.set(activeRequestId, { resolve, reject });
+        try {
+          worker.postMessage({
+            type: "search",
+            requestId: activeRequestId,
+            query,
+            options,
+          });
+        } catch (error) {
+          pending.delete(activeRequestId);
+          reject(
+            error instanceof Error
+              ? error
+              : new Error("Catalog normalized search could not start."),
+          );
+        }
+      });
+    },
+    terminate() {
+      worker.terminate();
+      fail(new Error("Catalog search Worker terminated."));
+    },
+  };
+}
 function waitForCatalogClientIndexRefreshWindow(
   signal?: AbortSignal,
 ): Promise<void> {
@@ -252,10 +403,15 @@ interface CatalogClientIndexContextValue {
   productCount: number;
   snapshotHash: string | null;
   estimatedMemoryBytes: number;
+  normalizationReady: boolean;
   search(
     query: string,
     options?: CatalogClientIndexSearchOptions,
   ): CatalogClientIndexSearchResult;
+  normalizeAndSearch(
+    query: string,
+    options?: CatalogClientIndexSearchOptions,
+  ): Promise<CatalogNormalizedSearchResult>;
 }
 
 const EMPTY_RESULT: CatalogClientIndexSearchResult = {
@@ -417,6 +573,8 @@ export function CatalogClientIndexProvider({
   const [source, setSource] = useState<CatalogClientIndexSource | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isStale, setIsStale] = useState(false);
+  const [normalizedSearcher, setNormalizedSearcher] =
+    useState<CatalogClientIndexNormalizedSearcher | null>(null);
 
   useEffect(() => {
     if (!auth.canUseReference) {
@@ -474,6 +632,15 @@ export function CatalogClientIndexProvider({
     };
   }, [auth.canUseReference, storage]);
 
+  useEffect(() => {
+    if (!index) {
+      setNormalizedSearcher(null);
+      return;
+    }
+    const searcher = createCatalogClientIndexNormalizedSearcher(index);
+    setNormalizedSearcher(searcher);
+    return () => searcher.terminate();
+  }, [index]);
   const search = useCallback(
     (query: string, options?: CatalogClientIndexSearchOptions) => {
       return index
@@ -481,6 +648,28 @@ export function CatalogClientIndexProvider({
         : { ...EMPTY_RESULT, query };
     },
     [index],
+  );
+
+  const normalizeAndSearch = useCallback(
+    (query: string, options?: CatalogClientIndexSearchOptions) => {
+      if (!index) {
+        return Promise.resolve<CatalogNormalizedSearchResult>({
+          query,
+          primary: [],
+          suggested: [],
+          durationMs: 0,
+        });
+      }
+      return normalizedSearcher
+        ? normalizedSearcher.search(query, options)
+        : Promise.resolve<CatalogNormalizedSearchResult>({
+            query,
+            primary: [],
+            suggested: [],
+            durationMs: 0,
+          });
+    },
+    [index, normalizedSearcher],
   );
 
   const value = useMemo<CatalogClientIndexContextValue>(
@@ -492,9 +681,20 @@ export function CatalogClientIndexProvider({
       productCount: index?.productCount ?? 0,
       snapshotHash: index?.snapshotHash ?? null,
       estimatedMemoryBytes: index?.estimatedMemoryBytes ?? 0,
+      normalizationReady: Boolean(normalizedSearcher),
       search,
+      normalizeAndSearch,
     }),
-    [index, isRefreshing, isStale, search, source, status],
+    [
+      index,
+      isRefreshing,
+      isStale,
+      normalizeAndSearch,
+      normalizedSearcher,
+      search,
+      source,
+      status,
+    ],
   );
 
   return (
@@ -504,6 +704,69 @@ export function CatalogClientIndexProvider({
   );
 }
 
+export function useCatalogClientNormalizedSearch(
+  query: string,
+  options: CatalogClientIndexSearchOptions = {},
+): CatalogNormalizedSearchResult | null {
+  const catalog = useCatalogClientIndex();
+  const limit = options.limit;
+  const form = options.form;
+  const strength = options.strength;
+  const compositionType = options.compositionType;
+  const scope = options.scope;
+  const requestKey = [
+    query,
+    limit ?? "",
+    form ?? "",
+    strength ?? "",
+    compositionType ?? "",
+    scope ?? "",
+  ].join("\u0000");
+  const [resolved, setResolved] = useState<{
+    key: string;
+    result: CatalogNormalizedSearchResult;
+  } | null>(null);
+
+  useEffect(() => {
+    if (
+      catalog.status !== "ready" ||
+      !catalog.normalizationReady ||
+      !query.trim()
+    ) {
+      setResolved(null);
+      return;
+    }
+    let active = true;
+    void catalog
+      .normalizeAndSearch(query, {
+        limit,
+        form,
+        strength,
+        compositionType,
+        scope,
+      })
+      .then((result) => {
+        if (active) setResolved({ key: requestKey, result });
+      })
+      .catch(() => {
+        if (active) setResolved(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [
+    catalog,
+    compositionType,
+    form,
+    limit,
+    query,
+    requestKey,
+    scope,
+    strength,
+  ]);
+
+  return resolved?.key === requestKey ? resolved.result : null;
+}
 export function useCatalogClientIndex(): CatalogClientIndexContextValue {
   const value = useContext(CatalogClientIndexContext);
   if (!value)

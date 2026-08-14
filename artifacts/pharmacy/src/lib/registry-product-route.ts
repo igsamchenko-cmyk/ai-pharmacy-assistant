@@ -17,3 +17,16 @@ export function registrationFromSearch(search: string): string {
     new URLSearchParams(search).get("registration")?.trim() ?? "";
   return REGISTRATION_NUMBER_PATTERN.test(registration) ? registration : "";
 }
+
+export function correctedQueryFromSearch(search: string): string {
+  const corrected =
+    new URLSearchParams(search).get("correctedQuery")?.trim() ?? "";
+  if (
+    !corrected ||
+    corrected.length > 120 ||
+    /[\u0000-\u001f\u007f]/u.test(corrected)
+  ) {
+    return "";
+  }
+  return corrected.replace(/\s+/gu, " ");
+}

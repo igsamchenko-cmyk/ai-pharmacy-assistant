@@ -4,9 +4,15 @@ import {
   useSearchCatalog,
   type RegistryProductResult,
 } from "@workspace/api-client-react";
-import type { CatalogClientIndexProduct } from "@workspace/catalog-index";
+import type {
+  CatalogClientIndexProduct,
+  CatalogNormalizedCandidate,
+} from "@workspace/catalog-index";
 import { Database, Search } from "lucide-react";
-import { useCatalogClientIndex } from "@/lib/catalog-client-index";
+import {
+  useCatalogClientIndex,
+  useCatalogClientNormalizedSearch,
+} from "@/lib/catalog-client-index";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,16 +34,73 @@ function fromServerProduct(
   };
 }
 
+function interactionIdentity(product: InteractionProductSelection): string {
+  return `${product.productId}|${product.registration}`;
+}
+
 export function uniqueInteractionOptions(
   products: readonly InteractionProductSelection[],
 ): InteractionProductSelection[] {
   const seen = new Set<string>();
   return products.filter((product) => {
-    const key = `${product.productId}|${product.registration}`;
+    const key = interactionIdentity(product);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
+}
+
+function candidateCorrections(
+  candidates: readonly CatalogNormalizedCandidate[],
+): Map<string, string> {
+  return new Map(
+    candidates.flatMap((candidate) =>
+      candidate.correctedQuery
+        ? [[interactionIdentity(candidate.product), candidate.correctedQuery]]
+        : [],
+    ),
+  );
+}
+
+function ProductOption({
+  product,
+  correctedQuery,
+  suggested = false,
+  onSelect,
+}: {
+  product: InteractionProductSelection;
+  correctedQuery?: string;
+  suggested?: boolean;
+  onSelect: (product: InteractionProductSelection) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(product)}
+      className="grid w-full min-w-0 gap-1 rounded-lg px-3 py-2 text-left hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
+      data-testid={`btn-add-product-${product.productId}`}
+    >
+      <span className="flex flex-wrap items-center gap-2 break-words font-semibold">
+        {product.tradeName}
+        {correctedQuery ? (
+          <Badge
+            variant={suggested ? "secondary" : "outline"}
+            className="max-w-full whitespace-normal break-all text-left"
+          >
+            {suggested ? "Виправлено" : "Розкладку виправлено"}:{" "}
+            {correctedQuery}
+          </Badge>
+        ) : null}
+      </span>
+      <span className="break-words text-xs text-muted-foreground">
+        {[product.strength, product.form].filter(Boolean).join(" · ") ||
+          "Форма не вказана"}
+      </span>
+      <span className="break-all text-xs text-muted-foreground">
+        {product.registration} · {product.inn || "Склад не вказано"}
+      </span>
+    </button>
+  );
 }
 
 export function RegistryInteractionSearchSelect({
@@ -81,16 +144,39 @@ export function RegistryInteractionSearchSelect({
       }),
     [clientCatalog, query],
   );
+  const normalizedLocalResult = useCatalogClientNormalizedSearch(query.trim(), {
+    limit: 25,
+    scope: "registry_products",
+  });
+  const primaryCandidates = normalizedLocalResult?.primary ?? [];
+  const primaryCorrections = useMemo(
+    () => candidateCorrections(primaryCandidates),
+    [primaryCandidates],
+  );
   const options = useMemo(
     () =>
       uniqueInteractionOptions(
         localReady
-          ? localResult.items.map((item) => item.product)
+          ? (normalizedLocalResult?.primary ?? localResult.items).map(
+              (item) => item.product,
+            )
           : (fallback.data?.registryProducts.items ?? []).map(
               fromServerProduct,
             ),
       ),
-    [fallback.data, localReady, localResult.items],
+    [fallback.data, localReady, localResult.items, normalizedLocalResult],
+  );
+  const suggestedCandidates = normalizedLocalResult?.suggested ?? [];
+  const suggestedOptions = useMemo(
+    () =>
+      uniqueInteractionOptions(
+        suggestedCandidates.map((candidate) => candidate.product),
+      ),
+    [suggestedCandidates],
+  );
+  const suggestedCorrections = useMemo(
+    () => candidateCorrections(suggestedCandidates),
+    [suggestedCandidates],
   );
 
   const select = (product: InteractionProductSelection) => {
@@ -102,12 +188,13 @@ export function RegistryInteractionSearchSelect({
     clientCatalog.status === "loading" ||
     clientCatalog.status === "idle" ||
     (fallbackEnabled && fallback.isLoading);
+  const renderedOptions = options.length + suggestedOptions.length;
 
   useEffect(() => {
-    if (showResults && !loading && options.length > 0) {
+    if (showResults && !loading && renderedOptions > 0) {
       markFirstResult(query);
     }
-  }, [loading, options.length, query, showResults]);
+  }, [loading, query, renderedOptions, showResults]);
 
   return (
     <div className="relative max-w-full space-y-2">
@@ -144,28 +231,40 @@ export function RegistryInteractionSearchSelect({
               <p className="p-4 text-center text-sm text-muted-foreground">
                 Пошук…
               </p>
-            ) : options.length ? (
-              options.map((product) => (
-                <button
-                  key={`${product.productId}:${product.registration}`}
-                  type="button"
-                  onClick={() => select(product)}
-                  className="grid w-full min-w-0 gap-1 rounded-lg px-3 py-2 text-left hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
-                  data-testid={`btn-add-product-${product.productId}`}
-                >
-                  <span className="break-words font-semibold">
-                    {product.tradeName}
-                  </span>
-                  <span className="break-words text-xs text-muted-foreground">
-                    {[product.strength, product.form]
-                      .filter(Boolean)
-                      .join(" · ") || "Форма не вказана"}
-                  </span>
-                  <span className="break-all text-xs text-muted-foreground">
-                    {product.registration} · {product.inn || "Склад не вказано"}
-                  </span>
-                </button>
-              ))
+            ) : renderedOptions ? (
+              <>
+                {options.map((product) => (
+                  <ProductOption
+                    key={interactionIdentity(product)}
+                    product={product}
+                    correctedQuery={primaryCorrections.get(
+                      interactionIdentity(product),
+                    )}
+                    onSelect={select}
+                  />
+                ))}
+                {suggestedOptions.length ? (
+                  <section
+                    className="mt-2 space-y-1 border-t border-primary/30 pt-2"
+                    data-testid="interaction-suggested-results"
+                  >
+                    <p className="px-3 py-1 text-sm font-semibold">
+                      Можливо, ви шукали:
+                    </p>
+                    {suggestedOptions.map((product) => (
+                      <ProductOption
+                        key={`suggested-${interactionIdentity(product)}`}
+                        product={product}
+                        correctedQuery={suggestedCorrections.get(
+                          interactionIdentity(product),
+                        )}
+                        suggested
+                        onSelect={select}
+                      />
+                    ))}
+                  </section>
+                ) : null}
+              </>
             ) : (
               <p className="p-4 text-center text-sm text-muted-foreground">
                 Нічого не знайдено
