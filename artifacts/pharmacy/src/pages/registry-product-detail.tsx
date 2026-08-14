@@ -213,6 +213,39 @@ export function RegistryProductDetailContent({
                 </span>{" "}
                 {product.inn || product.activeIngredient || "Не зазначено"}
               </p>
+              {product.instructionAvailable ? (
+                <Button
+                  asChild
+                  size="lg"
+                  className="mt-3 min-h-12 w-full whitespace-normal shadow-md ring-2 ring-primary/20 sm:w-auto"
+                >
+                  <a
+                    href={`/instructions/${product.id}`}
+                    data-testid="detail-instruction-action"
+                  >
+                    <BookOpenText className="h-5 w-5 shrink-0" />
+                    Відкрити інструкцію
+                  </a>
+                </Button>
+              ) : officialDocumentUrl &&
+                instructionSourceStatus === "official_document" ? (
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="mt-3 min-h-12 w-full whitespace-normal border-primary/50 text-primary shadow-sm sm:w-auto"
+                >
+                  <a
+                    href={officialDocumentUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    data-testid="detail-official-instruction-document"
+                  >
+                    <ExternalLink className="h-5 w-5 shrink-0" />
+                    Офіційна інструкція ДРЛЗ
+                  </a>
+                </Button>
+              ) : null}
             </div>
           </div>
 
@@ -297,39 +330,11 @@ export function RegistryProductDetailContent({
             className="grid min-w-0 grid-cols-2 gap-2"
             data-testid="registry-product-primary-actions"
           >
-            {product.instructionAvailable ? (
-              <Button
-                asChild
-                size="lg"
-                className="col-span-2 min-h-12 min-w-0 whitespace-normal sm:col-span-1"
-              >
-                <a
-                  href={`/instructions/${product.id}`}
-                  data-testid="detail-instruction-action"
-                >
-                  <BookOpenText className="h-5 w-5 shrink-0" />
-                  Інструкція
-                </a>
-              </Button>
-            ) : officialDocumentUrl &&
-              instructionSourceStatus === "official_document" ? (
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="col-span-2 min-h-12 min-w-0 whitespace-normal sm:col-span-1"
-              >
-                <a
-                  href={officialDocumentUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  data-testid="detail-official-instruction-document"
-                >
-                  <ExternalLink className="h-5 w-5 shrink-0" />
-                  Офіційна інструкція ДРЛЗ
-                </a>
-              </Button>
-            ) : (
+            {!product.instructionAvailable &&
+            !(
+              officialDocumentUrl &&
+              instructionSourceStatus === "official_document"
+            ) ? (
               <Button
                 size="lg"
                 disabled
@@ -341,7 +346,7 @@ export function RegistryProductDetailContent({
                   ? "Документ ДРЛЗ потребує перевірки"
                   : "ДРЛЗ не оприлюднив інструкцію"}
               </Button>
-            )}
+            ) : null}
             <Button
               asChild
               size="lg"

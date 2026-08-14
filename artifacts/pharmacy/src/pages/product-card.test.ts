@@ -281,6 +281,14 @@ describe("operational product card UI", () => {
     expect(PRODUCT_CARD_HERO_CLASS).not.toContain("overflow-hidden");
     expect(PRODUCT_CARD_TITLE_CLASS).toContain("overflow-wrap:anywhere");
     expect(PRODUCT_CARD_TITLE_CLASS).toContain("relative z-10");
+    const instructionIndex = html.indexOf(
+      'data-testid="product-card-instruction-quick-action"',
+    );
+    expect(html).toContain("Відкрити інструкцію");
+    expect(instructionIndex).toBeGreaterThan(
+      html.indexOf('data-testid="product-card-title"'),
+    );
+    expect(instructionIndex).toBeLessThan(html.indexOf("Категорія відпуску"));
   });
 
   it("shows exact-series input only when a prohibition document raised the flag", () => {

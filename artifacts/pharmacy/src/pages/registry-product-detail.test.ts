@@ -159,6 +159,16 @@ describe("registry product mobile detail UI", () => {
       expect(html).toContain("У Нацпереліку");
       expect(html).toContain("Є інструкція");
       expect(html).toContain(`href="/instructions/${item.id}"`);
+      const instructionIndex = html.indexOf(
+        'data-testid="detail-instruction-action"',
+      );
+      expect(html).toContain("Відкрити інструкцію");
+      expect(instructionIndex).toBeGreaterThan(
+        html.indexOf('data-testid="registry-product-name"'),
+      );
+      expect(instructionIndex).toBeLessThan(
+        html.indexOf('data-testid="product-strength-chip"'),
+      );
       expect(html).toContain('href="/interactions"');
       expect(html).toContain('href="/compare"');
       expect(html).toContain("В обране");
