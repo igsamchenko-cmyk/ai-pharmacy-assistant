@@ -256,12 +256,6 @@ function renderCard(value: ProductCard): string {
         card: value,
         favorite: false,
         onToggleFavorite: () => undefined,
-        draftSeries: "",
-        submittedSeries: "",
-        seriesLoading: false,
-        seriesError: false,
-        onDraftSeriesChange: () => undefined,
-        onSubmitSeries: () => undefined,
       }),
     ),
   );
@@ -291,10 +285,11 @@ describe("operational product card UI", () => {
     expect(instructionIndex).toBeLessThan(html.indexOf("Категорія відпуску"));
   });
 
-  it("shows exact-series input only when a prohibition document raised the flag", () => {
+  it("keeps prohibition status read-only without a manual series form", () => {
     const attention = renderCard(card());
     expect(attention).toContain("Є розпорядження — перевірте серію");
-    expect(attention).toContain('data-testid="series-input"');
+    expect(attention).not.toContain('data-testid="series-input"');
+    expect(attention).not.toContain("Перевірка серії упаковки");
 
     const clear = renderCard(
       card({
@@ -330,6 +325,8 @@ describe("operational product card UI", () => {
     expect(html).toContain("Переліки та ціна");
     expect(html).toContain("Свіжість кожного джерела");
     expect(html).toContain("Розпорядження Держлікслужби");
+    expect(html).not.toContain("Фармаконагляд");
+    expect(html).not.toContain("Відкрити майстер");
     expect(html).toContain("Повідомити про проблему");
   });
 
