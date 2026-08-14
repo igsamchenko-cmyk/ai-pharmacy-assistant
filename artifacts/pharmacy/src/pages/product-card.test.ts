@@ -268,9 +268,10 @@ describe("operational product card UI", () => {
 
     expect(html).toContain(value.identity.tradeName);
     expect(html).toContain('data-testid="product-card-title"');
-    expect(html).toContain("Категорію не підтверджено");
+    expect(html).not.toContain('data-testid="product-card-dispensing-status"');
+    expect(html).not.toContain("Категорію не підтверджено");
     expect(html).not.toContain("Без рецепта");
-    expect(html).toContain("Не трактуйте відсутні або неповні дані");
+    expect(html).not.toContain("Не трактуйте відсутні або неповні дані");
     expect(PRODUCT_CARD_PAGE_CLASS).toContain("overflow-x-clip");
     expect(PRODUCT_CARD_HERO_CLASS).not.toContain("overflow-hidden");
     expect(PRODUCT_CARD_TITLE_CLASS).toContain("overflow-wrap:anywhere");
@@ -282,7 +283,29 @@ describe("operational product card UI", () => {
     expect(instructionIndex).toBeGreaterThan(
       html.indexOf('data-testid="product-card-title"'),
     );
-    expect(instructionIndex).toBeLessThan(html.indexOf("Категорія відпуску"));
+    expect(instructionIndex).toBeLessThan(
+      html.indexOf('data-testid="product-card-series-status"'),
+    );
+  });
+
+  it("omits the status area when dispensing is unresolved and bans are stale", () => {
+    const base = card();
+    const html = renderCard(
+      card({
+        seriesStatus: {
+          ...base.seriesStatus!,
+          source: {
+            ...base.seriesStatus!.source,
+            freshness: "stale",
+          },
+        },
+      }),
+    );
+
+    expect(html).not.toContain('data-testid="product-card-key-statuses"');
+    expect(html).not.toContain('data-testid="product-card-dispensing-status"');
+    expect(html).not.toContain('data-testid="product-card-series-status"');
+    expect(html).not.toContain("Знімок заборон потребує оновлення");
   });
 
   it("keeps prohibition status read-only without a manual series form", () => {
