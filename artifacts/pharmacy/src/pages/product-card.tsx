@@ -45,6 +45,7 @@ import {
   registryProductDetailHref,
 } from "@/lib/registry-product-route";
 import { nationalListVerdict } from "@/lib/national-list-status";
+import { markCardOpen } from "@/lib/search-metrics";
 import {
   conciseManufacturerText,
   manufacturerHeading,
@@ -1053,6 +1054,7 @@ export default function ProductCardPage() {
   useEffect(() => {
     if (!product) return;
     recordRecentlyViewed(registryProductDrugRef(product));
+    markCardOpen(product.id);
   }, [product]);
 
   useEffect(() => {

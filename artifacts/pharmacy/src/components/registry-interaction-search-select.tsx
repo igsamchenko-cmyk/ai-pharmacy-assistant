@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getSearchCatalogQueryKey,
   useSearchCatalog,
@@ -11,6 +11,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { markFirstResult } from "@/lib/search-metrics";
 
 export type InteractionProductSelection = CatalogClientIndexProduct;
 
@@ -101,6 +102,12 @@ export function RegistryInteractionSearchSelect({
     clientCatalog.status === "loading" ||
     clientCatalog.status === "idle" ||
     (fallbackEnabled && fallback.isLoading);
+
+  useEffect(() => {
+    if (showResults && !loading && options.length > 0) {
+      markFirstResult(query);
+    }
+  }, [loading, options.length, query, showResults]);
 
   return (
     <div className="relative max-w-full space-y-2">

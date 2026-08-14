@@ -6,10 +6,12 @@ import {
   type CompiledCatalogClientIndex,
 } from "@workspace/catalog-index";
 
-const DATABASE_NAME = "farmassist-catalog-index";
-const DATABASE_VERSION = 2;
-const SNAPSHOT_STORE = "snapshots";
-const META_STORE = "meta";
+import {
+  CATALOG_INDEX_META_STORE,
+  CATALOG_INDEX_SNAPSHOT_STORE,
+  openCatalogIndexDatabase,
+} from "@/lib/catalog-index-db";
+
 const ACTIVE_KEY = "active";
 const STORAGE_RECORD_VERSION = 1;
 
@@ -160,42 +162,26 @@ function transactionDone(transaction: IDBTransaction): Promise<void> {
   });
 }
 
-function openDatabase(factory: IDBFactory): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = factory.open(DATABASE_NAME, DATABASE_VERSION);
-    request.onupgradeneeded = () => {
-      const database = request.result;
-      if (!database.objectStoreNames.contains(SNAPSHOT_STORE)) {
-        database.createObjectStore(SNAPSHOT_STORE, { keyPath: "snapshotHash" });
-      }
-      if (!database.objectStoreNames.contains(META_STORE)) {
-        database.createObjectStore(META_STORE, { keyPath: "key" });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () =>
-      reject(request.error ?? new Error("IndexedDB open failed."));
-  });
-}
-
 export function createIndexedDbCatalogIndexStorage(
   factory: IDBFactory | undefined = globalThis.indexedDB,
 ): CatalogClientIndexStorage {
   return {
     async readActive() {
       if (!factory) return null;
-      const database = await openDatabase(factory);
+      const database = await openCatalogIndexDatabase(factory);
       try {
         const transaction = database.transaction(
-          [META_STORE, SNAPSHOT_STORE],
+          [CATALOG_INDEX_META_STORE, CATALOG_INDEX_SNAPSHOT_STORE],
           "readonly",
         );
         const active = (await requestResult(
-          transaction.objectStore(META_STORE).get(ACTIVE_KEY),
+          transaction.objectStore(CATALOG_INDEX_META_STORE).get(ACTIVE_KEY),
         )) as ActiveRecord | undefined;
         const record = active?.snapshotHash
           ? await requestResult(
-              transaction.objectStore(SNAPSHOT_STORE).get(active.snapshotHash),
+              transaction
+                .objectStore(CATALOG_INDEX_SNAPSHOT_STORE)
+                .get(active.snapshotHash),
             )
           : null;
         await transactionDone(transaction);
@@ -214,15 +200,15 @@ export function createIndexedDbCatalogIndexStorage(
       if (!validatePersistedCatalogClientIndex(record)) {
         throw new Error("Compiled catalog client index is invalid.");
       }
-      const database = await openDatabase(factory);
+      const database = await openCatalogIndexDatabase(factory);
       try {
         const transaction = database.transaction(
-          [META_STORE, SNAPSHOT_STORE],
+          [CATALOG_INDEX_META_STORE, CATALOG_INDEX_SNAPSHOT_STORE],
           "readwrite",
         );
-        const snapshots = transaction.objectStore(SNAPSHOT_STORE);
+        const snapshots = transaction.objectStore(CATALOG_INDEX_SNAPSHOT_STORE);
         snapshots.put(record);
-        transaction.objectStore(META_STORE).put({
+        transaction.objectStore(CATALOG_INDEX_META_STORE).put({
           key: ACTIVE_KEY,
           snapshotHash: index.snapshotHash,
         } satisfies ActiveRecord);

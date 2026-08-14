@@ -42,6 +42,7 @@ import {
 import { conciseManufacturerText } from "@/lib/manufacturer-display";
 import { pharmacovigilanceHref } from "@/lib/pharmacovigilance-draft";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
+import { markCardOpen } from "@/lib/search-metrics";
 import { drugRefHref, useRecentlyViewed } from "@/hooks/use-favorites";
 import { conciseDosageForm } from "@/pages/search";
 
@@ -769,6 +770,7 @@ export default function Dispensing() {
       return;
     }
     setSelectedProfile(profileQuery.data);
+    markCardOpen(profileQuery.data.product.id);
     setPendingProduct(null);
   }, [pendingProduct, profileQuery.data]);
 

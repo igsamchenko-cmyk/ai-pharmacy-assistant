@@ -30,6 +30,7 @@ import {
   type CatalogClientIndexStorage,
 } from "@/lib/catalog-client-index-storage";
 import type { CatalogClientIndexWorkerResponse } from "@/lib/catalog-client-index.worker";
+import { markIndexReady } from "@/lib/search-metrics";
 
 export type CatalogClientIndexStatus = "idle" | "loading" | "ready" | "error";
 export type CatalogClientIndexSource = "cache" | "network";
@@ -39,6 +40,9 @@ export interface CatalogClientIndexRefreshResult {
   source: CatalogClientIndexSource;
   stale: boolean;
   persistenceAvailable: boolean;
+  cold: boolean;
+  indexBuildMs: number;
+  serializedIndexBytes: number;
 }
 
 export type CatalogClientIndexFetcher = (
@@ -362,9 +366,14 @@ export async function refreshCatalogClientIndex(
         source: "cache",
         stale: false,
         persistenceAvailable: true,
+        cold: false,
+        indexBuildMs: 0,
+        serializedIndexBytes: cachedIndex.estimatedMemoryBytes,
       };
     }
+    const compileStartedAt = performance.now();
     const remoteIndex = await compiler(remotePayload, signal);
+    const indexBuildMs = performance.now() - compileStartedAt;
     let persistenceAvailable = true;
     try {
       await storage.writeAndActivate(remoteIndex);
@@ -376,6 +385,9 @@ export async function refreshCatalogClientIndex(
       source: "network",
       stale: false,
       persistenceAvailable,
+      cold: !cachedIndex,
+      indexBuildMs,
+      serializedIndexBytes: remoteIndex.estimatedMemoryBytes,
     };
   } catch (error) {
     if (cachedIndex) {
@@ -384,6 +396,9 @@ export async function refreshCatalogClientIndex(
         source: "cache",
         stale: true,
         persistenceAvailable: true,
+        cold: false,
+        indexBuildMs: 0,
+        serializedIndexBytes: cachedIndex.estimatedMemoryBytes,
       };
     }
     throw error;
@@ -424,6 +439,12 @@ export function CatalogClientIndexProvider({
         setIndex(cached);
         setSource("cache");
         setStatus("ready");
+        markIndexReady({
+          catalogSize: cached.productCount,
+          indexBuildMs: 0,
+          serializedIndexBytes: cached.estimatedMemoryBytes,
+          cold: false,
+        });
       },
       controller.signal,
     )
@@ -433,6 +454,12 @@ export function CatalogClientIndexProvider({
         setSource(result.source);
         setIsStale(result.stale);
         setStatus("ready");
+        markIndexReady({
+          catalogSize: result.index.productCount,
+          indexBuildMs: result.indexBuildMs,
+          serializedIndexBytes: result.serializedIndexBytes,
+          cold: result.cold,
+        });
       })
       .catch(() => {
         if (!active) return;
