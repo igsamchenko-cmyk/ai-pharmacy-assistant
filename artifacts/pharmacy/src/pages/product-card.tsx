@@ -18,6 +18,7 @@ import {
   ChevronDown,
   CircleHelp,
   Database,
+  EllipsisVertical,
   ExternalLink,
   GitCompare,
   Heart,
@@ -27,6 +28,8 @@ import {
   WifiOff,
   ShieldAlert,
   ShieldCheck,
+  Sparkles,
+  Stethoscope,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +62,13 @@ import {
   manufacturerHeading,
 } from "@/lib/manufacturer-display";
 import { conciseDosageForm } from "@/pages/search";
+import { useInteractionCart } from "@/lib/interaction-cart";
+import {
+  productCardTabFromSearch,
+  productCardTabTarget,
+  type ProductCardTab,
+} from "@/lib/navigation-v3";
+import { pharmacovigilanceHref } from "@/lib/pharmacovigilance-draft";
 import {
   filterInstructionSections,
   INSTRUCTION_SAFETY_COPY,
@@ -79,6 +89,27 @@ export const PRODUCT_CARD_HERO_CLASS =
 
 export const PRODUCT_CARD_TITLE_CLASS =
   "relative z-10 block max-w-full [overflow-wrap:anywhere] text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl";
+
+const ProductAnalogsTab = React.lazy(() =>
+  import("@/components/analogs-tab").then((module) => ({
+    default: module.ProductAnalogsTab,
+  })),
+);
+
+const ProductAiSummary = React.lazy(() =>
+  import("@/components/ai-reference-panel").then((module) => ({
+    default: module.ProductAiSummary,
+  })),
+);
+
+const PRODUCT_CARD_TABS: ReadonlyArray<{
+  id: ProductCardTab;
+  label: string;
+}> = [
+  { id: "profile", label: "Профіль" },
+  { id: "analogs", label: "Аналоги" },
+  { id: "instruction", label: "Інструкція" },
+];
 
 const FRESHNESS_LABELS: Record<ProductCardFreshnessEntry["key"], string> = {
   registry: "Державний реєстр ЛЗ",
@@ -714,14 +745,22 @@ function InstructionSection({ card }: { card: ProductCard }) {
         </Alert>
       )}
 
-      {officialUrl ? (
+      <div className="flex flex-wrap gap-2">
+        {officialUrl ? (
+          <Button asChild variant="outline">
+            <a href={officialUrl} target="_blank" rel="noreferrer">
+              <ExternalLink className="h-4 w-4" />
+              Відкрити оригінальний документ ДРЛЗ
+            </a>
+          </Button>
+        ) : null}
         <Button asChild variant="outline">
-          <a href={officialUrl} target="_blank" rel="noreferrer">
-            <ExternalLink className="h-4 w-4" />
-            Відкрити оригінальний документ ДРЛЗ
-          </a>
+          <Link href="/instruction-search">
+            <Search className="h-4 w-4" />
+            Шукати в інструкціях
+          </Link>
         </Button>
-      ) : null}
+      </div>
     </section>
   );
 }
@@ -775,13 +814,19 @@ export interface ProductCardContentProps {
   card: ProductCard;
   favorite: boolean;
   onToggleFavorite: () => void;
+  activeTab?: ProductCardTab;
+  onTabChange?: (tab: ProductCardTab) => void;
 }
 
 export function ProductCardContent({
   card,
   favorite,
   onToggleFavorite,
+  activeTab = "profile",
+  onTabChange = () => undefined,
 }: ProductCardContentProps) {
+  const [aiOpen, setAiOpen] = useState(false);
+  const interactionCart = useInteractionCart();
   const product = card.identity;
   const displayForm = conciseDosageForm(product.dosageForm);
   const dispensingStatus = dispensingPresentation(card);
@@ -793,6 +838,15 @@ export function ProductCardContent({
   const incompatibilityQuote = hospitalFacts?.incompatibilities[0] ?? null;
   const hasOperationalExcerpt =
     Boolean(reconstitutionQuote) || Boolean(incompatibilityQuote);
+  const productInInteractionCart = interactionCart.isInCart(product.id);
+  const interactionCartItem = {
+    drugId: product.id,
+    name: product.tradeName,
+    inn: product.inn || product.activeIngredient || "",
+    registration: product.registration.number,
+    form: displayForm,
+    ...(product.strength ? { strength: product.strength } : {}),
+  };
 
   return (
     <main
@@ -801,7 +855,7 @@ export function ProductCardContent({
     >
       <nav className="flex min-h-11 min-w-0 items-center gap-3 border-b pb-2">
         <Link
-          href="/search?type=registry_products"
+          href="/?type=registry_products"
           className="flex min-w-0 items-center gap-2 text-sm font-semibold text-primary"
         >
           <ArrowLeft className="h-4 w-4 shrink-0" />
@@ -845,17 +899,14 @@ export function ProductCardContent({
                 {product.inn || product.activeIngredient || "Не зазначено"}
               </p>
               <Button
-                asChild
+                type="button"
                 size="lg"
                 className="mt-3 min-h-12 w-full whitespace-normal shadow-md ring-2 ring-primary/20 sm:w-auto"
+                onClick={() => onTabChange("instruction")}
+                data-testid="product-card-instruction-quick-action"
               >
-                <a
-                  href="#instruction"
-                  data-testid="product-card-instruction-quick-action"
-                >
-                  <BookOpenText className="h-5 w-5 shrink-0" />
-                  Відкрити інструкцію
-                </a>
+                <BookOpenText className="h-5 w-5 shrink-0" />
+                Відкрити інструкцію
               </Button>
             </div>
           </header>
@@ -938,14 +989,16 @@ export function ProductCardContent({
 
           <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
             <Button
-              asChild
-              variant="outline"
+              type="button"
+              variant={productInInteractionCart ? "secondary" : "outline"}
               className="min-h-11 min-w-0 whitespace-normal"
+              onClick={() => interactionCart.toggle(interactionCartItem)}
+              disabled={interactionCart.isFull && !productInInteractionCart}
+              aria-pressed={productInInteractionCart}
+              data-testid="product-card-interaction-toggle"
             >
-              <Link href="/interactions">
-                <GitCompare className="h-4 w-4 shrink-0" />
-                Взаємодії
-              </Link>
+              <GitCompare className="h-4 w-4 shrink-0" />
+              {productInInteractionCart ? "У кошику взаємодій" : "До взаємодій"}
             </Button>
             <ProductCompareButton
               product={product}
@@ -955,7 +1008,7 @@ export function ProductCardContent({
             <Button
               type="button"
               variant="outline"
-              className="col-span-2 min-h-11 min-w-0 whitespace-normal sm:col-span-1"
+              className="min-h-11 min-w-0 whitespace-normal"
               onClick={onToggleFavorite}
               aria-pressed={favorite}
             >
@@ -966,26 +1019,123 @@ export function ProductCardContent({
               />
               {favorite ? "В обраному" : "В обране"}
             </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="min-h-11 min-w-0 whitespace-normal"
+              data-testid="product-card-pharmacovigilance-action"
+            >
+              <Link href={pharmacovigilanceHref(product)}>
+                <Stethoscope className="h-4 w-4 shrink-0" />
+                Фармаконагляд
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 min-w-0 whitespace-normal"
+              onClick={() => setAiOpen((value) => !value)}
+              aria-expanded={aiOpen}
+              data-testid="product-card-ai-action"
+            >
+              <Sparkles className="h-4 w-4 shrink-0" />
+              {aiOpen ? "Сховати AI-довідку" : "AI-довідка"}
+            </Button>
+            <details className="group relative min-w-0">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+                <EllipsisVertical className="h-4 w-4 shrink-0" />
+                Ще
+              </summary>
+              <div className="absolute right-0 z-20 mt-2 min-w-40 rounded-lg border bg-popover p-1 text-sm text-popover-foreground shadow-lg">
+                <Link
+                  href="/about"
+                  className="block rounded-md px-3 py-2 hover:bg-accent"
+                >
+                  Про довідник
+                </Link>
+              </div>
+            </details>
           </div>
+
+          {interactionCart.isFull && !productInInteractionCart ? (
+            <p className="text-xs text-muted-foreground" role="status">
+              У кошику вже 5 препаратів. Відкрийте взаємодії, щоб змінити вибір.
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 
-      <HospitalFactsSection facts={hospitalFacts} />
-
-      {!registrationActive ? (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Реєстрація не підтверджена як чинна</AlertTitle>
-          <AlertDescription>
-            Не використовуйте картку як позитивний висновок про можливість
-            обігу.
-          </AlertDescription>
-        </Alert>
+      {aiOpen ? (
+        <React.Suspense
+          fallback={<Skeleton className="h-48 w-full rounded-2xl" />}
+        >
+          <ProductAiSummary
+            productId={product.id}
+            productName={product.tradeName}
+          />
+        </React.Suspense>
       ) : null}
 
-      <EconomicsSection card={card} />
-      <InstructionSection card={card} />
-      <FreshnessSection entries={card.freshness} />
+      <nav
+        id="product-card-tabs"
+        className="grid scroll-mt-20 grid-cols-3 gap-1 rounded-2xl border bg-card/70 p-1"
+        role="tablist"
+        aria-label="Розділи картки препарату"
+      >
+        {PRODUCT_CARD_TABS.map((tab) => (
+          <Button
+            key={tab.id}
+            type="button"
+            variant={activeTab === tab.id ? "default" : "ghost"}
+            className="min-h-11 min-w-0 whitespace-normal px-2"
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            data-testid={`product-card-tab-${tab.id}`}
+            onClick={() => onTabChange(tab.id)}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </nav>
+
+      <section
+        role="tabpanel"
+        aria-label={
+          PRODUCT_CARD_TABS.find((tab) => tab.id === activeTab)?.label
+        }
+        data-testid={`product-card-panel-${activeTab}`}
+        className="space-y-4"
+      >
+        {activeTab === "profile" ? (
+          <>
+            <HospitalFactsSection facts={hospitalFacts} />
+            {!registrationActive ? (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Реєстрація не підтверджена як чинна</AlertTitle>
+                <AlertDescription>
+                  Не використовуйте картку як позитивний висновок про можливість
+                  обігу.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            <EconomicsSection card={card} />
+            <FreshnessSection entries={card.freshness} />
+          </>
+        ) : null}
+
+        {activeTab === "analogs" ? (
+          <React.Suspense
+            fallback={<Skeleton className="h-72 w-full rounded-2xl" />}
+          >
+            <ProductAnalogsTab card={card} />
+          </React.Suspense>
+        ) : null}
+
+        {activeTab === "instruction" ? (
+          <InstructionSection card={card} />
+        ) : null}
+      </section>
 
       <ReportIssueButton
         type="safety_issue"
@@ -1133,6 +1283,25 @@ export default function ProductCardPage() {
     [productId, validProductId],
   );
   const { isFavorite, toggleFavorite } = useFavorites();
+  const [activeTab, setActiveTab] = useState<ProductCardTab>(() =>
+    productCardTabFromSearch(
+      typeof window === "undefined" ? "" : window.location.search,
+    ),
+  );
+
+  const selectProductCardTab = (tab: ProductCardTab) => {
+    setActiveTab(tab);
+    if (typeof window === "undefined") return;
+    const target = productCardTabTarget(window.location.href, productId, tab);
+    window.history.pushState(null, "", target);
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(
+          tab === "instruction" ? "instruction" : "product-card-tabs",
+        )
+        ?.scrollIntoView({ block: "start" });
+    });
+  };
 
   useLayoutEffect(() => {
     resetRegistryProductPageScroll(window);
@@ -1176,20 +1345,24 @@ export default function ProductCardPage() {
     }
   }, [cardQuery.data, cardQuery.isError, cardQuery.isLoading, offlineIdentity]);
   useEffect(() => {
-    if (!cardQuery.data) return;
-    const legacyInstructionRoute =
-      typeof window !== "undefined" &&
-      window.location.pathname.includes("/instructions/");
-    const targetId = legacyInstructionRoute
-      ? "instruction"
-      : typeof window !== "undefined"
-        ? window.location.hash.replace(/^#/u, "")
-        : "";
-    if (!targetId) return;
+    if (typeof window === "undefined") return undefined;
+    const syncTabFromUrl = () =>
+      setActiveTab(productCardTabFromSearch(window.location.search));
+    syncTabFromUrl();
+    window.addEventListener("popstate", syncTabFromUrl);
+    return () => window.removeEventListener("popstate", syncTabFromUrl);
+  }, [productId]);
+
+  useEffect(() => {
+    if (!cardQuery.data || activeTab !== "instruction") return;
+    const targetId =
+      typeof window === "undefined"
+        ? "instruction"
+        : window.location.hash.replace(/^#/u, "") || "instruction";
     window.requestAnimationFrame(() => {
       document.getElementById(targetId)?.scrollIntoView({ block: "start" });
     });
-  }, [cardQuery.data]);
+  }, [activeTab, cardQuery.data]);
 
   useEffect(() => {
     if (
@@ -1264,6 +1437,8 @@ export default function ProductCardPage() {
         card={cardQuery.data}
         favorite={isFavorite(product.id)}
         onToggleFavorite={() => toggleFavorite(registryProductDrugRef(product))}
+        activeTab={activeTab}
+        onTabChange={selectProductCardTab}
       />
     </div>
   );

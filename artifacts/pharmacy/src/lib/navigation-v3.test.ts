@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  favoritesAliasTarget,
   instructionAliasTarget,
+  productCardTabFromSearch,
+  productCardTabTarget,
+  savedTabFromSearch,
   legacyDrugSearchTarget,
   ocrSearchText,
   scanOpenFromSearch,
@@ -62,5 +66,30 @@ describe("Navigation v3 root search state", () => {
       "Креон 25000",
     );
     expect(ocrSearchText({ detectedName: null, text: "" })).toBe("");
+  });
+});
+
+describe("Navigation v3 PR-E card and saved tabs", () => {
+  it("keeps ProductCard tabs in the canonical product URL", () => {
+    expect(productCardTabFromSearch("?tab=analogs")).toBe("analogs");
+    expect(productCardTabFromSearch("?tab=instruction")).toBe("instruction");
+    expect(productCardTabFromSearch("?tab=unknown")).toBe("profile");
+    expect(
+      productCardTabTarget(
+        "https://example.test/products/OLD?registration=UA%2F1%2F01%2F01",
+        "ABC 123",
+        "instruction",
+      ),
+    ).toBe(
+      "/products/ABC%20123?registration=UA%2F1%2F01%2F01&tab=instruction#instruction",
+    );
+  });
+
+  it("combines favorites and history without dropping alias parameters", () => {
+    expect(savedTabFromSearch("?tab=favorites")).toBe("favorites");
+    expect(savedTabFromSearch("?tab=other")).toBe("history");
+    expect(favoritesAliasTarget("?source=menu")).toBe(
+      "/history?source=menu&tab=favorites",
+    );
   });
 });

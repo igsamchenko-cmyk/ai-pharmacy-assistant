@@ -165,7 +165,7 @@ export function QuickAccessContent({
               Обране
             </h2>
             <Link
-              href="/favorites"
+              href="/history?tab=favorites"
               className="shrink-0 text-sm font-medium text-primary hover:underline"
             >
               Усі

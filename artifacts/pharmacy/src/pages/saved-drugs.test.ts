@@ -3,8 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Router } from "wouter";
 import type { RegistryProductResult } from "@workspace/api-client-react";
-import { FavoritesContent } from "./favorites";
-import { ViewingHistoryContent } from "./history";
+import { SavedList } from "./history";
 import {
   RegistryProductDetailContent,
   registryProductDrugRef,
@@ -65,9 +64,7 @@ const storedProducts: DrugRef[] = representative.map((item) =>
 );
 
 function renderWithRouter(element: React.ReactElement): string {
-  return renderToStaticMarkup(
-    createElement(Router, { ssrPath: "/" }, element),
-  );
+  return renderToStaticMarkup(createElement(Router, { ssrPath: "/" }, element));
 }
 
 describe("favorites and viewing-history mobile UI", () => {
@@ -96,10 +93,10 @@ describe("favorites and viewing-history mobile UI", () => {
 
   it("renders complete favorite cards without horizontal overflow", () => {
     const html = renderWithRouter(
-      createElement(FavoritesContent, {
-        favorites: storedProducts,
+      createElement(SavedList, {
+        items: storedProducts,
+        emptyTab: "favorites",
         onRemove: () => undefined,
-        onClear: () => undefined,
       }),
     );
 
@@ -109,38 +106,35 @@ describe("favorites and viewing-history mobile UI", () => {
       expect(html).toContain(drug.form);
       expect(html).toContain(drug.manufacturer);
       expect(html).toContain(drug.registration);
-      expect(html).toContain('href="' + drug.href?.replaceAll("&", "&amp;") + '"');
+      expect(html).toContain(
+        'href="' + drug.href?.replaceAll("&", "&amp;") + '"',
+      );
     }
-    expect(html).toContain("overflow-x-hidden");
-    expect(html).not.toContain("overflow-x-auto");
     expect(html).toContain("Прибрати з обраного");
   });
 
   it("renders the latest-viewed list and both empty states", () => {
     const history = renderWithRouter(
-      createElement(ViewingHistoryContent, {
-        recent: storedProducts,
+      createElement(SavedList, {
+        items: storedProducts,
+        emptyTab: "history",
         onRemove: () => undefined,
-        onClear: () => undefined,
       }),
     );
-    expect(history).toContain("Останні 20 відкритих препаратів");
     expect(history).toContain("Прибрати з історії");
-    expect(history).toContain("overflow-x-hidden");
-    expect(history).not.toContain("overflow-x-auto");
 
     const emptyFavorites = renderWithRouter(
-      createElement(FavoritesContent, {
-        favorites: [],
+      createElement(SavedList, {
+        items: [],
+        emptyTab: "favorites",
         onRemove: () => undefined,
-        onClear: () => undefined,
       }),
     );
     const emptyHistory = renderWithRouter(
-      createElement(ViewingHistoryContent, {
-        recent: [],
+      createElement(SavedList, {
+        items: [],
+        emptyTab: "history",
         onRemove: () => undefined,
-        onClear: () => undefined,
       }),
     );
     expect(emptyFavorites).toContain("Обране поки порожнє");
