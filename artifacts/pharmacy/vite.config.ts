@@ -44,11 +44,39 @@ export default defineConfig({
         description:
           "Оперативний довідник зареєстрованих лікарських засобів України.",
         lang: "uk",
-        start_url: `${normalizedBasePath}search`,
+        start_url: normalizedBasePath,
         scope: normalizedBasePath,
         display: "standalone",
         background_color: "#122629",
         theme_color: "#122629",
+        shortcuts: [
+          {
+            name: "Перевірка відпуску",
+            short_name: "Відпуск",
+            description: "Відкрити професійну перевірку відпуску",
+            url: `${normalizedBasePath}dispense`,
+            icons: [
+              {
+                src: "shortcut-dispense-96x96.png",
+                sizes: "96x96",
+                type: "image/png",
+              },
+            ],
+          },
+          {
+            name: "Перевірка взаємодій",
+            short_name: "Взаємодії",
+            description: "Перевірити взаємодії вибраних препаратів",
+            url: `${normalizedBasePath}interactions`,
+            icons: [
+              {
+                src: "shortcut-interactions-96x96.png",
+                sizes: "96x96",
+                type: "image/png",
+              },
+            ],
+          },
+        ],
         icons: [
           {
             src: "pwa-192x192.png",

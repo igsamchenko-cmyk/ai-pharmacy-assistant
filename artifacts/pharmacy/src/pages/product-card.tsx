@@ -52,6 +52,11 @@ import {
 } from "@/lib/registry-product-route";
 import { nationalListVerdict } from "@/lib/national-list-status";
 import { markCardOpen } from "@/lib/search-metrics";
+import { useCatalogClientIndex } from "@/lib/catalog-client-index";
+import {
+  catalogProductToPreliminaryIdentity,
+  selectProductCardPresentation,
+} from "@/lib/product-card-preliminary";
 import {
   cacheOfflineProductIdentity,
   readOfflineProductIdentity,
@@ -1151,6 +1156,97 @@ export function ProductCardContent({
   );
 }
 
+export function PreliminaryProductCard({
+  identity,
+}: {
+  identity: OfflineProductIdentity;
+}) {
+  return (
+    <main
+      className={PRODUCT_CARD_PAGE_CLASS}
+      data-testid="product-card-preliminary"
+      data-preliminary="true"
+    >
+      <nav className="flex min-h-11 min-w-0 items-center gap-3 border-b pb-2">
+        <Link
+          href="/?type=registry_products"
+          className="flex min-w-0 items-center gap-2 text-sm font-semibold text-primary"
+        >
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          <span>До пошуку</span>
+        </Link>
+        <span className="min-w-0 flex-1 truncate text-right text-xs text-muted-foreground">
+          {identity.registration}
+        </span>
+      </nav>
+
+      <Card className={PRODUCT_CARD_HERO_CLASS}>
+        <CardContent className="min-w-0 space-y-5 p-4 sm:p-6">
+          <header className="flex min-w-0 items-start gap-3">
+            <div className="shrink-0 rounded-xl bg-primary/10 p-2.5">
+              <Pill className="h-6 w-6 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <h1 className={PRODUCT_CARD_TITLE_CLASS}>
+                  {identity.tradeName}
+                </h1>
+                <Badge variant="outline">Локальний індекс</Badge>
+              </div>
+              <p className="mt-2 break-words text-base text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  МНН / склад:
+                </span>{" "}
+                {identity.inn || "Не зазначено"}
+              </p>
+            </div>
+          </header>
+
+          <div className="flex min-w-0 flex-wrap gap-2">
+            {identity.strength ? (
+              <Badge className="max-w-full whitespace-normal px-3 py-1 text-sm">
+                {identity.strength}
+              </Badge>
+            ) : null}
+            {identity.form ? (
+              <Badge
+                variant="secondary"
+                className="max-w-full whitespace-normal px-3 py-1 text-sm"
+              >
+                {identity.form}
+              </Badge>
+            ) : null}
+          </div>
+
+          <dl className="rounded-xl border bg-background/60 p-3 text-sm">
+            <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+              Реєстраційний номер
+            </dt>
+            <dd className="mt-1 break-words font-medium">
+              {identity.registration}
+            </dd>
+          </dl>
+
+          <div
+            className="grid gap-3 sm:grid-cols-2"
+            aria-label="Завантажуємо реєстрові статуси"
+          >
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Назву, МНН, форму, дозування й реєстраційний номер показано з
+            локального індексу. Реєстрові статуси з’являться після повної
+            відповіді сервера.
+          </p>
+        </CardContent>
+      </Card>
+      <Skeleton className="h-14 w-full rounded-2xl" />
+      <Skeleton className="h-72 w-full rounded-2xl" />
+    </main>
+  );
+}
+
 function ProductCardSkeleton() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 overflow-x-hidden pb-16">
@@ -1283,6 +1379,15 @@ export default function ProductCardPage() {
     [productId, validProductId],
   );
   const { isFavorite, toggleFavorite } = useFavorites();
+  const clientCatalog = useCatalogClientIndex();
+  const indexIdentity = useMemo(() => {
+    if (!validProductId || clientCatalog.status !== "ready") return null;
+    const candidate = clientCatalog
+      .search(productId, { limit: 8 })
+      .items.find((item) => item.product.productId === productId)?.product;
+    return candidate ? catalogProductToPreliminaryIdentity(candidate) : null;
+  }, [clientCatalog, productId, validProductId]);
+  const preliminaryIdentity = indexIdentity ?? offlineIdentity;
   const [activeTab, setActiveTab] = useState<ProductCardTab>(() =>
     productCardTabFromSearch(
       typeof window === "undefined" ? "" : window.location.search,
@@ -1317,6 +1422,11 @@ export default function ProductCardPage() {
     },
   });
   const product = cardQuery.data?.identity;
+  const cardPresentation = selectProductCardPresentation({
+    serverCard: cardQuery.data,
+    preliminary: preliminaryIdentity,
+    loading: cardQuery.isLoading,
+  });
   const correctedQuery = correctedQueryFromSearch(
     typeof window === "undefined" ? "" : window.location.search,
   );
@@ -1394,7 +1504,10 @@ export default function ProductCardPage() {
   ]);
 
   if (!validProductId) return <ProductCardError invalid />;
-  if (cardQuery.isLoading) return <ProductCardSkeleton />;
+  if (cardPresentation.source === "preliminary") {
+    return <PreliminaryProductCard identity={cardPresentation.identity} />;
+  }
+  if (cardPresentation.source === "loading") return <ProductCardSkeleton />;
   if (cardQuery.isError || !cardQuery.data || !product) {
     if (offlineIdentity) {
       return (

@@ -4,6 +4,7 @@ import { Bookmark, GitCompare, Moon, Pill, Search, Sun } from "lucide-react";
 import { ServiceWarmupStatus } from "@/components/service-warmup-status";
 import { useThemeContext } from "./theme-provider";
 import { AuthStatus } from "./auth-status";
+import { GlobalHeaderSearch } from "./global-header-search";
 import { InteractionCartIndicator } from "./interaction-cart-indicator";
 
 export const DESKTOP_HEADER_CLASS =
@@ -104,11 +105,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
           className="flex min-h-11 items-center gap-2 rounded-lg font-bold text-primary"
         >
           <Pill className="h-6 w-6" />
-          <span>FarmAssist</span>
+          <span className="hidden min-[420px]:inline">FarmAssist</span>
         </Link>
+        <GlobalHeaderSearch className="mx-2 flex-1" />
         <button
           onClick={toggleTheme}
-          className="ml-auto flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
           data-testid="button-theme-toggle"
           aria-label={
             theme === "dark" ? "Увімкнути світлу тему" : "Увімкнути темну тему"
@@ -132,6 +134,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <span>FarmAssist</span>
           </Link>
           <PrimaryNavigation />
+          <GlobalHeaderSearch
+            className="w-full max-w-md flex-1"
+            registerShortcut
+          />
           <div className="ml-auto flex items-center gap-2">
             <button
               onClick={toggleTheme}
