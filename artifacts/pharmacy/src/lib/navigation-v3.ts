@@ -1,5 +1,8 @@
 export const SEARCH_URL_SYNC_DEBOUNCE_MS = 300;
 
+export type ProductCardTab = "profile" | "analogs" | "instruction";
+export type SavedTab = "history" | "favorites";
+
 function normalizedSearch(search: string): string {
   if (!search) return "";
   return search.startsWith("?") ? search : `?${search}`;
@@ -7,6 +10,34 @@ function normalizedSearch(search: string): string {
 
 export function searchAliasTarget(search: string): string {
   return `/${normalizedSearch(search)}`;
+}
+
+export function productCardTabFromSearch(search: string): ProductCardTab {
+  const tab = new URLSearchParams(search).get("tab");
+  return tab === "analogs" || tab === "instruction" ? tab : "profile";
+}
+
+export function productCardTabTarget(
+  currentHref: string,
+  productId: string,
+  tab: ProductCardTab,
+): string {
+  const url = new URL(currentHref, "https://farmassist.local");
+  url.searchParams.set("tab", tab);
+  const hash = tab === "instruction" ? "#instruction" : "";
+  return `/products/${encodeURIComponent(productId)}${url.search}${hash}`;
+}
+
+export function savedTabFromSearch(search: string): SavedTab {
+  return new URLSearchParams(search).get("tab") === "favorites"
+    ? "favorites"
+    : "history";
+}
+
+export function favoritesAliasTarget(search: string): string {
+  const params = new URLSearchParams(search);
+  params.set("tab", "favorites");
+  return `/history?${params.toString()}`;
 }
 
 export function instructionAliasTarget(

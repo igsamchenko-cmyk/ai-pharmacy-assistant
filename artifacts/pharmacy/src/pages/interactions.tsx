@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import {
   getListHistoryQueryKey,
   useCheckInteractions,
@@ -18,6 +18,7 @@ import {
   Info,
   ShieldAlert,
   ShieldCheck,
+  Trash2,
   X,
 } from "lucide-react";
 import {
@@ -36,6 +37,7 @@ import {
   type InteractionSummaryState,
 } from "@/lib/interaction-result-summary";
 import { Badge } from "@/components/ui/badge";
+import { useInteractionCart } from "@/lib/interaction-cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -255,26 +257,49 @@ export function addInteractionSelection(
 }
 
 export default function Interactions() {
-  const [selectedProducts, setSelectedProducts] = useState<
-    InteractionProductSelection[]
-  >([]);
+  const cart = useInteractionCart();
+  const selectedProducts = useMemo<InteractionProductSelection[]>(
+    () =>
+      cart.items.map((item) => ({
+        productId: item.drugId,
+        registration: item.registration,
+        tradeName: item.name,
+        inn: item.inn,
+        form: item.form ?? "",
+        strength: item.strength ?? "",
+      })),
+    [cart.items],
+  );
   const queryClient = useQueryClient();
   const checkInteractions = useCheckInteractions();
   const instructionSignals = useGetInteractionInstructionSignals();
   const createHistory = useCreateHistory();
 
-  const handleAdd = (product: InteractionProductSelection) => {
-    setSelectedProducts((current) => addInteractionSelection(current, product));
+  const resetResults = () => {
     checkInteractions.reset();
     instructionSignals.reset();
   };
 
+  const handleAdd = (product: InteractionProductSelection) => {
+    cart.add({
+      drugId: product.productId,
+      name: product.tradeName,
+      inn: product.inn,
+      registration: product.registration,
+      form: product.form,
+      strength: product.strength,
+    });
+    resetResults();
+  };
+
   const handleRemove = (productId: string) => {
-    setSelectedProducts((current) =>
-      current.filter((product) => product.productId !== productId),
-    );
-    checkInteractions.reset();
-    instructionSignals.reset();
+    cart.remove(productId);
+    resetResults();
+  };
+
+  const handleClear = () => {
+    cart.clear();
+    resetResults();
   };
 
   const handleCheck = () => {
@@ -381,16 +406,32 @@ export default function Interactions() {
           </div>
         ) : null}
 
-        <Button
-          className="min-h-12 w-full font-bold"
-          disabled={selectedProducts.length < 2 || checkInteractions.isPending}
-          onClick={handleCheck}
-          data-testid="btn-check-interactions"
-        >
-          {checkInteractions.isPending
-            ? "Перевірка точних позицій…"
-            : "Перевірити взаємодії"}
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            className="min-h-12 flex-1 font-bold"
+            disabled={
+              selectedProducts.length < 2 || checkInteractions.isPending
+            }
+            onClick={handleCheck}
+            data-testid="btn-check-interactions"
+          >
+            {checkInteractions.isPending
+              ? "Перевірка точних позицій…"
+              : "Перевірити взаємодії"}
+          </Button>
+          {selectedProducts.length ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-12 text-destructive"
+              onClick={handleClear}
+              data-testid="clear-interaction-cart"
+            >
+              <Trash2 className="h-4 w-4" />
+              Очистити список
+            </Button>
+          ) : null}
+        </div>
 
         {checkInteractions.isError ? (
           <div className="space-y-2 rounded-lg border border-destructive/30 px-4 py-4 text-sm text-destructive">

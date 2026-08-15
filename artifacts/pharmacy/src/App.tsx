@@ -12,6 +12,7 @@ import { CatalogClientIndexProvider } from "@/lib/catalog-client-index";
 import { RegulatoryRadarRefreshProvider } from "@/lib/regulatory-radar-refresh";
 import { ProtectedRoute } from "@/components/protected-route";
 import {
+  FavoritesAliasRedirect,
   InstructionAliasRedirect,
   LegacyDrugRedirect,
   RootRedirect,
@@ -26,7 +27,6 @@ const InstructionSearch = lazy(() => import("@/pages/instruction-search"));
 const Interactions = lazy(() => import("@/pages/interactions"));
 const Compare = lazy(() => import("@/pages/compare"));
 const History = lazy(() => import("@/pages/history"));
-const Favorites = lazy(() => import("@/pages/favorites"));
 const About = lazy(() => import("@/pages/about"));
 const DataQuality = lazy(() => import("@/pages/data-quality"));
 const ReviewQueue = lazy(() => import("@/pages/review"));
@@ -46,7 +46,6 @@ const ProtectedInstructionSearch = () => (
 const ProtectedInteractions = () => <ProtectedRoute component={Interactions} />;
 const ProtectedCompare = () => <ProtectedRoute component={Compare} />;
 const ProtectedHistory = () => <ProtectedRoute component={History} />;
-const ProtectedFavorites = () => <ProtectedRoute component={Favorites} />;
 const ProtectedDataQuality = () => (
   <ProtectedRoute component={DataQuality} minRole="reviewer" />
 );
@@ -109,8 +108,6 @@ function Router() {
               path="/pharmacovigilance"
               component={ProtectedPharmacovigilance}
             />
-            {/* TODO(PR-E): remove legacy page components after their content is
-                available from the canonical ProductCard hub. */}
             <Route path="/drug/:id" component={LegacyDrugRedirect} />
             <Route path="/analogs/:id" component={LegacyDrugRedirect} />
             <Route path="/analogs" component={RootRedirect} />
@@ -120,7 +117,7 @@ function Router() {
             <Route path="/ai-reference" component={RootRedirect} />
             <Route path="/scan" component={ScanRedirect} />
             <Route path="/history" component={ProtectedHistory} />
-            <Route path="/favorites" component={ProtectedFavorites} />
+            <Route path="/favorites" component={FavoritesAliasRedirect} />
             <Route path="/data-quality" component={ProtectedDataQuality} />
             <Route path="/review" component={ProtectedReviewQueue} />
             <Route path="/beta-dashboard" component={ProtectedBetaDashboard} />

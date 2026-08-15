@@ -247,7 +247,10 @@ function card(overrides: Partial<ProductCard> = {}): ProductCard {
   };
 }
 
-function renderCard(value: ProductCard): string {
+function renderCard(
+  value: ProductCard,
+  activeTab: "profile" | "analogs" | "instruction" = "profile",
+): string {
   return renderToStaticMarkup(
     createElement(
       Router,
@@ -256,6 +259,7 @@ function renderCard(value: ProductCard): string {
         card: value,
         favorite: false,
         onToggleFavorite: () => undefined,
+        activeTab,
       }),
     ),
   );
@@ -329,28 +333,37 @@ describe("operational product card UI", () => {
     expect(clear).not.toContain('data-testid="series-input"');
   });
 
-  it("keeps direct instruction text, economics and per-source dates on one page", () => {
-    const html = renderCard(card());
+  it("separates profile and instruction content without hiding safety actions", () => {
+    const value = card();
+    const profile = renderCard(value, "profile");
 
-    expect(html).toContain("Розчинити в 10 мл води для ін&#x27;єкцій.");
-    expect(html).toContain("Не змішувати з несумісними розчинами.");
-    expect(html).toContain("Госпітальні факти з інструкції");
-    expect(html).toContain(
+    expect(profile).toContain("Розчинити в 10 мл води для ін&#x27;єкцій.");
+    expect(profile).toContain("Не змішувати з несумісними розчинами.");
+    expect(profile).toContain("Госпітальні факти з інструкції");
+    expect(profile).toContain("Переліки та ціна");
+    expect(profile).toContain("Свіжість кожного джерела");
+    expect(profile).toContain("Розпорядження Держлікслужби");
+    expect(profile).toContain("Фармаконагляд");
+    expect(profile).toContain("AI-довідка");
+    expect(profile).not.toContain('data-testid="product-ai-summary"');
+    expect(profile).not.toContain('id="instruction-administration"');
+    expect(profile).toContain('data-testid="product-card-panel-profile"');
+
+    const instruction = renderCard(value, "instruction");
+    expect(instruction).toContain(
       `id="instruction-quote-administration-0-${ADMINISTRATION_TEXT.length}"`,
     );
-    expect(html).toContain(`data-char-end="${ADMINISTRATION_TEXT.length}"`);
-    expect(html).not.toContain(
+    expect(instruction).toContain(
+      `data-char-end="${ADMINISTRATION_TEXT.length}"`,
+    );
+    expect(instruction).toContain('id="instruction-administration"');
+    expect(instruction).toContain("Шукати в інструкціях");
+    expect(instruction).not.toContain("Переліки та ціна");
+    expect(instruction).not.toContain(
       "Прямої вказівки про швидкість введення не знайдено",
     );
-    expect(html).not.toContain("Швидкість введення");
-    expect(html).toContain("У тексті");
-    expect(html).toContain('id="instruction-administration"');
-    expect(html).toContain("Переліки та ціна");
-    expect(html).toContain("Свіжість кожного джерела");
-    expect(html).toContain("Розпорядження Держлікслужби");
-    expect(html).not.toContain("Фармаконагляд");
-    expect(html).not.toContain("Відкрити майстер");
-    expect(html).toContain("Повідомити про проблему");
+    expect(instruction).not.toContain("Швидкість введення");
+    expect(instruction).toContain("Повідомити про проблему");
   });
 
   it("omits hospital facts entirely when no verified quotes exist", () => {

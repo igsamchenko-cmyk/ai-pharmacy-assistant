@@ -1,6 +1,7 @@
 import { Redirect, useParams } from "wouter";
 import { getGetDrugQueryKey, useGetDrug } from "@workspace/api-client-react";
 import {
+  favoritesAliasTarget,
   instructionAliasTarget,
   legacyDrugSearchTarget,
   searchAliasTarget,
@@ -16,6 +17,10 @@ function currentHash(): string {
 
 export function SearchAliasRedirect() {
   return <Redirect to={searchAliasTarget(currentSearch())} replace />;
+}
+
+export function FavoritesAliasRedirect() {
+  return <Redirect to={favoritesAliasTarget(currentSearch())} replace />;
 }
 
 export function InstructionAliasRedirect() {

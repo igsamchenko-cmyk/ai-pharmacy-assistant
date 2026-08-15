@@ -4,6 +4,7 @@ import { Bookmark, GitCompare, Moon, Pill, Search, Sun } from "lucide-react";
 import { ServiceWarmupStatus } from "@/components/service-warmup-status";
 import { useThemeContext } from "./theme-provider";
 import { AuthStatus } from "./auth-status";
+import { InteractionCartIndicator } from "./interaction-cart-indicator";
 
 export const DESKTOP_HEADER_CLASS =
   "sticky top-0 z-50 hidden min-h-16 border-b border-border bg-card/95 px-[max(1.5rem,env(safe-area-inset-left))] shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/90 md:flex";
@@ -159,6 +160,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
+      <InteractionCartIndicator />
       <PrimaryNavigation mobile />
     </div>
   );
