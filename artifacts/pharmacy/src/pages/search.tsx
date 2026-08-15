@@ -48,6 +48,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useDebounce } from "@/hooks/use-debounce";
 import { ReportIssueButton } from "@/components/report-issue-button";
+import { QuickProductChips } from "@/components/quick-product-chips";
+import { RegulatoryUpdateBanner } from "@/components/regulatory-update-banner";
 import { ProductCompareButton } from "@/components/product-compare-button";
 import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
@@ -57,10 +59,6 @@ import {
   useCatalogClientNormalizedSearch,
 } from "@/lib/catalog-client-index";
 import { markFirstResult } from "@/lib/search-metrics";
-import {
-  readSearchQueryHistory,
-  recordSearchQuery,
-} from "@/lib/search-query-history";
 import { visualViewportKeyboardInset } from "@/lib/visual-viewport";
 import { nationalListVerdict } from "@/lib/national-list-status";
 import {
@@ -1520,11 +1518,7 @@ export default function SearchPage() {
   const [variantPage, setVariantPage] = useState(1);
   const [effectiveQ, setEffectiveQ] = useState(initial.q.trim());
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [recentQueries, setRecentQueries] = useState(readSearchQueryHistory);
   const [mobileKeyboardInset, setMobileKeyboardInset] = useState(0);
-  const rememberQuery = useCallback((value: string) => {
-    setRecentQueries(recordSearchQuery(value));
-  }, []);
   const updateOcrOpen = useCallback((open: boolean) => {
     setOcrOpen(open);
     const nextUrl = searchUrlWithScan(window.location.href, open);
@@ -1584,6 +1578,7 @@ export default function SearchPage() {
 
       event.preventDefault();
       searchInputRef.current?.focus({ preventScroll: true });
+      if (event.key === "/") return;
       setQ((current) => current + event.key);
     };
 
@@ -1977,14 +1972,6 @@ export default function SearchPage() {
     shouldUseLocalCatalog,
   ]);
 
-  useEffect(() => {
-    if (renderedResultCount <= 0 || shortQuery || q.trim() !== effectiveQ) {
-      return;
-    }
-    const timer = window.setTimeout(() => rememberQuery(q), 750);
-    return () => window.clearTimeout(timer);
-  }, [effectiveQ, q, rememberQuery, renderedResultCount, shortQuery]);
-
   return (
     <div
       className="max-w-full space-y-5 overflow-x-hidden pb-8 animate-in motion-reduce:animate-none fade-in duration-300"
@@ -2031,6 +2018,12 @@ export default function SearchPage() {
               className="min-h-12 bg-card pl-9 pr-28"
               value={q}
               onChange={(event) => setQ(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== "Escape") return;
+                event.preventDefault();
+                setQ("");
+                setEffectiveQ("");
+              }}
               onFocus={() => {
                 if (window.matchMedia("(max-width: 767px)").matches) {
                   window.requestAnimationFrame(() => {
@@ -2085,36 +2078,10 @@ export default function SearchPage() {
             <SearchIcon className="h-4 w-4" />
           </Button>
         </form>
-        {recentQueries.length ? (
-          <div
-            className="mt-2 flex items-center gap-2 overflow-x-auto pb-1"
-            aria-label="Останні пошукові запити"
-            data-testid="recent-search-queries"
-          >
-            <span className="shrink-0 text-xs text-muted-foreground">
-              Останні:
-            </span>
-            {recentQueries.map((query) => (
-              <Button
-                key={query.toLocaleLowerCase("uk-UA")}
-                type="button"
-                size="sm"
-                variant="secondary"
-                className="h-9 shrink-0 rounded-full px-3 text-xs"
-                onPointerDown={(event) => event.preventDefault()}
-                onClick={() => {
-                  searchInputRef.current?.blur();
-                  setQ(query);
-                  setEffectiveQ(query);
-                }}
-                data-testid="recent-search-query"
-              >
-                {query}
-              </Button>
-            ))}
-          </div>
-        ) : null}
+        <QuickProductChips />
       </div>
+
+      <RegulatoryUpdateBanner />
 
       {ocrOpen ? (
         <React.Suspense

@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from "react";
+import {
+  getListHistoryQueryKey,
+  useClearHistory,
+  useDeleteHistory,
+  useListHistory,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Bookmark, Clock3, Heart, Search, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { SavedDrugCard } from "@/components/saved-drug-card";
+import { ServerHistoryList } from "@/components/server-history-list";
 import { Button } from "@/components/ui/button";
 import {
   clearRecentlyViewed,
@@ -78,6 +86,30 @@ export default function History() {
       typeof window === "undefined" ? "" : window.location.search,
     ),
   );
+  const queryClient = useQueryClient();
+  const serverHistory = useListHistory({
+    query: {
+      enabled: tab === "history",
+      queryKey: getListHistoryQueryKey(),
+      staleTime: 60_000,
+      refetchOnWindowFocus: false,
+    },
+  });
+  const clearServerHistory = useClearHistory();
+  const deleteServerHistory = useDeleteHistory();
+  const [removingServerId, setRemovingServerId] = useState<string | null>(null);
+
+  const refreshServerHistory = () =>
+    queryClient.invalidateQueries({ queryKey: getListHistoryQueryKey() });
+  const removeServerEntry = async (id: string) => {
+    setRemovingServerId(id);
+    try {
+      await deleteServerHistory.mutateAsync({ id });
+      await refreshServerHistory();
+    } finally {
+      setRemovingServerId(null);
+    }
+  };
 
   useEffect(() => {
     const sync = () => setTab(savedTabFromSearch(window.location.search));
@@ -184,6 +216,60 @@ export default function History() {
           onRemove={tab === "favorites" ? removeFavorite : removeRecentlyViewed}
         />
       </section>
+
+      {tab === "history" ? (
+        <section
+          className="space-y-4 border-t pt-5"
+          aria-labelledby="activity-history-title"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 id="activity-history-title" className="text-lg font-bold">
+                Активність довідника
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Пошуки, перевірки взаємодій та інші виконані дії.
+              </p>
+            </div>
+            {serverHistory.data?.length ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-destructive"
+                disabled={clearServerHistory.isPending}
+                onClick={() =>
+                  void clearServerHistory
+                    .mutateAsync()
+                    .then(refreshServerHistory)
+                }
+                data-testid="clear-server-history"
+              >
+                <Trash2 className="h-4 w-4" />
+                Очистити дії
+              </Button>
+            ) : null}
+          </div>
+          {serverHistory.isLoading ? (
+            <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+              Завантажуємо активність…
+            </p>
+          ) : null}
+          {serverHistory.isError ? (
+            <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+              Не вдалося завантажити серверну історію. Локальні картки вище
+              доступні без сервера.
+            </p>
+          ) : null}
+          {!serverHistory.isLoading && !serverHistory.isError ? (
+            <ServerHistoryList
+              entries={serverHistory.data ?? []}
+              onRemove={(id) => void removeServerEntry(id)}
+              removingId={removingServerId}
+            />
+          ) : null}
+        </section>
+      ) : null}
     </main>
   );
 }

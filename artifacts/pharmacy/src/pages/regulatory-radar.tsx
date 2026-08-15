@@ -30,6 +30,10 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useRegulatoryRadarRefresh } from "@/lib/regulatory-radar-refresh";
+import {
+  markRegSnapshotSeen,
+  regulatorySnapshotVersion,
+} from "@/lib/regulatory-snapshot-seen";
 
 type EventFilter = "new" | RegulatoryEventSearchFilter;
 
@@ -413,12 +417,19 @@ export default function RegulatoryRadarPage() {
     },
   );
   const automaticRefresh = useRegulatoryRadarRefresh();
+  const currentSnapshotVersion = regulatorySnapshotVersion(
+    automaticRefresh.lastResult,
+  );
   const isRefreshing =
     automaticRefresh.isRefreshing ||
     radar.isFetching ||
     eventJournal.isFetching;
 
   useEffect(() => setEventPage(1), [query, filter]);
+
+  useEffect(() => {
+    if (currentSnapshotVersion) markRegSnapshotSeen(currentSnapshotVersion);
+  }, [currentSnapshotVersion]);
 
   useEffect(() => {
     if (!radar.data || seenStateReady) return;

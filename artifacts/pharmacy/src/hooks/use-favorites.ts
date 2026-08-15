@@ -14,6 +14,7 @@ export interface DrugRef {
   manufacturer?: string;
   registration?: string;
   href?: string;
+  ts?: number;
 }
 
 interface DrugRefStorage {
@@ -110,6 +111,12 @@ export function normalizeDrugRef(value: unknown): DrugRef | null {
   const dosage = optionalText(candidate.dosage);
   const form = optionalText(candidate.form);
   const manufacturer = optionalText(candidate.manufacturer, 500);
+  const ts =
+    typeof candidate.ts === "number" &&
+    Number.isFinite(candidate.ts) &&
+    candidate.ts > 0
+      ? Math.floor(candidate.ts)
+      : undefined;
   return {
     id,
     brandName,
@@ -119,10 +126,14 @@ export function normalizeDrugRef(value: unknown): DrugRef | null {
     ...(manufacturer ? { manufacturer } : {}),
     ...(route.registration ? { registration: route.registration } : {}),
     ...(route.href ? { href: route.href } : {}),
+    ...(ts ? { ts } : {}),
   };
 }
 
-export function sanitizeDrugRefs(value: unknown, limit = FAVORITES_LIMIT): DrugRef[] {
+export function sanitizeDrugRefs(
+  value: unknown,
+  limit = FAVORITES_LIMIT,
+): DrugRef[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
   const result: DrugRef[] = [];
@@ -151,8 +162,9 @@ export function toggleFavoriteRefs(
 export function recordRecentlyViewedRefs(
   current: DrugRef[],
   drug: DrugRef,
+  ts = Date.now(),
 ): DrugRef[] {
-  const normalized = normalizeDrugRef(drug);
+  const normalized = normalizeDrugRef({ ...drug, ts });
   if (!normalized) return sanitizeDrugRefs(current, RECENT_LIMIT);
   return sanitizeDrugRefs(
     [normalized, ...current.filter((item) => item.id !== normalized.id)],
@@ -250,7 +262,13 @@ export function useFavorites() {
 
   const clearFavorites = useCallback(() => write(FAVORITES_KEY, []), []);
 
-  return { favorites, isFavorite, toggleFavorite, removeFavorite, clearFavorites };
+  return {
+    favorites,
+    isFavorite,
+    toggleFavorite,
+    removeFavorite,
+    clearFavorites,
+  };
 }
 
 export function useRecentlyViewed() {
@@ -265,19 +283,18 @@ export function recordRecentlyViewed(drug: DrugRef): void {
   const normalized = normalizeDrugRef(drug);
   if (!normalized) return;
 
+  const viewed = { ...normalized, ts: Date.now() };
   const favorites = read(FAVORITES_KEY);
   if (favorites.some((item) => item.id === normalized.id)) {
     write(
       FAVORITES_KEY,
-      favorites.map((item) =>
-        item.id === normalized.id ? normalized : item,
-      ),
+      favorites.map((item) => (item.id === normalized.id ? viewed : item)),
     );
   }
 
   write(
     RECENT_KEY,
-    recordRecentlyViewedRefs(read(RECENT_KEY, RECENT_LIMIT), normalized),
+    recordRecentlyViewedRefs(read(RECENT_KEY, RECENT_LIMIT), viewed, viewed.ts),
     RECENT_LIMIT,
   );
 }
