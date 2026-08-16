@@ -149,6 +149,33 @@ product/registration metadata, document date, attribution and an
 original-document link. The text is official source text, not individualized
 advice or a recommendation to start, stop or change treatment.
 
+### Instruction Tab Trust Strip
+
+The Instruction tab on the unified product card (`/products/:productId`) shows
+a trust strip above the sections: the official document date, the exact
+registration number and the source (currently always ДРЛЗ, the only allowed
+source). When `provenance.coveragePct` is below 100%, an adjacent badge
+states the record is partially recognized and links to the original document
+via the existing "Відкрити оригінальний документ ДРЛЗ" action. No new API
+fields were needed — the strip is built entirely from
+`ProductCardInstruction.source` and `.provenance`, which the card endpoint
+already returns.
+
+### Client-Side Instruction Cache
+
+`artifacts/pharmacy/src/lib/instruction-cache.ts` persists the last 200
+opened instructions (LRU by `lastAccessedAt`) in the same IndexedDB database
+as the catalog index and performance metrics
+(`artifacts/pharmacy/src/lib/catalog-index-db.ts`, store `instructions`,
+database version 4). When a pharmacist opens `/products/:productId` directly
+onto `?tab=instruction` before the product card has finished loading over the
+network, `ProductCardPage` renders `CachedInstructionPreview` from the cached
+record instead of waiting — the in-flight `useGetProductCard` request still
+resolves in the background and fully replaces the cached preview with live
+data the moment it lands (no field-level merge, matching the existing
+PR-F preliminary-card contract). The cache is written on every successful
+open of the Instruction tab, keyed by `productId`.
+
 ## Full-Text Search
 
 `GET /api/catalog/instructions/search` searches the verified committed
