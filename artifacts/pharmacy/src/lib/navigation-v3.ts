@@ -40,6 +40,24 @@ export function favoritesAliasTarget(search: string): string {
   return `/history?${params.toString()}`;
 }
 
+/**
+ * Layers a product-instruction section anchor onto an already-built product
+ * href (PR-H, H.1/H.2.3). Preserves the href's existing query params (e.g.
+ * `registration`, `correctedQuery`), forces `tab=instruction`, and appends
+ * the `#instruction-{sectionKey}` hash consumed by the Instruction tab's
+ * existing anchor/scroll handling in `product-card.tsx`. Any pre-existing
+ * hash on `href` is discarded -- callers pass a bare product/registration
+ * href here, never one that already targets a specific anchor.
+ */
+export function instructionSectionTarget(
+  href: string,
+  sectionKey: string,
+): string {
+  const url = new URL(href, "https://farmassist.local");
+  url.searchParams.set("tab", "instruction");
+  return `${url.pathname}${url.search}#instruction-${sectionKey}`;
+}
+
 export function instructionAliasTarget(
   productId: string,
   search: string,

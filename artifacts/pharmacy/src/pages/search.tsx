@@ -36,6 +36,7 @@ import {
   ChevronDown,
   ChevronUp,
   Database,
+  FileSearch,
   Filter,
   FlaskConical,
   GitCompare,
@@ -2556,18 +2557,33 @@ export default function SearchPage() {
                 </p>
               </div>
               {effectiveQ && (
-                <ReportIssueButton
-                  type="search_miss"
-                  context={`catalog-search-miss:${effectiveQ}`}
-                  sourceSnapshot={{
-                    query: effectiveQ,
-                    type,
-                    manufacturer: debouncedManufacturer,
-                    form: debouncedForm,
-                    registrationStatus,
-                  }}
-                  compact
-                />
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <ReportIssueButton
+                    type="search_miss"
+                    context={`catalog-search-miss:${effectiveQ}`}
+                    sourceSnapshot={{
+                      query: effectiveQ,
+                      type,
+                      manufacturer: debouncedManufacturer,
+                      form: debouncedForm,
+                      registrationStatus,
+                    }}
+                    compact
+                  />
+                  {/* PR-H, H.3: second-tier search when the catalog
+                      (product identity) search is a genuine zero-result
+                      miss. Full-text instruction search is server-side and
+                      slower, so this is a deliberate second step. */}
+                  <Button asChild variant="outline">
+                    <Link
+                      href={`/instruction-search?q=${encodeURIComponent(effectiveQ)}`}
+                      data-testid="catalog-search-instructions-cta"
+                    >
+                      <FileSearch className="h-4 w-4" />
+                      Шукати в текстах інструкцій
+                    </Link>
+                  </Button>
+                </div>
               )}
             </div>
           )}

@@ -198,6 +198,41 @@ MVP snapshots. Expanding official instruction coverage is a separate reviewed
 data checkpoint; the search implementation does not generalize a result to an
 unindexed product.
 
+## Section Intent And Anchors
+
+`lib/catalog-index/src/section-intent.ts` extracts a section-navigation
+intent from a catalog search query, e.g. `"амоксил лактація"` strips the
+`лактація` token and resolves it to `pregnancyAndLactation`. This is the
+single explicitly-scoped extension of `normalizeAndSearchCatalogClientIndex`:
+the stripped query runs through the unmodified name-matching pipeline, and
+section intent never influences which products are found or their order —
+it only changes the landing point after an explicit click. A query that is
+only the section keyword (no product name left to search by) is passed
+through untouched and extracts no intent.
+
+The keyword dictionary covers 8 of the spec's original 9 groups. The
+`"діти"/"дитяч"/"дітям"` group ("Дітям") is intentionally omitted: this
+repository's instruction section model has 9 keys (see below), with no
+`children` section for it to resolve to. A query like `"німесил дітям"`
+therefore runs as a plain two-word search rather than landing on a section.
+
+The Instruction tab shows fixed-order quick-jump chips — Показання · Дози ·
+Протипоказання · Вагітність · Взаємодії · Побічні — each rendered only when
+that section is present in the specific instruction. This mirrors the
+spec's original 7-chip design with the same "Діти" gap: there is no
+`children` key to add a seventh chip for. Tapping a chip, or opening a URL
+carrying a `#instruction-{key}` anchor (from a search result's
+`sectionIntent`, or from a full-text search hit), opens and briefly
+highlights that section. If the target section isn't present in this
+instruction — or the instruction has no structured sections at all — a
+toast says so instead of landing on a silent no-op.
+
+A catalog search with zero results (both direct and corrected/fuzzy
+candidates empty) offers a second-tier "Шукати в текстах інструкцій" action
+that carries the query over to `/instruction-search`, the server-side
+full-text search described above. This is a deliberate second step, never
+triggered automatically, since full-text search is slower.
+
 ## Production Activation Plan
 
 No production DB write or import is required. After PR approval:

@@ -80,7 +80,9 @@ export function instructionSearchResultHref(
   >,
 ): string {
   const anchor = `instruction-quote-${item.sectionKey}-${item.quote.charStart}-${item.quote.charEnd}`;
-  return `/products/${encodeURIComponent(item.registryProductId)}?registration=${encodeURIComponent(item.registrationNumber)}#${anchor}`;
+  // PR-H, H.3.2: land directly on the Instruction tab, not just on a hash
+  // the Profile tab ignores until the pharmacist switches tabs manually.
+  return `/products/${encodeURIComponent(item.registryProductId)}?registration=${encodeURIComponent(item.registrationNumber)}&tab=instruction#${anchor}`;
 }
 
 export interface HighlightedSegment {

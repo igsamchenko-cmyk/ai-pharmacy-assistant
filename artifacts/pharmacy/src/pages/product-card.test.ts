@@ -18,6 +18,7 @@ import {
   PRODUCT_CARD_TITLE_CLASS,
   ProductCardContent,
   instructionQuoteFromHash,
+  instructionSectionKeyFromHash,
 } from "./product-card";
 
 const PRODUCT_ID = "A".repeat(32);
@@ -484,6 +485,83 @@ describe("operational product card UI", () => {
 
     expect(html).toContain('data-testid="instruction-trust-badge"');
     expect(html).not.toContain('data-testid="instruction-partial-badge"');
+  });
+
+  it("parses a plain section anchor for PR-H chip/search landing, distinct from the quote-anchor format", () => {
+    expect(instructionSectionKeyFromHash("#instruction-indications")).toBe(
+      "indications",
+    );
+    expect(
+      instructionSectionKeyFromHash("#instruction-pregnancyAndLactation"),
+    ).toBe("pregnancyAndLactation");
+    expect(instructionSectionKeyFromHash("#instruction-unknown")).toBeNull();
+    expect(
+      instructionSectionKeyFromHash(
+        "#instruction-quote-interactions-0-10",
+      ),
+    ).toBeNull();
+    expect(instructionSectionKeyFromHash("")).toBeNull();
+  });
+
+  it("renders quick-jump chips only for sections actually present in this instruction (PR-H, H.1.2)", () => {
+    const html = renderCard(card(), "instruction");
+    // Fixture has indications/administration/contraindications/interactions
+    // populated and adverseReactions/pregnancyAndLactation null.
+    expect(html).toContain(
+      'data-testid="instruction-section-chip-indications"',
+    );
+    expect(html).toContain(
+      'data-testid="instruction-section-chip-administration"',
+    );
+    expect(html).toContain(
+      'data-testid="instruction-section-chip-contraindications"',
+    );
+    expect(html).toContain(
+      'data-testid="instruction-section-chip-interactions"',
+    );
+    expect(html).not.toContain(
+      'data-testid="instruction-section-chip-pregnancyAndLactation"',
+    );
+    expect(html).not.toContain(
+      'data-testid="instruction-section-chip-adverseReactions"',
+    );
+  });
+
+  it("never shows a 'Діти' chip -- no children section exists in the reconciled 9-key model", () => {
+    const base = card();
+    const html = renderCard(
+      card({
+        instruction: {
+          ...base.instruction,
+          sections: {
+            indications: "Показання.",
+            contraindications: "Протипоказання.",
+            adverseReactions: "Побічні.",
+            interactions: "Взаємодії.",
+            specialWarnings: "Застереження.",
+            pregnancyAndLactation: "Вагітність.",
+            administration: "Дози.",
+            overdose: "Передозування.",
+            storage: "Зберігання.",
+          },
+        },
+      }),
+      "instruction",
+    );
+    const chipCount = (
+      html.match(/data-testid="instruction-section-chip-/g) ?? []
+    ).length;
+    expect(chipCount).toBe(6);
+    expect(html).not.toContain("Діти");
+  });
+
+  it("omits the chip row entirely when there are no structured sections", () => {
+    const base = card();
+    const html = renderCard(
+      card({ instruction: { ...base.instruction, sections: null } }),
+      "instruction",
+    );
+    expect(html).not.toContain('data-testid="instruction-section-chips"');
   });
 });
 
