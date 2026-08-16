@@ -283,9 +283,48 @@ const NON_SPECIFIC_INN_KEYS = new Set([
   "various",
 ]);
 
-export function isNonSpecificInn(inn: string): boolean {
+/**
+ * The registry also carries WHO/ATC-style combination names that DO contain a
+ * substance but still do not identify the full composition — "Valsartan and
+ * diuretics", "Timolol, combinations", "Paracetamol, combinations excl.
+ * psycholeptics", "Barbiturates in combination with other drugs". Two products
+ * sharing such a string may well contain different second components, so the
+ * string is a therapeutic-class label, not an analog identity.
+ *
+ * A name that actually enumerates its components ("Vitamin B1 in combination
+ * with vitamin B6 and/or vitamin B12") stays specific: it identifies exactly
+ * what is inside.
+ */
+const PARTIAL_COMBINATION_INN_PATTERN =
+  /(?:,\s*combinations?\b|\band\s+(?:other\s+drugs|diuretics)\b|\bin\s+combination\s+with\s+other\s+drugs\b)/iu;
+
+export type CatalogInnSpecificity =
+  | "specific"
+  | "placeholder"
+  | "partial_combination";
+
+/**
+ * How much of a product's identity its registry МНН actually carries.
+ *
+ * - `specific` — names the substance(s); safe to group by.
+ * - `partial_combination` — names one substance plus an unresolved class; may
+ *   be shown as a class, never as an analog set.
+ * - `placeholder` — carries no substance at all; never groupable.
+ */
+export function catalogInnSpecificity(inn: string): CatalogInnSpecificity {
   const key = normalizeCatalogIndexText(inn);
-  return key.length < 3 || NON_SPECIFIC_INN_KEYS.has(key);
+  if (key.length < 3 || NON_SPECIFIC_INN_KEYS.has(key)) return "placeholder";
+  return PARTIAL_COMBINATION_INN_PATTERN.test(inn)
+    ? "partial_combination"
+    : "specific";
+}
+
+/**
+ * True when the МНН cannot stand alone as a composition identity — i.e. a
+ * composition key should be resolved for this row if one is available.
+ */
+export function isNonSpecificInn(inn: string): boolean {
+  return catalogInnSpecificity(inn) !== "specific";
 }
 
 /**
