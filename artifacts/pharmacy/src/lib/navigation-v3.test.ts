@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   favoritesAliasTarget,
   instructionAliasTarget,
+  instructionSectionTarget,
   productCardTabFromSearch,
   productCardTabTarget,
   savedTabFromSearch,
@@ -90,6 +91,30 @@ describe("Navigation v3 PR-E card and saved tabs", () => {
     expect(savedTabFromSearch("?tab=other")).toBe("history");
     expect(favoritesAliasTarget("?source=menu")).toBe(
       "/history?source=menu&tab=favorites",
+    );
+  });
+});
+
+describe("Navigation v3 PR-H section anchors", () => {
+  it("layers tab=instruction and a section hash onto an existing product href, keeping its query params", () => {
+    expect(
+      instructionSectionTarget(
+        "/products/ABC?registration=UA%2F1%2F01%2F01",
+        "pregnancyAndLactation",
+      ),
+    ).toBe(
+      "/products/ABC?registration=UA%2F1%2F01%2F01&tab=instruction#instruction-pregnancyAndLactation",
+    );
+  });
+
+  it("preserves a correctedQuery param and overwrites any pre-existing tab", () => {
+    expect(
+      instructionSectionTarget(
+        "/products/ABC?registration=UA%2F1%2F01%2F01&correctedQuery=нурофен&tab=profile",
+        "indications",
+      ),
+    ).toBe(
+      "/products/ABC?registration=UA%2F1%2F01%2F01&correctedQuery=%D0%BD%D1%83%D1%80%D0%BE%D1%84%D0%B5%D0%BD&tab=instruction#instruction-indications",
     );
   });
 });

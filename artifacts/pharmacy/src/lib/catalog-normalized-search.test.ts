@@ -235,6 +235,41 @@ describe("catalog normalized search safety", () => {
     expect(worker.terminate).toHaveBeenCalledOnce();
   });
 
+  it("H.2.4 invariant: a section-keyword query returns identical product results and order to the bare product query", () => {
+    const index = compileCatalogClientIndex(payload(safetyProducts));
+    const plain = normalizeAndSearchCatalogClientIndex(index, "нурофен");
+    const withIntent = normalizeAndSearchCatalogClientIndex(
+      index,
+      "нурофен показання",
+    );
+    const drugIds = (result: typeof plain) =>
+      result.primary.map((candidate) => candidate.drugId);
+    expect(drugIds(withIntent)).toEqual(drugIds(plain));
+    expect(withIntent.primary.map((candidate) => candidate.rank)).toEqual(
+      plain.primary.map((candidate) => candidate.rank),
+    );
+    expect(withIntent.sectionIntent).toBe("indications");
+    expect(plain.sectionIntent).toBeUndefined();
+  });
+
+  it("extracts a section intent for a real product-plus-keyword query (амоксил лактація example from the spec)", () => {
+    const index = compileCatalogClientIndex(
+      payload([...safetyProducts, product(5, "АМОКСИЛ", "Амоксицилін")]),
+    );
+    const result = normalizeAndSearchCatalogClientIndex(
+      index,
+      "амоксил лактація",
+    );
+    expect(result.primary[0]?.product.tradeName).toBe("АМОКСИЛ");
+    expect(result.sectionIntent).toBe("pregnancyAndLactation");
+  });
+
+  it("does not set sectionIntent for a query that is only the section keyword", () => {
+    const index = compileCatalogClientIndex(payload(safetyProducts));
+    const result = normalizeAndSearchCatalogClientIndex(index, "показання");
+    expect(result.sectionIntent).toBeUndefined();
+  });
+
   it("renders fuzzy suggestions in a separate, explicit-click section", () => {
     const index = compileCatalogClientIndex(payload(safetyProducts));
     const normalizedResult = normalizeAndSearchCatalogClientIndex(
@@ -260,5 +295,51 @@ describe("catalog normalized search safety", () => {
     expect(html).toContain("Виправлено");
     expect(html).toContain("correctedQuery=%D0%BF%D0%B0%D1%80");
     expect(html).toContain("Відкрити");
+  });
+
+  it("PR-H, H.2.3: a primary result carrying a sectionIntent links straight to that instruction section", () => {
+    const index = compileCatalogClientIndex(payload(safetyProducts));
+    const normalizedResult = normalizeAndSearchCatalogClientIndex(
+      index,
+      "нурофен показання",
+    );
+    expect(normalizedResult.sectionIntent).toBe("indications");
+    const html = renderToStaticMarkup(
+      createElement(
+        Router,
+        { hook: () => ["/search", () => undefined] },
+        createElement(LocalCatalogResults, {
+          result: {
+            query: "нурофен показання",
+            total: 0,
+            items: [],
+            durationMs: 0,
+          },
+          normalizedResult,
+        }),
+      ),
+    );
+    expect(html).toContain("tab=instruction#instruction-indications");
+  });
+
+  it("PR-H, H.3: a genuine zero-result catalog search offers the full-text instruction search fallback", () => {
+    const query = "неіснуючийпрепарат";
+    const html = renderToStaticMarkup(
+      createElement(
+        Router,
+        { hook: () => ["/search", () => undefined] },
+        createElement(LocalCatalogResults, {
+          result: { query, total: 0, items: [], durationMs: 0 },
+          normalizedResult: null,
+        }),
+      ),
+    );
+    expect(html).toContain('data-testid="local-catalog-no-results"');
+    expect(html).toContain(
+      'data-testid="local-catalog-search-instructions-cta"',
+    );
+    expect(html).toContain(
+      `/instruction-search?q=${encodeURIComponent(query)}`,
+    );
   });
 });
