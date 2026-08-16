@@ -17,9 +17,17 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCatalogClientIndex } from "@/lib/catalog-client-index";
 import {
+  catalogInnSpecificity,
   classifyRegistryAnalogs,
-  isNonSpecificInn,
 } from "@/lib/product-analogs";
+
+/**
+ * The shared index caps a search at 250 results. The largest real same-МНН
+ * group in the current catalog is ~120, so asking for the cap keeps every
+ * member of a group in view; anything beyond it is reported, never dropped
+ * silently.
+ */
+const ANALOG_SEARCH_LIMIT = 250;
 
 const EMPTY_SEARCH_RESULT = {
   query: "",
@@ -70,27 +78,42 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
   const catalog = useCatalogClientIndex();
   const product = card.identity;
   const inn = product.inn || product.activeIngredient || "";
-  const nonSpecificInn = isNonSpecificInn(inn);
+  const specificity = catalogInnSpecificity(inn);
 
-  // When the registry МНН is a placeholder, this position's own index row
-  // carries the composition identity resolved from the official price catalog.
+  // When the registry МНН does not identify the composition on its own, this
+  // position's own index row carries the composition resolved from the
+  // official price catalog.
   const compositionKey = useMemo(() => {
-    if (!nonSpecificInn) return "";
+    if (specificity === "specific") return "";
     const self = catalog
       .search(product.id, { limit: 5 })
       .items.find((item) => item.product.productId === product.id);
     return self?.product.compositionKey ?? "";
-  }, [catalog, nonSpecificInn, product.id]);
+  }, [catalog, specificity, product.id]);
 
-  const byComposition = Boolean(compositionKey);
-  const query = compositionKey || (nonSpecificInn ? "" : inn);
+  const mode = compositionKey
+    ? "composition"
+    : specificity === "specific"
+      ? "inn"
+      : specificity === "partial_combination"
+        ? "inn_class"
+        : "unresolved";
+  const byComposition = mode === "composition";
+  const query = mode === "unresolved" ? "" : compositionKey || inn;
   const result = useMemo(
     () =>
       query
-        ? catalog.search(query, { limit: 100, scope: "ingredients" })
+        ? catalog.search(query, {
+            limit: ANALOG_SEARCH_LIMIT,
+            scope: "ingredients",
+          })
         : EMPTY_SEARCH_RESULT,
     [catalog, query],
   );
+  // `total` counts every match before the cap, so a shortfall means the
+  // catalog holds more than the tab can show — say so instead of implying
+  // the list is complete.
+  const truncated = result.total > result.items.length;
   const groups = useMemo(
     () =>
       classifyRegistryAnalogs(
@@ -121,7 +144,9 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
             <Pill className="h-5 w-5 text-primary" />
             {byComposition
               ? "Реєстрові варіанти за складом"
-              : "Реєстрові варіанти за МНН"}
+              : mode === "inn_class"
+                ? "Позиції з тим самим записом МНН"
+                : "Реєстрові варіанти за МНН"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {byComposition
@@ -150,7 +175,19 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
             ДРЛЗ, і воно не охоплює препарати без задекларованої ціни.
           </AlertDescription>
         </Alert>
-      ) : nonSpecificInn ? (
+      ) : mode === "inn_class" ? (
+        <Alert className="border-amber-500/40 bg-amber-500/5">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Це група за записом МНН, а не за складом</AlertTitle>
+          <AlertDescription>
+            Запис «{inn}» називає одну діючу речовину та клас, а не повний
+            склад, тому позиції нижче можуть містити різні другі компоненти. Це
+            перелік однакового запису МНН, а не підтверджені аналоги.
+            Структурованого складу для цієї позиції немає в Національному
+            каталозі цін МОЗ — звіряйте фактичний склад в інструкції.
+          </AlertDescription>
+        </Alert>
+      ) : mode === "unresolved" ? (
         <Alert className="border-sky-500/40 bg-sky-500/5">
           <Info className="h-4 w-4" />
           <AlertTitle>МНН не деталізовано в реєстрі</AlertTitle>
@@ -165,7 +202,19 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
         </Alert>
       ) : null}
 
-      {nonSpecificInn && !byComposition ? null : (
+      {truncated ? (
+        <Alert className="border-amber-500/40 bg-amber-500/5">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Перелік показано не повністю</AlertTitle>
+          <AlertDescription>
+            У каталозі є {result.total} позицій за цим запитом, показано перші{" "}
+            {result.items.length}. Скористайтеся пошуком за МНН, щоб переглянути
+            решту.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {mode === "unresolved" ? null : (
         <>
           <div className="space-y-4">
             <h3 className="flex flex-wrap items-center gap-2 font-bold">
@@ -180,7 +229,7 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
               <span className="h-3 w-3 rounded-full bg-amber-500" />
               {byComposition
                 ? "Той самий склад, інша форма або дозування"
-                : "Те саме МНН, інша форма або дозування"}
+                : "Той самий запис МНН, інша форма або дозування"}
             </h3>
             <ProductList products={groups.partial} />
           </div>

@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import type { ProductCard } from "@workspace/api-client-react";
 import {
@@ -15,6 +15,8 @@ import {
  * answers per query rather than returning one fixed result.
  */
 const indexRows: { current: CatalogClientIndexProduct[] } = { current: [] };
+/** Extra matches the real index would hold beyond the search cap. */
+const extraBeyondCap: { current: number } = { current: 0 };
 
 function searchStub(query: string): CatalogClientIndexSearchResult {
   const items = indexRows.current
@@ -29,7 +31,15 @@ function searchStub(query: string): CatalogClientIndexSearchResult {
       rank: 0,
       matchedBy: "inn_exact" as const,
     }));
-  return { query, total: items.length, items, durationMs: 0 };
+  const isSelfLookup = indexRows.current.some(
+    (product) => product.productId === query,
+  );
+  return {
+    query,
+    total: items.length + (isSelfLookup ? 0 : extraBeyondCap.current),
+    items,
+    durationMs: 0,
+  };
 }
 
 vi.mock("@/lib/catalog-client-index", () => ({
@@ -100,6 +110,10 @@ const RENNIE_KEY = catalogCompositionKey(
 );
 
 describe("ProductAnalogsTab", () => {
+  beforeEach(() => {
+    extraBeyondCap.current = 0;
+  });
+
   it("shows the real INN-matched analogs when the МНН is a specific substance", () => {
     indexRows.current = [candidate("B".repeat(32), "Бренд Б")];
     const html = render(card());
@@ -160,5 +174,44 @@ describe("ProductAnalogsTab", () => {
     // The unrelated placeholder peer must not leak into a composition group.
     expect(html).not.toContain("А-ДІСТОН");
     expect(html).not.toContain("МНН не деталізовано в реєстрі");
+  });
+
+  it("shows a class-combination INN as a class, never as confirmed analogs", () => {
+    // "Valsartan and diuretics" names a substance plus an unresolved class, so
+    // the peers below may hold a different diuretic — the tab must say so.
+    indexRows.current = [
+      candidate(SELF_ID, "ВАЛЬСАКОР Н", { inn: "Valsartan and diuretics" }),
+      candidate("G".repeat(32), "ДІОВАН НСТ", {
+        inn: "Valsartan and diuretics",
+      }),
+    ];
+    const html = render(
+      card({ inn: "Valsartan and diuretics", activeIngredient: "" }),
+    );
+
+    expect(html).toContain("ДІОВАН НСТ");
+    expect(html).toContain("Це група за записом МНН, а не за складом");
+    expect(html).toContain("Позиції з тим самим записом МНН");
+    expect(html).toContain("можуть містити різні другі компоненти");
+    // It must not claim to be a composition match or a plain analog set.
+    expect(html).not.toContain("Підібрано за складом");
+    expect(html).not.toContain("МНН не деталізовано в реєстрі");
+  });
+
+  it("reports a truncated list instead of implying it is complete", () => {
+    indexRows.current = [candidate("H".repeat(32), "Бренд Г")];
+    extraBeyondCap.current = 40;
+    const html = render(card());
+
+    expect(html).toContain("Перелік показано не повністю");
+    expect(html).toContain("41");
+  });
+
+  it("does not warn about truncation when every match fits", () => {
+    indexRows.current = [candidate("I".repeat(32), "Бренд Д")];
+    const html = render(card());
+
+    expect(html).toContain("Бренд Д");
+    expect(html).not.toContain("Перелік показано не повністю");
   });
 });
