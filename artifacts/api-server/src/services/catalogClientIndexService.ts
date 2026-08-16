@@ -4,7 +4,9 @@ import {
   CATALOG_CLIENT_INDEX_MAX_WIRE_BYTES,
   CATALOG_CLIENT_INDEX_VERSION,
   catalogClientIndexWireBytes,
+  catalogCompositionKey,
   encodeCatalogClientIndexRow,
+  isNonSpecificInn,
   type CatalogClientIndexAliasRow,
   type CatalogClientIndexPayload,
 } from "@workspace/catalog-index";
@@ -12,6 +14,8 @@ import {
   listDictionaryEntries,
   resolveSourceBackedDictionaryQuery,
 } from "../knowledge/dictionary";
+import { normalizeRegistrationNumber } from "../knowledge/dispensingCategories/model";
+import { priceCatalogCompositionByRegistration } from "../knowledge/priceCatalog/catalog";
 import { normalize } from "../lib/text";
 
 export interface CatalogClientIndexQueryExecutor {
@@ -142,6 +146,36 @@ async function readSnapshot(
   return { productCount, snapshotHash, generatedAt };
 }
 
+/**
+ * Resolve the composition identity for a registration whose registry МНН is a
+ * non-specific placeholder ("Comb drug" and friends). Without this, every such
+ * product shares one meaningless identity and cannot be grouped at all; with
+ * it, the actual active substances decide. Rows with a usable registry МНН keep
+ * an empty key, so composition never silently overrides the registry.
+ */
+function resolveCompositionKey(
+  row: ProductRow,
+  compositions: Map<string, string>,
+): string {
+  if (!isNonSpecificInn(row.inn ?? "")) return "";
+  const registration = normalizeRegistrationNumber(row.registration_number);
+  const composition = registration ? compositions.get(registration) : undefined;
+  return composition ? catalogCompositionKey(composition) : "";
+}
+
+/**
+ * Composition lookups must never break the catalog index: the price catalog is
+ * a separate optional snapshot, so a missing or malformed file degrades to "no
+ * composition keys" instead of taking search offline.
+ */
+function loadCompositionIndex(): Map<string, string> {
+  try {
+    return priceCatalogCompositionByRegistration();
+  } catch {
+    return new Map();
+  }
+}
+
 async function buildPayloadUncached(
   snapshot: CatalogClientIndexSnapshot,
   executor: CatalogClientIndexQueryExecutor,
@@ -165,6 +199,7 @@ async function buildPayloadUncached(
     );
   }
   const aliases = buildCatalogClientIndexAliases();
+  const compositions = loadCompositionIndex();
   const payload: CatalogClientIndexPayload = {
     version: CATALOG_CLIENT_INDEX_VERSION,
     snapshotHash: snapshot.snapshotHash,
@@ -179,6 +214,7 @@ async function buildPayloadUncached(
         inn: bounded(row.inn, 500, "inn"),
         form: bounded(conciseCatalogIndexForm(row.form), 500, "form"),
         strength: bounded(row.strength, 120, "strength"),
+        compositionKey: resolveCompositionKey(row, compositions),
       }),
     ),
     aliases,

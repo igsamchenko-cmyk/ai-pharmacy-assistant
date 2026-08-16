@@ -17,30 +17,41 @@ function executor(
     productCount?: number;
     tradeName?: string;
     form?: string;
+    rows?: { registration_number: string; inn: string }[];
   } = {},
 ): CatalogClientIndexQueryExecutor & { query: ReturnType<typeof vi.fn> } {
   const snapshotHash = options.snapshotHash ?? SHA;
   const productCount = options.productCount ?? 2;
-  const rows = [
-    {
-      registry_id: "A".repeat(32),
-      registration_number: "UA/1/01/01",
-      trade_name: options.tradeName ?? "ЕНАП®",
-      inn: "Enalapril",
-      form: options.form ?? "таблетки; по 10 таблеток у блістері",
-      strength: "10 мг",
-      source_snapshot_hash: options.rowSnapshotHash ?? snapshotHash,
-    },
-    {
-      registry_id: "B".repeat(32),
-      registration_number: "UA/2/01/01",
-      trade_name: "ЕЛІКВІС",
-      inn: "Apixaban",
-      form: "таблетки in bulk; по 5000 таблеток",
-      strength: "5 мг",
-      source_snapshot_hash: options.rowSnapshotHash ?? snapshotHash,
-    },
-  ];
+  const rows = options.rows
+    ? options.rows.map((row, index) => ({
+        registry_id: String.fromCharCode(65 + index).repeat(32),
+        registration_number: row.registration_number,
+        trade_name: `ПРЕПАРАТ ${index + 1}`,
+        inn: row.inn,
+        form: "таблетки",
+        strength: "10 мг",
+        source_snapshot_hash: options.rowSnapshotHash ?? snapshotHash,
+      }))
+    : [
+        {
+          registry_id: "A".repeat(32),
+          registration_number: "UA/1/01/01",
+          trade_name: options.tradeName ?? "ЕНАП®",
+          inn: "Enalapril",
+          form: options.form ?? "таблетки; по 10 таблеток у блістері",
+          strength: "10 мг",
+          source_snapshot_hash: options.rowSnapshotHash ?? snapshotHash,
+        },
+        {
+          registry_id: "B".repeat(32),
+          registration_number: "UA/2/01/01",
+          trade_name: "ЕЛІКВІС",
+          inn: "Apixaban",
+          form: "таблетки in bulk; по 5000 таблеток",
+          strength: "5 мг",
+          source_snapshot_hash: options.rowSnapshotHash ?? snapshotHash,
+        },
+      ];
   const query = vi.fn(async (statement: string) => {
     if (statement.includes("COUNT(*)")) {
       return {
@@ -62,13 +73,13 @@ function executor(
 describe("catalog client index service", () => {
   beforeEach(() => resetCatalogClientIndexCacheForTests());
 
-  it("builds a deterministic six-field projection with concise forms", async () => {
+  it("builds a deterministic seven-field projection with concise forms", async () => {
     const store = executor();
     const result = await loadCatalogClientIndex(null, store);
     expect(result.status).toBe("ready");
     if (result.status !== "ready") return;
     expect(result.payload).toMatchObject({
-      version: 1,
+      version: 2,
       snapshotHash: SHA,
       productCount: 2,
     });
@@ -81,10 +92,33 @@ describe("catalog client index service", () => {
       "Enalapril",
       "таблетки",
       "10 мг",
+      "",
     ]);
     expect(result.payload.rows[1]?.[4]).toBe("таблетки");
     expect(result.wireBytes).toBeGreaterThan(0);
     expect(store.query).toHaveBeenCalledTimes(2);
+  });
+
+  it("resolves a composition key only where the registry МНН is a placeholder", async () => {
+    // UA/6025/01/01 is РЕННІ® БЕЗ ЦУКРУ, whose registry МНН is the literal
+    // placeholder "Comb drug"; the МОЗ price catalog records its real
+    // composition as "Кальцію карбонат + МАГНІЮ КАРБОНАТ ВАЖКИЙ".
+    const store = executor({
+      rows: [
+        { registration_number: "UA/6025/01/01", inn: "Comb drug" },
+        { registration_number: "UA/6025/01/01", inn: "Enalapril" },
+      ],
+    });
+    const result = await loadCatalogClientIndex(null, store);
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+
+    const placeholderRow = result.payload.rows[0];
+    expect(placeholderRow?.[6]).toBe("кальціюкарбонат;магніюкарбонатважкии");
+
+    // The same registration with a usable МНН keeps an empty composition key:
+    // a real substance name is never overridden by the price catalog.
+    expect(result.payload.rows[1]?.[6]).toBe("");
   });
 
   it("prewarms once and shares one payload build across concurrent clients", async () => {
