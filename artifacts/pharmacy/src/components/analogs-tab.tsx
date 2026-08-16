@@ -1,13 +1,22 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import type { ProductCard } from "@workspace/api-client-react";
 import type { CatalogClientIndexProduct } from "@workspace/catalog-index";
-import { AlertTriangle, ChevronRight, Database, Pill } from "lucide-react";
+import {
+  AlertTriangle,
+  ChevronRight,
+  Database,
+  Info,
+  Pill,
+} from "lucide-react";
 import { Link } from "wouter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCatalogClientIndex } from "@/lib/catalog-client-index";
-import { classifyRegistryAnalogs } from "@/lib/product-analogs";
+import {
+  classifyRegistryAnalogs,
+  isNonSpecificInn,
+} from "@/lib/product-analogs";
 
 function ProductList({ products }: { products: CatalogClientIndexProduct[] }) {
   if (!products.length) {
@@ -51,6 +60,7 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
   const catalog = useCatalogClientIndex();
   const product = card.identity;
   const inn = product.inn || product.activeIngredient || "";
+  const nonSpecificInn = isNonSpecificInn(inn);
   const result = useMemo(
     () =>
       catalog.search(inn, {
@@ -93,21 +103,38 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
         </Badge>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="flex flex-wrap items-center gap-2 font-bold">
-          <span className="h-3 w-3 rounded-full bg-emerald-500" />
-          Точний збіг форми й дозування
-        </h3>
-        <ProductList products={groups.full} />
-      </div>
+      {nonSpecificInn ? (
+        <Alert className="border-sky-500/40 bg-sky-500/5">
+          <Info className="h-4 w-4" />
+          <AlertTitle>МНН не деталізовано в реєстрі</AlertTitle>
+          <AlertDescription>
+            Держреєстр зберігає МНН цієї позиції як загальну позначку «{inn}» —
+            так описують комбіновані препарати, склад яких не розкладено на
+            окрему діючу речовину. Підбір «тієї самої МНН» за таким записом
+            об&apos;єднав би непов&apos;язані препарати, тому FarmAssist його не
+            показує. Перевірте фактичний склад в інструкції та зіставте аналоги
+            вручну.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <>
+          <div className="space-y-4">
+            <h3 className="flex flex-wrap items-center gap-2 font-bold">
+              <span className="h-3 w-3 rounded-full bg-emerald-500" />
+              Точний збіг форми й дозування
+            </h3>
+            <ProductList products={groups.full} />
+          </div>
 
-      <div className="space-y-4">
-        <h3 className="flex flex-wrap items-center gap-2 font-bold">
-          <span className="h-3 w-3 rounded-full bg-amber-500" />
-          Те саме МНН, інша форма або дозування
-        </h3>
-        <ProductList products={groups.partial} />
-      </div>
+          <div className="space-y-4">
+            <h3 className="flex flex-wrap items-center gap-2 font-bold">
+              <span className="h-3 w-3 rounded-full bg-amber-500" />
+              Те саме МНН, інша форма або дозування
+            </h3>
+            <ProductList products={groups.partial} />
+          </div>
+        </>
+      )}
 
       <Alert className="border-amber-500/40 bg-amber-500/5">
         <AlertTriangle className="h-4 w-4" />
