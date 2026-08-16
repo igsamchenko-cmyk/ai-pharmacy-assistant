@@ -31,6 +31,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/use-debounce";
 import { INSTRUCTION_SECTION_LABELS } from "@/pages/drug-instruction";
+import { logZeroResults } from "@/lib/zero-results-log";
 
 const SECTION_OPTIONS: Array<{
   value: SearchDrugInstructionsSection;
@@ -242,6 +243,14 @@ export default function InstructionSearchPage() {
       refetchOnWindowFocus: false,
     },
   });
+
+  // PR-I, I.3: log a genuine zero-result full-text search locally (never
+  // over the network) so it can be reviewed alongside catalog zero-results.
+  useEffect(() => {
+    if (!enabled || !search.isSuccess) return;
+    if (search.data.items.length > 0) return;
+    logZeroResults("instruction_search", debouncedQuery);
+  }, [debouncedQuery, enabled, search.data, search.isSuccess]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

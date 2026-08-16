@@ -10,6 +10,7 @@ function record(value: number | null): SearchMetricRecord {
     ttir: value,
     ttfr: value,
     ttc: value,
+    ttSec: value,
     catalogSize: 16_533,
     indexBuildMs: 0,
     serializedIndexBytes: 1,
@@ -24,6 +25,15 @@ describe("performance metrics summary", () => {
       count: 5,
       median: 30,
       p90: 50,
+    });
+  });
+
+  it("also summarizes TTSec (PR-I, I.3)", () => {
+    const records = [5, 15, 25, null].map(record);
+    expect(metricDistribution(records, "ttSec")).toEqual({
+      count: 3,
+      median: 15,
+      p90: 25,
     });
   });
 });
