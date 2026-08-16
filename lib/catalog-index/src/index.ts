@@ -1,10 +1,22 @@
 import { convertCatalogKeyboardLayout } from "./layout-map";
+import {
+  extractCatalogSectionIntent,
+  type CatalogSectionIntentKey,
+} from "./section-intent";
 
 export {
   convertCatalogKeyboardLayout,
   LATIN_TO_UKRAINIAN_LAYOUT,
   UKRAINIAN_TO_LATIN_LAYOUT,
 } from "./layout-map";
+
+export {
+  CATALOG_SECTION_INTENT_DICTIONARY,
+  extractCatalogSectionIntent,
+  type CatalogSectionIntentExtraction,
+  type CatalogSectionIntentGroup,
+  type CatalogSectionIntentKey,
+} from "./section-intent";
 
 export const CATALOG_CLIENT_INDEX_VERSION = 1 as const;
 export const CATALOG_CLIENT_INDEX_MAX_PRODUCTS = 20_000;
@@ -136,6 +148,13 @@ export interface CatalogNormalizedSearchResult {
   primary: CatalogNormalizedCandidate[];
   suggested: CatalogNormalizedCandidate[];
   durationMs: number;
+  /**
+   * Section-navigation intent extracted from the query (PR-H, H.2). Present
+   * only when a section keyword was found AND stripping it left a usable
+   * product-name query. Never influences `primary`/`suggested` ranking or
+   * membership -- see the H.2.4 invariant in `./section-intent.ts`.
+   */
+  sectionIntent?: CatalogSectionIntentKey;
 }
 
 const UKRAINIAN_TO_LATIN: Readonly<Record<string, string>> = {
@@ -743,19 +762,27 @@ export function normalizeAndSearchCatalogClientIndex(
     Math.min(options.limit ?? CATALOG_CLIENT_INDEX_DEFAULT_LIMIT, 250),
   );
   const searchOptions = { ...options, limit };
-  const direct = searchCatalogClientIndex(index, rawQuery, searchOptions);
+  // PR-H, H.2.2: the single allowed extension of this v2 layer. When a
+  // section keyword is found and stripping it still leaves a usable
+  // product-name query, `searchQuery` is that stripped remainder and every
+  // search pass below runs on it instead of `rawQuery`; the section keyword
+  // itself never reaches the name-matching pipeline. Otherwise `searchQuery`
+  // equals `rawQuery` exactly, so behavior is byte-for-byte unchanged.
+  const { query: searchQuery, sectionIntent } =
+    extractCatalogSectionIntent(rawQuery);
+  const direct = searchCatalogClientIndex(index, searchQuery, searchOptions);
   const primary: CatalogNormalizedCandidate[] = direct.items.map(
     (item, position) =>
       normalizedCandidate(
         item,
         directMatchType(item.matchedBy),
         position,
-        rawQuery,
+        searchQuery,
       ),
   );
   const seen = new Set(primary.map(candidateIdentity));
 
-  const correctedLayout = convertCatalogKeyboardLayout(rawQuery);
+  const correctedLayout = convertCatalogKeyboardLayout(searchQuery);
   if (correctedLayout && primary.length < limit) {
     const layout = searchCatalogClientIndex(
       index,
@@ -767,7 +794,7 @@ export function normalizeAndSearchCatalogClientIndex(
         item,
         "layout",
         position,
-        rawQuery,
+        searchQuery,
         correctedLayout,
         100_000,
       );
@@ -781,7 +808,7 @@ export function normalizeAndSearchCatalogClientIndex(
 
   const suggested: CatalogNormalizedCandidate[] = [];
   if (!primary.length) {
-    for (const correctedToken of fuzzyCorrectedTokens(index, rawQuery)) {
+    for (const correctedToken of fuzzyCorrectedTokens(index, searchQuery)) {
       const fuzzyResult = searchCatalogClientIndex(index, correctedToken, {
         ...searchOptions,
         limit: FUZZY_SUGGESTION_LIMIT,
@@ -791,10 +818,10 @@ export function normalizeAndSearchCatalogClientIndex(
           item,
           "fuzzy",
           position,
-          rawQuery,
+          searchQuery,
           correctedToken,
           commonPrefixLength(
-            normalizeCatalogSearchTokenText(rawQuery),
+            normalizeCatalogSearchTokenText(searchQuery),
             correctedToken,
           ) * 10_000,
         );
@@ -813,6 +840,7 @@ export function normalizeAndSearchCatalogClientIndex(
     primary,
     suggested,
     durationMs: performance.now() - startedAt,
+    ...(sectionIntent ? { sectionIntent } : {}),
   };
 }
 export function catalogClientIndexWireBytes(
