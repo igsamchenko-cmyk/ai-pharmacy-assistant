@@ -7,13 +7,15 @@ import {
   type CatalogNormalizedCandidate,
   type CatalogNormalizedMatchType,
   type CatalogNormalizedSearchResult,
+  type CatalogSectionIntentKey,
 } from "@workspace/catalog-index";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronRight, Database, Search } from "lucide-react";
+import { ChevronRight, Database, FileSearch, Search } from "lucide-react";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
 import { cacheOfflineProductIdentity } from "@/lib/offline-product-card";
+import { instructionSectionTarget } from "@/lib/navigation-v3";
 
 interface LocalCatalogGroup {
   key: string;
@@ -87,22 +89,33 @@ export function groupLocalCatalogResults(
 function productHref(
   product: CatalogClientIndexSearchItem["product"],
   correctedQuery?: string,
+  sectionIntent?: CatalogSectionIntentKey,
 ): string {
   const href = registryProductDetailHref({
     id: product.productId,
     registration: { number: product.registration },
   });
-  return correctedQuery
+  const withCorrection = correctedQuery
     ? `${href}&correctedQuery=${encodeURIComponent(correctedQuery)}`
     : href;
+  // PR-H, H.2.3: when the query carried a section intent ("амоксил
+  // лактація"), land directly on that instruction section instead of the
+  // default Profile tab. Whether the section actually exists in this
+  // product's parsed instruction is validated once the card loads --
+  // product-card.tsx shows a toast instead of a silent no-op if it doesn't.
+  return sectionIntent
+    ? instructionSectionTarget(withCorrection, sectionIntent)
+    : withCorrection;
 }
 
 function LocalCatalogGroupCards({
   groups,
   suggested = false,
+  sectionIntent,
 }: {
   groups: LocalCatalogGroup[];
   suggested?: boolean;
+  sectionIntent?: CatalogSectionIntentKey;
 }) {
   return (
     <div className="space-y-3">
@@ -181,7 +194,11 @@ function LocalCatalogGroupCards({
                     className="min-h-11 w-full sm:w-auto"
                   >
                     <Link
-                      href={productHref(product, group.correctedQuery)}
+                      href={productHref(
+                        product,
+                        group.correctedQuery,
+                        suggested ? undefined : sectionIntent,
+                      )}
                       data-navigation="spa"
                       onClick={() =>
                         cacheOfflineProductIdentity({
@@ -222,6 +239,7 @@ export function LocalCatalogResults({
   const suggestedItems = normalizedResult?.suggested ?? [];
   const groups = groupLocalCatalogResults(primaryItems);
   const suggestedGroups = groupLocalCatalogResults(suggestedItems);
+  const sectionIntent = normalizedResult?.sectionIntent;
   const ingredientMode = mode === "ingredients";
   if (!result.query.trim()) {
     return (
@@ -244,7 +262,7 @@ export function LocalCatalogResults({
   if (!groups.length && !suggestedGroups.length) {
     return (
       <div
-        className="space-y-2 border-y py-10 text-center"
+        className="space-y-3 border-y py-10 text-center"
         data-testid="local-catalog-no-results"
       >
         <Search className="mx-auto h-8 w-8 text-muted-foreground" />
@@ -254,6 +272,21 @@ export function LocalCatalogResults({
             ? "Спробуйте українську, латинську або міжнародну назву МНН."
             : "Спробуйте повну торгову назву, МНН або реєстраційний номер."}
         </p>
+        {/* PR-H, H.3: second-tier search when the catalog (product identity)
+            search is a genuine zero-result miss. Full-text instruction
+            search is server-side and slower, so this is a deliberate
+            second step, never triggered automatically. */}
+        {!ingredientMode && result.query.trim() ? (
+          <Button asChild variant="outline">
+            <Link
+              href={`/instruction-search?q=${encodeURIComponent(result.query.trim())}`}
+              data-testid="local-catalog-search-instructions-cta"
+            >
+              <FileSearch className="h-4 w-4" />
+              Шукати в текстах інструкцій
+            </Link>
+          </Button>
+        ) : null}
       </div>
     );
   }
@@ -283,7 +316,7 @@ export function LocalCatalogResults({
               Локально · {durationMs.toFixed(1)} мс
             </Badge>
           </div>
-          <LocalCatalogGroupCards groups={groups} />
+          <LocalCatalogGroupCards groups={groups} sectionIntent={sectionIntent} />
         </section>
       ) : null}
 
