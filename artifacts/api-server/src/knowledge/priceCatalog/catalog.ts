@@ -123,6 +123,41 @@ export function checkPriceCatalog(
   };
 }
 
+/**
+ * Map every registration number in the price catalog to its structured
+ * composition string (the catalog's own «МНН» column, e.g.
+ * "Кальцію карбонат + МАГНІЮ КАРБОНАТ ВАЖКИЙ").
+ *
+ * Unlike the registry's free-text «Склад (діючі)» prose, this column lists the
+ * active substances as discrete `+`-separated components, which makes it usable
+ * as a composition identity. A registration whose packages disagree on the
+ * composition is dropped rather than guessed at: an ambiguous composition must
+ * never become an analog claim.
+ */
+export function priceCatalogCompositionByRegistration(
+  snapshot?: PriceCatalogSnapshot,
+): Map<string, string> {
+  const records = (snapshot ?? loadSnapshot()).records;
+  const compositions = new Map<string, string>();
+  const ambiguous = new Set<string>();
+  for (const record of records) {
+    const composition = record.inn.trim();
+    if (!composition) continue;
+    const registration = normalizeRegistrationNumber(record.registrationNumber);
+    if (!registration || ambiguous.has(registration)) continue;
+    const previous = compositions.get(registration);
+    if (previous === undefined) {
+      compositions.set(registration, composition);
+      continue;
+    }
+    if (previous !== composition) {
+      compositions.delete(registration);
+      ambiguous.add(registration);
+    }
+  }
+  return compositions;
+}
+
 export function clearPriceCatalogCache(): void {
   snapshotCache.clear();
 }
