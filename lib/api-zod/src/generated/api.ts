@@ -761,8 +761,8 @@ export const getCatalogClientIndexResponseAliasCountMax = 5000;
 
 export const getCatalogClientIndexResponseRowsItemItemMax = 500;
 
-export const getCatalogClientIndexResponseRowsItemMin = 6;
-export const getCatalogClientIndexResponseRowsItemMax = 6;
+export const getCatalogClientIndexResponseRowsItemMin = 7;
+export const getCatalogClientIndexResponseRowsItemMax = 7;
 
 export const getCatalogClientIndexResponseRowsMax = 20000;
 
@@ -776,7 +776,7 @@ export const getCatalogClientIndexResponseAliasesMax = 5000;
 
 
 export const GetCatalogClientIndexResponse = zod.object({
-  "version": zod.literal(1),
+  "version": zod.literal(2),
   "snapshotHash": zod.string().regex(getCatalogClientIndexResponseSnapshotHashRegExp),
   "generatedAt": zod.coerce.date(),
   "productCount": zod.number().min(1).max(getCatalogClientIndexResponseProductCountMax),
