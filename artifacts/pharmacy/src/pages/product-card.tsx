@@ -63,6 +63,12 @@ import {
   type OfflineProductIdentity,
 } from "@/lib/offline-product-card";
 import {
+  getInstructionCacheStore,
+  readCachedInstruction,
+  writeInstructionCache,
+  type InstructionCacheRecord,
+} from "@/lib/instruction-cache";
+import {
   conciseManufacturerText,
   manufacturerHeading,
 } from "@/lib/manufacturer-display";
@@ -641,6 +647,38 @@ function EconomicsSection({ card }: { card: ProductCard }) {
   );
 }
 
+function InstructionTrustBadge({
+  documentDate,
+  registrationNumber,
+  coveragePct,
+}: {
+  documentDate: string | null | undefined;
+  registrationNumber: string;
+  coveragePct: number | null | undefined;
+}) {
+  const isPartial = typeof coveragePct === "number" && coveragePct < 100;
+  return (
+    <div
+      className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
+      data-testid="instruction-trust-badge"
+    >
+      <span>
+        Офіційна редакція від {formatDate(documentDate)} · РП{" "}
+        {registrationNumber} · джерело ДРЛЗ
+      </span>
+      {isPartial ? (
+        <Badge
+          variant="outline"
+          className="border-amber-500/50 text-amber-700 dark:text-amber-300"
+          data-testid="instruction-partial-badge"
+        >
+          Розпізнано частково — повний текст за посиланням
+        </Badge>
+      ) : null}
+    </div>
+  );
+}
+
 function InstructionSection({ card }: { card: ProductCard }) {
   const [query, setQuery] = useState("");
   const sections = card.instruction.sections;
@@ -668,6 +706,19 @@ function InstructionSection({ card }: { card: ProductCard }) {
     card.identity.officialInstructionDocumentUrl ??
     null;
 
+  useEffect(() => {
+    if (!card.instruction.available) return;
+    void writeInstructionCache(
+      getInstructionCacheStore(),
+      card.identity.id,
+      card.instruction,
+      {
+        productTradeName: card.identity.tradeName,
+        registrationNumber: card.identity.registration.number,
+      },
+    );
+  }, [card.instruction, card.identity]);
+
   return (
     <section id="instruction" className="scroll-mt-20 space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -687,6 +738,14 @@ function InstructionSection({ card }: { card: ProductCard }) {
           </Badge>
         ) : null}
       </div>
+
+      {card.instruction.source ? (
+        <InstructionTrustBadge
+          documentDate={card.instruction.source.documentDate}
+          registrationNumber={card.identity.registration.number}
+          coveragePct={card.instruction.provenance?.coveragePct}
+        />
+      ) : null}
 
       <Alert className="border-amber-500/50 bg-amber-500/5">
         <AlertTriangle className="h-4 w-4" />
@@ -1247,6 +1306,87 @@ export function PreliminaryProductCard({
   );
 }
 
+export function CachedInstructionPreview({
+  cached,
+}: {
+  cached: InstructionCacheRecord;
+}) {
+  const sections = cached.instruction.sections;
+  const visibleSections = sections
+    ? INSTRUCTION_SECTION_LABELS.filter(({ key }) => sections[key])
+    : [];
+
+  return (
+    <main
+      className={PRODUCT_CARD_PAGE_CLASS}
+      data-testid="product-card-cached-instruction"
+      data-cached="true"
+    >
+      <nav className="flex min-h-11 min-w-0 items-center gap-3 border-b pb-2">
+        <Link
+          href="/?type=registry_products"
+          className="flex min-w-0 items-center gap-2 text-sm font-semibold text-primary"
+        >
+          <ArrowLeft className="h-4 w-4 shrink-0" />
+          <span>До пошуку</span>
+        </Link>
+        <span className="min-w-0 flex-1 truncate text-right text-xs text-muted-foreground">
+          {cached.registrationNumber}
+        </span>
+      </nav>
+
+      <Card className={PRODUCT_CARD_HERO_CLASS}>
+        <CardContent className="min-w-0 space-y-4 p-4 sm:p-6">
+          <header className="flex min-w-0 items-start gap-3">
+            <div className="shrink-0 rounded-xl bg-primary/10 p-2.5">
+              <BookOpenText className="h-6 w-6 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <h1 className={PRODUCT_CARD_TITLE_CLASS}>
+                  {cached.productTradeName}
+                </h1>
+                <Badge variant="outline">Збережена версія</Badge>
+              </div>
+            </div>
+          </header>
+
+          <InstructionTrustBadge
+            documentDate={cached.instruction.source?.documentDate}
+            registrationNumber={cached.registrationNumber}
+            coveragePct={cached.instruction.provenance?.coveragePct}
+          />
+
+          {sections && visibleSections.length ? (
+            <div className="rounded-2xl border bg-card/70 px-4">
+              {visibleSections.map(({ key, label }) => (
+                <details
+                  key={key}
+                  id={`instruction-${key}`}
+                  className="group scroll-mt-20 border-b py-1 last:border-b-0"
+                >
+                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold">
+                    <span className="break-words">{label}</span>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+                  </summary>
+                  <div className="pb-5 text-sm leading-7">
+                    <InstructionSectionContent content={sections[key]} />
+                  </div>
+                </details>
+              ))}
+            </div>
+          ) : null}
+
+          <p className="text-xs text-muted-foreground" role="status">
+            Показано збережену версію інструкції з попереднього перегляду.
+            Оновлюємо дані з сервера…
+          </p>
+        </CardContent>
+      </Card>
+    </main>
+  );
+}
+
 function ProductCardSkeleton() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 overflow-x-hidden pb-16">
@@ -1393,6 +1533,8 @@ export default function ProductCardPage() {
       typeof window === "undefined" ? "" : window.location.search,
     ),
   );
+  const [cachedInstruction, setCachedInstruction] =
+    useState<InstructionCacheRecord | null>(null);
 
   const selectProductCardTab = (tab: ProductCardTab) => {
     setActiveTab(tab);
@@ -1430,6 +1572,20 @@ export default function ProductCardPage() {
   const correctedQuery = correctedQueryFromSearch(
     typeof window === "undefined" ? "" : window.location.search,
   );
+
+  useEffect(() => {
+    setCachedInstruction(null);
+    if (!validProductId || activeTab !== "instruction") return;
+    let cancelled = false;
+    void readCachedInstruction(getInstructionCacheStore(), productId).then(
+      (record) => {
+        if (!cancelled) setCachedInstruction(record);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, productId, validProductId]);
 
   useEffect(() => {
     if (!product) return;
@@ -1504,6 +1660,13 @@ export default function ProductCardPage() {
   ]);
 
   if (!validProductId) return <ProductCardError invalid />;
+  if (
+    cardPresentation.source !== "server" &&
+    activeTab === "instruction" &&
+    cachedInstruction?.productId === productId
+  ) {
+    return <CachedInstructionPreview cached={cachedInstruction} />;
+  }
   if (cardPresentation.source === "preliminary") {
     return <PreliminaryProductCard identity={cardPresentation.identity} />;
   }

@@ -10,7 +10,9 @@ import type {
   ProductCard,
   ProductCardFreshnessEntry,
 } from "@workspace/api-client-react";
+import type { InstructionCacheRecord } from "@/lib/instruction-cache";
 import {
+  CachedInstructionPreview,
   PRODUCT_CARD_HERO_CLASS,
   PRODUCT_CARD_PAGE_CLASS,
   PRODUCT_CARD_TITLE_CLASS,
@@ -450,5 +452,91 @@ describe("operational product card UI", () => {
     expect(
       instructionQuoteFromHash("#instruction-quote-unknown-0-4", sections),
     ).toBeNull();
+  });
+
+  it("shows the trust strip with the document date, registration number and a partial badge", () => {
+    const value = card();
+    const html = renderCard(value, "instruction");
+
+    expect(html).toContain('data-testid="instruction-trust-badge"');
+    expect(html).toContain("Офіційна редакція від");
+    expect(html).toContain(REGISTRATION);
+    expect(html).toContain("джерело ДРЛЗ");
+    expect(html).toContain('data-testid="instruction-partial-badge"');
+    expect(html).toContain("Розпізнано частково");
+  });
+
+  it("hides the partial badge once every canonical section is covered", () => {
+    const base = card();
+    const html = renderCard(
+      card({
+        instruction: {
+          ...base.instruction,
+          provenance: {
+            ...base.instruction.provenance!,
+            availableSectionCount: 9,
+            coveragePct: 100,
+          },
+        },
+      }),
+      "instruction",
+    );
+
+    expect(html).toContain('data-testid="instruction-trust-badge"');
+    expect(html).not.toContain('data-testid="instruction-partial-badge"');
+  });
+});
+
+describe("cached instruction preview", () => {
+  function cachedRecord(
+    overrides: Partial<InstructionCacheRecord> = {},
+  ): InstructionCacheRecord {
+    const base = card();
+    return {
+      productId: PRODUCT_ID,
+      instruction: base.instruction,
+      productTradeName: base.identity.tradeName,
+      registrationNumber: REGISTRATION,
+      documentHash: base.instruction.source?.documentHash ?? null,
+      cachedAt: 1_700_000_000_000,
+      lastAccessedAt: 1_700_000_000_000,
+      ...overrides,
+    };
+  }
+
+  it("renders sections, trade name and the trust strip straight from the cache", () => {
+    const html = renderToStaticMarkup(
+      createElement(Router, { ssrPath: `/products/${PRODUCT_ID}` }, [
+        createElement(CachedInstructionPreview, {
+          key: "preview",
+          cached: cachedRecord(),
+        }),
+      ]),
+    );
+
+    expect(html).toContain('data-testid="product-card-cached-instruction"');
+    expect(html).toContain(card().identity.tradeName);
+    expect(html).toContain(REGISTRATION);
+    expect(html).toContain('data-testid="instruction-trust-badge"');
+    expect(html).toContain("Збережена версія");
+    expect(html).toContain("Розчинити в 10 мл води для ін&#x27;єкцій.");
+    expect(html).toContain("Оновлюємо дані з сервера");
+  });
+
+  it("omits the section list when the cached record has no structured sections", () => {
+    const base = card();
+    const html = renderToStaticMarkup(
+      createElement(Router, { ssrPath: `/products/${PRODUCT_ID}` }, [
+        createElement(CachedInstructionPreview, {
+          key: "preview",
+          cached: cachedRecord({
+            instruction: { ...base.instruction, sections: null },
+          }),
+        }),
+      ]),
+    );
+
+    expect(html).not.toContain('id="instruction-administration"');
+    expect(html).toContain("Оновлюємо дані з сервера");
   });
 });
