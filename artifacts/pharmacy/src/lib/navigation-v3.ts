@@ -58,6 +58,26 @@ export function instructionSectionTarget(
   return `${url.pathname}${url.search}#instruction-${sectionKey}`;
 }
 
+/**
+ * PR-I, I.2: builds the absolute, shareable link for "Поділитися розділом"
+ * -- the same `?tab=instruction#instruction-{key}` target as
+ * `instructionSectionTarget`, but with an explicit origin so the result is
+ * a full URL a pharmacist can paste into a message rather than a
+ * site-relative path.
+ */
+export function instructionSectionShareUrl(
+  origin: string,
+  productId: string,
+  search: string,
+  sectionKey: string,
+): string {
+  const target = instructionSectionTarget(
+    `/products/${encodeURIComponent(productId)}${normalizedSearch(search)}`,
+    sectionKey,
+  );
+  return `${origin.replace(/\/$/u, "")}${target}`;
+}
+
 export function instructionAliasTarget(
   productId: string,
   search: string,

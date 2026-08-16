@@ -12,6 +12,9 @@ export interface SearchMetricRecord {
   ttir: number | null;
   ttfr: number | null;
   ttc: number | null;
+  /** PR-I, I.3: time from app start to the first instruction section a
+   * pharmacist opens on the current card ("time to section"). */
+  ttSec: number | null;
   catalogSize: number | null;
   indexBuildMs: number | null;
   serializedIndexBytes: number | null;
@@ -45,6 +48,7 @@ export interface SearchMetricsTracker {
   markIndexReady(meta: SearchIndexReadyMeta): void;
   markFirstResult(query: string): void;
   markCardOpen(drugId: string): void;
+  markSectionOpen(sectionKey: string): void;
   flush(): Promise<void>;
   snapshot(): SearchMetricRecord | null;
 }
@@ -199,6 +203,7 @@ export function createSearchMetricsTracker(
         ttir: null,
         ttfr: null,
         ttc: null,
+        ttSec: null,
         catalogSize: null,
         indexBuildMs: null,
         serializedIndexBytes: null,
@@ -230,6 +235,11 @@ export function createSearchMetricsTracker(
       record = { ...record, ttc: markElapsed("card-open") };
       persist();
     },
+    markSectionOpen(sectionKey) {
+      if (!record || record.ttSec !== null || !sectionKey.trim()) return;
+      record = { ...record, ttSec: markElapsed("section-open") };
+      persist();
+    },
     flush() {
       return persistChain;
     },
@@ -259,5 +269,7 @@ export const markIndexReady = (meta: SearchIndexReadyMeta) =>
 export const markFirstResult = (query: string) =>
   tracker.markFirstResult(query);
 export const markCardOpen = (drugId: string) => tracker.markCardOpen(drugId);
+export const markSectionOpen = (sectionKey: string) =>
+  tracker.markSectionOpen(sectionKey);
 export const readSearchMetrics = (limit = SEARCH_METRICS_LIMIT) =>
   browserStore.list(limit);
