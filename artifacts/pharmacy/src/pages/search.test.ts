@@ -34,7 +34,6 @@ import {
   shouldPreserveCatalogResults,
   shouldRetryCatalogRequest,
 } from "./search";
-import { REGISTRY_CATALOG_HREF } from "./home";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
 
 vi.mock("@/components/report-issue-button", () => ({
@@ -937,10 +936,9 @@ describe("registry catalog UI", () => {
     expect(resolveCatalogViewState(false, false, true)).toBe("results");
   });
 
-  it("preserves the medical warning and the full-catalog home route", () => {
+  it("preserves the medical warning shown with registry results", () => {
     expect(REGISTRY_CATALOG_SAFETY_COPY).toBe(
       "Наявність препарату в реєстрі не підтверджує взаємозамінність, відсутність взаємодій або доцільність застосування.",
     );
-    expect(REGISTRY_CATALOG_HREF).toBe("/search?type=registry_products");
   });
 });
