@@ -1,4 +1,10 @@
-import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   getGetProductCardQueryKey,
   useGetProductCard,
@@ -79,6 +85,7 @@ import {
   productCardTabTarget,
   type ProductCardTab,
 } from "@/lib/navigation-v3";
+import { toast } from "@/hooks/use-toast";
 import { pharmacovigilanceHref } from "@/lib/pharmacovigilance-draft";
 import {
   filterInstructionSections,
@@ -340,6 +347,23 @@ export function instructionQuoteFromHash(
     charStart,
     charEnd,
   };
+}
+
+const INSTRUCTION_SECTION_HASH_PATTERN =
+  /^#instruction-(indications|contraindications|adverseReactions|interactions|specialWarnings|pregnancyAndLactation|administration|overdose|storage)$/u;
+
+/**
+ * Parses a plain section anchor (PR-H, H.1: `#instruction-{key}`, as opposed
+ * to the more specific `#instruction-quote-{key}-{start}-{end}` format
+ * handled by `instructionQuoteFromHash`). Used both for landing from a
+ * search result carrying a `sectionIntent` (H.2.3) and for the section
+ * chips' own scroll-to links (H.1.2).
+ */
+export function instructionSectionKeyFromHash(
+  hash: string,
+): InstructionQuote["sectionKey"] | null {
+  const match = hash.match(INSTRUCTION_SECTION_HASH_PATTERN);
+  return match ? (match[1] as InstructionQuote["sectionKey"]) : null;
 }
 
 function quotesForFact(
@@ -679,6 +703,60 @@ function InstructionTrustBadge({
   );
 }
 
+/**
+ * Fixed-order quick-jump chips for the Instruction tab (PR-H, H.1.2).
+ *
+ * The spec's original 7-chip order was "Показання · Дози · Протипоказання
+ * · Вагітність · Діти · Взаємодії · Побічні" against a 19-key section
+ * model. This repository's reconciled 9-key model (PR-G) has no "children"
+ * section at all, so "Діти" is intentionally dropped here -- there is
+ * nothing for that chip to scroll to. The remaining 6 map onto existing
+ * keys in the spec's original relative order.
+ */
+const INSTRUCTION_SECTION_CHIPS: ReadonlyArray<{
+  key: (typeof INSTRUCTION_SECTION_LABELS)[number]["key"];
+  label: string;
+}> = [
+  { key: "indications", label: "Показання" },
+  { key: "administration", label: "Дози" },
+  { key: "contraindications", label: "Протипоказання" },
+  { key: "pregnancyAndLactation", label: "Вагітність" },
+  { key: "interactions", label: "Взаємодії" },
+  { key: "adverseReactions", label: "Побічні" },
+];
+
+function InstructionSectionChips({
+  sections,
+  onSelect,
+}: {
+  sections: ProductCard["instruction"]["sections"];
+  onSelect: (key: InstructionQuote["sectionKey"]) => void;
+}) {
+  if (!sections) return null;
+  const chips = INSTRUCTION_SECTION_CHIPS.filter(({ key }) => sections[key]);
+  if (!chips.length) return null;
+  return (
+    <div
+      className="flex flex-wrap gap-2"
+      role="list"
+      data-testid="instruction-section-chips"
+    >
+      {chips.map(({ key, label }) => (
+        <button
+          key={key}
+          type="button"
+          role="listitem"
+          onClick={() => onSelect(key)}
+          className="min-h-9 rounded-full border bg-background px-3 py-1 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          data-testid={`instruction-section-chip-${key}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function InstructionSection({ card }: { card: ProductCard }) {
   const [query, setQuery] = useState("");
   const sections = card.instruction.sections;
@@ -705,6 +783,9 @@ function InstructionSection({ card }: { card: ProductCard }) {
     card.instruction.source?.url ??
     card.identity.officialInstructionDocumentUrl ??
     null;
+  const [highlightedSection, setHighlightedSection] =
+    useState<InstructionQuote["sectionKey"] | null>(null);
+  const sectionLandingHandledRef = useRef(false);
 
   useEffect(() => {
     if (!card.instruction.available) return;
@@ -718,6 +799,53 @@ function InstructionSection({ card }: { card: ProductCard }) {
       },
     );
   }, [card.instruction, card.identity]);
+
+  // PR-H, H.1.1/H.2.3: a plain `#instruction-{key}` hash (from a chip click
+  // via history.replaceState, or from a search result carrying a
+  // sectionIntent) opens and highlights that section for 2 seconds. If the
+  // requested section isn't present in this instruction -- or the
+  // instruction has no structured sections at all -- a non-intrusive toast
+  // says so instead of landing on a silent no-op (H.2.3).
+  useEffect(() => {
+    if (sectionLandingHandledRef.current) return;
+    if (typeof window === "undefined") return;
+    const sectionKey = instructionSectionKeyFromHash(window.location.hash);
+    if (!sectionKey) return;
+    sectionLandingHandledRef.current = true;
+    if (sections?.[sectionKey]) {
+      setHighlightedSection(sectionKey);
+      const timer = window.setTimeout(
+        () => setHighlightedSection(null),
+        2000,
+      );
+      return () => window.clearTimeout(timer);
+    }
+    toast({
+      title: "Розділ у розпарсеній інструкції відсутній",
+      description:
+        "Перегляньте офіційний документ повністю за посиланням нижче.",
+    });
+    return undefined;
+  }, [sections]);
+
+  const handleSectionChipSelect = (
+    sectionKey: InstructionQuote["sectionKey"],
+  ) => {
+    if (typeof document !== "undefined") {
+      const details = document.getElementById(`instruction-${sectionKey}`);
+      if (details instanceof HTMLDetailsElement) details.open = true;
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", `#instruction-${sectionKey}`);
+        window.requestAnimationFrame(() =>
+          details?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        );
+      }
+    }
+    setHighlightedSection(sectionKey);
+    if (typeof window !== "undefined") {
+      window.setTimeout(() => setHighlightedSection(null), 2000);
+    }
+  };
 
   return (
     <section id="instruction" className="scroll-mt-20 space-y-4">
@@ -766,6 +894,10 @@ function InstructionSection({ card }: { card: ProductCard }) {
               placeholder="Наприклад: кліренс, натрію хлорид"
             />
           </label>
+          <InstructionSectionChips
+            sections={sections}
+            onSelect={handleSectionChipSelect}
+          />
           <div className="rounded-2xl border bg-card/70 px-4">
             {visibleSections.map(({ key, label }) => (
               <details
@@ -773,12 +905,20 @@ function InstructionSection({ card }: { card: ProductCard }) {
                 id={`instruction-${key}`}
                 className="group scroll-mt-20 border-b py-1 last:border-b-0"
                 open={
-                  key === "administration" || targetQuote?.sectionKey === key
+                  key === "administration" ||
+                  targetQuote?.sectionKey === key ||
+                  highlightedSection === key
                     ? true
                     : undefined
                 }
               >
-                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold">
+                <summary
+                  className={`flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold transition-colors ${
+                    highlightedSection === key
+                      ? "rounded-lg bg-primary/10 ring-2 ring-primary/40"
+                      : ""
+                  }`}
+                >
                   <span className="break-words">{label}</span>
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
                 </summary>

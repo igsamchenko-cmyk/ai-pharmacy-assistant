@@ -38,9 +38,9 @@ function result(): InstructionSearchResult {
 }
 
 describe("instruction search UI helpers", () => {
-  it("builds a mobile-safe exact product-card anchor", () => {
+  it("builds a mobile-safe exact product-card anchor on the Instruction tab", () => {
     expect(instructionSearchResultHref(result())).toBe(
-      `/products/${PRODUCT_ID}?registration=UA%2F1234%2F01%2F01#instruction-quote-interactions-100-133`,
+      `/products/${PRODUCT_ID}?registration=UA%2F1234%2F01%2F01&tab=instruction#instruction-quote-interactions-100-133`,
     );
   });
 
