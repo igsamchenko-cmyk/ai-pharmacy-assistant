@@ -3,7 +3,11 @@ import {
   catalogCompositionKey,
   type CatalogClientIndexProduct,
 } from "@workspace/catalog-index";
-import { classifyRegistryAnalogs, isNonSpecificInn } from "./product-analogs";
+import {
+  catalogInnSpecificity,
+  classifyRegistryAnalogs,
+  isNonSpecificInn,
+} from "./product-analogs";
 
 const base = {
   productId: "A".repeat(32),
@@ -115,6 +119,23 @@ describe("registry analog classification", () => {
     ).toEqual({ full: [sameComposition], partial: [otherFlavour] });
   });
 
+  it("still groups a class-combination INN, unlike a bare placeholder", () => {
+    // "Valsartan and diuretics" names a substance, so the group is meaningful
+    // as a class even without a composition — the tab labels it as such.
+    const classBase = {
+      ...base,
+      inn: "Valsartan and diuretics",
+      compositionKey: "",
+    };
+    const peer = candidate("M".repeat(32), "ВАЛСАКОР", {
+      inn: "Valsartan and diuretics",
+    });
+    expect(classifyRegistryAnalogs(classBase, [peer])).toEqual({
+      full: [peer],
+      partial: [],
+    });
+  });
+
   it("does not fall back to the placeholder INN when no composition is resolved", () => {
     const combBase = { ...base, inn: "Comb drug", compositionKey: "" };
     const placeholderPeer = candidate("L".repeat(32), "АВІСАН", {
@@ -157,6 +178,38 @@ describe("catalogCompositionKey", () => {
       (_unused, index) => `компонент${index}`,
     ).join(" + ");
     expect(catalogCompositionKey(homeopathic)).toBe("");
+  });
+});
+
+describe("catalogInnSpecificity", () => {
+  it("classifies WHO-style class combinations as partial, not specific", () => {
+    // Real registry values: they name one substance plus an unresolved class,
+    // so two products sharing the string may hold different second components.
+    for (const inn of [
+      "Valsartan and diuretics",
+      "Ramipril and diuretics",
+      "Timolol, combinations",
+      "Paracetamol, combinations excl. psycholeptics",
+      "Barbiturates in combination with other drugs",
+    ]) {
+      expect(catalogInnSpecificity(inn)).toBe("partial_combination");
+    }
+  });
+
+  it("keeps a name that enumerates its components specific", () => {
+    expect(
+      catalogInnSpecificity(
+        "Vitamin B1 in combination with vitamin B6 and/or vitamin B12",
+      ),
+    ).toBe("specific");
+    expect(
+      catalogInnSpecificity("Amoxicillin and beta-lactamase inhibitor"),
+    ).toBe("specific");
+  });
+
+  it("separates a bare placeholder from a class combination", () => {
+    expect(catalogInnSpecificity("Comb drug")).toBe("placeholder");
+    expect(catalogInnSpecificity("Ібупрофен")).toBe("specific");
   });
 });
 

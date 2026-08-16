@@ -1,10 +1,11 @@
 import {
+  catalogInnSpecificity,
   isNonSpecificInn,
   normalizeCatalogIndexText,
   type CatalogClientIndexProduct,
 } from "@workspace/catalog-index";
 
-export { isNonSpecificInn };
+export { catalogInnSpecificity, isNonSpecificInn };
 
 export interface RegistryAnalogBase {
   productId: string;
@@ -48,12 +49,14 @@ export function classifyRegistryAnalogs(
   const full: CatalogClientIndexProduct[] = [];
   const partial: CatalogClientIndexProduct[] = [];
 
-  // A placeholder МНН is not an identity, so it may only be replaced by a real
-  // composition — never fallen back to. Without either, nothing is an analog.
+  // A resolved composition always wins. Failing that, a placeholder МНН carries
+  // no substance at all and may never be fallen back to; a partial-combination
+  // МНН does name a substance, so it may still group — the caller is
+  // responsible for labelling that as a class rather than as an analog set.
   const matchesBase = compositionKey
     ? (candidate: CatalogClientIndexProduct) =>
         candidate.compositionKey === compositionKey
-    : !inn || isNonSpecificInn(base.inn)
+    : !inn || catalogInnSpecificity(base.inn) === "placeholder"
       ? null
       : (candidate: CatalogClientIndexProduct) =>
           normalizeCatalogIndexText(candidate.inn) === inn;
