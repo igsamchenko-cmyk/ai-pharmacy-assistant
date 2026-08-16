@@ -1,6 +1,9 @@
 import React, { useMemo } from "react";
 import type { ProductCard } from "@workspace/api-client-react";
-import type { CatalogClientIndexProduct } from "@workspace/catalog-index";
+import type {
+  CatalogClientIndexProduct,
+  CatalogClientIndexSearchResult,
+} from "@workspace/catalog-index";
 import {
   AlertTriangle,
   ChevronRight,
@@ -17,6 +20,13 @@ import {
   classifyRegistryAnalogs,
   isNonSpecificInn,
 } from "@/lib/product-analogs";
+
+const EMPTY_SEARCH_RESULT = {
+  query: "",
+  total: 0,
+  items: [],
+  durationMs: 0,
+} as const satisfies CatalogClientIndexSearchResult;
 
 function ProductList({ products }: { products: CatalogClientIndexProduct[] }) {
   if (!products.length) {
@@ -61,13 +71,25 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
   const product = card.identity;
   const inn = product.inn || product.activeIngredient || "";
   const nonSpecificInn = isNonSpecificInn(inn);
+
+  // When the registry МНН is a placeholder, this position's own index row
+  // carries the composition identity resolved from the official price catalog.
+  const compositionKey = useMemo(() => {
+    if (!nonSpecificInn) return "";
+    const self = catalog
+      .search(product.id, { limit: 5 })
+      .items.find((item) => item.product.productId === product.id);
+    return self?.product.compositionKey ?? "";
+  }, [catalog, nonSpecificInn, product.id]);
+
+  const byComposition = Boolean(compositionKey);
+  const query = compositionKey || (nonSpecificInn ? "" : inn);
   const result = useMemo(
     () =>
-      catalog.search(inn, {
-        limit: 100,
-        scope: "ingredients",
-      }),
-    [catalog, inn],
+      query
+        ? catalog.search(query, { limit: 100, scope: "ingredients" })
+        : EMPTY_SEARCH_RESULT,
+    [catalog, query],
   );
   const groups = useMemo(
     () =>
@@ -77,10 +99,18 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
           inn,
           form: product.dosageForm,
           strength: product.strength ?? "",
+          compositionKey,
         },
         result.items.map((item) => item.product),
       ),
-    [inn, product.dosageForm, product.id, product.strength, result.items],
+    [
+      compositionKey,
+      inn,
+      product.dosageForm,
+      product.id,
+      product.strength,
+      result.items,
+    ],
   );
 
   return (
@@ -89,10 +119,14 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
         <div>
           <h2 className="flex items-center gap-2 text-xl font-bold">
             <Pill className="h-5 w-5 text-primary" />
-            Реєстрові варіанти за МНН
+            {byComposition
+              ? "Реєстрові варіанти за складом"
+              : "Реєстрові варіанти за МНН"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {inn || "МНН цієї позиції не зіставлено"}
+            {byComposition
+              ? "Той самий перелік діючих речовин"
+              : inn || "МНН цієї позиції не зіставлено"}
           </p>
         </div>
         <Badge variant="outline" className="gap-1">
@@ -103,7 +137,20 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
         </Badge>
       </div>
 
-      {nonSpecificInn ? (
+      {byComposition ? (
+        <Alert className="border-sky-500/40 bg-sky-500/5">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Підібрано за складом, а не за МНН</AlertTitle>
+          <AlertDescription>
+            Держреєстр зберігає МНН цієї позиції як загальну позначку «{inn}» —
+            так описують комбіновані препарати, склад яких не розкладено на
+            окрему діючу речовину. Підбір за таким записом об&apos;єднав би
+            непов&apos;язані препарати, тому FarmAssist зіставляє перелік діючих
+            речовин із Національного каталогу цін МОЗ. Це інше джерело, ніж
+            ДРЛЗ, і воно не охоплює препарати без задекларованої ціни.
+          </AlertDescription>
+        </Alert>
+      ) : nonSpecificInn ? (
         <Alert className="border-sky-500/40 bg-sky-500/5">
           <Info className="h-4 w-4" />
           <AlertTitle>МНН не деталізовано в реєстрі</AlertTitle>
@@ -111,12 +158,14 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
             Держреєстр зберігає МНН цієї позиції як загальну позначку «{inn}» —
             так описують комбіновані препарати, склад яких не розкладено на
             окрему діючу речовину. Підбір «тієї самої МНН» за таким записом
-            об&apos;єднав би непов&apos;язані препарати, тому FarmAssist його не
-            показує. Перевірте фактичний склад в інструкції та зіставте аналоги
-            вручну.
+            об&apos;єднав би непов&apos;язані препарати, а структурованого
+            складу для цієї позиції немає в Національному каталозі цін МОЗ.
+            Перевірте фактичний склад в інструкції та зіставте аналоги вручну.
           </AlertDescription>
         </Alert>
-      ) : (
+      ) : null}
+
+      {nonSpecificInn && !byComposition ? null : (
         <>
           <div className="space-y-4">
             <h3 className="flex flex-wrap items-center gap-2 font-bold">
@@ -129,7 +178,9 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
           <div className="space-y-4">
             <h3 className="flex flex-wrap items-center gap-2 font-bold">
               <span className="h-3 w-3 rounded-full bg-amber-500" />
-              Те саме МНН, інша форма або дозування
+              {byComposition
+                ? "Той самий склад, інша форма або дозування"
+                : "Те саме МНН, інша форма або дозування"}
             </h3>
             <ProductList products={groups.partial} />
           </div>
@@ -140,9 +191,10 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Не автоматична заміна</AlertTitle>
         <AlertDescription>
-          Збіг МНН не підтверджує взаємозамінність. Перевірте форму, дозування,
-          шлях введення, показання та умови рецепта. Терапевтичні аналоги без
-          окремої перевіреної доказової бази тут не формуються.
+          {byComposition ? "Збіг складу" : "Збіг МНН"} не підтверджує
+          взаємозамінність. Перевірте форму, дозування, шлях введення, показання
+          та умови рецепта. Терапевтичні аналоги без окремої перевіреної
+          доказової бази тут не формуються.
         </AlertDescription>
       </Alert>
     </section>
