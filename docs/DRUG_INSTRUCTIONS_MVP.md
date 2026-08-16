@@ -233,6 +233,40 @@ that carries the query over to `/instruction-search`, the server-side
 full-text search described above. This is a deliberate second step, never
 triggered automatically, since full-text search is slower.
 
+## Reading UX And Local Metrics
+
+The Instruction tab's "Знайти в тексті" box (`lib/instruction-find.ts`) is a
+purely local, case-insensitive substring search across the already-loaded
+structured sections. Sections containing a match auto-open, matches are
+highlighted inline, and a counter with prev/next controls cycles through
+every match across all sections, scrolling and briefly emphasizing the
+active one. It never calls the server and reuses the same section-filter
+box the tab already had, rather than adding a second overlapping search
+field.
+
+A 3-step reading font size (small/medium/large, `lib/instruction-font-size.ts`)
+is persisted per-browser in `localStorage` and applied to every section's
+text. Each section's summary row also has a "Поділитися розділом" button
+that copies the section's absolute, paste-ready
+`?tab=instruction#instruction-{key}` link to the clipboard
+(`instructionSectionShareUrl` in `lib/navigation-v3.ts`) without sending the
+instruction text itself anywhere.
+
+`lib/search-metrics.ts` gained `markSectionOpen`/`ttSec` ("time to
+section"): the same idempotent, IndexedDB-backed pattern as the existing
+`ttir`/`ttfr`/`ttc` marks. It records the first moment a section becomes
+visible on the Instruction tab -- the always-open administration section by
+default, or an explicit chip/anchor landing -- and is shown alongside the
+other timings on `/perf`.
+
+`lib/zero-results-log.ts` is a separate, capped (500 entries) IndexedDB log
+of searches that returned zero results, written locally from the three
+zero-result branches (catalog client-index search, catalog server search,
+and full-text instruction search) and never transmitted over the network.
+`/perf` lists the log and can export it as a JSON file for periodic review
+of what pharmacists search for that the catalog or instruction index
+doesn't answer.
+
 ## Production Activation Plan
 
 No production DB write or import is required. After PR approval:

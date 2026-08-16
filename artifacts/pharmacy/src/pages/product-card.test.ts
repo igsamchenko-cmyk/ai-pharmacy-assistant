@@ -563,6 +563,56 @@ describe("operational product card UI", () => {
     );
     expect(html).not.toContain('data-testid="instruction-section-chips"');
   });
+
+  it("renders the 3-step font-size control and defaults to the medium step (PR-I, I.2)", () => {
+    const html = renderCard(card(), "instruction");
+    expect(html).toContain('data-testid="instruction-font-size-control"');
+    expect(html).toContain('data-testid="instruction-font-size-sm"');
+    expect(html).toContain('data-testid="instruction-font-size-md"');
+    expect(html).toContain('data-testid="instruction-font-size-lg"');
+    expect(html).toMatch(
+      /aria-pressed="true"[^>]*data-testid="instruction-font-size-md"/,
+    );
+  });
+
+  it("omits the font-size control when there are no structured sections (PR-I, I.2)", () => {
+    const base = card();
+    const html = renderCard(
+      card({ instruction: { ...base.instruction, sections: null } }),
+      "instruction",
+    );
+    expect(html).not.toContain('data-testid="instruction-font-size-control"');
+  });
+
+  it("renders a share button for every section shown on the tab (PR-I, I.2)", () => {
+    const html = renderCard(card(), "instruction");
+    // All 9 canonical sections render a details row (with a "not
+    // structured" fallback message for the null ones), so every one gets
+    // its own share link -- not just the populated sections.
+    for (const key of [
+      "indications",
+      "contraindications",
+      "adverseReactions",
+      "interactions",
+      "specialWarnings",
+      "pregnancyAndLactation",
+      "administration",
+      "overdose",
+      "storage",
+    ]) {
+      expect(html).toContain(`data-testid="instruction-section-share-${key}"`);
+    }
+  });
+
+  it("relabels the section search box as find-in-text (PR-I, I.1)", () => {
+    const html = renderCard(card(), "instruction");
+    expect(html).toContain("Знайти в тексті");
+    expect(html).toContain('data-testid="instruction-find-input"');
+    // With no query typed yet, the match counter/prev/next controls are
+    // not rendered at all -- they only appear once there is something to
+    // count or navigate.
+    expect(html).not.toContain('data-testid="instruction-find-nav"');
+  });
 });
 
 describe("cached instruction preview", () => {

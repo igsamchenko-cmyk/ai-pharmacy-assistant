@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, RefreshCw } from "lucide-react";
+import { Activity, Download, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +7,14 @@ import {
   readSearchMetrics,
   type SearchMetricRecord,
 } from "@/lib/search-metrics";
+import {
+  getZeroResultsLogStore,
+  SOURCE_LABELS,
+  zeroResultsLogToJson,
+  type ZeroResultsLogRecord,
+} from "@/lib/zero-results-log";
 
-type MetricKey = "ttir" | "ttfr" | "ttc";
+type MetricKey = "ttir" | "ttfr" | "ttc" | "ttSec";
 
 export interface SearchMetricDistribution {
   count: number;
@@ -60,6 +66,7 @@ function SummaryCard({
     ["TTIR", metricDistribution(records, "ttir")],
     ["TTFR", metricDistribution(records, "ttfr")],
     ["TTC", metricDistribution(records, "ttc")],
+    ["TTSec", metricDistribution(records, "ttSec")],
   ] as const;
   return (
     <Card>
@@ -82,14 +89,106 @@ function SummaryCard({
   );
 }
 
+function downloadJson(filename: string, contents: string): void {
+  const blob = new Blob([contents], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+/** PR-I, I.3: the local, never-transmitted log of searches that returned
+ * zero results (`lib/zero-results-log.ts`), so the owner can periodically
+ * review what pharmacists search for that the catalog or instruction index
+ * doesn't answer. */
+function ZeroResultsCard({
+  records,
+  loading,
+}: {
+  records: ZeroResultsLogRecord[];
+  loading: boolean;
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+        <CardTitle className="text-lg">
+          Порожні запити · {records.length}
+        </CardTitle>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!records.length}
+          onClick={() =>
+            downloadJson(
+              `zero-results-${new Date().toISOString().slice(0, 10)}.json`,
+              zeroResultsLogToJson(records),
+            )
+          }
+          data-testid="zero-results-export"
+        >
+          <Download className="h-4 w-4" />
+          Експорт JSON
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Завантаження…</p>
+        ) : records.length ? (
+          <div className="max-w-full overflow-x-auto">
+            <table className="w-full min-w-[600px] text-left text-sm">
+              <thead className="border-b text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="px-2 py-3">Час</th>
+                  <th className="px-2 py-3">Джерело</th>
+                  <th className="px-2 py-3">Запит</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {records.map((record) => (
+                  <tr key={record.id}>
+                    <td className="whitespace-nowrap px-2 py-3">
+                      {new Date(record.ts).toLocaleString("uk-UA")}
+                    </td>
+                    <td className="px-2 py-3">
+                      <Badge variant="outline">
+                        {SOURCE_LABELS[record.source]}
+                      </Badge>
+                    </td>
+                    <td className="max-w-md break-words px-2 py-3">
+                      {record.query}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Порожніх запитів ще не зафіксовано.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function PerfMetricsPage() {
   const [records, setRecords] = useState<SearchMetricRecord[]>([]);
+  const [zeroResults, setZeroResults] = useState<ZeroResultsLogRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setRecords(await readSearchMetrics());
+      const [metrics, zero] = await Promise.all([
+        readSearchMetrics(),
+        getZeroResultsLogStore().list(),
+      ]);
+      setRecords(metrics);
+      setZeroResults(zero);
     } finally {
       setLoading(false);
     }
@@ -148,6 +247,7 @@ export default function PerfMetricsPage() {
                     <th className="px-2 py-3">TTIR</th>
                     <th className="px-2 py-3">TTFR</th>
                     <th className="px-2 py-3">TTC</th>
+                    <th className="px-2 py-3">TTSec</th>
                     <th className="px-2 py-3">Побудова</th>
                     <th className="px-2 py-3">Каталог</th>
                     <th className="px-2 py-3">Розмір</th>
@@ -179,6 +279,9 @@ export default function PerfMetricsPage() {
                         {formatMilliseconds(record.ttc)}
                       </td>
                       <td className="px-2 py-3">
+                        {formatMilliseconds(record.ttSec)}
+                      </td>
+                      <td className="px-2 py-3">
                         {formatMilliseconds(record.indexBuildMs)}
                       </td>
                       <td className="px-2 py-3">
@@ -202,6 +305,8 @@ export default function PerfMetricsPage() {
           )}
         </CardContent>
       </Card>
+
+      <ZeroResultsCard records={zeroResults} loading={loading} />
     </div>
   );
 }

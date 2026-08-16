@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   favoritesAliasTarget,
   instructionAliasTarget,
+  instructionSectionShareUrl,
   instructionSectionTarget,
   productCardTabFromSearch,
   productCardTabTarget,
@@ -115,6 +116,34 @@ describe("Navigation v3 PR-H section anchors", () => {
       ),
     ).toBe(
       "/products/ABC?registration=UA%2F1%2F01%2F01&correctedQuery=%D0%BD%D1%83%D1%80%D0%BE%D1%84%D0%B5%D0%BD&tab=instruction#instruction-indications",
+    );
+  });
+});
+
+describe("Navigation v3 PR-I share link", () => {
+  it("builds an absolute, paste-ready link for a single instruction section", () => {
+    expect(
+      instructionSectionShareUrl(
+        "https://farmassist.example",
+        "ABC 123",
+        "?registration=UA%2F1%2F01%2F01",
+        "interactions",
+      ),
+    ).toBe(
+      "https://farmassist.example/products/ABC%20123?registration=UA%2F1%2F01%2F01&tab=instruction#instruction-interactions",
+    );
+  });
+
+  it("trims a trailing slash on the origin and tolerates an empty search", () => {
+    expect(
+      instructionSectionShareUrl(
+        "https://farmassist.example/",
+        "ABC",
+        "",
+        "storage",
+      ),
+    ).toBe(
+      "https://farmassist.example/products/ABC?tab=instruction#instruction-storage",
     );
   });
 });

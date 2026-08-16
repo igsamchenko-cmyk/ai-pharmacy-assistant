@@ -60,6 +60,7 @@ import {
   useCatalogClientNormalizedSearch,
 } from "@/lib/catalog-client-index";
 import { markFirstResult } from "@/lib/search-metrics";
+import { logZeroResults } from "@/lib/zero-results-log";
 import { visualViewportKeyboardInset } from "@/lib/visual-viewport";
 import { nationalListVerdict } from "@/lib/national-list-status";
 import {
@@ -1972,6 +1973,21 @@ export default function SearchPage() {
     shortQuery,
     shouldUseLocalCatalog,
   ]);
+
+  // PR-I, I.3: log a genuine zero-result server-catalog search locally
+  // (never over the network). The client-index path's own zero-result
+  // branch is logged separately inside `LocalCatalogResults`.
+  useEffect(() => {
+    if (
+      shouldUseLocalCatalog ||
+      viewState !== "empty" ||
+      shortQuery ||
+      !effectiveQ
+    ) {
+      return;
+    }
+    logZeroResults("catalog", effectiveQ);
+  }, [effectiveQ, shortQuery, shouldUseLocalCatalog, viewState]);
 
   return (
     <div

@@ -48,6 +48,7 @@ function record(index: number): SearchMetricRecord {
     ttir: index,
     ttfr: null,
     ttc: null,
+    ttSec: null,
     catalogSize: 16_533,
     indexBuildMs: 0,
     serializedIndexBytes: 1_000,
@@ -80,6 +81,10 @@ describe("search metrics", () => {
     tracker.markFirstResult("Енап");
     performance.time = 120;
     tracker.markCardOpen("A".repeat(32));
+    performance.time = 150;
+    tracker.markSectionOpen("indications");
+    performance.time = 200;
+    tracker.markSectionOpen("interactions");
     await tracker.flush();
 
     expect(tracker.snapshot()).toEqual({
@@ -89,6 +94,7 @@ describe("search metrics", () => {
       ttir: 40,
       ttfr: 75,
       ttc: 120,
+      ttSec: 150,
       catalogSize: 16_533,
       indexBuildMs: 18,
       serializedIndexBytes: 2_000_000,
@@ -124,6 +130,7 @@ describe("search metrics", () => {
       });
       tracker.markFirstResult("Енап");
       tracker.markCardOpen("A".repeat(32));
+      tracker.markSectionOpen("indications");
     }).not.toThrow();
     await tracker.flush();
     expect(tracker.snapshot()).toBeNull();

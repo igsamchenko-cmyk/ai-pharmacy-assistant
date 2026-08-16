@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "wouter";
 import {
   normalizeCatalogIndexText,
@@ -16,6 +16,7 @@ import { ChevronRight, Database, FileSearch, Search } from "lucide-react";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
 import { cacheOfflineProductIdentity } from "@/lib/offline-product-card";
 import { instructionSectionTarget } from "@/lib/navigation-v3";
+import { logZeroResults } from "@/lib/zero-results-log";
 
 interface LocalCatalogGroup {
   key: string;
@@ -241,6 +242,18 @@ export function LocalCatalogResults({
   const suggestedGroups = groupLocalCatalogResults(suggestedItems);
   const sectionIntent = normalizedResult?.sectionIntent;
   const ingredientMode = mode === "ingredients";
+  // PR-I, I.3: log a genuine zero-result catalog search locally (never
+  // over the network) so the owner can periodically review what
+  // pharmacists search for that the local catalog index can't answer.
+  const isZeroResultSearch =
+    Boolean(result.query.trim()) && !groups.length && !suggestedGroups.length;
+  useEffect(() => {
+    if (!isZeroResultSearch) return;
+    logZeroResults(
+      ingredientMode ? "catalog_ingredients" : "catalog",
+      result.query,
+    );
+  }, [ingredientMode, isZeroResultSearch, result.query]);
   if (!result.query.trim()) {
     return (
       <div

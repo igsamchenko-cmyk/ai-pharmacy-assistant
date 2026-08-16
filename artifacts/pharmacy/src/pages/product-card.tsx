@@ -22,6 +22,7 @@ import {
   BookOpenText,
   CheckCircle2,
   ChevronDown,
+  ChevronUp,
   CircleHelp,
   Database,
   EllipsisVertical,
@@ -31,6 +32,7 @@ import {
   Pill,
   RefreshCw,
   Search,
+  Share2,
   WifiOff,
   ShieldAlert,
   ShieldCheck,
@@ -57,7 +59,7 @@ import {
   registryProductDetailHref,
 } from "@/lib/registry-product-route";
 import { nationalListVerdict } from "@/lib/national-list-status";
-import { markCardOpen } from "@/lib/search-metrics";
+import { markCardOpen, markSectionOpen } from "@/lib/search-metrics";
 import { useCatalogClientIndex } from "@/lib/catalog-client-index";
 import {
   catalogProductToPreliminaryIdentity,
@@ -81,10 +83,29 @@ import {
 import { conciseDosageForm } from "@/pages/search";
 import { useInteractionCart } from "@/lib/interaction-cart";
 import {
+  instructionSectionShareUrl,
   productCardTabFromSearch,
   productCardTabTarget,
   type ProductCardTab,
 } from "@/lib/navigation-v3";
+import {
+  buildHighlightFragments,
+  findMatchElementId,
+  findTextMatches,
+  flattenSectionMatches,
+  type ContentMark,
+  type FlatMatch,
+  type SectionMatchGroup,
+  type TextMatch,
+} from "@/lib/instruction-find";
+import {
+  INSTRUCTION_FONT_SIZE_BUTTON_CLASS,
+  INSTRUCTION_FONT_SIZE_CLASS,
+  INSTRUCTION_FONT_SIZE_STEPS,
+  readInstructionFontSize,
+  writeInstructionFontSize,
+  type InstructionFontSizeStep,
+} from "@/lib/instruction-font-size";
 import { toast } from "@/hooks/use-toast";
 import { pharmacovigilanceHref } from "@/lib/pharmacovigilance-draft";
 import {
@@ -505,12 +526,30 @@ function HospitalFactsSection({
   );
 }
 
+const FIND_MATCH_MARK_CLASS =
+  "scroll-mt-28 rounded bg-amber-300/60 text-inherit ring-1 ring-amber-500/40";
+const FIND_ACTIVE_MATCH_MARK_CLASS =
+  "scroll-mt-28 rounded bg-amber-400/80 text-inherit ring-2 ring-amber-600";
+
+/**
+ * Renders one instruction section's content with two independent kinds of
+ * highlight merged into a single pass (PR-H exact-quote anchors plus PR-I,
+ * I.1 "Знайти в тексті" matches): `buildHighlightFragments`
+ * (`lib/instruction-find.ts`) dedupes and sorts both mark kinds by
+ * character range and slices the text around them.
+ */
 function AnchoredInstructionContent({
   content,
   quotes,
+  sectionKey,
+  findMatches = [],
+  activeFindMatchIndex = null,
 }: {
   content: string | null;
   quotes: InstructionQuote[];
+  sectionKey?: InstructionQuote["sectionKey"];
+  findMatches?: TextMatch[];
+  activeFindMatchIndex?: number | null;
 }) {
   if (!content) return <InstructionSectionContent content={content} />;
   const validQuotes = [
@@ -524,33 +563,55 @@ function AnchoredInstructionContent({
         )
         .map((quote) => [`${quote.charStart}:${quote.charEnd}`, quote]),
     ).values(),
-  ].sort((left, right) => left.charStart - right.charStart);
-  if (!validQuotes.length) {
-    return <InstructionSectionContent content={content} />;
-  }
+  ];
 
-  const fragments: React.ReactNode[] = [];
-  let cursor = 0;
-  for (const quote of validQuotes) {
-    if (quote.charStart < cursor) continue;
-    if (quote.charStart > cursor) {
-      fragments.push(content.slice(cursor, quote.charStart));
-    }
-    fragments.push(
-      <mark
-        key={quoteAnchorId(quote)}
-        id={quoteAnchorId(quote)}
-        data-char-start={quote.charStart}
-        data-char-end={quote.charEnd}
-        className="scroll-mt-28 rounded bg-primary/15 text-inherit ring-1 ring-primary/25"
-      >
-        {quote.text}
-      </mark>,
-    );
-    cursor = quote.charEnd;
-  }
-  if (cursor < content.length) fragments.push(content.slice(cursor));
-  return <p className="whitespace-pre-wrap break-words">{fragments}</p>;
+  const marks: ContentMark[] = [
+    ...validQuotes.map((quote) => ({
+      id: quoteAnchorId(quote),
+      start: quote.charStart,
+      end: quote.charEnd,
+      className:
+        "scroll-mt-28 rounded bg-primary/15 text-inherit ring-1 ring-primary/25",
+      dataset: {
+        charStart: String(quote.charStart),
+        charEnd: String(quote.charEnd),
+      },
+    })),
+    ...findMatches.map((match, index) => ({
+      id: sectionKey
+        ? findMatchElementId(sectionKey, index)
+        : `instruction-find-match-${index}`,
+      start: match.start,
+      end: match.end,
+      className:
+        index === activeFindMatchIndex
+          ? FIND_ACTIVE_MATCH_MARK_CLASS
+          : FIND_MATCH_MARK_CLASS,
+    })),
+  ];
+
+  if (!marks.length) return <InstructionSectionContent content={content} />;
+
+  const fragments = buildHighlightFragments(content, marks);
+  return (
+    <p className="whitespace-pre-wrap break-words">
+      {fragments.map((fragment, index) =>
+        fragment.mark ? (
+          <mark
+            key={fragment.mark.id}
+            id={fragment.mark.id}
+            data-char-start={fragment.mark.dataset?.charStart}
+            data-char-end={fragment.mark.dataset?.charEnd}
+            className={fragment.mark.className}
+          >
+            {fragment.text}
+          </mark>
+        ) : (
+          <React.Fragment key={index}>{fragment.text}</React.Fragment>
+        ),
+      )}
+    </p>
+  );
 }
 
 function OperationalExcerpt({
@@ -757,12 +818,103 @@ function InstructionSectionChips({
   );
 }
 
+const FONT_SIZE_STEP_LABEL: Record<InstructionFontSizeStep, string> = {
+  sm: "Дрібний текст",
+  md: "Звичайний текст",
+  lg: "Великий текст",
+};
+
+/** PR-I, I.2: 3-step reading font size for the structured sections,
+ * persisted per-browser (`lib/instruction-font-size.ts`). */
+function InstructionFontSizeControl({
+  step,
+  onSelect,
+}: {
+  step: InstructionFontSizeStep;
+  onSelect: (step: InstructionFontSizeStep) => void;
+}) {
+  return (
+    <div
+      className="inline-flex items-center gap-1 rounded-full border bg-background p-1"
+      role="group"
+      aria-label="Розмір тексту інструкції"
+      data-testid="instruction-font-size-control"
+    >
+      {INSTRUCTION_FONT_SIZE_STEPS.map((candidate) => (
+        <button
+          key={candidate}
+          type="button"
+          onClick={() => onSelect(candidate)}
+          aria-pressed={step === candidate}
+          aria-label={FONT_SIZE_STEP_LABEL[candidate]}
+          data-testid={`instruction-font-size-${candidate}`}
+          className={`min-h-9 min-w-9 rounded-full px-2 font-semibold transition-colors ${INSTRUCTION_FONT_SIZE_BUTTON_CLASS[candidate]} ${
+            step === candidate
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent"
+          }`}
+        >
+          А
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** PR-I, I.2: "Поділитися розділом" -- copies the absolute
+ * `?tab=instruction#instruction-{key}` link for one section to the
+ * clipboard. Never sends the instruction text itself anywhere, only the
+ * link the recipient would open in their own browser. */
+function ShareSectionButton({
+  productId,
+  sectionKey,
+}: {
+  productId: string;
+  sectionKey: InstructionQuote["sectionKey"];
+}) {
+  const handleShare = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (typeof window === "undefined") return;
+    const url = instructionSectionShareUrl(
+      window.location.origin,
+      productId,
+      window.location.search,
+      sectionKey,
+    );
+    try {
+      await window.navigator.clipboard.writeText(url);
+      toast({ title: "Посилання на розділ скопійовано" });
+    } catch {
+      toast({
+        title: "Не вдалося скопіювати посилання",
+        description: url,
+      });
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={(event) => void handleShare(event)}
+      className="inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      aria-label="Поділитися розділом"
+      data-testid={`instruction-section-share-${sectionKey}`}
+    >
+      <Share2 className="h-4 w-4" />
+    </button>
+  );
+}
+
 function InstructionSection({ card }: { card: ProductCard }) {
-  const [query, setQuery] = useState("");
+  const [findQuery, setFindQuery] = useState("");
+  const [activeMatchGlobalIndex, setActiveMatchGlobalIndex] = useState(0);
+  const [fontSize, setFontSize] = useState<InstructionFontSizeStep>(() =>
+    readInstructionFontSize(),
+  );
   const sections = card.instruction.sections;
   const visibleSections = useMemo(
-    () => (sections ? filterInstructionSections(sections, query) : []),
-    [query, sections],
+    () => (sections ? filterInstructionSections(sections, findQuery) : []),
+    [findQuery, sections],
   );
   const targetQuote = useMemo(
     () =>
@@ -787,6 +939,63 @@ function InstructionSection({ card }: { card: ProductCard }) {
     useState<InstructionQuote["sectionKey"] | null>(null);
   const sectionLandingHandledRef = useRef(false);
 
+  // PR-I, I.1: cross-section "Знайти в тексті" matches for the current
+  // find query, computed against the already-loaded structured sections --
+  // never a network call. Sections with zero matches are naturally absent
+  // from `sectionMatchGroups`, so they neither auto-open nor render marks.
+  const sectionMatchGroups: SectionMatchGroup[] = useMemo(() => {
+    if (!sections || !findQuery.trim()) return [];
+    return INSTRUCTION_SECTION_LABELS.map(({ key }) => ({
+      sectionKey: key,
+      matches: findTextMatches(sections[key] ?? "", findQuery),
+    })).filter((group) => group.matches.length > 0);
+  }, [findQuery, sections]);
+  const flatMatches: FlatMatch[] = useMemo(
+    () => flattenSectionMatches(sectionMatchGroups),
+    [sectionMatchGroups],
+  );
+  const totalMatches = flatMatches.length;
+  const activeMatch = totalMatches
+    ? flatMatches[
+        ((activeMatchGlobalIndex % totalMatches) + totalMatches) %
+          totalMatches
+      ]
+    : null;
+
+  useEffect(() => {
+    setActiveMatchGlobalIndex(0);
+  }, [findQuery]);
+
+  useEffect(() => {
+    if (!activeMatch || typeof document === "undefined") return;
+    const details = document.getElementById(
+      `instruction-${activeMatch.sectionKey}`,
+    );
+    if (details instanceof HTMLDetailsElement) details.open = true;
+    const elementId = findMatchElementId(
+      activeMatch.sectionKey,
+      activeMatch.matchIndexInSection,
+    );
+    if (typeof window === "undefined") return;
+    window.requestAnimationFrame(() => {
+      document
+        .getElementById(elementId)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [activeMatch]);
+
+  const goToMatch = (direction: 1 | -1) => {
+    if (!totalMatches) return;
+    setActiveMatchGlobalIndex(
+      (current) => ((current + direction) % totalMatches + totalMatches) % totalMatches,
+    );
+  };
+
+  const handleFontSizeSelect = (step: InstructionFontSizeStep) => {
+    setFontSize(step);
+    writeInstructionFontSize(step);
+  };
+
   useEffect(() => {
     if (!card.instruction.available) return;
     void writeInstructionCache(
@@ -799,6 +1008,17 @@ function InstructionSection({ card }: { card: ProductCard }) {
       },
     );
   }, [card.instruction, card.identity]);
+
+  // PR-I, I.3: "time to section" -- the administration section is always
+  // open by default (see the `<details open>` condition below), so the
+  // moment sections are available on the Instruction tab is the moment a
+  // section actually becomes visible to the pharmacist. `markSectionOpen`
+  // is idempotent (search-metrics.ts only records the first call), so this
+  // safely coexists with the explicit chip/anchor calls below without
+  // double-counting.
+  useEffect(() => {
+    if (sections) markSectionOpen("administration");
+  }, [sections]);
 
   // PR-H, H.1.1/H.2.3: a plain `#instruction-{key}` hash (from a chip click
   // via history.replaceState, or from a search result carrying a
@@ -814,6 +1034,7 @@ function InstructionSection({ card }: { card: ProductCard }) {
     sectionLandingHandledRef.current = true;
     if (sections?.[sectionKey]) {
       setHighlightedSection(sectionKey);
+      markSectionOpen(sectionKey);
       const timer = window.setTimeout(
         () => setHighlightedSection(null),
         2000,
@@ -842,6 +1063,7 @@ function InstructionSection({ card }: { card: ProductCard }) {
       }
     }
     setHighlightedSection(sectionKey);
+    markSectionOpen(sectionKey);
     if (typeof window !== "undefined") {
       window.setTimeout(() => setHighlightedSection(null), 2000);
     }
@@ -859,12 +1081,20 @@ function InstructionSection({ card }: { card: ProductCard }) {
             Дослівні структуровані розділи для цієї реєстрової позиції.
           </p>
         </div>
-        {card.instruction.provenance ? (
-          <Badge variant="outline">
-            {card.instruction.provenance.availableSectionCount}/9 розділів ·{" "}
-            {card.instruction.provenance.coveragePct}%
-          </Badge>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {sections ? (
+            <InstructionFontSizeControl
+              step={fontSize}
+              onSelect={handleFontSizeSelect}
+            />
+          ) : null}
+          {card.instruction.provenance ? (
+            <Badge variant="outline">
+              {card.instruction.provenance.availableSectionCount}/9 розділів ·{" "}
+              {card.instruction.provenance.coveragePct}%
+            </Badge>
+          ) : null}
+        </div>
       </div>
 
       {card.instruction.source ? (
@@ -884,54 +1114,117 @@ function InstructionSection({ card }: { card: ProductCard }) {
       {sections ? (
         <>
           <InstructionEssentials sections={sections} />
-          <label className="block max-w-md">
-            <span className="mb-1 block text-sm font-medium">
-              Пошук у завантажених розділах
-            </span>
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Наприклад: кліренс, натрію хлорид"
-            />
-          </label>
+          <div className="max-w-md space-y-2">
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium">
+                Знайти в тексті
+              </span>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={findQuery}
+                  onChange={(event) => setFindQuery(event.target.value)}
+                  placeholder="Наприклад: кліренс, натрію хлорид"
+                  data-testid="instruction-find-input"
+                />
+                {findQuery.trim() ? (
+                  <div
+                    className="flex shrink-0 items-center gap-1"
+                    data-testid="instruction-find-nav"
+                  >
+                    <span
+                      className="whitespace-nowrap text-xs text-muted-foreground"
+                      data-testid="instruction-find-counter"
+                    >
+                      {totalMatches
+                        ? `${(((activeMatchGlobalIndex % totalMatches) + totalMatches) % totalMatches) + 1}/${totalMatches}`
+                        : "0/0"}
+                    </span>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      onClick={() => goToMatch(-1)}
+                      disabled={!totalMatches}
+                      aria-label="Попередній збіг"
+                      data-testid="instruction-find-prev"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      onClick={() => goToMatch(1)}
+                      disabled={!totalMatches}
+                      aria-label="Наступний збіг"
+                      data-testid="instruction-find-next"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            </label>
+          </div>
           <InstructionSectionChips
             sections={sections}
             onSelect={handleSectionChipSelect}
           />
           <div className="rounded-2xl border bg-card/70 px-4">
-            {visibleSections.map(({ key, label }) => (
-              <details
-                key={key}
-                id={`instruction-${key}`}
-                className="group scroll-mt-20 border-b py-1 last:border-b-0"
-                open={
-                  key === "administration" ||
-                  targetQuote?.sectionKey === key ||
-                  highlightedSection === key
-                    ? true
-                    : undefined
-                }
-              >
-                <summary
-                  className={`flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold transition-colors ${
-                    highlightedSection === key
-                      ? "rounded-lg bg-primary/10 ring-2 ring-primary/40"
-                      : ""
-                  }`}
+            {visibleSections.map(({ key, label }) => {
+              const matchGroup = sectionMatchGroups.find(
+                (group) => group.sectionKey === key,
+              );
+              const activeMatchIndexInSection =
+                activeMatch?.sectionKey === key
+                  ? activeMatch.matchIndexInSection
+                  : null;
+              return (
+                <details
+                  key={key}
+                  id={`instruction-${key}`}
+                  className="group scroll-mt-20 border-b py-1 last:border-b-0"
+                  open={
+                    key === "administration" ||
+                    targetQuote?.sectionKey === key ||
+                    highlightedSection === key ||
+                    Boolean(matchGroup)
+                      ? true
+                      : undefined
+                  }
                 >
-                  <span className="break-words">{label}</span>
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="pb-5 text-sm leading-7">
-                  <AnchoredInstructionContent
-                    content={sections[key]}
-                    quotes={instructionQuotes.filter(
-                      (quote) => quote.sectionKey === key,
-                    )}
-                  />
-                </div>
-              </details>
-            ))}
+                  <summary
+                    className={`flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 font-semibold transition-colors ${
+                      highlightedSection === key
+                        ? "rounded-lg bg-primary/10 ring-2 ring-primary/40"
+                        : ""
+                    }`}
+                  >
+                    <span className="break-words">{label}</span>
+                    <span className="flex shrink-0 items-center gap-1">
+                      <ShareSectionButton
+                        productId={card.identity.id}
+                        sectionKey={key}
+                      />
+                      <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+                    </span>
+                  </summary>
+                  <div
+                    className={`pb-5 ${INSTRUCTION_FONT_SIZE_CLASS[fontSize]}`}
+                  >
+                    <AnchoredInstructionContent
+                      content={sections[key]}
+                      quotes={instructionQuotes.filter(
+                        (quote) => quote.sectionKey === key,
+                      )}
+                      sectionKey={key}
+                      findMatches={matchGroup?.matches ?? []}
+                      activeFindMatchIndex={activeMatchIndexInSection}
+                    />
+                  </div>
+                </details>
+              );
+            })}
             {!visibleSections.length ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
                 У структурованих розділах збігів не знайдено.

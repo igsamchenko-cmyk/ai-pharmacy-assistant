@@ -1,9 +1,10 @@
 export const CATALOG_INDEX_DATABASE_NAME = "farmassist-catalog-index";
-export const CATALOG_INDEX_DATABASE_VERSION = 4;
+export const CATALOG_INDEX_DATABASE_VERSION = 5;
 export const CATALOG_INDEX_SNAPSHOT_STORE = "snapshots";
 export const CATALOG_INDEX_META_STORE = "meta";
 export const SEARCH_METRICS_STORE = "perf_metrics";
 export const INSTRUCTION_CACHE_STORE = "instructions";
+export const ZERO_RESULTS_LOG_STORE = "zero_results_log";
 
 export function openCatalogIndexDatabase(
   factory: IDBFactory,
@@ -32,6 +33,9 @@ export function openCatalogIndexDatabase(
         database.createObjectStore(INSTRUCTION_CACHE_STORE, {
           keyPath: "productId",
         });
+      }
+      if (!database.objectStoreNames.contains(ZERO_RESULTS_LOG_STORE)) {
+        database.createObjectStore(ZERO_RESULTS_LOG_STORE, { keyPath: "id" });
       }
     };
     request.onsuccess = () => resolve(request.result);
