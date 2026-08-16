@@ -1,8 +1,17 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { RegulatoryEvent } from "@workspace/api-client-react";
-import { EventCard, filterRegulatoryEvents } from "./regulatory-radar";
+import type {
+  RegulatoryEvent,
+  RegulatoryEventCounts,
+  RegulatorySource,
+} from "@workspace/api-client-react";
+import {
+  EventCard,
+  filterEventCount,
+  filterRegulatoryEvents,
+  sourceHighlight,
+} from "./regulatory-radar";
 
 const events: RegulatoryEvent[] = [
   {
@@ -89,5 +98,64 @@ describe("regulatory radar event filtering", () => {
     expect(
       filterRegulatoryEvents(events, "", "new", new Set(["restore"])),
     ).toEqual([events[1]]);
+  });
+});
+
+describe("filterEventCount", () => {
+  const eventCounts: RegulatoryEventCounts = {
+    temporaryBan: 3,
+    permanentBan: 1,
+    restored: 2,
+    other: 5,
+  };
+
+  it("reads the matching bucket for each of the four category filters", () => {
+    expect(filterEventCount("temporary_ban", eventCounts, 0)).toBe(3);
+    expect(filterEventCount("permanent_ban", eventCounts, 0)).toBe(1);
+    expect(filterEventCount("restored", eventCounts, 0)).toBe(2);
+    expect(filterEventCount("review", eventCounts, 0)).toBe(5);
+  });
+
+  it("uses the unseen count for the new filter, ignoring eventCounts", () => {
+    expect(filterEventCount("new", eventCounts, 7)).toBe(7);
+  });
+
+  it("has no count for the all filter, since it isn't a sub-category", () => {
+    expect(filterEventCount("all", eventCounts, 0)).toBeNull();
+  });
+});
+
+describe("sourceHighlight", () => {
+  function source(overrides: Partial<RegulatorySource> = {}): RegulatorySource {
+    return {
+      key: "series_restrictions",
+      label: "Держлікслужба",
+      publisher: "Держлікслужба",
+      status: "current",
+      checkedAt: "2026-08-01T00:00:00.000Z",
+      latestChangeDate: null,
+      releaseDate: null,
+      recordCount: 100,
+      note: "",
+      warnings: [],
+      sourceUrl: "https://example.org/",
+      ...overrides,
+    };
+  }
+
+  it("prefers the latest change date when present", () => {
+    expect(sourceHighlight(source({ latestChangeDate: "2026-07-01" }))).toBe(
+      "Остання зміна: 01.07.2026",
+    );
+  });
+
+  it("falls back to the release date when there is no change date", () => {
+    expect(sourceHighlight(source({ releaseDate: "2026-06-01" }))).toBe(
+      "Редакція: 01.06.2026",
+    );
+  });
+
+  it("returns null instead of repeating the checked-at date a second time", () => {
+    expect(sourceHighlight(source())).toBeNull();
   });
 });

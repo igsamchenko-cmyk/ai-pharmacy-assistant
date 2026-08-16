@@ -2,6 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 vi.mock("../components/report-issue-button", () => ({
   ReportIssueButton: () => "Повідомити про проблему",
@@ -254,16 +255,26 @@ function renderCard(
   value: ProductCard,
   activeTab: "profile" | "analogs" | "instruction" = "profile",
 ): string {
+  // The series-check panel calls a react-query hook (enabled only after a
+  // pharmacist submits a series), so `useQuery` needs a client in context
+  // even though this static render never triggers a fetch.
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return renderToStaticMarkup(
     createElement(
-      Router,
-      { ssrPath: `/products/${PRODUCT_ID}` },
-      createElement(ProductCardContent, {
-        card: value,
-        favorite: false,
-        onToggleFavorite: () => undefined,
-        activeTab,
-      }),
+      QueryClientProvider,
+      { client: queryClient },
+      createElement(
+        Router,
+        { ssrPath: `/products/${PRODUCT_ID}` },
+        createElement(ProductCardContent, {
+          card: value,
+          favorite: false,
+          onToggleFavorite: () => undefined,
+          activeTab,
+        }),
+      ),
     ),
   );
 }
@@ -315,11 +326,31 @@ describe("operational product card UI", () => {
     expect(html).not.toContain("Знімок заборон потребує оновлення");
   });
 
-  it("keeps prohibition status read-only without a manual series form", () => {
+  it("offers a real exact-series check instead of a passive warning", () => {
     const attention = renderCard(card());
     expect(attention).toContain("Є розпорядження — перевірте серію");
-    expect(attention).not.toContain('data-testid="series-input"');
-    expect(attention).not.toContain("Перевірка серії упаковки");
+    expect(attention).toContain("AB-1");
+    expect(attention).toContain('data-testid="series-check-panel"');
+    expect(attention).toContain('data-testid="series-input"');
+    const submitIndex = attention.indexOf('data-testid="series-check-submit"');
+    expect(submitIndex).toBeGreaterThan(-1);
+    // The submit button starts disabled: no series has been typed yet, and
+    // the check must never fire against an empty/unsubmitted value.
+    expect(attention.slice(0, submitIndex)).toMatch(/disabled[^>]*$/);
+    expect(attention).not.toContain('data-testid="series-check-result"');
+
+    const allSeries = renderCard(
+      card({
+        seriesStatus: {
+          ...card().seriesStatus!,
+          allSeriesAffected: true,
+        },
+      }),
+    );
+    expect(allSeries).toContain("Заборонено всі серії");
+    expect(allSeries).toContain(
+      "заборона поширюється на всі серії цього реєстраційного посвідчення",
+    );
 
     const clear = renderCard(
       card({
@@ -333,7 +364,9 @@ describe("operational product card UI", () => {
       }),
     );
     expect(clear).toContain("Заборонних документів за номером не знайдено");
-    expect(clear).not.toContain('data-testid="series-input"');
+    // The interactive checker stays available even when the snapshot shows
+    // no restriction, since a pharmacist can still look up a specific series.
+    expect(clear).toContain('data-testid="series-input"');
   });
 
   it("separates profile and instruction content without hiding safety actions", () => {
@@ -496,9 +529,7 @@ describe("operational product card UI", () => {
     ).toBe("pregnancyAndLactation");
     expect(instructionSectionKeyFromHash("#instruction-unknown")).toBeNull();
     expect(
-      instructionSectionKeyFromHash(
-        "#instruction-quote-interactions-0-10",
-      ),
+      instructionSectionKeyFromHash("#instruction-quote-interactions-0-10"),
     ).toBeNull();
     expect(instructionSectionKeyFromHash("")).toBeNull();
   });
