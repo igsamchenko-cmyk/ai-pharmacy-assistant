@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogClientIndexProduct } from "@workspace/catalog-index";
-import { classifyRegistryAnalogs } from "./product-analogs";
+import { classifyRegistryAnalogs, isNonSpecificInn } from "./product-analogs";
 
 const base = {
   productId: "A".repeat(32),
@@ -50,5 +50,46 @@ describe("registry analog classification", () => {
         zeta,
       ]).full.map((product) => product.tradeName),
     ).toEqual(["А-Бренд", "Я-Бренд"]);
+  });
+
+  it("never groups unrelated products sharing a non-specific placeholder INN", () => {
+    // "Comb drug" is a literal placeholder the official registry writes into
+    // the МНН field for combination products whose composition isn't
+    // decomposed into a single substance — not a real analog identity.
+    const combBase = { ...base, inn: "Comb drug" };
+    const unrelatedOne = candidate("G".repeat(32), "А-ДІСТОН", {
+      inn: "Comb drug",
+      form: "краплі",
+      strength: "",
+    });
+    const unrelatedTwo = candidate("H".repeat(32), "АВІСАН", {
+      inn: "Comb drug",
+      form: "порошок",
+      strength: "",
+    });
+    expect(
+      classifyRegistryAnalogs(combBase, [unrelatedOne, unrelatedTwo]),
+    ).toEqual({ full: [], partial: [] });
+  });
+});
+
+describe("isNonSpecificInn", () => {
+  it("flags known registry placeholder values regardless of case or spacing", () => {
+    expect(isNonSpecificInn("Comb drug")).toBe(true);
+    expect(isNonSpecificInn("COMBINATION")).toBe(true);
+    expect(isNonSpecificInn("mono")).toBe(true);
+    expect(isNonSpecificInn("Other")).toBe(true);
+    expect(isNonSpecificInn("various")).toBe(true);
+  });
+
+  it("flags empty or too-short values", () => {
+    expect(isNonSpecificInn("")).toBe(true);
+    expect(isNonSpecificInn("а")).toBe(true);
+  });
+
+  it("does not flag real substance names", () => {
+    expect(isNonSpecificInn("Ібупрофен")).toBe(false);
+    expect(isNonSpecificInn("Парацетамол")).toBe(false);
+    expect(isNonSpecificInn("Мультіензими")).toBe(false);
   });
 });

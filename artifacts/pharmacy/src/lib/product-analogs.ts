@@ -15,6 +15,32 @@ export interface RegistryAnalogGroups {
   partial: CatalogClientIndexProduct[];
 }
 
+/**
+ * The official registry does not always record a specific active-substance
+ * name in the МНН/INN field. For combination products whose composition
+ * isn't decomposed into one substance, it stores a generic placeholder
+ * (e.g. "Comb drug") instead. Hundreds of otherwise unrelated products share
+ * that exact literal string, so matching "same INN" against it would group
+ * arbitrary drops, granules, tablets, and powders together as if they were
+ * analogs. Treat these placeholders as "no specific INN" rather than as a
+ * real substance identity.
+ */
+const NON_SPECIFIC_INN_KEYS = new Set([
+  "combdrug",
+  "combination",
+  "combinations",
+  "combined",
+  "mono",
+  "multiple",
+  "other",
+  "various",
+]);
+
+export function isNonSpecificInn(inn: string): boolean {
+  const key = normalizeCatalogIndexText(inn);
+  return key.length < 3 || NON_SPECIFIC_INN_KEYS.has(key);
+}
+
 function comparableText(value: string): string {
   return normalizeCatalogIndexText(value)
     .replace(/[^\p{L}\p{N}]+/gu, "")
@@ -39,7 +65,7 @@ export function classifyRegistryAnalogs(
   const full: CatalogClientIndexProduct[] = [];
   const partial: CatalogClientIndexProduct[] = [];
 
-  if (!inn) return { full, partial };
+  if (!inn || isNonSpecificInn(base.inn)) return { full, partial };
   for (const candidate of candidates) {
     if (
       candidate.productId === base.productId ||
