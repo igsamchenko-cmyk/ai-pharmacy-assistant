@@ -4,20 +4,27 @@ import React, {
   useMemo,
   useRef,
   useState,
+  type FormEvent,
 } from "react";
 import {
+  getCheckProductSeriesRestrictionsQueryKey,
   getGetProductCardQueryKey,
+  useCheckProductSeriesRestrictions,
   useGetProductCard,
   type AdministrationFacts,
   type InstructionQuote,
   type ProductCard,
   type ProductCardFreshnessEntry,
+  type ProductSeriesRestrictionSummary,
+  type SeriesRestrictionCheck,
+  type SeriesRestrictionCheckStatus,
 } from "@workspace/api-client-react";
 import { Link, useParams } from "wouter";
 import {
   AlertTriangle,
   ArrowLeft,
   BadgeDollarSign,
+  Ban,
   BellRing,
   BookOpenText,
   CheckCircle2,
@@ -29,8 +36,10 @@ import {
   ExternalLink,
   GitCompare,
   Heart,
+  LoaderCircle,
   Pill,
   RefreshCw,
+  RotateCcw,
   Search,
   Share2,
   WifiOff,
@@ -98,6 +107,13 @@ import {
   type SectionMatchGroup,
   type TextMatch,
 } from "@/lib/instruction-find";
+import {
+  normalizeSeriesQuery,
+  seriesCheckStatusLabel,
+  seriesOverviewPresentation,
+  SERIES_EVENT_TYPE_LABELS,
+  SERIES_INPUT_MAX_LENGTH,
+} from "@/lib/series-restriction-check";
 import {
   INSTRUCTION_FONT_SIZE_BUTTON_CLASS,
   INSTRUCTION_FONT_SIZE_CLASS,
@@ -234,24 +250,232 @@ function dispensingPresentation(card: ProductCard) {
   return null;
 }
 
-function seriesPresentation(card: ProductCard) {
+function seriesOverviewFromCard(
+  card: ProductCard,
+): ProductSeriesRestrictionSummary | null {
   const series = card.seriesStatus;
   if (!series || series.source.freshness !== "current") return null;
-  if (series.requiresSeriesCheck) {
-    return {
-      label: "Є розпорядження — перевірте серію",
-      detail: `Пов'язаних документів: ${series.eventCount}. Це ще не означає, що конкретна серія заборонена.`,
-      className: "border-destructive/45 bg-destructive/5",
-      icon: BellRing,
-    };
-  }
-  return {
-    label: "Заборонних документів за номером не знайдено",
-    detail:
-      "Це результат поточного знімка, а не окремий дозвіл на застосування чи відпуск.",
+  return series;
+}
+
+const SERIES_OVERVIEW_TONE_PRESENTATION: Record<
+  ReturnType<typeof seriesOverviewPresentation>["tone"],
+  { className: string; icon: React.ComponentType<{ className?: string }> }
+> = {
+  blocked: { className: "border-destructive/60 bg-destructive/10", icon: Ban },
+  caution: {
+    className: "border-destructive/45 bg-destructive/5",
+    icon: BellRing,
+  },
+  clear: {
     className: "border-emerald-500/40 bg-emerald-500/5",
     icon: CheckCircle2,
+  },
+};
+
+function seriesStatusCardProps(series: ProductSeriesRestrictionSummary) {
+  const presentation = seriesOverviewPresentation(series);
+  const tone = SERIES_OVERVIEW_TONE_PRESENTATION[presentation.tone];
+  return {
+    label: presentation.label,
+    detail: presentation.detail,
+    className: tone.className,
+    icon: tone.icon,
   };
+}
+
+const SERIES_CHECK_STATUS_STYLE: Record<
+  SeriesRestrictionCheckStatus,
+  { className: string; icon: React.ComponentType<{ className?: string }> }
+> = {
+  blocked: {
+    className: "border-destructive/60 bg-destructive/10 text-destructive",
+    icon: Ban,
+  },
+  needs_review: {
+    className:
+      "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200",
+    icon: AlertTriangle,
+  },
+  restored: {
+    className:
+      "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    icon: RotateCcw,
+  },
+  no_match: {
+    className: "border-border bg-muted/40 text-muted-foreground",
+    icon: CircleHelp,
+  },
+};
+
+function SeriesCheckResult({ result }: { result: SeriesRestrictionCheck }) {
+  const style = SERIES_CHECK_STATUS_STYLE[result.status];
+  const StatusIcon = style.icon;
+  return (
+    <div
+      className={`rounded-xl border p-3 ${style.className}`}
+      data-testid="series-check-status"
+    >
+      <p className="flex items-center gap-2 font-semibold">
+        <StatusIcon className="h-4 w-4 shrink-0" />
+        {seriesCheckStatusLabel(result.status)}
+      </p>
+      <p className="mt-1 text-sm">{result.summary}</p>
+      {result.events.length ? (
+        <ul className="mt-3 space-y-2 border-t border-current/10 pt-3">
+          {result.events.map((event) => (
+            <li
+              key={`${event.documentNumber}-${event.documentDate}`}
+              className="text-xs"
+            >
+              <span className="font-medium">
+                {SERIES_EVENT_TYPE_LABELS[event.eventType]}
+              </span>{" "}
+              · № {event.documentNumber} від {formatDate(event.documentDate)}
+              {event.additionalInfo ? (
+                <span className="block text-muted-foreground">
+                  {event.additionalInfo}
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <a
+        href={result.source.url}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-3 inline-flex items-center gap-1 text-xs font-medium hover:underline"
+      >
+        Відкрити офіційний реєстр
+        <ExternalLink className="h-3 w-3" />
+      </a>
+    </div>
+  );
+}
+
+function SeriesCheckPanel({
+  productId,
+  registrationNumber,
+  overview,
+}: {
+  productId: string;
+  registrationNumber: string;
+  overview: ProductSeriesRestrictionSummary;
+}) {
+  const [seriesInput, setSeriesInput] = useState("");
+  const [submittedSeries, setSubmittedSeries] = useState<string | null>(null);
+  const trimmedInput = normalizeSeriesQuery(seriesInput);
+  const seriesCheckParams = {
+    productId,
+    registrationNumber,
+    series: submittedSeries ?? "",
+  };
+  const check = useCheckProductSeriesRestrictions(seriesCheckParams, {
+    query: {
+      queryKey: getCheckProductSeriesRestrictionsQueryKey(seriesCheckParams),
+      enabled: Boolean(submittedSeries),
+      staleTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+    },
+  });
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!trimmedInput) return;
+    setSubmittedSeries(trimmedInput);
+  };
+
+  return (
+    <Card data-testid="series-check-panel">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Search className="h-4 w-4 text-primary" />
+          Перевірка серії
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {overview.allSeriesAffected ? (
+          <p className="rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+            Чинна заборона поширюється на всі серії цього реєстраційного
+            посвідчення.
+          </p>
+        ) : overview.restrictedSeries.length ? (
+          <div className="rounded-lg border bg-muted/40 px-3 py-2 text-sm">
+            <p className="font-medium text-foreground">
+              Названі в документах серії
+            </p>
+            <p className="mt-1 break-words text-muted-foreground">
+              {overview.restrictedSeries.join(", ")}
+            </p>
+          </div>
+        ) : null}
+        {overview.unspecifiedSeriesAffected ? (
+          <p className="text-xs text-muted-foreground">
+            Є документ без зазначеної серії — перевірку варто зробити навіть за
+            відсутності точного збігу нижче.
+          </p>
+        ) : null}
+
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-wrap items-end gap-2"
+        >
+          <label className="min-w-0 flex-1">
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Серія з упаковки
+            </span>
+            <Input
+              value={seriesInput}
+              onChange={(event) => setSeriesInput(event.target.value)}
+              maxLength={SERIES_INPUT_MAX_LENGTH}
+              placeholder="Напр. AB-1234"
+              data-testid="series-input"
+            />
+          </label>
+          <Button
+            type="submit"
+            disabled={!trimmedInput || check.isFetching}
+            data-testid="series-check-submit"
+          >
+            {check.isFetching ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+            Перевірити
+          </Button>
+        </form>
+
+        {submittedSeries ? (
+          <div data-testid="series-check-result">
+            {check.isLoading ? (
+              <p className="text-sm text-muted-foreground">
+                Перевіряємо офіційний знімок Держлікслужби…
+              </p>
+            ) : check.isError ? (
+              <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                Перевірку не вдалося виконати. Не робіть висновок про
+                відсутність заборони.
+              </p>
+            ) : check.data ? (
+              <SeriesCheckResult result={check.data} />
+            ) : null}
+          </div>
+        ) : null}
+
+        <p className="text-xs text-muted-foreground">
+          Відсутність збігу за серією не є дозволом на відпуск чи застосування.{" "}
+          <Link
+            href={`/regulatory-radar?q=${encodeURIComponent(registrationNumber)}`}
+            className="font-medium text-primary hover:underline"
+          >
+            Повний журнал розпоряджень
+          </Link>
+        </p>
+      </CardContent>
+    </Card>
+  );
 }
 
 function StatusCard({
@@ -935,8 +1159,9 @@ function InstructionSection({ card }: { card: ProductCard }) {
     card.instruction.source?.url ??
     card.identity.officialInstructionDocumentUrl ??
     null;
-  const [highlightedSection, setHighlightedSection] =
-    useState<InstructionQuote["sectionKey"] | null>(null);
+  const [highlightedSection, setHighlightedSection] = useState<
+    InstructionQuote["sectionKey"] | null
+  >(null);
   const sectionLandingHandledRef = useRef(false);
 
   // PR-I, I.1: cross-section "Знайти в тексті" matches for the current
@@ -957,8 +1182,7 @@ function InstructionSection({ card }: { card: ProductCard }) {
   const totalMatches = flatMatches.length;
   const activeMatch = totalMatches
     ? flatMatches[
-        ((activeMatchGlobalIndex % totalMatches) + totalMatches) %
-          totalMatches
+        ((activeMatchGlobalIndex % totalMatches) + totalMatches) % totalMatches
       ]
     : null;
 
@@ -987,7 +1211,8 @@ function InstructionSection({ card }: { card: ProductCard }) {
   const goToMatch = (direction: 1 | -1) => {
     if (!totalMatches) return;
     setActiveMatchGlobalIndex(
-      (current) => ((current + direction) % totalMatches + totalMatches) % totalMatches,
+      (current) =>
+        (((current + direction) % totalMatches) + totalMatches) % totalMatches,
     );
   };
 
@@ -1035,10 +1260,7 @@ function InstructionSection({ card }: { card: ProductCard }) {
     if (sections?.[sectionKey]) {
       setHighlightedSection(sectionKey);
       markSectionOpen(sectionKey);
-      const timer = window.setTimeout(
-        () => setHighlightedSection(null),
-        2000,
-      );
+      const timer = window.setTimeout(() => setHighlightedSection(null), 2000);
       return () => window.clearTimeout(timer);
     }
     toast({
@@ -1327,7 +1549,10 @@ export function ProductCardContent({
   const product = card.identity;
   const displayForm = conciseDosageForm(product.dosageForm);
   const dispensingStatus = dispensingPresentation(card);
-  const seriesStatus = seriesPresentation(card);
+  const seriesOverview = seriesOverviewFromCard(card);
+  const seriesStatus = seriesOverview
+    ? seriesStatusCardProps(seriesOverview)
+    : null;
   const registrationActive = product.registration.status === "active";
   const hospitalFacts = card.instruction.administrationFacts;
   const reconstitutionQuote =
@@ -1465,6 +1690,14 @@ export function ProductCardContent({
                 />
               ) : null}
             </section>
+          ) : null}
+
+          {seriesOverview ? (
+            <SeriesCheckPanel
+              productId={product.id}
+              registrationNumber={product.registration.number}
+              overview={seriesOverview}
+            />
           ) : null}
 
           {hasOperationalExcerpt ? (

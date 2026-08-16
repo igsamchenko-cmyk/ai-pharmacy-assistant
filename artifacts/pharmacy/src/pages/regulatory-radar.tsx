@@ -18,6 +18,7 @@ import {
   getGetRegulatoryRadarQueryKey,
   useSearchRegulatoryEvents,
   getSearchRegulatoryEventsQueryKey,
+  type RegulatoryEventCounts,
   type RegulatoryEventSearchFilter,
   type RegulatoryEvent,
   type RegulatorySource,
@@ -109,6 +110,33 @@ function writeSeenEventIds(ids: Set<string>): void {
   }
 }
 
+/**
+ * The filter pills double as the event-type counters: this replaces the
+ * separate "Тимчасові заборони / Постійні заборони / Поновлення / Інші
+ * зміни" stat tiles that used to duplicate these same four filters with a
+ * second set of clickable controls showing the same counts.
+ */
+export function filterEventCount(
+  filter: EventFilter,
+  eventCounts: RegulatoryEventCounts,
+  newCount: number,
+): number | null {
+  switch (filter) {
+    case "new":
+      return newCount;
+    case "temporary_ban":
+      return eventCounts.temporaryBan;
+    case "permanent_ban":
+      return eventCounts.permanentBan;
+    case "restored":
+      return eventCounts.restored;
+    case "review":
+      return eventCounts.other;
+    default:
+      return null;
+  }
+}
+
 function matchesEventFilter(
   event: RegulatoryEvent,
   filter: EventFilter,
@@ -191,19 +219,25 @@ function refreshStatusMessage(
   }
 }
 
-function sourceDate(source: RegulatorySource): string {
+/**
+ * Only returns text when it adds something `checkedAt` doesn't already say.
+ * Removes the duplicate "Перевірено" line that used to repeat on every
+ * source card that had no separate change/release date.
+ */
+export function sourceHighlight(source: RegulatorySource): string | null {
   if (source.latestChangeDate) {
     return `Остання зміна: ${formatDate(source.latestChangeDate)}`;
   }
   if (source.releaseDate) {
     return `Редакція: ${formatDate(source.releaseDate)}`;
   }
-  return `Перевірено: ${formatDate(source.checkedAt)}`;
+  return null;
 }
 
 function SourceCard({ source }: { source: RegulatorySource }) {
   const status = STATUS_PRESENTATION[source.status];
   const StatusIcon = source.status === "current" ? CheckCircle2 : AlertTriangle;
+  const highlight = sourceHighlight(source);
   return (
     <Card
       className="h-full border-border/80 bg-card/70"
@@ -222,19 +256,13 @@ function SourceCard({ source }: { source: RegulatorySource }) {
             {status.label}
           </Badge>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="rounded-lg bg-muted/60 p-2">
-            <span className="block text-muted-foreground">Записів</span>
-            <strong className="text-sm">
-              {source.recordCount.toLocaleString("uk-UA")}
-            </strong>
-          </div>
-          <div className="rounded-lg bg-muted/60 p-2">
-            <span className="block text-muted-foreground">Перевірено</span>
-            <strong className="text-sm">{formatDate(source.checkedAt)}</strong>
-          </div>
-        </div>
-        <p className="text-xs font-medium text-primary">{sourceDate(source)}</p>
+        <p className="text-xs text-muted-foreground">
+          {source.recordCount.toLocaleString("uk-UA")} записів · перевірено{" "}
+          {formatDate(source.checkedAt)}
+        </p>
+        {highlight ? (
+          <p className="text-xs font-medium text-primary">{highlight}</p>
+        ) : null}
         <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
           {source.note}
         </p>
@@ -710,75 +738,29 @@ export default function RegulatoryRadarPage() {
                   role="group"
                   aria-label="Фільтр типу події"
                 >
-                  {FILTERS.map((item) => (
-                    <button
-                      key={item.key}
-                      type="button"
-                      onClick={() => setFilter(item.key)}
-                      className={`min-h-11 rounded-full border px-3 py-2 text-xs font-medium transition-colors lg:min-h-9 ${filter === item.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-accent"}`}
-                    >
-                      {item.label}
-                      {item.key === "new" ? ` · ${newEventIds.size}` : ""}
-                    </button>
-                  ))}
+                  {FILTERS.map((item) => {
+                    const count = filterEventCount(
+                      item.key,
+                      radar.data.summary.eventCounts,
+                      newEventIds.size,
+                    );
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => setFilter(item.key)}
+                        aria-pressed={filter === item.key}
+                        className={`min-h-11 rounded-full border px-3 py-2 text-xs font-medium transition-colors lg:min-h-9 ${filter === item.key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background hover:bg-accent"}`}
+                      >
+                        {item.label}
+                        {count !== null ? ` · ${count}` : ""}
+                      </button>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <button
-                type="button"
-                onClick={() => setFilter("temporary_ban")}
-                aria-pressed={filter === "temporary_ban"}
-                className="rounded-xl border border-destructive/25 bg-destructive/5 p-3 text-left transition-colors hover:bg-destructive/10"
-              >
-                <span className="text-xs text-muted-foreground">
-                  Тимчасові заборони
-                </span>
-                <strong className="mt-1 block text-xl">
-                  {radar.data.summary.eventCounts.temporaryBan}
-                </strong>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter("permanent_ban")}
-                aria-pressed={filter === "permanent_ban"}
-                className="rounded-xl border border-destructive/25 bg-destructive/5 p-3 text-left transition-colors hover:bg-destructive/10"
-              >
-                <span className="text-xs text-muted-foreground">
-                  Постійні заборони
-                </span>
-                <strong className="mt-1 block text-xl">
-                  {radar.data.summary.eventCounts.permanentBan}
-                </strong>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter("restored")}
-                aria-pressed={filter === "restored"}
-                className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3 text-left transition-colors hover:bg-emerald-500/10"
-              >
-                <span className="text-xs text-muted-foreground">
-                  Поновлення
-                </span>
-                <strong className="mt-1 block text-xl">
-                  {radar.data.summary.eventCounts.restored}
-                </strong>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter("review")}
-                aria-pressed={filter === "review"}
-                className="rounded-xl border bg-muted/30 p-3 text-left transition-colors hover:bg-muted/60"
-              >
-                <span className="text-xs text-muted-foreground">
-                  Інші зміни
-                </span>
-                <strong className="mt-1 block text-xl">
-                  {radar.data.summary.eventCounts.other}
-                </strong>
-              </button>
-            </div>
             <div className="space-y-3">
               {eventJournal.isLoading ? (
                 <div
