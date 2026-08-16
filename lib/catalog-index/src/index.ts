@@ -18,7 +18,7 @@ export {
   type CatalogSectionIntentKey,
 } from "./section-intent";
 
-export const CATALOG_CLIENT_INDEX_VERSION = 1 as const;
+export const CATALOG_CLIENT_INDEX_VERSION = 2 as const;
 export const CATALOG_CLIENT_INDEX_MAX_PRODUCTS = 20_000;
 export const CATALOG_CLIENT_INDEX_MAX_ALIASES = 5_000;
 export const CATALOG_CLIENT_INDEX_MAX_WIRE_BYTES = 8 * 1024 * 1024;
@@ -32,6 +32,12 @@ export interface CatalogClientIndexProduct {
   inn: string;
   form: string;
   strength: string;
+  /**
+   * Canonical composition identity for registrations whose registry МНН is a
+   * non-specific placeholder. Empty for every other row — see
+   * `catalogCompositionKey` and `isNonSpecificInn`.
+   */
+  compositionKey: string;
 }
 
 export type CatalogClientIndexRow = readonly [
@@ -41,6 +47,7 @@ export type CatalogClientIndexRow = readonly [
   inn: string,
   form: string,
   strength: string,
+  compositionKey: string,
 ];
 
 export type CatalogClientIndexAliasRow = readonly [
@@ -63,6 +70,7 @@ export type CatalogClientIndexMatchKind =
   | "registration_exact"
   | "product_exact"
   | "trade_prefix"
+  | "composition_exact"
   | "inn_exact"
   | "inn_prefix"
   | "trade_transliteration_exact"
@@ -256,6 +264,58 @@ function isCombinationInn(value: string): boolean {
   );
 }
 
+/**
+ * The official registry does not always record a specific active-substance name
+ * in the \u041c\u041d\u041d/INN field. For combination products whose composition is not
+ * decomposed into one substance it stores a generic placeholder such as
+ * "Comb drug" instead, and hundreds of otherwise unrelated products share that
+ * exact literal string. Treat these as "no specific INN" rather than as a real
+ * substance identity, so nothing is ever grouped by a placeholder.
+ */
+const NON_SPECIFIC_INN_KEYS = new Set([
+  "combdrug",
+  "combination",
+  "combinations",
+  "combined",
+  "mono",
+  "multiple",
+  "other",
+  "various",
+]);
+
+export function isNonSpecificInn(inn: string): boolean {
+  const key = normalizeCatalogIndexText(inn);
+  return key.length < 3 || NON_SPECIFIC_INN_KEYS.has(key);
+}
+
+/**
+ * Longest canonical composition accepted as an analog identity. Multi-component
+ * homeopathic preparations run into thousands of characters; an exact match on
+ * such a list is neither a useful analog group nor worth the wire budget.
+ */
+export const CATALOG_COMPOSITION_KEY_MAX_LENGTH = 300;
+
+/**
+ * Build an order-independent composition identity from a structured composition
+ * string such as "\u041a\u0430\u043b\u044c\u0446\u0456\u044e \u043a\u0430\u0440\u0431\u043e\u043d\u0430\u0442 + \u041c\u0410\u0413\u041d\u0406\u042e \u041a\u0410\u0420\u0411\u041e\u041d\u0410\u0422 \u0412\u0410\u0416\u041a\u0418\u0419".
+ *
+ * Only `+` and `;` are treated as separators: commas occur inside chemical names
+ * (for example "2,4-\u0434\u0438\u0445\u043b\u043e\u0440\u0431\u0435\u043d\u0437\u0438\u043b\u043e\u0432\u0438\u0439 \u0441\u043f\u0438\u0440\u0442") and splitting on them would shred
+ * a single ingredient into fragments. Components are normalized, deduplicated
+ * and sorted, so the same combination written in a different order yields the
+ * same key. Joined with `;`, which survives `normalizeCatalogIndexText`, so the
+ * key can be used directly as a search query.
+ */
+export function catalogCompositionKey(composition: string): string {
+  const parts = composition
+    .split(/[+;]/u)
+    .map((part) => normalizeCatalogIndexText(part))
+    .filter(Boolean);
+  if (!parts.length) return "";
+  const key = [...new Set(parts)].sort().join(";");
+  return key.length > CATALOG_COMPOSITION_KEY_MAX_LENGTH ? "" : key;
+}
+
 export function decodeCatalogClientIndexRow(
   row: CatalogClientIndexRow,
 ): CatalogClientIndexProduct {
@@ -266,6 +326,7 @@ export function decodeCatalogClientIndexRow(
     inn: row[3],
     form: row[4],
     strength: row[5],
+    compositionKey: row[6],
   };
 }
 
@@ -279,6 +340,7 @@ export function encodeCatalogClientIndexRow(
     product.inn,
     product.form,
     product.strength,
+    product.compositionKey,
   ];
 }
 
@@ -312,7 +374,7 @@ export function compileCatalogClientIndex(
   const seen = new Set<string>();
   let estimatedMemoryBytes = 0;
   const products = payload.rows.map((row) => {
-    if (row.length !== 6)
+    if (row.length !== 7)
       throw new Error("Catalog client index row is invalid.");
     const product = decodeCatalogClientIndexRow(row);
     if (!/^[A-F0-9]{32}$/u.test(product.productId) || !product.registration) {
@@ -336,6 +398,12 @@ export function compileCatalogClientIndex(
     };
     if (!prepared.tradeKey && !prepared.innKey && !prepared.registrationKey) {
       throw new Error("Catalog client index product has no searchable key.");
+    }
+    if (
+      typeof prepared.compositionKey !== "string" ||
+      prepared.compositionKey.length > CATALOG_COMPOSITION_KEY_MAX_LENGTH
+    ) {
+      throw new Error("Catalog client index composition key is invalid.");
     }
     estimatedMemoryBytes += estimatePreparedProductBytes(prepared);
     return prepared;
@@ -391,6 +459,12 @@ function matchRank(
       return { rank: 1, matchedBy: "product_exact" };
     if (product.tradeKey.startsWith(queryKey))
       return { rank: 2, matchedBy: "trade_prefix" };
+  }
+  if (product.compositionKey && product.compositionKey === queryKey) {
+    return {
+      rank: scope === "ingredients" ? 0 : 3,
+      matchedBy: "composition_exact",
+    };
   }
   if (product.innKey === queryKey)
     return { rank: scope === "ingredients" ? 0 : 3, matchedBy: "inn_exact" };

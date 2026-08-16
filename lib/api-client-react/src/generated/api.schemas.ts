@@ -1919,8 +1919,8 @@ export interface RegistryProductPage {
 }
 
 /**
- * @minItems 6
- * @maxItems 6
+ * @minItems 7
+ * @maxItems 7
  * @items.maxLength 500
  */
 export type CatalogClientIndexRow = string[];
@@ -1936,7 +1936,7 @@ export type CatalogClientIndexResponseVersion = typeof CatalogClientIndexRespons
 
 
 export const CatalogClientIndexResponseVersion = {
-  NUMBER_1: 1,
+  NUMBER_2: 2,
 } as const;
 
 export interface CatalogClientIndexResponse {

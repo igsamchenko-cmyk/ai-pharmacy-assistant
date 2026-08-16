@@ -4,8 +4,10 @@ import { fileURLToPath } from "node:url";
 import {
   CATALOG_CLIENT_INDEX_VERSION,
   catalogClientIndexWireBytes,
+  catalogCompositionKey,
   compileCatalogClientIndex,
   encodeCatalogClientIndexRow,
+  isNonSpecificInn,
   normalizeCatalogIndexText,
   searchCatalogClientIndex,
   type CatalogClientIndexPayload,
@@ -14,6 +16,8 @@ import {
   buildCatalogClientIndexAliases,
   conciseCatalogIndexForm,
 } from "../services/catalogClientIndexService";
+import { normalizeRegistrationNumber } from "../knowledge/dispensingCategories/model";
+import { priceCatalogCompositionByRegistration } from "../knowledge/priceCatalog/catalog";
 import {
   downloadOfficialRegistrySnapshot,
   parseRegistryFile,
@@ -96,22 +100,28 @@ async function main(): Promise<void> {
   }
 
   const aliases = buildCatalogClientIndexAliases();
+  // Mirror the production payload: composition keys carry real wire weight.
+  const compositions = priceCatalogCompositionByRegistration();
   const payload: CatalogClientIndexPayload = {
     version: CATALOG_CLIENT_INDEX_VERSION,
     snapshotHash: sourceSha256,
     generatedAt: "1970-01-01T00:00:00.000Z",
     productCount: registry.rows.length,
     aliasCount: aliases.length,
-    rows: registry.rows.map((row) =>
-      encodeCatalogClientIndexRow({
+    rows: registry.rows.map((row) => {
+      const composition = isNonSpecificInn(row.inn)
+        ? compositions.get(normalizeRegistrationNumber(row.registrationNumber))
+        : undefined;
+      return encodeCatalogClientIndexRow({
         productId: row.registryId,
         registration: row.registrationNumber,
         tradeName: row.tradeName,
         inn: row.inn,
         form: conciseCatalogIndexForm(row.form),
         strength: row.strength,
-      }),
-    ),
+        compositionKey: composition ? catalogCompositionKey(composition) : "",
+      });
+    }),
     aliases,
   };
   const index = compileCatalogClientIndex(payload);

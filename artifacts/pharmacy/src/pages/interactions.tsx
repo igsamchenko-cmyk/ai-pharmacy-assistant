@@ -267,6 +267,7 @@ export default function Interactions() {
         inn: item.inn,
         form: item.form ?? "",
         strength: item.strength ?? "",
+        compositionKey: "",
       })),
     [cart.items],
   );

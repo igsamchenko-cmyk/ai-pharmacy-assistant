@@ -37,6 +37,7 @@ function product(
     inn,
     form: "таблетки",
     strength: "10 мг",
+    compositionKey: "",
   };
 }
 

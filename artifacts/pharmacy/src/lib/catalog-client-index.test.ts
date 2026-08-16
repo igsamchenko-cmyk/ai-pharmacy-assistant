@@ -45,6 +45,7 @@ function product(
   tradeName: string,
   inn: string,
   strength = "10 мг",
+  compositionKey = "",
 ): CatalogClientIndexProduct {
   return {
     productId: id(value),
@@ -53,6 +54,7 @@ function product(
     inn,
     form: "таблетки",
     strength,
+    compositionKey,
   };
 }
 
@@ -269,8 +271,10 @@ describe("catalog client index", () => {
     expect(() =>
       compileCatalogClientIndex({ ...valid, productCount: 99 }),
     ).toThrow(/count/u);
+    // A payload from the previous schema must be refused, not reinterpreted:
+    // that rejection is what evicts stale caches after a row-shape change.
     expect(() =>
-      compileCatalogClientIndex({ ...valid, version: 2 as 1 }),
+      compileCatalogClientIndex({ ...valid, version: 1 as 2 }),
     ).toThrow(/version/u);
     expect(() =>
       compileCatalogClientIndex({

@@ -58,6 +58,9 @@ const ProtectedRegulatoryRadar = () => (
 const ProtectedBetaDashboard = () => (
   <ProtectedRoute component={BetaDashboard} minRole="reviewer" />
 );
+const ProtectedPerfMetrics = () => (
+  <ProtectedRoute component={PerfMetrics} minRole="reviewer" />
+);
 const ProtectedProductCard = () => <ProtectedRoute component={ProductCard} />;
 const ProtectedPharmacovigilance = () => (
   <ProtectedRoute component={Pharmacovigilance} />
@@ -122,7 +125,7 @@ function Router() {
             <Route path="/review" component={ProtectedReviewQueue} />
             <Route path="/beta-dashboard" component={ProtectedBetaDashboard} />
             <Route path="/about" component={About} />
-            <Route path="/perf" component={PerfMetrics} />
+            <Route path="/perf" component={ProtectedPerfMetrics} />
             <Route component={NotFound} />
           </Switch>
         </Suspense>

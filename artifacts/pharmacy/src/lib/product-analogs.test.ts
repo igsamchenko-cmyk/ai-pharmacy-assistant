@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { CatalogClientIndexProduct } from "@workspace/catalog-index";
+import {
+  catalogCompositionKey,
+  type CatalogClientIndexProduct,
+} from "@workspace/catalog-index";
 import { classifyRegistryAnalogs, isNonSpecificInn } from "./product-analogs";
 
 const base = {
@@ -21,6 +24,7 @@ function candidate(
     inn: "Ібупрофен",
     form: "таблетки вкриті оболонкою",
     strength: "200 мг",
+    compositionKey: "",
     ...overrides,
   };
 }
@@ -70,6 +74,89 @@ describe("registry analog classification", () => {
     expect(
       classifyRegistryAnalogs(combBase, [unrelatedOne, unrelatedTwo]),
     ).toEqual({ full: [], partial: [] });
+  });
+
+  it("groups a placeholder-INN product by composition when one is resolved", () => {
+    // РЕННІ: the registry МНН is "Comb drug", but the composition key resolved
+    // from the МОЗ price catalog is what actually identifies its analogs.
+    const rennie = catalogCompositionKey(
+      "Кальцію карбонат + МАГНІЮ КАРБОНАТ ВАЖКИЙ",
+    );
+    const combBase = {
+      ...base,
+      inn: "Comb drug",
+      form: "таблетки жувальні",
+      strength: "680 мг/80 мг",
+      compositionKey: rennie,
+    };
+    const sameComposition = candidate("I".repeat(32), "РЕММАКС-КВ", {
+      inn: "Comb drug",
+      form: "таблетки жувальні",
+      strength: "680 мг/80 мг",
+      compositionKey: rennie,
+    });
+    const otherFlavour = candidate("J".repeat(32), "РЕННІ З МЕНТОЛОМ", {
+      inn: "Comb drug",
+      form: "таблетки жувальні",
+      strength: "500 мг/100 мг",
+      compositionKey: rennie,
+    });
+    const unrelatedPlaceholder = candidate("K".repeat(32), "А-ДІСТОН", {
+      inn: "Comb drug",
+      compositionKey: catalogCompositionKey("Щось інше + Ще одне"),
+    });
+
+    expect(
+      classifyRegistryAnalogs(combBase, [
+        sameComposition,
+        otherFlavour,
+        unrelatedPlaceholder,
+      ]),
+    ).toEqual({ full: [sameComposition], partial: [otherFlavour] });
+  });
+
+  it("does not fall back to the placeholder INN when no composition is resolved", () => {
+    const combBase = { ...base, inn: "Comb drug", compositionKey: "" };
+    const placeholderPeer = candidate("L".repeat(32), "АВІСАН", {
+      inn: "Comb drug",
+    });
+    expect(classifyRegistryAnalogs(combBase, [placeholderPeer])).toEqual({
+      full: [],
+      partial: [],
+    });
+  });
+});
+
+describe("catalogCompositionKey", () => {
+  it("is independent of component order and spelling noise", () => {
+    expect(
+      catalogCompositionKey("Кальцію карбонат + МАГНІЮ КАРБОНАТ ВАЖКИЙ"),
+    ).toBe(catalogCompositionKey("магнію карбонат важкий + кальцію карбонат"));
+  });
+
+  it("keeps commas inside a chemical name instead of splitting on them", () => {
+    // "2,4-дихлорбензиловий спирт" is one ingredient, not two.
+    const key = catalogCompositionKey(
+      "2,4-ДИХЛОРБЕНЗИЛОВИЙ СПИРТ + АМІЛМЕТАКРЕЗОЛ",
+    );
+    expect(key.split(";")).toHaveLength(2);
+    expect(key).toContain("2,4дихлорбензиловииспирт");
+  });
+
+  it("treats a semicolon as a component separator and deduplicates", () => {
+    expect(
+      catalogCompositionKey("Аспірин; Аспірин + Кофеїн").split(";"),
+    ).toEqual(["аспірин", "кофеін"]);
+  });
+
+  it("refuses an empty or unusably long composition", () => {
+    expect(catalogCompositionKey("")).toBe("");
+    expect(catalogCompositionKey("   +   ")).toBe("");
+    const homeopathic = Array.from(
+      { length: 40 },
+      (_unused, index) => `компонент${index}`,
+    ).join(" + ");
+    expect(catalogCompositionKey(homeopathic)).toBe("");
   });
 });
 

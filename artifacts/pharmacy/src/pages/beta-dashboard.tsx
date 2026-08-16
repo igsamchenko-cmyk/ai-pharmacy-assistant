@@ -63,6 +63,7 @@ const UI = {
     exportJson: "\u0415\u043a\u0441\u043f\u043e\u0440\u0442 JSON",
     openQuality: "\u0412\u0456\u0434\u043a\u0440\u0438\u0442\u0438 \u044f\u043a\u0456\u0441\u0442\u044c",
     openReview: "\u0412\u0456\u0434\u043a\u0440\u0438\u0442\u0438 review",
+    openPerf: "\u0412\u0456\u0434\u043a\u0440\u0438\u0442\u0438 \u043c\u0435\u0442\u0440\u0438\u043a\u0438",
   },
   status: {
     warning: "\u041f\u043e\u043f\u0435\u0440\u0435\u0434\u0436\u0435\u043d\u043d\u044f",
@@ -467,12 +468,17 @@ function DashboardContent({
         title={UI.labels.runtimeMode}
         icon={ServerCog}
         action={
-          <RunButton
-            checkType="diagnostics"
-            onRun={onRun}
-            running={runningType === "diagnostics"}
-            label={UI.buttons.diagnostics}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/perf">{UI.buttons.openPerf}</Link>
+            </Button>
+            <RunButton
+              checkType="diagnostics"
+              onRun={onRun}
+              running={runningType === "diagnostics"}
+              label={UI.buttons.diagnostics}
+            />
+          </div>
         }
       >
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
