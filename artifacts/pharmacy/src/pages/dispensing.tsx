@@ -25,6 +25,7 @@ import {
   OctagonX,
   RotateCcw,
   ShieldAlert,
+  WifiOff,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -42,8 +43,10 @@ import {
 import { conciseManufacturerText } from "@/lib/manufacturer-display";
 import { pharmacovigilanceHref } from "@/lib/pharmacovigilance-draft";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
+import { dispensingResolutionFailure } from "@/lib/server-check-failure";
 import { markCardOpen } from "@/lib/search-metrics";
 import { drugRefHref, useRecentlyViewed } from "@/hooks/use-favorites";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import { conciseDosageForm } from "@/pages/search";
 
 export const MANUAL_DISPENSING_STEPS = [
@@ -759,6 +762,11 @@ export default function Dispensing() {
     !profileQuery.isFetching &&
     (profileQuery.isError || profileIdentityMismatch),
   );
+  // Only ever used to explain a failure the query already reported, never to
+  // decide whether to issue it: a wrong "you are offline" guess must not stand
+  // between the pharmacist and a check the server could have answered.
+  const offline = !useOnlineStatus();
+  const resolutionFailure = dispensingResolutionFailure(offline);
 
   useEffect(() => {
     if (!pendingProduct || !profileQuery.data) return;
@@ -896,11 +904,22 @@ export default function Dispensing() {
             <Card data-testid="dispensing-exact-resolution">
               <CardContent className="space-y-3 p-4">
                 {exactResolutionFailed ? (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Точну позицію не підтверджено</AlertTitle>
+                  // The verdict is identical either way — the position is not
+                  // confirmed and must not be dispensed against. Only the
+                  // explanation differs, so the pharmacist knows whether to
+                  // retry or to restore a connection first.
+                  <Alert
+                    variant="destructive"
+                    data-testid="dispensing-exact-resolution-failed"
+                  >
+                    {offline ? (
+                      <WifiOff className="h-4 w-4" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4" />
+                    )}
+                    <AlertTitle>{resolutionFailure.title}</AlertTitle>
                     <AlertDescription>
-                      Не використовуйте неповну картку як оперативну довідку.
+                      {resolutionFailure.body}
                     </AlertDescription>
                   </Alert>
                 ) : (
