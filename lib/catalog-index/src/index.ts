@@ -410,6 +410,109 @@ export function catalogRegistrationCertificate(registration: string): string {
   return match?.[1]?.toUpperCase() ?? "";
 }
 
+/**
+ * Short forms of the unit names the МОЗ price catalog spells out in full.
+ *
+ * Only the closed set below is shortened. An unlisted unit is left verbatim
+ * rather than guessed at, because an unrecognised unit on a dose is worse than
+ * a verbose one.
+ */
+const CATALOG_STRENGTH_UNIT_SHORT_FORMS: ReadonlyArray<
+  readonly [pattern: RegExp, short: string]
+> = [
+  [/^міжнародна\(і\)\s+одиниця\(і\)$/iu, "МО"],
+  [/^мікрограм\(и\)$/iu, "мкг"],
+  [/^міліграм\(и\)$/iu, "мг"],
+  [/^грам\(и\)$/iu, "г"],
+  [/^мікролітр\(и\)$/iu, "мкл"],
+  [/^мілілітр\(и\)$/iu, "мл"],
+  [/^літр\(и\)$/iu, "л"],
+  [/^одиниця\(і\)$/iu, "ОД"],
+  [/^відсоток$/iu, "%"],
+];
+
+/**
+ * Denominator units that state a measured quantity rather than a countable
+ * dose unit. `10 мг / 1 мл` needs its denominator to mean anything; `20 мг /
+ * 1 Капсула` does not, because the form is already shown beside the strength.
+ *
+ * Expressed as an allow-list of measures rather than a list of dosage forms, so
+ * an unseen form name (Песарій, Картридж, Патч…) still collapses correctly.
+ */
+const CATALOG_STRENGTH_MEASURE_DENOMINATORS =
+  /^(?:мікрограм|міліграм|грам|мікролітр|мілілітр|літр)\(и\)$/iu;
+
+function shortCatalogStrengthUnit(unit: string): string {
+  const value = unit.trim();
+  for (const [pattern, short] of CATALOG_STRENGTH_UNIT_SHORT_FORMS) {
+    if (pattern.test(value)) return short;
+  }
+  return value;
+}
+
+function decimalComma(value: string): string {
+  return value.replace(".", ",");
+}
+
+const CATALOG_STRENGTH_TERM_PATTERN =
+  /^(\d+(?:[.,]\d+)?)\s+(.+?)\s*\/\s*(\d+(?:[.,]\d+)?)\s+(.+)$/u;
+
+function conciseCatalogStrengthTerm(
+  term: string,
+): { text: string; denominator: string } | null {
+  const match = CATALOG_STRENGTH_TERM_PATTERN.exec(term.trim());
+  if (!match) return null;
+  const [, amount, unit, count, denominatorUnit] = match;
+  if (!amount || !unit || !count || !denominatorUnit) return null;
+  const numerator = `${decimalComma(amount)} ${shortCatalogStrengthUnit(unit)}`;
+  // A single countable dose unit adds nothing the form line does not already
+  // say, so it is dropped; a measure, or any count other than one, is kept.
+  const redundant =
+    count === "1" &&
+    !CATALOG_STRENGTH_MEASURE_DENOMINATORS.test(denominatorUnit.trim());
+  const denominator = redundant
+    ? ""
+    : `${count === "1" ? "" : `${decimalComma(count)} `}${shortCatalogStrengthUnit(denominatorUnit)}`;
+  return { text: numerator, denominator };
+}
+
+/** Longest concise strength worth showing; beyond it the raw value is kept. */
+export const CATALOG_STRENGTH_MAX_CONCISE_LENGTH = 80;
+
+/**
+ * Render the price catalog's declared strength the way a pharmacist reads it.
+ *
+ * The catalog writes `20 міліграм(и) / 1 Капсула`, which is unusable as a
+ * label. This shortens the unit names and drops a denominator that merely
+ * repeats the dosage form, including in a combination
+ * (`0,5 грам(и) / 1 Таблетка + 30 міліграм(и) / 1 Таблетка` → `0,5 г + 30 мг`).
+ *
+ * No arithmetic is performed: `0.005 грам(и)` becomes `0,005 г`, never `5 мг`.
+ * Rescaling a dose would put a floating-point rounding error on a medicine
+ * strength, and both spellings are read fluently at the counter. Anything that
+ * does not parse is returned unchanged, so an unrecognised format degrades to
+ * today's behaviour instead of losing the value.
+ */
+export function conciseCatalogStrength(strength: string): string {
+  const value = strength.trim().replace(/\s+/gu, " ");
+  if (!value) return "";
+  const terms = value
+    .split("+")
+    .map((term) => conciseCatalogStrengthTerm(term));
+  if (terms.some((term) => term === null)) return value;
+  const parsed = terms as { text: string; denominator: string }[];
+  // A shared denominator is only ever factored out when it is empty. Writing
+  // `1,1 мг + 7,7 мг/1,1 мл` would read as though the per-millilitre basis
+  // applied to the last component alone, so a measured basis is repeated on
+  // every component instead — verbose, but it cannot be misread.
+  const concise = parsed
+    .map((term) =>
+      term.denominator ? `${term.text}/${term.denominator}` : term.text,
+    )
+    .join(" + ");
+  return concise.length <= CATALOG_STRENGTH_MAX_CONCISE_LENGTH ? concise : value;
+}
+
 export function decodeCatalogClientIndexRow(
   row: CatalogClientIndexRow,
 ): CatalogClientIndexProduct {
