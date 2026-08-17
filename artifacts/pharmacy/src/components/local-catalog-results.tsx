@@ -14,6 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, Database, FileSearch, Search } from "lucide-react";
 import { registryProductDetailHref } from "@/lib/registry-product-route";
+import {
+  CATALOG_REGISTRATION_STATUS_LABELS,
+  groupCatalogVariants,
+} from "@/lib/catalog-result-variants";
 import { cacheOfflineProductIdentity } from "@/lib/offline-product-card";
 import { instructionSectionTarget } from "@/lib/navigation-v3";
 import { logZeroResults } from "@/lib/zero-results-log";
@@ -160,65 +164,83 @@ function LocalCatalogGroupCards({
               </p>
             </div>
             <div className="divide-y rounded-xl border">
-              {group.variants.map(({ product }, index) => (
-                <div
-                  key={`${product.productId}:${product.registration}`}
-                  className="grid min-w-0 gap-3 p-3 sm:grid-cols-[1fr_auto] sm:items-center"
-                >
-                  <div className="min-w-0 space-y-2">
-                    {group.variants.length > 1 ? (
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                        Реєстровий варіант {index + 1}
-                      </p>
-                    ) : null}
-                    <div className="flex flex-wrap gap-2">
-                      {product.strength ? (
-                        <Badge variant="secondary">{product.strength}</Badge>
-                      ) : null}
-                      {product.form ? (
+              {groupCatalogVariants(group.variants, new Date()).map(
+                (variant) => (
+                  <div
+                    key={variant.key + variant.form + variant.manufacturer}
+                    className="min-w-0 space-y-3 p-3"
+                    data-testid={`local-variant-${variant.key}`}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      {variant.form ? (
                         <Badge
                           variant="outline"
                           className="max-w-full whitespace-normal text-left"
                         >
-                          {product.form}
+                          {variant.form}
+                        </Badge>
+                      ) : null}
+                      {variant.status === "terminated" ? (
+                        <Badge
+                          variant="destructive"
+                          data-testid="local-variant-terminated"
+                        >
+                          {CATALOG_REGISTRATION_STATUS_LABELS.terminated}
                         </Badge>
                       ) : null}
                     </div>
+                    {/* Manufacturer is how a pharmacist tells two same-name,
+                        same-form registrations apart; the number never was. */}
+                    <p className="break-words text-sm font-medium">
+                      {variant.manufacturer || "Виробника не вказано"}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {variant.lines.map(({ product }, index) => (
+                        <Button
+                          key={`${product.productId}:${product.registration}`}
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="min-h-11"
+                        >
+                          <Link
+                            href={productHref(
+                              product,
+                              group.correctedQuery,
+                              suggested ? undefined : sectionIntent,
+                            )}
+                            data-navigation="spa"
+                            onClick={() =>
+                              cacheOfflineProductIdentity({
+                                productId: product.productId,
+                                registration: product.registration,
+                                tradeName: product.tradeName,
+                                inn: product.inn,
+                                form: product.form,
+                                strength: product.strength,
+                              })
+                            }
+                            data-testid={
+                              "local-product-open-" + product.productId
+                            }
+                          >
+                            {product.strength ||
+                              (variant.lines.length > 1
+                                ? `Варіант ${index + 1}`
+                                : "Відкрити")}
+                            <ChevronRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      ))}
+                    </div>
                     <p className="break-all text-xs text-muted-foreground">
-                      <span className="font-medium">Реєстрація:</span>{" "}
-                      {product.registration}
+                      {variant.lines.length > 1
+                        ? `Посвідчення ${variant.key} · ${variant.lines.length} рядки`
+                        : `Реєстрація: ${variant.lines[0]?.product.registration ?? variant.key}`}
                     </p>
                   </div>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="min-h-11 w-full sm:w-auto"
-                  >
-                    <Link
-                      href={productHref(
-                        product,
-                        group.correctedQuery,
-                        suggested ? undefined : sectionIntent,
-                      )}
-                      data-navigation="spa"
-                      onClick={() =>
-                        cacheOfflineProductIdentity({
-                          productId: product.productId,
-                          registration: product.registration,
-                          tradeName: product.tradeName,
-                          inn: product.inn,
-                          form: product.form,
-                          strength: product.strength,
-                        })
-                      }
-                      data-testid={"local-product-open-" + product.productId}
-                    >
-                      Відкрити
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              ))}
+                ),
+              )}
             </div>
           </CardContent>
         </Card>
@@ -329,7 +351,10 @@ export function LocalCatalogResults({
               Локально · {durationMs.toFixed(1)} мс
             </Badge>
           </div>
-          <LocalCatalogGroupCards groups={groups} sectionIntent={sectionIntent} />
+          <LocalCatalogGroupCards
+            groups={groups}
+            sectionIntent={sectionIntent}
+          />
         </section>
       ) : null}
 

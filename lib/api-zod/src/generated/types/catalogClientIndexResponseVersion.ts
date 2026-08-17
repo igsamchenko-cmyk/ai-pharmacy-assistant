@@ -10,5 +10,5 @@ export type CatalogClientIndexResponseVersion = typeof CatalogClientIndexRespons
 
 
 export const CatalogClientIndexResponseVersion = {
-  NUMBER_2: 2,
+  NUMBER_3: 3,
 } as const;

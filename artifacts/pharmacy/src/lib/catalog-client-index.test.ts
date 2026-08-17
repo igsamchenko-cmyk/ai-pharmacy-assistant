@@ -46,6 +46,7 @@ function product(
   inn: string,
   strength = "10 мг",
   compositionKey = "",
+  overrides: Partial<CatalogClientIndexProduct> = {},
 ): CatalogClientIndexProduct {
   return {
     productId: id(value),
@@ -55,6 +56,9 @@ function product(
     form: "таблетки",
     strength,
     compositionKey,
+    manufacturer: "Виробник",
+    registrationValidity: "2030-01-01",
+    ...overrides,
   };
 }
 
@@ -172,9 +176,12 @@ describe("catalog client index", () => {
       ),
     );
     expect(html).toContain("1 торгова назва · 2 зареєстровані варіанти");
-    expect(html).toContain("Реєстровий варіант 1");
-    expect(html).toContain("Реєстровий варіант 2");
-    expect(html).toContain("Реєстрація:");
+    // What tells two same-name registrations apart is the manufacturer and the
+    // strength — the registration number is kept only as the identifier.
+    expect(html).toContain("Виробник");
+    expect(html).toContain(">5 мг<");
+    expect(html).toContain(">10 мг<");
+    expect(html).toContain("Реєстрація: UA/1/01/01");
   });
 
   it("supports deterministic punctuation, prefix, registration and transliteration search", () => {
@@ -274,7 +281,7 @@ describe("catalog client index", () => {
     // A payload from the previous schema must be refused, not reinterpreted:
     // that rejection is what evicts stale caches after a row-shape change.
     expect(() =>
-      compileCatalogClientIndex({ ...valid, version: 1 as 2 }),
+      compileCatalogClientIndex({ ...valid, version: 2 as 3 }),
     ).toThrow(/version/u);
     expect(() =>
       compileCatalogClientIndex({

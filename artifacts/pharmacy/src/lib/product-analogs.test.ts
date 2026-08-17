@@ -29,6 +29,8 @@ function candidate(
     form: "таблетки вкриті оболонкою",
     strength: "200 мг",
     compositionKey: "",
+    manufacturer: "Виробник",
+    registrationValidity: "2030-01-01",
     ...overrides,
   };
 }

@@ -3,6 +3,7 @@ import {
   CATALOG_CLIENT_INDEX_MAX_PRODUCTS,
   CATALOG_CLIENT_INDEX_MAX_WIRE_BYTES,
   CATALOG_CLIENT_INDEX_VERSION,
+  CATALOG_REGISTRATION_TERMINATED_MARKER,
   catalogClientIndexWireBytes,
   catalogCompositionKey,
   encodeCatalogClientIndexRow,
@@ -15,7 +16,10 @@ import {
   resolveSourceBackedDictionaryQuery,
 } from "../knowledge/dictionary";
 import { normalizeRegistrationNumber } from "../knowledge/dispensingCategories/model";
-import { priceCatalogCompositionByRegistration } from "../knowledge/priceCatalog/catalog";
+import {
+  priceCatalogCompositionByRegistration,
+  priceCatalogStrengthByRegistration,
+} from "../knowledge/priceCatalog/catalog";
 import { normalize } from "../lib/text";
 
 export interface CatalogClientIndexQueryExecutor {
@@ -36,6 +40,9 @@ interface ProductRow {
   inn: string;
   form: string;
   strength: string;
+  manufacturer: string | null;
+  registration_end_date: string | null;
+  early_termination: string | null;
   source_snapshot_hash: string | null;
 }
 
@@ -164,16 +171,44 @@ function resolveCompositionKey(
 }
 
 /**
- * Composition lookups must never break the catalog index: the price catalog is
- * a separate optional snapshot, so a missing or malformed file degrades to "no
- * composition keys" instead of taking search offline.
+ * Price-catalog lookups must never break the catalog index: it is a separate
+ * optional snapshot, so a missing or malformed file degrades to "no enrichment"
+ * instead of taking search offline.
  */
-function loadCompositionIndex(): Map<string, string> {
+function loadPriceCatalogIndexes(): {
+  compositions: Map<string, string>;
+  strengths: Map<string, string>;
+} {
   try {
-    return priceCatalogCompositionByRegistration();
+    return {
+      compositions: priceCatalogCompositionByRegistration(),
+      strengths: priceCatalogStrengthByRegistration(),
+    };
   } catch {
-    return new Map();
+    return { compositions: new Map(), strengths: new Map() };
   }
+}
+
+/**
+ * Keep the registry's validity evidence rather than a verdict, so the client
+ * can re-evaluate it against the current date. An explicit early-termination
+ * flag wins over the end date; anything unparseable stays empty and reads as
+ * "unknown" rather than as "active".
+ */
+function resolveRegistrationValidity(row: ProductRow): string {
+  const earlyTermination = (row.early_termination ?? "").trim().toLowerCase();
+  if (
+    earlyTermination &&
+    !["no", "false", "0", "ні", "нет"].includes(earlyTermination)
+  ) {
+    return CATALOG_REGISTRATION_TERMINATED_MARKER;
+  }
+  const endDate = (row.registration_end_date ?? "").trim();
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/u.exec(endDate);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const dotted = /^(\d{2})\.(\d{2})\.(\d{4})/u.exec(endDate);
+  if (dotted) return `${dotted[3]}-${dotted[2]}-${dotted[1]}`;
+  return "";
 }
 
 async function buildPayloadUncached(
@@ -181,11 +216,17 @@ async function buildPayloadUncached(
   executor: CatalogClientIndexQueryExecutor,
 ): Promise<{ payload: CatalogClientIndexPayload; wireBytes: number }> {
   const result = await executor.query(
-    `SELECT registry_id, registration_number, trade_name, inn, form, strength,
-            source_snapshot_hash
-     FROM knowledge_registry_products
-     WHERE review_status <> 'stale'
-     ORDER BY normalized_trade_name, registration_number, registry_id
+    `SELECT p.registry_id, p.registration_number, p.trade_name, p.inn, p.form,
+            p.strength, p.registration_end_date, p.early_termination,
+            p.source_snapshot_hash,
+            (SELECT m.name
+               FROM knowledge_registry_manufacturers m
+              WHERE m.product_registry_id = p.registry_id
+              ORDER BY m.normalized_name
+              LIMIT 1) AS manufacturer
+     FROM knowledge_registry_products p
+     WHERE p.review_status <> 'stale'
+     ORDER BY p.normalized_trade_name, p.registration_number, p.registry_id
      LIMIT $1`,
     [CATALOG_CLIENT_INDEX_MAX_PRODUCTS + 1],
   );
@@ -199,24 +240,33 @@ async function buildPayloadUncached(
     );
   }
   const aliases = buildCatalogClientIndexAliases();
-  const compositions = loadCompositionIndex();
+  const { compositions, strengths } = loadPriceCatalogIndexes();
   const payload: CatalogClientIndexPayload = {
     version: CATALOG_CLIENT_INDEX_VERSION,
     snapshotHash: snapshot.snapshotHash,
     generatedAt: snapshot.generatedAt,
     productCount: snapshot.productCount,
     aliasCount: aliases.length,
-    rows: rows.map((row) =>
-      encodeCatalogClientIndexRow({
+    rows: rows.map((row) => {
+      // The registry's own strength column is empty for most rows, which is
+      // what makes same-name, same-form results indistinguishable; fall back
+      // to the declared strength rather than showing nothing.
+      const registration = normalizeRegistrationNumber(row.registration_number);
+      const strength =
+        row.strength.trim() ||
+        (registration ? (strengths.get(registration) ?? "") : "");
+      return encodeCatalogClientIndexRow({
         productId: bounded(row.registry_id, 32, "productId"),
         registration: bounded(row.registration_number, 80, "registration"),
         tradeName: bounded(row.trade_name, 500, "tradeName"),
         inn: bounded(row.inn, 500, "inn"),
         form: bounded(conciseCatalogIndexForm(row.form), 500, "form"),
-        strength: bounded(row.strength, 120, "strength"),
+        strength: bounded(strength, 120, "strength"),
         compositionKey: resolveCompositionKey(row, compositions),
-      }),
-    ),
+        manufacturer: bounded(row.manufacturer, 500, "manufacturer"),
+        registrationValidity: resolveRegistrationValidity(row),
+      });
+    }),
     aliases,
   };
   const wireBytes = catalogClientIndexWireBytes(payload);

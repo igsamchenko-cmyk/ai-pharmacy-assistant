@@ -18,7 +18,7 @@ export {
   type CatalogSectionIntentKey,
 } from "./section-intent";
 
-export const CATALOG_CLIENT_INDEX_VERSION = 2 as const;
+export const CATALOG_CLIENT_INDEX_VERSION = 3 as const;
 export const CATALOG_CLIENT_INDEX_MAX_PRODUCTS = 20_000;
 export const CATALOG_CLIENT_INDEX_MAX_ALIASES = 5_000;
 export const CATALOG_CLIENT_INDEX_MAX_WIRE_BYTES = 8 * 1024 * 1024;
@@ -38,6 +38,20 @@ export interface CatalogClientIndexProduct {
    * `catalogCompositionKey` and `isNonSpecificInn`.
    */
   compositionKey: string;
+  /**
+   * Primary manufacturer name. Together with `strength` this is what actually
+   * tells two same-name, same-form registrations apart on a pharmacy shelf —
+   * the registration number does not.
+   */
+  manufacturer: string;
+  /**
+   * Registration validity as recorded by the registry, kept as raw data rather
+   * than a precomputed verdict: `"!"` for an explicit early termination, an
+   * ISO `YYYY-MM-DD` end date, or `""` when unknown. The status is derived at
+   * render time by `catalogRegistrationStatus`, so a registration that lapses
+   * between index rebuilds stops reading as active on its own.
+   */
+  registrationValidity: string;
 }
 
 export type CatalogClientIndexRow = readonly [
@@ -48,6 +62,8 @@ export type CatalogClientIndexRow = readonly [
   form: string,
   strength: string,
   compositionKey: string,
+  manufacturer: string,
+  registrationValidity: string,
 ];
 
 export type CatalogClientIndexAliasRow = readonly [
@@ -355,6 +371,45 @@ export function catalogCompositionKey(composition: string): string {
   return key.length > CATALOG_COMPOSITION_KEY_MAX_LENGTH ? "" : key;
 }
 
+/** Marker stored in `registrationValidity` for an explicit early termination. */
+export const CATALOG_REGISTRATION_TERMINATED_MARKER = "!";
+
+export type CatalogRegistrationStatus = "active" | "terminated" | "unknown";
+
+/**
+ * Derive a registration's status from the raw validity value at read time.
+ *
+ * Deliberately not precomputed at index-build time: the index is only rebuilt
+ * when the source snapshot changes, so a stored verdict would keep calling a
+ * lapsed registration "active" indefinitely. An unparseable or missing date
+ * yields `unknown` rather than `active` — absence of an end date is not
+ * evidence of validity.
+ */
+export function catalogRegistrationStatus(
+  registrationValidity: string,
+  now: Date,
+): CatalogRegistrationStatus {
+  const value = registrationValidity.trim();
+  if (!value) return "unknown";
+  if (value === CATALOG_REGISTRATION_TERMINATED_MARKER) return "terminated";
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(value)) return "unknown";
+  const today = `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, "0")}-${`${now.getDate()}`.padStart(2, "0")}`;
+  return value < today ? "terminated" : "active";
+}
+
+/**
+ * The certificate a registration line belongs to: `UA/19799/01/03` → `UA/19799`.
+ *
+ * The registry issues one certificate per product and numbers each dosage or
+ * package line under it, so lines sharing a base are the same product rather
+ * than competing options. Returns `""` when the number does not follow the
+ * canonical shape, so callers fall back to treating the row as standalone.
+ */
+export function catalogRegistrationCertificate(registration: string): string {
+  const match = /^\s*(UA\/\d+)\/\d+\/\d+\s*$/iu.exec(registration);
+  return match?.[1]?.toUpperCase() ?? "";
+}
+
 export function decodeCatalogClientIndexRow(
   row: CatalogClientIndexRow,
 ): CatalogClientIndexProduct {
@@ -366,6 +421,8 @@ export function decodeCatalogClientIndexRow(
     form: row[4],
     strength: row[5],
     compositionKey: row[6],
+    manufacturer: row[7],
+    registrationValidity: row[8],
   };
 }
 
@@ -380,6 +437,8 @@ export function encodeCatalogClientIndexRow(
     product.form,
     product.strength,
     product.compositionKey,
+    product.manufacturer,
+    product.registrationValidity,
   ];
 }
 
@@ -413,7 +472,7 @@ export function compileCatalogClientIndex(
   const seen = new Set<string>();
   let estimatedMemoryBytes = 0;
   const products = payload.rows.map((row) => {
-    if (row.length !== 7)
+    if (row.length !== 9)
       throw new Error("Catalog client index row is invalid.");
     const product = decodeCatalogClientIndexRow(row);
     if (!/^[A-F0-9]{32}$/u.test(product.productId) || !product.registration) {
@@ -443,6 +502,13 @@ export function compileCatalogClientIndex(
       prepared.compositionKey.length > CATALOG_COMPOSITION_KEY_MAX_LENGTH
     ) {
       throw new Error("Catalog client index composition key is invalid.");
+    }
+    if (
+      typeof prepared.manufacturer !== "string" ||
+      typeof prepared.registrationValidity !== "string" ||
+      prepared.manufacturer.length > 500
+    ) {
+      throw new Error("Catalog client index product identity is invalid.");
     }
     estimatedMemoryBytes += estimatePreparedProductBytes(prepared);
     return prepared;

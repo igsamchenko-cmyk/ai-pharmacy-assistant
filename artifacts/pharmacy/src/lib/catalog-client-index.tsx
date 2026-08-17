@@ -97,7 +97,7 @@ export async function compileCatalogClientIndexCooperatively(
   for (let offset = 0; offset < payload.rows.length; offset += chunkSize) {
     const rows = payload.rows.slice(offset, offset + chunkSize);
     for (const row of rows) {
-      if (!Array.isArray(row) || row.length !== 7)
+      if (!Array.isArray(row) || row.length !== 9)
         throw new Error("Catalog client index row is invalid.");
       const identity = `${row[0]}\u0000${row[1]}`;
       if (identities.has(identity))
@@ -468,7 +468,7 @@ function payloadFromUnknown(input: unknown): CatalogClientIndexPayload {
     !value.rows.every(
       (row) =>
         Array.isArray(row) &&
-        row.length === 7 &&
+        row.length === 9 &&
         row.every((field) => typeof field === "string"),
     ) ||
     !Array.isArray(value.aliases) ||

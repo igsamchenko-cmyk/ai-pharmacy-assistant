@@ -3438,8 +3438,8 @@ components:
           type: boolean
     CatalogClientIndexRow:
       type: array
-      minItems: 7
-      maxItems: 7
+      minItems: 9
+      maxItems: 9
       items:
         type: string
         maxLength: 500
@@ -3465,7 +3465,7 @@ components:
       properties:
         version:
           type: integer
-          enum: [2]
+          enum: [3]
         snapshotHash:
           type: string
           pattern: "^[a-f0-9]{64}$"

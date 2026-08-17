@@ -268,6 +268,8 @@ export default function Interactions() {
         form: item.form ?? "",
         strength: item.strength ?? "",
         compositionKey: "",
+        manufacturer: "",
+        registrationValidity: "",
       })),
     [cart.items],
   );
