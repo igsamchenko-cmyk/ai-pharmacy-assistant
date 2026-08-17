@@ -30,6 +30,9 @@ function executor(
         inn: row.inn,
         form: "таблетки",
         strength: "10 мг",
+        manufacturer: "Виробник",
+        registration_end_date: "2030-01-01",
+        early_termination: "",
         source_snapshot_hash: options.rowSnapshotHash ?? snapshotHash,
       }))
     : [
@@ -40,6 +43,9 @@ function executor(
           inn: "Enalapril",
           form: options.form ?? "таблетки; по 10 таблеток у блістері",
           strength: "10 мг",
+          manufacturer: "КРКА",
+          registration_end_date: "2030-01-01",
+          early_termination: "",
           source_snapshot_hash: options.rowSnapshotHash ?? snapshotHash,
         },
         {
@@ -49,6 +55,9 @@ function executor(
           inn: "Apixaban",
           form: "таблетки in bulk; по 5000 таблеток",
           strength: "5 мг",
+          manufacturer: "Пфайзер",
+          registration_end_date: "01.01.2020",
+          early_termination: "",
           source_snapshot_hash: options.rowSnapshotHash ?? snapshotHash,
         },
       ];
@@ -73,13 +82,13 @@ function executor(
 describe("catalog client index service", () => {
   beforeEach(() => resetCatalogClientIndexCacheForTests());
 
-  it("builds a deterministic seven-field projection with concise forms", async () => {
+  it("builds a deterministic nine-field projection with concise forms", async () => {
     const store = executor();
     const result = await loadCatalogClientIndex(null, store);
     expect(result.status).toBe("ready");
     if (result.status !== "ready") return;
     expect(result.payload).toMatchObject({
-      version: 2,
+      version: 3,
       snapshotHash: SHA,
       productCount: 2,
     });
@@ -93,8 +102,12 @@ describe("catalog client index service", () => {
       "таблетки",
       "10 мг",
       "",
+      "КРКА",
+      "2030-01-01",
     ]);
     expect(result.payload.rows[1]?.[4]).toBe("таблетки");
+    // A dotted end date is normalised, so the client can compare it as a date.
+    expect(result.payload.rows[1]?.[8]).toBe("2020-01-01");
     expect(result.wireBytes).toBeGreaterThan(0);
     expect(store.query).toHaveBeenCalledTimes(2);
   });
