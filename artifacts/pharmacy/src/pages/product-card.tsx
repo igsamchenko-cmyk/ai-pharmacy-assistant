@@ -54,7 +54,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ProductCompareButton } from "@/components/product-compare-button";
 import { ReportIssueButton } from "@/components/report-issue-button";
 import {
   recordRecentlyViewed,
@@ -1717,10 +1716,16 @@ export function ProductCardContent({
             </section>
           ) : null}
 
-          <div className="grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3">
+          {/* Six equally weighted buttons made every action look equally
+              likely, which is the same as none of them being the obvious next
+              step. The two that act on the position in front of the
+              pharmacist stay primary; everything else is a deliberate detour
+              and lives behind «Ще». Comparison moved to the Analogs tab,
+              where the question «цей чи цей?» is actually asked. */}
+          <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
             <Button
               type="button"
-              variant={productInInteractionCart ? "secondary" : "outline"}
+              variant={productInInteractionCart ? "secondary" : "default"}
               className="min-h-11 min-w-0 whitespace-normal"
               onClick={() => interactionCart.toggle(interactionCartItem)}
               disabled={interactionCart.isFull && !productInInteractionCart}
@@ -1729,25 +1734,6 @@ export function ProductCardContent({
             >
               <GitCompare className="h-4 w-4 shrink-0" />
               {productInInteractionCart ? "У кошику взаємодій" : "До взаємодій"}
-            </Button>
-            <ProductCompareButton
-              product={product}
-              conciseForm={displayForm}
-              className="min-h-11 min-w-0 whitespace-normal"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              className="min-h-11 min-w-0 whitespace-normal"
-              onClick={onToggleFavorite}
-              aria-pressed={favorite}
-            >
-              <Heart
-                className={
-                  favorite ? "h-4 w-4 fill-primary text-primary" : "h-4 w-4"
-                }
-              />
-              {favorite ? "В обраному" : "В обране"}
             </Button>
             <Button
               asChild
@@ -1760,29 +1746,45 @@ export function ProductCardContent({
                 Фармаконагляд
               </Link>
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="min-h-11 min-w-0 whitespace-normal"
-              onClick={() => setAiOpen((value) => !value)}
-              aria-expanded={aiOpen}
-              data-testid="product-card-ai-action"
-            >
-              <Sparkles className="h-4 w-4 shrink-0" />
-              {aiOpen ? "Сховати AI-довідку" : "AI-довідка"}
-            </Button>
             <details className="group relative min-w-0">
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
                 <EllipsisVertical className="h-4 w-4 shrink-0" />
                 Ще
               </summary>
-              <div className="absolute right-0 z-20 mt-2 min-w-40 rounded-lg border bg-popover p-1 text-sm text-popover-foreground shadow-lg">
-                <Link
-                  href="/about"
-                  className="block rounded-md px-3 py-2 hover:bg-accent"
+              <div className="absolute right-0 z-20 mt-2 flex min-w-56 flex-col gap-1 rounded-lg border bg-popover p-1 text-sm text-popover-foreground shadow-lg">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-11 w-full justify-start whitespace-normal"
+                  onClick={onToggleFavorite}
+                  aria-pressed={favorite}
+                  data-testid="product-card-favorite-action"
                 >
-                  Про довідник
-                </Link>
+                  <Heart
+                    className={
+                      favorite ? "h-4 w-4 fill-primary text-primary" : "h-4 w-4"
+                    }
+                  />
+                  {favorite ? "В обраному" : "В обране"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-h-11 w-full justify-start whitespace-normal"
+                  onClick={() => setAiOpen((value) => !value)}
+                  aria-expanded={aiOpen}
+                  data-testid="product-card-ai-action"
+                >
+                  <Sparkles className="h-4 w-4 shrink-0" />
+                  {aiOpen ? "Сховати AI-довідку" : "AI-довідка"}
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="min-h-11 w-full justify-start whitespace-normal"
+                >
+                  <Link href="/about">Про довідник</Link>
+                </Button>
               </div>
             </details>
           </div>
