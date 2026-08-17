@@ -7,8 +7,8 @@
  */
 
 /**
- * @minItems 7
- * @maxItems 7
+ * @minItems 9
+ * @maxItems 9
  * @items.maxLength 500
  */
 export type CatalogClientIndexRow = string[];
