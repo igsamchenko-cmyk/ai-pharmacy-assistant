@@ -98,6 +98,14 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{html,js,css,svg,png,ico,woff,woff2}"],
+        // Route chunks are kept out of the precache to keep the install small.
+        // The two exceptions are the routes the manifest itself puts on the
+        // user's home screen as shortcuts — `dispensing` and `interactions`.
+        // A shortcut the app offered that dead-ends on the offline-chunk
+        // boundary is worse than the ~57 KB it costs to precache them. Neither
+        // screen can *complete* its check offline (both confirm the exact
+        // position on the server), but both open, search the local catalog and
+        // say what they need. Keep this list in sync with `shortcuts` above.
         globIgnores: [
           "**/review-*.js",
           "**/beta-dashboard-*.js",
@@ -105,10 +113,8 @@ export default defineConfig({
           "**/perf-metrics-*.js",
           "**/about-*.js",
           "**/compare-*.js",
-          "**/dispensing-*.js",
           "**/history-*.js",
           "**/instruction-search-*.js",
-          "**/interactions-*.js",
           "**/login-*.js",
           "**/not-found-*.js",
           "**/pharmacovigilance-*.js",
