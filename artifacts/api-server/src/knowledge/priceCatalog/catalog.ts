@@ -158,6 +158,39 @@ export function priceCatalogCompositionByRegistration(
   return compositions;
 }
 
+/**
+ * Map every registration number to its declared strength.
+ *
+ * The registry's own «Дозування» column is frequently empty, which is why two
+ * same-name, same-form rows can look identical in search. The price catalog
+ * records the strength per declared package, so it fills that gap. Packages of
+ * one registration that disagree on strength are dropped rather than guessed
+ * at — the same fail-closed rule the composition map uses.
+ */
+export function priceCatalogStrengthByRegistration(
+  snapshot?: PriceCatalogSnapshot,
+): Map<string, string> {
+  const records = (snapshot ?? loadSnapshot()).records;
+  const strengths = new Map<string, string>();
+  const ambiguous = new Set<string>();
+  for (const record of records) {
+    const strength = record.strength.trim();
+    if (!strength) continue;
+    const registration = normalizeRegistrationNumber(record.registrationNumber);
+    if (!registration || ambiguous.has(registration)) continue;
+    const previous = strengths.get(registration);
+    if (previous === undefined) {
+      strengths.set(registration, strength);
+      continue;
+    }
+    if (previous !== strength) {
+      strengths.delete(registration);
+      ambiguous.add(registration);
+    }
+  }
+  return strengths;
+}
+
 export function clearPriceCatalogCache(): void {
   snapshotCache.clear();
 }
