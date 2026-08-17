@@ -2,12 +2,23 @@ import {
   catalogRegistrationCertificate,
   catalogRegistrationStatus,
   type CatalogClientIndexProduct,
-  type CatalogClientIndexSearchItem,
   type CatalogRegistrationStatus,
 } from "@workspace/catalog-index";
 
 /**
- * One certificate's worth of search results.
+ * The minimum a row needs to be grouped: the position and its ordering weight.
+ *
+ * Deliberately narrower than `CatalogClientIndexSearchItem` so the analogs tab,
+ * which classifies plain products rather than search hits, can group with the
+ * same rules instead of growing a second near-copy of them.
+ */
+export interface CatalogVariantInput {
+  product: CatalogClientIndexProduct;
+  rank: number;
+}
+
+/**
+ * One certificate's worth of results.
  *
  * The registry issues a single certificate per product and numbers each dosage
  * or package line under it — `UA/19799/01/01`, `/02`, `/03` are one Фармак
@@ -18,11 +29,13 @@ import {
 export interface CatalogVariantGroup {
   /** Certificate base (`UA/19799`), or the full number when unparseable. */
   key: string;
+  /** A certificate belongs to one product, so every line shares this name. */
+  tradeName: string;
   manufacturer: string;
   form: string;
   status: CatalogRegistrationStatus;
   /** Ordered lines of this certificate; the first is the default target. */
-  lines: CatalogClientIndexSearchItem[];
+  lines: CatalogVariantInput[];
   /** Distinct strengths across the lines, in listing order. */
   strengths: string[];
   bestRank: number;
@@ -53,7 +66,7 @@ function statusWeight(status: CatalogRegistrationStatus): number {
 }
 
 export function groupCatalogVariants(
-  items: readonly CatalogClientIndexSearchItem[],
+  items: readonly CatalogVariantInput[],
   now: Date,
 ): CatalogVariantGroup[] {
   const groups = new Map<string, CatalogVariantGroup>();
@@ -78,6 +91,7 @@ export function groupCatalogVariants(
       key:
         catalogRegistrationCertificate(product.registration) ||
         product.registration,
+      tradeName: product.tradeName,
       manufacturer: product.manufacturer,
       form: product.form,
       status,
