@@ -31,9 +31,10 @@ function fromServerProduct(
     inn: product.inn || product.activeIngredient,
     form: product.dosageForm,
     strength: product.strength ?? "",
-    // Composition identity is resolved only inside the catalog index; an
-    // interaction selection never needs it.
+    // Index-only fields; an interaction selection never needs them.
     compositionKey: "",
+    manufacturer: "",
+    registrationValidity: "",
   };
 }
 
