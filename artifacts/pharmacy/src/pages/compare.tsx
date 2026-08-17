@@ -26,6 +26,7 @@ import {
   type InteractionProductSelection,
 } from "@/components/registry-interaction-search-select";
 import {
+  comparisonProductFromClientIndexRow,
   comparisonProductFromRegistry,
   type ComparisonProductRef,
   useProductComparison,
@@ -88,26 +89,10 @@ export function exactComparisonInstruction(
 export function comparisonProductFromClientIndex(
   product: InteractionProductSelection,
 ): ComparisonProductRef {
-  const productId = product.productId.trim().toUpperCase();
-  const registrationNumber = product.registration.trim();
-  const inn = product.inn.trim() || null;
-  return {
-    productId,
-    registrationNumber,
-    tradeName: product.tradeName.trim(),
-    inn,
-    atcCode: null,
-    activeIngredient: inn,
-    strength: product.strength.trim() || null,
-    dosageForm: conciseDosageForm(product.form),
-    manufacturer: null,
-    nationalListStatus: "uncertain",
-    instructionAvailable: false,
-    href: registryProductDetailHref({
-      id: productId,
-      registration: { number: registrationNumber },
-    }),
-  };
+  return comparisonProductFromClientIndexRow(
+    product,
+    conciseDosageForm(product.form),
+  );
 }
 
 function present(value: string | null | undefined): string {
