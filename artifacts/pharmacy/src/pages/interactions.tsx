@@ -37,7 +37,9 @@ import {
   type InteractionSummaryState,
 } from "@/lib/interaction-result-summary";
 import { Badge } from "@/components/ui/badge";
+import { useOnlineStatus } from "@/hooks/use-online-status";
 import { useInteractionCart } from "@/lib/interaction-cart";
+import { interactionCheckFailure } from "@/lib/server-check-failure";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -277,6 +279,9 @@ export default function Interactions() {
   const checkInteractions = useCheckInteractions();
   const instructionSignals = useGetInteractionInstructionSignals();
   const createHistory = useCreateHistory();
+  // Explains a failure that already happened; never gates the request itself.
+  const offline = !useOnlineStatus();
+  const checkFailure = interactionCheckFailure(offline);
 
   const resetResults = () => {
     checkInteractions.reset();
@@ -437,16 +442,21 @@ export default function Interactions() {
         </div>
 
         {checkInteractions.isError ? (
-          <div className="space-y-2 rounded-lg border border-destructive/30 px-4 py-4 text-sm text-destructive">
-            <p>
-              Не вдалося звірити точні реєстрові позиції. Дані про взаємодію не
-              показано.
-            </p>
-            <ReportIssueButton
-              type="interaction_issue"
-              context={`registry-interaction-error:${selectedContext}`}
-              compact
-            />
+          // Same verdict either way — no interaction data is shown. Offline
+          // only changes what the pharmacist should do next, and there is
+          // nothing to report as a data issue when the request never arrived.
+          <div
+            className="space-y-2 rounded-lg border border-destructive/30 px-4 py-4 text-sm text-destructive"
+            data-testid="interaction-check-error"
+          >
+            <p>{checkFailure.body}</p>
+            {offline ? null : (
+              <ReportIssueButton
+                type="interaction_issue"
+                context={`registry-interaction-error:${selectedContext}`}
+                compact
+              />
+            )}
           </div>
         ) : null}
       </div>
