@@ -7,15 +7,26 @@ import type {
 import {
   AlertTriangle,
   ChevronRight,
+  Columns3,
   Database,
   Info,
   Pill,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  comparisonProductFromClientIndexRow,
+  comparisonProductFromRegistry,
+  useProductComparison,
+} from "@/hooks/use-product-comparison";
 import { useCatalogClientIndex } from "@/lib/catalog-client-index";
+import {
+  CATALOG_REGISTRATION_STATUS_LABELS,
+  groupCatalogVariants,
+} from "@/lib/catalog-result-variants";
 import {
   catalogInnSpecificity,
   classifyRegistryAnalogs,
@@ -36,8 +47,37 @@ const EMPTY_SEARCH_RESULT = {
   durationMs: 0,
 } as const satisfies CatalogClientIndexSearchResult;
 
-function ProductList({ products }: { products: CatalogClientIndexProduct[] }) {
-  if (!products.length) {
+function analogHref(product: CatalogClientIndexProduct): string {
+  return `/products/${encodeURIComponent(product.productId)}?registration=${encodeURIComponent(product.registration)}&tab=profile`;
+}
+
+/**
+ * The analog list groups by certificate for the same reason search results do.
+ *
+ * A search for a common substance returns whole certificates — `UA/0235/02/01`,
+ * `/02`, `/03` are one ОМЕЗ in 20, 10 and 40 мг. Listed as three cards reading
+ * "ОМЕЗ® · капсули" they look like three analogs to choose between, and the
+ * registration number is the only thing telling them apart, which is exactly
+ * what a pharmacist cannot act on. Collapsed, the choice becomes the strength.
+ */
+function AnalogList({
+  products,
+  onCompare,
+  comparedProductId,
+}: {
+  products: CatalogClientIndexProduct[];
+  onCompare: (product: CatalogClientIndexProduct) => void;
+  comparedProductId: string;
+}) {
+  const groups = useMemo(
+    () =>
+      groupCatalogVariants(
+        products.map((product, rank) => ({ product, rank })),
+        new Date(),
+      ),
+    [products],
+  );
+  if (!groups.length) {
     return (
       <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
         Реєстрових варіантів у цій групі не знайдено.
@@ -46,30 +86,83 @@ function ProductList({ products }: { products: CatalogClientIndexProduct[] }) {
   }
   return (
     <div className="grid gap-3 lg:grid-cols-2">
-      {products.map((product) => (
-        <Link
-          key={product.productId}
-          href={`/products/${encodeURIComponent(product.productId)}?registration=${encodeURIComponent(product.registration)}&tab=profile`}
-          className="block min-w-0"
-        >
-          <Card className="group h-full transition-colors hover:border-primary/40">
-            <CardContent className="flex min-w-0 items-center justify-between gap-4 p-4">
-              <div className="min-w-0 flex-1 space-y-1">
-                <h4 className="break-words font-bold">{product.tradeName}</h4>
-                <p className="break-words text-xs text-muted-foreground">
-                  {[product.strength, product.form]
-                    .filter(Boolean)
-                    .join(" · ") || "Форму не вказано"}
+      {groups.map((group) => {
+        const lead = group.lines[0]?.product;
+        if (!lead) return null;
+        return (
+          <Card
+            key={group.key + group.form + group.manufacturer}
+            className="flex h-full min-w-0 flex-col"
+            data-testid={`analog-variant-${group.key}`}
+          >
+            <CardContent className="flex min-w-0 flex-1 flex-col gap-3 p-4">
+              <div className="min-w-0 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h4 className="break-words font-bold">{group.tradeName}</h4>
+                  {group.status === "terminated" ? (
+                    <Badge
+                      variant="destructive"
+                      data-testid="analog-variant-terminated"
+                    >
+                      {CATALOG_REGISTRATION_STATUS_LABELS.terminated}
+                    </Badge>
+                  ) : null}
+                </div>
+                {/* Manufacturer is how a pharmacist tells two same-name,
+                    same-form registrations apart; the number never was. */}
+                <p className="break-words text-sm font-medium">
+                  {group.manufacturer || "Виробника не вказано"}
                 </p>
-                <p className="break-all text-xs text-muted-foreground">
-                  {product.registration}
+                <p className="break-words text-xs text-muted-foreground">
+                  {group.form || "Форму не вказано"}
                 </p>
               </div>
-              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+              <div className="flex flex-wrap gap-2">
+                {group.lines.map(({ product }, index) => (
+                  <Button
+                    key={`${product.productId}:${product.registration}`}
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="min-h-11"
+                  >
+                    <Link
+                      href={analogHref(product)}
+                      data-testid={`analog-open-${product.productId}`}
+                    >
+                      {product.strength ||
+                        (group.lines.length > 1
+                          ? `Варіант ${index + 1}`
+                          : "Відкрити")}
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                ))}
+              </div>
+              <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
+                <p className="break-all text-xs text-muted-foreground">
+                  {group.lines.length > 1
+                    ? `Посвідчення ${group.key} · ${group.lines.length} рядки`
+                    : `Реєстрація: ${lead.registration}`}
+                </p>
+                <Button
+                  type="button"
+                  variant={
+                    comparedProductId === lead.productId ? "secondary" : "ghost"
+                  }
+                  size="sm"
+                  className="min-h-11"
+                  onClick={() => onCompare(lead)}
+                  data-testid={`analog-compare-${lead.productId}`}
+                >
+                  <Columns3 className="h-4 w-4 shrink-0" />
+                  Порівняти
+                </Button>
+              </div>
             </CardContent>
           </Card>
-        </Link>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -114,6 +207,32 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
   // catalog holds more than the tab can show — say so instead of implying
   // the list is complete.
   const truncated = result.total > result.items.length;
+
+  const [, navigate] = useLocation();
+  const comparison = useProductComparison();
+  /**
+   * Comparing an analog always means comparing it against the position on
+   * screen, so the pair is set outright instead of accumulating in a basket
+   * the pharmacist has to reason about. This is why the old card-level button
+   * could dead-end at a disabled «Максимум 2»: there was no way to say which
+   * two, only how many.
+   */
+  const compareWithCurrent = React.useCallback(
+    (analog: CatalogClientIndexProduct) => {
+      comparison.clear();
+      comparison.addProduct(
+        comparisonProductFromRegistry(product, product.dosageForm),
+      );
+      comparison.addProduct(
+        comparisonProductFromClientIndexRow(analog, analog.form),
+      );
+      navigate("/compare");
+    },
+    [comparison, navigate, product],
+  );
+  const comparedProductId =
+    comparison.products.find((entry) => entry.productId !== product.id)
+      ?.productId ?? "";
   const groups = useMemo(
     () =>
       classifyRegistryAnalogs(
@@ -221,7 +340,11 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
               <span className="h-3 w-3 rounded-full bg-emerald-500" />
               Точний збіг форми й дозування
             </h3>
-            <ProductList products={groups.full} />
+            <AnalogList
+              products={groups.full}
+              onCompare={compareWithCurrent}
+              comparedProductId={comparedProductId}
+            />
           </div>
 
           <div className="space-y-4">
@@ -231,7 +354,11 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
                 ? "Той самий склад, інша форма або дозування"
                 : "Той самий запис МНН, інша форма або дозування"}
             </h3>
-            <ProductList products={groups.partial} />
+            <AnalogList
+              products={groups.partial}
+              onCompare={compareWithCurrent}
+              comparedProductId={comparedProductId}
+            />
           </div>
         </>
       )}

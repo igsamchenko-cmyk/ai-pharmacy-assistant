@@ -216,4 +216,70 @@ describe("ProductAnalogsTab", () => {
     expect(html).toContain("Бренд Д");
     expect(html).not.toContain("Перелік показано не повністю");
   });
+
+  it("collapses the lines of one certificate instead of listing them as rival analogs", () => {
+    // UA/0235/02/01-03 is one ОМЕЗ from Д-р Редді'с in three strengths. Listed
+    // separately they read as three analogs distinguished only by a
+    // registration number, which is what the pharmacist cannot act on.
+    indexRows.current = [
+      candidate("B".repeat(32), "ОМЕЗ®", {
+        registration: "UA/0235/02/01",
+        strength: "20 мг",
+        manufacturer: "Д-р Редді'с",
+        form: "капсули",
+      }),
+      candidate("C".repeat(32), "ОМЕЗ®", {
+        registration: "UA/0235/02/02",
+        strength: "10 мг",
+        manufacturer: "Д-р Редді'с",
+        form: "капсули",
+      }),
+      candidate("D".repeat(32), "ОМЕЗ®", {
+        registration: "UA/0235/02/03",
+        strength: "40 мг",
+        manufacturer: "Д-р Редді'с",
+        form: "капсули",
+      }),
+    ];
+    const html = render(card());
+
+    // One card, three strength choices, and the manufacturer that identifies it.
+    expect(html.match(/analog-variant-UA\/0235/gu)).toHaveLength(1);
+    expect(html).toContain("Посвідчення UA/0235 · 3 рядки");
+    expect(html).toContain("Д-р Редді&#x27;с");
+    expect(html).toContain(">20 мг");
+    expect(html).toContain(">10 мг");
+    expect(html).toContain(">40 мг");
+  });
+
+  it("keeps two manufacturers of the same substance apart and marks a lapsed one", () => {
+    indexRows.current = [
+      candidate("E".repeat(32), "ОМЕПРАЗОЛ", {
+        registration: "UA/9067/01/01",
+        manufacturer: "АСТРАФАРМ",
+      }),
+      candidate("F".repeat(32), "ОМЕПРАЗОЛ-ДАРНИЦЯ", {
+        registration: "UA/4321/01/01",
+        manufacturer: "Дарниця",
+        registrationValidity: "2020-01-01",
+      }),
+    ];
+    const html = render(card());
+
+    expect(html).toContain("АСТРАФАРМ");
+    expect(html).toContain("Дарниця");
+    expect(html).toContain("Реєстрацію припинено");
+    // A terminated registration is still findable — an old pack is still on a
+    // shelf — but never ahead of a valid one.
+    expect(html.indexOf("АСТРАФАРМ")).toBeLessThan(html.indexOf("Дарниця"));
+  });
+
+  it("offers comparison against the position on screen, never a bare capacity limit", () => {
+    indexRows.current = [candidate("G".repeat(32), "Бренд В")];
+    const html = render(card());
+
+    expect(html).toContain("Порівняти");
+    expect(html).toContain(`analog-compare-${"G".repeat(32)}`);
+    expect(html).not.toContain("Максимум 2");
+  });
 });
