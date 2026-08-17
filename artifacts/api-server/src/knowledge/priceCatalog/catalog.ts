@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { conciseCatalogStrength } from "@workspace/catalog-index";
 import { TtlCache } from "../../lib/cache";
 import { resolveDataFilePath } from "../../lib/dataPath";
 import { normalizeRegistrationNumber } from "../dispensingCategories/model";
@@ -166,6 +167,9 @@ export function priceCatalogCompositionByRegistration(
  * records the strength per declared package, so it fills that gap. Packages of
  * one registration that disagree on strength are dropped rather than guessed
  * at — the same fail-closed rule the composition map uses.
+ *
+ * Values are shortened for display first, so two packages spelling the same
+ * dose differently do not read as a disagreement.
  */
 export function priceCatalogStrengthByRegistration(
   snapshot?: PriceCatalogSnapshot,
@@ -174,7 +178,7 @@ export function priceCatalogStrengthByRegistration(
   const strengths = new Map<string, string>();
   const ambiguous = new Set<string>();
   for (const record of records) {
-    const strength = record.strength.trim();
+    const strength = conciseCatalogStrength(record.strength);
     if (!strength) continue;
     const registration = normalizeRegistrationNumber(record.registrationNumber);
     if (!registration || ambiguous.has(registration)) continue;

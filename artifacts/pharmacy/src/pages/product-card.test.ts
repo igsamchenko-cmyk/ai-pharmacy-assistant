@@ -698,4 +698,35 @@ describe("cached instruction preview", () => {
     expect(html).not.toContain('id="instruction-administration"');
     expect(html).toContain("Оновлюємо дані з сервера");
   });
+
+  it("gives the two actions on the position primacy and files the rest under «Ще»", () => {
+    const html = renderCard(card());
+
+    // Six equally weighted buttons meant nothing read as the next step. The
+    // interaction basket and pharmacovigilance act on the position in hand;
+    // saving, AI and the about page are detours.
+    expect(html).toContain('data-testid="product-card-interaction-toggle"');
+    expect(html).toContain(
+      'data-testid="product-card-pharmacovigilance-action"',
+    );
+    const moreIndex = html.indexOf("Ще</summary>");
+    expect(moreIndex).toBeGreaterThan(-1);
+    for (const testId of [
+      'data-testid="product-card-favorite-action"',
+      'data-testid="product-card-ai-action"',
+    ]) {
+      expect(html.indexOf(testId)).toBeGreaterThan(moreIndex);
+    }
+    expect(html.indexOf("Про довідник")).toBeGreaterThan(moreIndex);
+  });
+
+  it("no longer offers comparison from the card, where the pair was never nameable", () => {
+    const html = renderCard(card());
+
+    // Comparison lives in the Analogs tab now: «цей чи цей?» is asked there,
+    // and a capacity message («Максимум 2») is not an action.
+    expect(html).not.toContain("Максимум 2");
+    expect(html).not.toContain("Порівняти");
+    expect(html).not.toContain("У порівнянні");
+  });
 });
