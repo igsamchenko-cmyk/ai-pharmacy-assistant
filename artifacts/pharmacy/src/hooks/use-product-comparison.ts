@@ -145,6 +145,48 @@ export function comparisonProductFromRegistry(
   };
 }
 
+/**
+ * Build a comparison entry from a client-index row.
+ *
+ * The index carries identity only, so everything the registry decides —
+ * national list standing, instruction availability, ATC — is left at its
+ * unknown value and hydrated by the comparison screen. `nationalListStatus`
+ * starts at `uncertain` rather than a concrete verdict: understating what is
+ * known is safe, asserting a listing that was never checked is not.
+ */
+export function comparisonProductFromClientIndexRow(
+  product: {
+    productId: string;
+    registration: string;
+    tradeName: string;
+    inn: string;
+    strength: string;
+    manufacturer?: string;
+  },
+  conciseForm: string,
+): ComparisonProductRef {
+  const productId = product.productId.trim().toUpperCase();
+  const registrationNumber = product.registration.trim();
+  const inn = product.inn.trim() || null;
+  return {
+    productId,
+    registrationNumber,
+    tradeName: product.tradeName.trim(),
+    inn,
+    atcCode: null,
+    activeIngredient: inn,
+    strength: product.strength.trim() || null,
+    dosageForm: conciseForm.trim() || null,
+    manufacturer: product.manufacturer?.trim() || null,
+    nationalListStatus: "uncertain",
+    instructionAvailable: false,
+    href: registryProductDetailHref({
+      id: productId,
+      registration: { number: registrationNumber },
+    }),
+  };
+}
+
 function browserStorage(): ComparisonStorage | null {
   if (typeof window === "undefined") return null;
   return window.localStorage;
