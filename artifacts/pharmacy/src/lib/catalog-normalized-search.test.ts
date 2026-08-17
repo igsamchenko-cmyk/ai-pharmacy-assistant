@@ -38,6 +38,8 @@ function product(
     form: "таблетки",
     strength: "10 мг",
     compositionKey: "",
+    manufacturer: "Виробник",
+    registrationValidity: "2030-01-01",
   };
 }
 
@@ -295,7 +297,9 @@ describe("catalog normalized search safety", () => {
     expect(html).toContain("Можливо, ви шукали:");
     expect(html).toContain("Виправлено");
     expect(html).toContain("correctedQuery=%D0%BF%D0%B0%D1%80");
-    expect(html).toContain("Відкрити");
+    // The open control is now labelled by the strength, which is the thing a
+    // pharmacist actually chooses between.
+    expect(html).toContain(">10 мг<");
   });
 
   it("PR-H, H.2.3: a primary result carrying a sectionIntent links straight to that instruction section", () => {

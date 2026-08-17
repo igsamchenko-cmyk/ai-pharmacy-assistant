@@ -31,6 +31,12 @@ export interface CatalogClientIndexStorage {
   writeAndActivate(index: CompiledCatalogClientIndex): Promise<void>;
 }
 
+/**
+ * Every string field of a prepared product, in sync with the compiled shape in
+ * `lib/catalog-index`. The memory recomputed here is compared byte-for-byte
+ * against the stored total, so a field missing from this list silently makes
+ * every persisted index fail validation — keep it complete when the row grows.
+ */
 const PRODUCT_STRING_FIELDS = [
   "productId",
   "registration",
@@ -38,6 +44,9 @@ const PRODUCT_STRING_FIELDS = [
   "inn",
   "form",
   "strength",
+  "compositionKey",
+  "manufacturer",
+  "registrationValidity",
   "tradeKey",
   "innKey",
   "registrationKey",
