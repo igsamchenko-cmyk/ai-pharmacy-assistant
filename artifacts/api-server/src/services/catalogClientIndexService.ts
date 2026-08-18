@@ -85,21 +85,47 @@ function bounded(
 }
 
 /**
- * A derived value that does not fit its bound is dropped, not thrown on.
+ * A value that does not fit its bound is dropped, not thrown on.
  *
- * `bounded` is right for registry-native columns: the contract says they fit,
- * and a violation means the snapshot is wrong. It is the wrong rule for a
- * value this service synthesises from a second source. The МОЗ price catalog
- * records some combination strengths as multi-hundred-character prose — 139
- * registrations in the current snapshot exceed the 120-character strength
- * bound, the longest by a factor of eighteen — and throwing on one of them
- * took the entire client index offline with a 503 for every pharmacist. A
- * missing dosage on one position is honest; losing the whole catalog to make
- * that point is not.
+ * `bounded` is right for identity columns: the contract says they fit, and a
+ * violation means the row cannot be addressed at all. It is the wrong rule for
+ * a dosage. The МОЗ price catalog records some combination strengths as
+ * multi-hundred-character prose — 139 registrations in the current snapshot
+ * exceed the 120-character strength bound, the longest by a factor of
+ * eighteen — and throwing on one of them took the entire client index offline
+ * with a 503 for every pharmacist. A missing dosage on one position is honest;
+ * losing the whole catalog to make that point is not. A dosage is never
+ * truncated: half of "100 мг" reads as a different dose.
  */
 function boundedOrEmpty(value: string, max: number): string {
   const normalized = value.trim().replace(/\s+/gu, " ");
   return normalized.length > max ? "" : normalized;
+}
+
+/**
+ * A descriptive column that overruns its bound is truncated, not thrown on.
+ *
+ * The bounds keep the wire payload predictable; they were never evidence that
+ * the registry is well-formed. It is not. Seven manufacturer entries in the
+ * current snapshot spell out every production role inside the name field, the
+ * longest running to 607 characters, and `bounded` threw on the first of them
+ * — a second whole-catalog outage from a single unreadable cell. Truncating
+ * costs the tail of a role list; throwing costs every pharmacist the offline
+ * catalog. Cutting at a word boundary keeps the part that identifies the
+ * company, which is what the analog list uses to tell two same-name
+ * registrations apart, and the ellipsis is part of the stored value so a cut
+ * string is never presented as the complete one.
+ */
+function boundedDescription(
+  value: string | null | undefined,
+  max: number,
+): string {
+  const normalized = value?.trim().replace(/\s+/gu, " ") ?? "";
+  if (normalized.length <= max) return normalized;
+  const cut = normalized.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  const kept = lastSpace > max / 2 ? cut.slice(0, lastSpace) : cut;
+  return `${kept.replace(/[,;:\-\s]+$/u, "")}…`;
 }
 
 export function buildCatalogClientIndexAliases(): CatalogClientIndexAliasRow[] {
@@ -274,24 +300,22 @@ async function buildPayloadUncached(
       // to the declared strength rather than showing nothing.
       const registration = normalizeRegistrationNumber(row.registration_number);
       const strength =
-        row.strength.trim() ||
+        boundedOrEmpty(row.strength ?? "", CATALOG_INDEX_STRENGTH_MAX_LENGTH) ||
         boundedOrEmpty(
           registration ? (strengths.get(registration) ?? "") : "",
           CATALOG_INDEX_STRENGTH_MAX_LENGTH,
         );
       return encodeCatalogClientIndexRow({
+        // Identity stays strict: a row whose own identifier does not fit is
+        // not a long description, it is a row nothing can link to.
         productId: bounded(row.registry_id, 32, "productId"),
         registration: bounded(row.registration_number, 80, "registration"),
-        tradeName: bounded(row.trade_name, 500, "tradeName"),
-        inn: bounded(row.inn, 500, "inn"),
-        form: bounded(conciseCatalogIndexForm(row.form), 500, "form"),
-        strength: bounded(
-          strength,
-          CATALOG_INDEX_STRENGTH_MAX_LENGTH,
-          "strength",
-        ),
+        tradeName: boundedDescription(row.trade_name, 500),
+        inn: boundedDescription(row.inn, 500),
+        form: boundedDescription(conciseCatalogIndexForm(row.form), 500),
+        strength,
         compositionKey: resolveCompositionKey(row, compositions),
-        manufacturer: bounded(row.manufacturer, 500, "manufacturer"),
+        manufacturer: boundedDescription(row.manufacturer, 500),
         registrationValidity: resolveRegistrationValidity(row),
       });
     }),
