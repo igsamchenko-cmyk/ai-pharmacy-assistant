@@ -510,7 +510,9 @@ export function conciseCatalogStrength(strength: string): string {
       term.denominator ? `${term.text}/${term.denominator}` : term.text,
     )
     .join(" + ");
-  return concise.length <= CATALOG_STRENGTH_MAX_CONCISE_LENGTH ? concise : value;
+  return concise.length <= CATALOG_STRENGTH_MAX_CONCISE_LENGTH
+    ? concise
+    : value;
 }
 
 export function decodeCatalogClientIndexRow(
@@ -799,6 +801,91 @@ export function searchCatalogClientIndex(
 
 interface CatalogSymSpellIndex {
   deletes: Map<string, Set<string>>;
+}
+
+/**
+ * Exact-identity lookups over a compiled index.
+ *
+ * Analog grouping is an equality question — same МНН, or same composition —
+ * but it used to be answered by running the ranked text search and then
+ * discarding everything that did not match exactly. That made a group's
+ * completeness depend on a result cap and let prefix matches, which the caller
+ * throws away, count towards "the list is truncated". These maps answer the
+ * equality question directly, so a group is always whole.
+ *
+ * Built lazily and cached per compiled index in a WeakMap, the same way the
+ * fuzzy index is: nothing is added to the persisted payload, so there is no
+ * wire cost and no index version change.
+ */
+interface CatalogIdentityIndex {
+  byProductId: Map<string, PreparedCatalogProduct>;
+  byInnKey: Map<string, PreparedCatalogProduct[]>;
+  byCompositionKey: Map<string, PreparedCatalogProduct[]>;
+}
+
+const catalogIdentityIndexes = new WeakMap<
+  CompiledCatalogClientIndex,
+  CatalogIdentityIndex
+>();
+
+function pushInto(
+  map: Map<string, PreparedCatalogProduct[]>,
+  key: string,
+  product: PreparedCatalogProduct,
+): void {
+  if (!key) return;
+  const bucket = map.get(key);
+  if (bucket) bucket.push(product);
+  else map.set(key, [product]);
+}
+
+function getCatalogIdentityIndex(
+  index: CompiledCatalogClientIndex,
+): CatalogIdentityIndex {
+  const cached = catalogIdentityIndexes.get(index);
+  if (cached) return cached;
+  const built: CatalogIdentityIndex = {
+    byProductId: new Map(),
+    byInnKey: new Map(),
+    byCompositionKey: new Map(),
+  };
+  for (const product of index.products) {
+    if (!built.byProductId.has(product.productId)) {
+      built.byProductId.set(product.productId, product);
+    }
+    pushInto(built.byInnKey, product.innKey, product);
+    pushInto(built.byCompositionKey, product.compositionKey, product);
+  }
+  catalogIdentityIndexes.set(index, built);
+  return built;
+}
+
+/** The row for an exact product id, without ranking the whole catalog for it. */
+export function catalogProductById(
+  index: CompiledCatalogClientIndex,
+  productId: string,
+): CatalogClientIndexProduct | null {
+  return getCatalogIdentityIndex(index).byProductId.get(productId) ?? null;
+}
+
+/**
+ * Every position sharing an exact identity, complete and uncapped.
+ *
+ * A composition key wins when present, because it is only ever set where the
+ * registry МНН does not name a substance. Returns `[]` for an empty key rather
+ * than everything — an unknown identity must never read as "all products".
+ */
+export function catalogPositionsByIdentity(
+  index: CompiledCatalogClientIndex,
+  identity: { innKey?: string; compositionKey?: string },
+): CatalogClientIndexProduct[] {
+  const lookups = getCatalogIdentityIndex(index);
+  const compositionKey = identity.compositionKey ?? "";
+  if (compositionKey) {
+    return [...(lookups.byCompositionKey.get(compositionKey) ?? [])];
+  }
+  const innKey = identity.innKey ?? "";
+  return innKey ? [...(lookups.byInnKey.get(innKey) ?? [])] : [];
 }
 
 const catalogSymSpellIndexes = new WeakMap<
