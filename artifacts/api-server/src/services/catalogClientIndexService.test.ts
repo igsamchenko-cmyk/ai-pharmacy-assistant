@@ -17,6 +17,7 @@ function executor(
     productCount?: number;
     tradeName?: string;
     form?: string;
+    manufacturer?: string;
     rows?: { registration_number: string; inn: string; strength?: string }[];
   } = {},
 ): CatalogClientIndexQueryExecutor & { query: ReturnType<typeof vi.fn> } {
@@ -43,7 +44,7 @@ function executor(
           inn: "Enalapril",
           form: options.form ?? "таблетки; по 10 таблеток у блістері",
           strength: "10 мг",
-          manufacturer: "КРКА",
+          manufacturer: options.manufacturer ?? "КРКА",
           registration_end_date: "2030-01-01",
           early_termination: "",
           source_snapshot_hash: options.rowSnapshotHash ?? snapshotHash,
@@ -158,6 +159,30 @@ describe("catalog client index service", () => {
     if (result.status !== "ready") return;
     expect(result.payload.rows).toHaveLength(1);
     expect(result.payload.rows[0]?.[5]).toBe("");
+  });
+
+  it("truncates an over-long manufacturer instead of taking the catalog offline", async () => {
+    // Regression: the second outage from the same shape of defect. The registry
+    // spells production roles out inside the manufacturer name — UA/17978/01/01
+    // runs to 607 characters — and the 500-character bound threw on it, so one
+    // unreadable cell answered 503 for all 16601 positions. Manufacturer is the
+    // field the analog list uses to tell two same-name registrations apart, so
+    // it is cut rather than dropped, and the cut is visible.
+    const manufacturer = `Біоген (Данія) Менюфекчуринг АпС ${"роль ".repeat(120)}`;
+    expect(manufacturer.trim()).toHaveLength(632);
+
+    const result = await loadCatalogClientIndex(
+      null,
+      executor({ manufacturer }),
+    );
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    const stored = result.payload.rows[0]?.[7] ?? "";
+    expect(stored.length).toBeLessThanOrEqual(500);
+    expect(stored.startsWith("Біоген (Данія) Менюфекчуринг АпС")).toBe(true);
+    // Without the ellipsis a cut name reads as the whole registered name.
+    expect(stored.endsWith("\u2026")).toBe(true);
   });
 
   it("prewarms once and shares one payload build across concurrent clients", async () => {
