@@ -1,51 +1,50 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import type { ProductCard } from "@workspace/api-client-react";
 import {
   catalogCompositionKey,
+  normalizeCatalogIndexText,
   type CatalogClientIndexProduct,
-  type CatalogClientIndexSearchResult,
 } from "@workspace/catalog-index";
 
 /**
- * The tab issues two distinct lookups — one for the position's own index row
- * (by productId, to read its composition key) and one for peers — so the stub
- * answers per query rather than returning one fixed result.
+ * The tab asks two exact questions — this row by id, and every row sharing an
+ * identity — so the stub answers them the way the real index does rather than
+ * standing in a ranked search for them.
  */
 const indexRows: { current: CatalogClientIndexProduct[] } = { current: [] };
-/** Extra matches the real index would hold beyond the search cap. */
-const extraBeyondCap: { current: number } = { current: 0 };
 
-function searchStub(query: string): CatalogClientIndexSearchResult {
-  const items = indexRows.current
-    .filter(
-      (product) =>
-        product.productId === query ||
-        (Boolean(product.compositionKey) && product.compositionKey === query) ||
-        product.inn === query,
-    )
-    .map((product) => ({
-      product,
-      rank: 0,
-      matchedBy: "inn_exact" as const,
-    }));
-  const isSelfLookup = indexRows.current.some(
-    (product) => product.productId === query,
+function productByIdStub(productId: string): CatalogClientIndexProduct | null {
+  return (
+    indexRows.current.find((product) => product.productId === productId) ?? null
   );
-  return {
-    query,
-    total: items.length + (isSelfLookup ? 0 : extraBeyondCap.current),
-    items,
-    durationMs: 0,
-  };
+}
+
+function positionsByIdentityStub(identity: {
+  innKey?: string;
+  compositionKey?: string;
+}): CatalogClientIndexProduct[] {
+  const compositionKey = identity.compositionKey ?? "";
+  if (compositionKey) {
+    return indexRows.current.filter(
+      (product) => product.compositionKey === compositionKey,
+    );
+  }
+  const innKey = identity.innKey ?? "";
+  return innKey
+    ? indexRows.current.filter(
+        (product) => normalizeCatalogIndexText(product.inn) === innKey,
+      )
+    : [];
 }
 
 vi.mock("@/lib/catalog-client-index", () => ({
   useCatalogClientIndex: () => ({
     status: "ready",
-    search: (query: string) => searchStub(query),
+    productById: productByIdStub,
+    positionsByIdentity: positionsByIdentityStub,
   }),
 }));
 
@@ -112,10 +111,6 @@ const RENNIE_KEY = catalogCompositionKey(
 );
 
 describe("ProductAnalogsTab", () => {
-  beforeEach(() => {
-    extraBeyondCap.current = 0;
-  });
-
   it("shows the real INN-matched analogs when the МНН is a specific substance", () => {
     indexRows.current = [candidate("B".repeat(32), "Бренд Б")];
     const html = render(card());
@@ -200,20 +195,23 @@ describe("ProductAnalogsTab", () => {
     expect(html).not.toContain("МНН не деталізовано в реєстрі");
   });
 
-  it("reports a truncated list instead of implying it is complete", () => {
-    indexRows.current = [candidate("H".repeat(32), "Бренд Г")];
-    extraBeyondCap.current = 40;
+  it("returns a large group whole instead of capping it", () => {
+    // The old path generated candidates with a ranked search capped at 250 and
+    // then warned that the list was incomplete. Grouping is an equality
+    // question, so the whole group comes back and there is nothing to warn
+    // about — a pharmacist scanning for a substitute must not be shown a
+    // silently shortened set.
+    indexRows.current = Array.from({ length: 300 }, (_, index) =>
+      candidate(
+        index.toString(16).toUpperCase().padStart(32, "0"),
+        `БРЕНД ${index}`,
+        { registration: `UA/${index + 1}/01/01` },
+      ),
+    );
     const html = render(card());
 
-    expect(html).toContain("Перелік показано не повністю");
-    expect(html).toContain("41");
-  });
-
-  it("does not warn about truncation when every match fits", () => {
-    indexRows.current = [candidate("I".repeat(32), "Бренд Д")];
-    const html = render(card());
-
-    expect(html).toContain("Бренд Д");
+    expect(html).toContain("БРЕНД 0");
+    expect(html).toContain("БРЕНД 299");
     expect(html).not.toContain("Перелік показано не повністю");
   });
 
