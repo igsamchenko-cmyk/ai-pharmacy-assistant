@@ -7,7 +7,7 @@ import {
 } from "../knowledge/analogCoverage";
 import { priceCatalogCompositionByRegistration } from "../knowledge/priceCatalog/catalog";
 import {
-  authorizeCatalogProfileDatabase,
+  authorizeCatalogSmokeDatabase,
   closeCatalogSmokePool,
   configureCatalogSmokeReadOnlySession,
   createReadOnlyCatalogExecutor,
@@ -45,12 +45,15 @@ function text(value: unknown): string {
 /**
  * Measure, for the whole catalog, what the analogs tab will actually resolve.
  *
- * Read-only by construction: it reuses the production search smoke harness, so
- * the same authorization and read-only session checks apply as to every other
- * script that touches the live registry.
+ * Read-only by construction: it reuses the catalog smoke harness, so the same
+ * authorization and read-only session checks apply as to every other script
+ * that touches the registry. A local database needs no ceremony, a non-local
+ * one needs `ALLOW_REGISTRY_CATALOG_DB_SMOKE_NONLOCAL=true`, and the protected
+ * production host stays behind the approved workflow gate — a coverage report
+ * is not a reason to widen that door.
  */
 async function main(): Promise<void> {
-  authorizeCatalogProfileDatabase(process.env.DATABASE_URL, process.env);
+  authorizeCatalogSmokeDatabase(process.env.DATABASE_URL, process.env);
   configureCatalogSmokeReadOnlySession(process.env);
   const { pool: importedPool } = await import("@workspace/db");
   const pool = importedPool as unknown as PoolLike;
