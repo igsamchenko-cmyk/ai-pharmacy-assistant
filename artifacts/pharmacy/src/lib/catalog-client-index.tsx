@@ -7,6 +7,9 @@ import {
   catalogClientIndexWireBytes,
   compileCatalogClientIndex,
   normalizeAndSearchCatalogClientIndex,
+  catalogPositionsByIdentity,
+  catalogProductById,
+  type CatalogClientIndexProduct,
   searchCatalogClientIndex,
   type CatalogClientIndexAliasRow,
   type CatalogClientIndexPayload,
@@ -437,6 +440,13 @@ interface CatalogClientIndexContextValue {
     query: string,
     options?: CatalogClientIndexSearchOptions,
   ): CatalogClientIndexSearchResult;
+  /** Exact row for a product id, without ranking the catalog to find it. */
+  productById(productId: string): CatalogClientIndexProduct | null;
+  /** Every position sharing an exact identity — complete, never capped. */
+  positionsByIdentity(identity: {
+    innKey?: string;
+    compositionKey?: string;
+  }): CatalogClientIndexProduct[];
   normalizeAndSearch(
     query: string,
     options?: CatalogClientIndexSearchOptions,
@@ -679,6 +689,18 @@ export function CatalogClientIndexProvider({
     [index],
   );
 
+  const productById = useCallback(
+    (productId: string) =>
+      index ? catalogProductById(index, productId) : null,
+    [index],
+  );
+
+  const positionsByIdentity = useCallback(
+    (identity: { innKey?: string; compositionKey?: string }) =>
+      index ? catalogPositionsByIdentity(index, identity) : [],
+    [index],
+  );
+
   const normalizeAndSearch = useCallback(
     (query: string, options?: CatalogClientIndexSearchOptions) => {
       if (!index) {
@@ -712,6 +734,8 @@ export function CatalogClientIndexProvider({
       estimatedMemoryBytes: index?.estimatedMemoryBytes ?? 0,
       normalizationReady: Boolean(normalizedSearcher),
       search,
+      productById,
+      positionsByIdentity,
       normalizeAndSearch,
     }),
     [
@@ -720,6 +744,8 @@ export function CatalogClientIndexProvider({
       isStale,
       normalizeAndSearch,
       normalizedSearcher,
+      positionsByIdentity,
+      productById,
       search,
       source,
       status,
