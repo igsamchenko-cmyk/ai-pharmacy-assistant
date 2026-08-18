@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import type { ProductCard } from "@workspace/api-client-react";
-import type {
-  CatalogClientIndexProduct,
-  CatalogClientIndexSearchResult,
+import {
+  normalizeCatalogIndexText,
+  type CatalogClientIndexProduct,
 } from "@workspace/catalog-index";
 import {
   AlertTriangle,
@@ -31,21 +31,6 @@ import {
   catalogInnSpecificity,
   classifyRegistryAnalogs,
 } from "@/lib/product-analogs";
-
-/**
- * The shared index caps a search at 250 results. The largest real same-МНН
- * group in the current catalog is ~120, so asking for the cap keeps every
- * member of a group in view; anything beyond it is reported, never dropped
- * silently.
- */
-const ANALOG_SEARCH_LIMIT = 250;
-
-const EMPTY_SEARCH_RESULT = {
-  query: "",
-  total: 0,
-  items: [],
-  durationMs: 0,
-} as const satisfies CatalogClientIndexSearchResult;
 
 function analogHref(product: CatalogClientIndexProduct): string {
   return `/products/${encodeURIComponent(product.productId)}?registration=${encodeURIComponent(product.registration)}&tab=profile`;
@@ -175,13 +160,11 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
 
   // When the registry МНН does not identify the composition on its own, this
   // position's own index row carries the composition resolved from the
-  // official price catalog.
+  // official price catalog. Read by id: ranking the whole catalog to find a
+  // row whose identifier is already known was both wasteful and fragile.
   const compositionKey = useMemo(() => {
     if (specificity === "specific") return "";
-    const self = catalog
-      .search(product.id, { limit: 5 })
-      .items.find((item) => item.product.productId === product.id);
-    return self?.product.compositionKey ?? "";
+    return catalog.productById(product.id)?.compositionKey ?? "";
   }, [catalog, specificity, product.id]);
 
   const mode = compositionKey
@@ -192,21 +175,22 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
         ? "inn_class"
         : "unresolved";
   const byComposition = mode === "composition";
-  const query = mode === "unresolved" ? "" : compositionKey || inn;
-  const result = useMemo(
+  // Grouping is an equality question, so it is asked as one. The ranked text
+  // search used to stand in for this: it capped the answer at 250 and counted
+  // prefix matches — which the classifier then discarded — towards "the list
+  // is incomplete". An exact lookup returns the whole group every time, so
+  // there is no cap to warn about and no phantom shortfall.
+  const candidates = useMemo(
     () =>
-      query
-        ? catalog.search(query, {
-            limit: ANALOG_SEARCH_LIMIT,
-            scope: "ingredients",
-          })
-        : EMPTY_SEARCH_RESULT,
-    [catalog, query],
+      mode === "unresolved"
+        ? []
+        : catalog.positionsByIdentity(
+            compositionKey
+              ? { compositionKey }
+              : { innKey: normalizeCatalogIndexText(inn) },
+          ),
+    [catalog, compositionKey, inn, mode],
   );
-  // `total` counts every match before the cap, so a shortfall means the
-  // catalog holds more than the tab can show — say so instead of implying
-  // the list is complete.
-  const truncated = result.total > result.items.length;
 
   const [, navigate] = useLocation();
   const comparison = useProductComparison();
@@ -243,15 +227,15 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
           strength: product.strength ?? "",
           compositionKey,
         },
-        result.items.map((item) => item.product),
+        candidates,
       ),
     [
+      candidates,
       compositionKey,
       inn,
       product.dosageForm,
       product.id,
       product.strength,
-      result.items,
     ],
   );
 
@@ -317,18 +301,6 @@ export function ProductAnalogsTab({ card }: { card: ProductCard }) {
             об&apos;єднав би непов&apos;язані препарати, а структурованого
             складу для цієї позиції немає в Національному каталозі цін МОЗ.
             Перевірте фактичний склад в інструкції та зіставте аналоги вручну.
-          </AlertDescription>
-        </Alert>
-      ) : null}
-
-      {truncated ? (
-        <Alert className="border-amber-500/40 bg-amber-500/5">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Перелік показано не повністю</AlertTitle>
-          <AlertDescription>
-            У каталозі є {result.total} позицій за цим запитом, показано перші{" "}
-            {result.items.length}. Скористайтеся пошуком за МНН, щоб переглянути
-            решту.
           </AlertDescription>
         </Alert>
       ) : null}
