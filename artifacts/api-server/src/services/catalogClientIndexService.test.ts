@@ -17,7 +17,7 @@ function executor(
     productCount?: number;
     tradeName?: string;
     form?: string;
-    rows?: { registration_number: string; inn: string }[];
+    rows?: { registration_number: string; inn: string; strength?: string }[];
   } = {},
 ): CatalogClientIndexQueryExecutor & { query: ReturnType<typeof vi.fn> } {
   const snapshotHash = options.snapshotHash ?? SHA;
@@ -29,7 +29,7 @@ function executor(
         trade_name: `ПРЕПАРАТ ${index + 1}`,
         inn: row.inn,
         form: "таблетки",
-        strength: "10 мг",
+        strength: row.strength ?? "10 мг",
         manufacturer: "Виробник",
         registration_end_date: "2030-01-01",
         early_termination: "",
@@ -132,6 +132,32 @@ describe("catalog client index service", () => {
     // The same registration with a usable МНН keeps an empty composition key:
     // a real substance name is never overridden by the price catalog.
     expect(result.payload.rows[1]?.[6]).toBe("");
+  });
+
+  it("drops an over-long declared strength instead of taking the catalog offline", async () => {
+    // Regression: the МОЗ price catalog records some combination strengths as
+    // multi-hundred-character prose. Feeding one into the 120-character
+    // strength bound threw, and because the whole payload is built in one
+    // pass, a single unusable value returned 503 for the entire catalog.
+    // UA/6658/01/01 is real: its declared strength is 861 characters.
+    const store = executor({
+      productCount: 1,
+      // An empty registry strength is what sends the row to the price-catalog
+      // backfill in the first place.
+      rows: [
+        {
+          registration_number: "UA/6658/01/01",
+          inn: "Comb drug",
+          strength: "",
+        },
+      ],
+    });
+    const result = await loadCatalogClientIndex(null, store);
+
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    expect(result.payload.rows).toHaveLength(1);
+    expect(result.payload.rows[0]?.[5]).toBe("");
   });
 
   it("prewarms once and shares one payload build across concurrent clients", async () => {

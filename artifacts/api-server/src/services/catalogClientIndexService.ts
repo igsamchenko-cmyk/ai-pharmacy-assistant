@@ -70,6 +70,9 @@ function normalizeEtag(value: string | null | undefined): string | null {
   return /^[a-f0-9]{64}$/u.test(normalized) ? normalized : null;
 }
 
+/** Strength bound shared by the row mapper and the price-catalog backfill. */
+const CATALOG_INDEX_STRENGTH_MAX_LENGTH = 120;
+
 function bounded(
   value: string | null | undefined,
   max: number,
@@ -79,6 +82,24 @@ function bounded(
   if (normalized.length > max)
     throw new Error(`Catalog client index ${field} exceeds its bound.`);
   return normalized;
+}
+
+/**
+ * A derived value that does not fit its bound is dropped, not thrown on.
+ *
+ * `bounded` is right for registry-native columns: the contract says they fit,
+ * and a violation means the snapshot is wrong. It is the wrong rule for a
+ * value this service synthesises from a second source. The МОЗ price catalog
+ * records some combination strengths as multi-hundred-character prose — 139
+ * registrations in the current snapshot exceed the 120-character strength
+ * bound, the longest by a factor of eighteen — and throwing on one of them
+ * took the entire client index offline with a 503 for every pharmacist. A
+ * missing dosage on one position is honest; losing the whole catalog to make
+ * that point is not.
+ */
+function boundedOrEmpty(value: string, max: number): string {
+  const normalized = value.trim().replace(/\s+/gu, " ");
+  return normalized.length > max ? "" : normalized;
 }
 
 export function buildCatalogClientIndexAliases(): CatalogClientIndexAliasRow[] {
@@ -254,14 +275,21 @@ async function buildPayloadUncached(
       const registration = normalizeRegistrationNumber(row.registration_number);
       const strength =
         row.strength.trim() ||
-        (registration ? (strengths.get(registration) ?? "") : "");
+        boundedOrEmpty(
+          registration ? (strengths.get(registration) ?? "") : "",
+          CATALOG_INDEX_STRENGTH_MAX_LENGTH,
+        );
       return encodeCatalogClientIndexRow({
         productId: bounded(row.registry_id, 32, "productId"),
         registration: bounded(row.registration_number, 80, "registration"),
         tradeName: bounded(row.trade_name, 500, "tradeName"),
         inn: bounded(row.inn, 500, "inn"),
         form: bounded(conciseCatalogIndexForm(row.form), 500, "form"),
-        strength: bounded(strength, 120, "strength"),
+        strength: bounded(
+          strength,
+          CATALOG_INDEX_STRENGTH_MAX_LENGTH,
+          "strength",
+        ),
         compositionKey: resolveCompositionKey(row, compositions),
         manufacturer: bounded(row.manufacturer, 500, "manufacturer"),
         registrationValidity: resolveRegistrationValidity(row),
