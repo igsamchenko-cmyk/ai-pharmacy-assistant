@@ -39,6 +39,7 @@
     "knowledge:registry:sync-summary": "tsx src/scripts/knowledge-registry-sync-summary.ts",
     "knowledge:catalog:completeness-report": "tsx src/scripts/knowledge-catalog-completeness-report.ts",
     "knowledge:catalog:search-coverage-report": "tsx src/scripts/knowledge-catalog-search-coverage-report.ts",
+    "knowledge:catalog:analog-coverage-report": "tsx src/scripts/knowledge-catalog-analog-coverage-report.ts",
     "knowledge:catalog:client-index-benchmark": "tsx src/scripts/knowledge-catalog-client-index-benchmark.ts",
     "knowledge:evidence:coverage-report": "tsx src/scripts/knowledge-evidence-comparison-coverage-report.ts",
     "knowledge:candidates:generate": "tsx src/scripts/knowledge-candidates-generate.ts",
