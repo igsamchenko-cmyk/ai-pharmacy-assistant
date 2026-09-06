@@ -1,16 +1,16 @@
 {
   "schemaVersion": "ua-dls-series-restrictions-v1",
-  "generatedAt": "2026-07-31T19:14:35.713Z",
+  "generatedAt": "2026-09-06T08:36:47.893Z",
   "source": {
     "title": "Реєстр документів щодо якості лікарських засобів",
     "publisher": "Державна служба України з лікарських засобів та контролю за наркотиками",
     "url": "https://pub-mex.dls.gov.ua/QLA/DocList.aspx",
     "coverageStartDate": "2000-01-01",
-    "latestDocumentDate": "2026-07-31",
+    "latestDocumentDate": "2026-08-31",
     "complete": true,
-    "recordCount": 21453,
+    "recordCount": 21541,
     "requestCount": 6,
-    "sha256": "04516f0848280fc3719f05385f49ada03ffd8c913798005e4af3727690e9ce07",
+    "sha256": "ce7963f008655a84d4a49d0987adf14618ea7feadbeb8d92374813b3c9f244e4",
     "documentTypeIds": [
       "48",
       "50",
@@ -379262,11 +379262,27 @@
       "sourceOrder": 21423
     },
     {
+      "documentDate": "2026-07-22",
+      "documentNumber": "335-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ЦЕФОТАКСИМАНАНТА(СУБСТАНДАРТ.)",
+      "medicineName": "ЦЕФОТАКСИМ АНАНТА",
+      "dosageForm": "порошок для розчину для ін`єкцій по 2 г, 1 флакон з порошком у коробці",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Ананта Медікеар Лімітед",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21424
+    },
+    {
       "documentDate": "2026-07-24",
       "documentNumber": "336-001.001/002.0/17-26",
       "eventType": "permanent_ban",
       "registrationNumber": "UA/15145/01/01",
-      "medicineName": "ПАКЛІТАКСЕЛ АМАКСА",
+      "medicineName": "ПАКЛІТАКСЕЛ АМАКСА (Paclitaxel 300 mg/50 ml)",
       "dosageForm": "концентрат для розчину для інфузій, 6 мг/мл; по 5 мл, 16,7 мл або 50 мл у флаконі; по 1 флакону в картонній коробці",
       "seriesRaw": "AO261002",
       "seriesValues": [
@@ -379277,7 +379293,7 @@
       "manufacturer": "контроль та випуск серії: АкВіда ГмбХ, Німеччина виробництво in bulk, первинне та вторинне пакування: Самянг Холдінгз Корпорейшн, Республiка Корея виробництво in bulk, первинне пакування, вторинне пакування, контроль серії: АкВіда ГмбХ, Німеччина",
       "country": "Німеччина/ Республiка Корея",
       "additionalInfo": "",
-      "sourceOrder": 21424
+      "sourceOrder": 21425
     },
     {
       "documentDate": "2026-07-27",
@@ -379295,7 +379311,7 @@
       "manufacturer": "ТОВ \"МАРІФАРМ\"",
       "country": "Словенія",
       "additionalInfo": "",
-      "sourceOrder": 21425
+      "sourceOrder": 21426
     },
     {
       "documentDate": "2026-07-27",
@@ -379313,7 +379329,7 @@
       "manufacturer": "ПАТ \"Хімфармзавод \"Червона зірка\"",
       "country": "Україна",
       "additionalInfo": "",
-      "sourceOrder": 21426
+      "sourceOrder": 21427
     },
     {
       "documentDate": "2026-07-27",
@@ -379331,7 +379347,7 @@
       "manufacturer": "ТОВ «МАРІФАРМ»",
       "country": "Словенія",
       "additionalInfo": "",
-      "sourceOrder": 21427
+      "sourceOrder": 21428
     },
     {
       "documentDate": "2026-07-27",
@@ -379349,7 +379365,7 @@
       "manufacturer": "ТОВ «МАРІФАРМ»",
       "country": "Словенія",
       "additionalInfo": "",
-      "sourceOrder": 21428
+      "sourceOrder": 21429
     },
     {
       "documentDate": "2026-07-27",
@@ -379367,7 +379383,7 @@
       "manufacturer": "ТОВ «МАРІФАРМ»",
       "country": "Словенія",
       "additionalInfo": "",
-      "sourceOrder": 21429
+      "sourceOrder": 21430
     },
     {
       "documentDate": "2026-07-27",
@@ -379385,7 +379401,7 @@
       "manufacturer": "Бафна Фармасьютікалс Лтд.",
       "country": "Індія",
       "additionalInfo": "Скасування розпорядження від 08.10.2025 № 780-001.1/002.0/17-25",
-      "sourceOrder": 21430
+      "sourceOrder": 21431
     },
     {
       "documentDate": "2026-07-27",
@@ -379403,7 +379419,7 @@
       "manufacturer": "АТ \"Фармак\"",
       "country": "Україна",
       "additionalInfo": "Скасування розпорядження від 22.12.2025 № 1082-001.1/002.0/17-25",
-      "sourceOrder": 21431
+      "sourceOrder": 21432
     },
     {
       "documentDate": "2026-07-27",
@@ -379421,7 +379437,7 @@
       "manufacturer": "ПрАТ Фармацевтична фабрика \"Віола\"",
       "country": "Україна",
       "additionalInfo": "",
-      "sourceOrder": 21432
+      "sourceOrder": 21433
     },
     {
       "documentDate": "2026-07-27",
@@ -379439,7 +379455,7 @@
       "manufacturer": "ПрАТ Фармацевтична фабрика \"Віола\"",
       "country": "Україна",
       "additionalInfo": "",
-      "sourceOrder": 21433
+      "sourceOrder": 21434
     },
     {
       "documentDate": "2026-07-27",
@@ -379457,7 +379473,7 @@
       "manufacturer": "ПрАТ Фармацевтична фабрика \"Віола\"",
       "country": "Україна",
       "additionalInfo": "",
-      "sourceOrder": 21434
+      "sourceOrder": 21435
     },
     {
       "documentDate": "2026-07-28",
@@ -379475,7 +379491,7 @@
       "manufacturer": "Ресіфарм Карлскога АБ",
       "country": "Австрія",
       "additionalInfo": "",
-      "sourceOrder": 21435
+      "sourceOrder": 21436
     },
     {
       "documentDate": "2026-07-28",
@@ -379493,7 +379509,7 @@
       "manufacturer": "Novartis Sagl?k, G?da ve Tar?m Urunleri San. ve Tic. A.S.",
       "country": "-",
       "additionalInfo": "",
-      "sourceOrder": 21436
+      "sourceOrder": 21437
     },
     {
       "documentDate": "2026-07-28",
@@ -379515,7 +379531,7 @@
       "manufacturer": "Евертоджен Лайф Саєнсиз Лімітед",
       "country": "Індія",
       "additionalInfo": "",
-      "sourceOrder": 21437
+      "sourceOrder": 21438
     },
     {
       "documentDate": "2026-07-28",
@@ -379539,7 +379555,7 @@
       "manufacturer": "Евертоджен Лайф Саєнсиз Лімітед",
       "country": "Індія",
       "additionalInfo": "",
-      "sourceOrder": 21438
+      "sourceOrder": 21439
     },
     {
       "documentDate": "2026-07-29",
@@ -379557,7 +379573,7 @@
       "manufacturer": "ПАТ \"Монфарм\"",
       "country": "Україна",
       "additionalInfo": "",
-      "sourceOrder": 21439
+      "sourceOrder": 21440
     },
     {
       "documentDate": "2026-07-29",
@@ -379575,7 +379591,7 @@
       "manufacturer": "Евертоджен Лайф Саєнсиз Лімітед",
       "country": "Індія",
       "additionalInfo": "Скасування розпорядження від 03.04.2024 № 3322-001.1/002.0/17-24",
-      "sourceOrder": 21440
+      "sourceOrder": 21441
     },
     {
       "documentDate": "2026-07-29",
@@ -379593,7 +379609,7 @@
       "manufacturer": "СЕПТОДОНТ",
       "country": "Франція",
       "additionalInfo": "",
-      "sourceOrder": 21441
+      "sourceOrder": 21442
     },
     {
       "documentDate": "2026-07-30",
@@ -379611,7 +379627,7 @@
       "manufacturer": "СЕПТОДОНТ",
       "country": "Франція",
       "additionalInfo": "",
-      "sourceOrder": 21442
+      "sourceOrder": 21443
     },
     {
       "documentDate": "2026-07-30",
@@ -379629,7 +379645,7 @@
       "manufacturer": "Гетеро Лабз Лімітед",
       "country": "Індія",
       "additionalInfo": "Часткове скасування розпорядження від 26.03.2026 № 160-001.2/002.0/17-26",
-      "sourceOrder": 21443
+      "sourceOrder": 21444
     },
     {
       "documentDate": "2026-07-30",
@@ -379647,7 +379663,7 @@
       "manufacturer": "Гетеро Лабз Лімітед",
       "country": "Індія",
       "additionalInfo": "Скасування розпорядження від 26.03.2026 № 160-001.2/002.0/17-26",
-      "sourceOrder": 21444
+      "sourceOrder": 21445
     },
     {
       "documentDate": "2026-07-31",
@@ -379665,7 +379681,7 @@
       "manufacturer": "АТ \"Лубнифарм\"",
       "country": "Україна",
       "additionalInfo": "",
-      "sourceOrder": 21445
+      "sourceOrder": 21446
     },
     {
       "documentDate": "2026-07-31",
@@ -379683,7 +379699,7 @@
       "manufacturer": "ПАТ \"Науково-виробничий центр \"Борщагівський хіміко-фармацевтичний завод\"",
       "country": "Україна",
       "additionalInfo": "Часткове скасування розпорядження від 21.01.2026 № 35-001.3/002.0/17-26",
-      "sourceOrder": 21446
+      "sourceOrder": 21447
     },
     {
       "documentDate": "2026-07-31",
@@ -379701,7 +379717,7 @@
       "manufacturer": "ПАТ \"Науково-виробничий центр \"Борщагівський хіміко-фармацевтичний завод\"",
       "country": "Україна",
       "additionalInfo": "Часткове скасування розпорядження від 21.01.2026 № 35-001.3/002.0/17-26",
-      "sourceOrder": 21447
+      "sourceOrder": 21448
     },
     {
       "documentDate": "2026-07-31",
@@ -379719,7 +379735,7 @@
       "manufacturer": "ПАТ \"Науково-виробничий центр \"Борщагівський хіміко-фармацевтичний завод\"",
       "country": "Україна",
       "additionalInfo": "Часткове скасування розпорядження від 21.01.2026 № 35-001.3/002.0/17-26",
-      "sourceOrder": 21448
+      "sourceOrder": 21449
     },
     {
       "documentDate": "2026-07-31",
@@ -379737,7 +379753,7 @@
       "manufacturer": "ПАТ \"Науково-виробничий центр \"Борщагівський хіміко-фармацевтичний завод\"",
       "country": "Україна",
       "additionalInfo": "Часткове скасування розпорядження від 21.01.2026 № 35-001.3/002.0/17-26",
-      "sourceOrder": 21449
+      "sourceOrder": 21450
     },
     {
       "documentDate": "2026-07-31",
@@ -379755,7 +379771,7 @@
       "manufacturer": "ПАТ \"Науково-виробничий центр \"Борщагівський хіміко-фармацевтичний завод\"",
       "country": "Україна",
       "additionalInfo": "Часткове скасування розпорядження від 21.01.2026 № 35-001.3/002.0/17-26",
-      "sourceOrder": 21450
+      "sourceOrder": 21451
     },
     {
       "documentDate": "2026-07-31",
@@ -379773,7 +379789,7 @@
       "manufacturer": "ПАТ \"Науково-виробничий центр \"Борщагівський хіміко-фармацевтичний завод\"",
       "country": "Україна",
       "additionalInfo": "Часткове скасування розпорядження від 21.01.2026 № 35-001.3/002.0/17-26",
-      "sourceOrder": 21451
+      "sourceOrder": 21452
     },
     {
       "documentDate": "2026-07-31",
@@ -379789,7 +379805,1575 @@
       "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
       "country": "Китай",
       "additionalInfo": "",
-      "sourceOrder": 21452
+      "sourceOrder": 21453
+    },
+    {
+      "documentDate": "2026-08-04",
+      "documentNumber": "354-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/18370/01/01",
+      "medicineName": "МЕФЕНАМІНОВА КИСЛОТА",
+      "dosageForm": "таблетки по 500 мг по 10 таблеток у блістері, по 2 блістери в пачці",
+      "seriesRaw": "151224",
+      "seriesValues": [
+        "151224"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ТОВ \"Фармацевтична компанія \"ФарКоС\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21454
+    },
+    {
+      "documentDate": "2026-08-04",
+      "documentNumber": "355-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/20896/01/01",
+      "medicineName": "АТРАКУРІУМ-ДАРНИЦЯ",
+      "dosageForm": "розчин для ін'єкцій, 10 мг/мл, по 5 мл в ампулі; по 5 ампул у контурній чарунковій упаковці; по 1 контурній чарунковій упаковці в пачці",
+      "seriesRaw": "UP10825, UP21125, UP10626, UP20625",
+      "seriesValues": [
+        "UP10825, UP21125, UP10626, UP20625",
+        "UP10825",
+        "UP21125",
+        "UP10626",
+        "UP20625"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПрАТ \"Фармацевтична фірма \"Дарниця\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21455
+    },
+    {
+      "documentDate": "2026-08-04",
+      "documentNumber": "356-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/3924/01/01",
+      "medicineName": "КЛОПІДОГРЕЛЬ",
+      "dosageForm": "таблетки, вкриті оболонкою, по 75 мг по 10 таблеток у блістері: по 3 блістери в коробці з картону",
+      "seriesRaw": "1110126",
+      "seriesValues": [
+        "1110126"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "всі стадії виробництва, контроль якості, випуск серії: Товариство з обмеженою відповідальністю\" ФАРМЕКС ГРУП\", Україна",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21456
+    },
+    {
+      "documentDate": "2026-08-06",
+      "documentNumber": "357-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ORAMIN-FSOFTCAP(СУБСТАНД.)",
+      "medicineName": "ORAMIN-F SOFT CAP",
+      "dosageForm": "М'які желатинові капсули, 30 капсул у коробці.",
+      "seriesRaw": "6AAA",
+      "seriesValues": [
+        "6AAA"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Daewon Healthcare Ltd",
+      "country": "Республіка Корея",
+      "additionalInfo": "",
+      "sourceOrder": 21457
+    },
+    {
+      "documentDate": "2026-08-06",
+      "documentNumber": "358-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "CISATRACURIUMBESILATE(СУБСТАНД.)",
+      "medicineName": "всі серії ЛЗ CISATRACURIUM BESILATE, виробництва LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "dosageForm": "-",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21458
+    },
+    {
+      "documentDate": "2026-08-06",
+      "documentNumber": "358-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ENTECAVIRMONOHYDRATE(INTERMEDIATE)(СУБСТАНД.)",
+      "medicineName": "всі серії ЛЗ ENTECAVIR MONOHYDRATE (Intermediate) , виробництва LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "dosageForm": "-",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21459
+    },
+    {
+      "documentDate": "2026-08-06",
+      "documentNumber": "359-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/12754/01/01",
+      "medicineName": "ОМНІТРОП®/Omnitrope® (Somatropin 5 mg/1.5mL)",
+      "dosageForm": "розчин для ін'єкцій, у картриджі; по 1 або 5 картриджів у картонній коробці",
+      "seriesRaw": "PR7350, PR7351",
+      "seriesValues": [
+        "PR7350, PR7351",
+        "PR7350",
+        "PR7351"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Novartis Pharmaceutical Manufacturing GmbH",
+      "country": "Австрія",
+      "additionalInfo": "",
+      "sourceOrder": 21460
+    },
+    {
+      "documentDate": "2026-08-06",
+      "documentNumber": "360-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ALKASELTZER(ФАЛЬСИФІКАТ)",
+      "medicineName": "ALKA SELTZER® (Acetylsalicylic acid/Sodium bicarbonate/Citric acid) 0,324 g/1,976 g/1,000 g",
+      "dosageForm": "таблетки № 100",
+      "seriesRaw": "X25GUE",
+      "seriesValues": [
+        "X25GUE"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "з маркуванням виробника Bayer de Mexico, S.A. de C.V.",
+      "country": "Мексика",
+      "additionalInfo": "",
+      "sourceOrder": 21461
+    },
+    {
+      "documentDate": "2026-08-06",
+      "documentNumber": "360-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "DESENFRIOLD®(ФАЛЬСИФІКАТ)",
+      "medicineName": "DESENFRIOL D® (Chlorphenamine/Phenylephrine/Paracetamol) 2 mg/5 mg/500 mg",
+      "dosageForm": "таблетки № 30",
+      "seriesRaw": "X24EKH",
+      "seriesValues": [
+        "X24EKH"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "з маркуванням виробника Bayer de Mexico, S.A. de C.V.",
+      "country": "Мексика",
+      "additionalInfo": "",
+      "sourceOrder": 21462
+    },
+    {
+      "documentDate": "2026-08-06",
+      "documentNumber": "360-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "FLANAX(ФАЛЬСИФІКАТ)",
+      "medicineName": "FLANAX® (Naproxen) 550 mg",
+      "dosageForm": "таблетки № 30",
+      "seriesRaw": "X2557P, X25CFZ",
+      "seriesValues": [
+        "X2557P, X25CFZ",
+        "X2557P",
+        "X25CFZ"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "з маркуванням виробника Bayer Bitterfeld Gmb",
+      "country": "Німеччина",
+      "additionalInfo": "",
+      "sourceOrder": 21463
+    },
+    {
+      "documentDate": "2026-08-06",
+      "documentNumber": "360-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "TABCINACTIVE(ФАЛЬСИФІКАТ)",
+      "medicineName": "TABCIN ACTIVE® (paracetamol/ dextromethorphan hydrobromide /Doxylamine succinate/Phenylephrine hydrochloride)",
+      "dosageForm": "капсули № 12",
+      "seriesRaw": "M230717B (блістер), X25RXG (коробка)",
+      "seriesValues": [
+        "M230717B (БЛІСТЕР), X25RXG (КОРОБКА)",
+        "M230717B (БЛІСТЕР)",
+        "X25RXG (КОРОБКА)"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "з маркуванням виробника Berlimed, S.A.",
+      "country": "Іспанія",
+      "additionalInfo": "",
+      "sourceOrder": 21464
+    },
+    {
+      "documentDate": "2026-08-06",
+      "documentNumber": "360-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ТABCINNOCHE®(ФАЛЬСИФІКАТ)",
+      "medicineName": "TABCIN NOCHE (paracetamol/ dextromethorphan hydrobromide /Doxylamine succinate/ Phenylephrine hydrochloride) 325.00 mg/10.00 mg/6.25 mg/5.00 mg",
+      "dosageForm": "КАПСУЛИ № 12",
+      "seriesRaw": "всі серії Зз терміном придатності NOV27",
+      "seriesValues": [
+        "ВСІ СЕРІЇ ЗЗ ТЕРМІНОМ ПРИДАТНОСТІ NOV27"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21465
+    },
+    {
+      "documentDate": "2026-08-07",
+      "documentNumber": "361-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/2403/01/01",
+      "medicineName": "КЕТОСТЕРИЛ",
+      "dosageForm": "таблетки, вкриті плівковою оболонкою; по 20 таблеток у блістері; по 5 блістерів у запаяному пакеті з алюмінієвої фольги; по 1 пакету в картонній коробці",
+      "seriesRaw": "18B1337",
+      "seriesValues": [
+        "18B1337"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Лабесфаль Лабораторіос Алміро, С.А.",
+      "country": "Португалія",
+      "additionalInfo": "",
+      "sourceOrder": 21466
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "362-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/17410/01/01",
+      "medicineName": "ЛАЗИН",
+      "dosageForm": "таблетки, вкриті плівковою оболонкою, по 5 мг по 10 таблеток у блістері; по 3 блістери в картонній коробці",
+      "seriesRaw": "E254585",
+      "seriesValues": [
+        "E254585"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Гетеро Лабз Лімітед",
+      "country": "Індія",
+      "additionalInfo": "Скасування розпорядження від 26.03.2026 № 160-001.2/002.0/17-26",
+      "sourceOrder": 21467
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "363-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "SPIRIVA(СУБСТАНДАРТ.)",
+      "medicineName": "SPIRIVA (TIOTROPIUM) 18 MCG",
+      "dosageForm": "10 капсул у блістері",
+      "seriesRaw": "404993",
+      "seriesValues": [
+        "404993"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "BOEHRINGER INGELHEIM PHARMA GMBH & CO.",
+      "country": "Німеччина",
+      "additionalInfo": "",
+      "sourceOrder": 21468
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "364-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "RISPERIDONETEVA(СУБСТАНДАРТ.)",
+      "medicineName": "RISPERIDONE TEVA (Risperidonum) 37,5 mg",
+      "dosageForm": "1 флакон порошку + 1 шприц + 2 голки + 1 адаптер, 2 флакони порошку + 2 шприци + 4 голки + 2 адаптери, 5 флаконів порошку + 5 шприців + 10 голок + 5 адаптерів",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Pharmathen International S.A",
+      "country": "Греція",
+      "additionalInfo": "",
+      "sourceOrder": 21469
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "364-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "RISPERIDONETEVA(СУБСТАНДАРТ.)",
+      "medicineName": "RISPERIDONE TEVA (Risperidonum) 25 mg",
+      "dosageForm": "1 флакон порошку + 1 шприц + 2 голки + 1 адаптер, 2 флакони порошку + 2 шприци + 4 голки + 2 адаптери, 5 флаконів порошку + 5 шприців + 10 голок + 5 адаптерів",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Pharmathen International S.A Industrial Park Sapes, Rodopi Prefecture",
+      "country": "Греція",
+      "additionalInfo": "",
+      "sourceOrder": 21470
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "364-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "RISPERIDONETEVA50MG(СУБСТАНДАРТ.)",
+      "medicineName": "RISPERIDONE TEVA RISPERIDONE TEVA (Risperidonum) 50 mg",
+      "dosageForm": "порошок та розчинник для пролонгованої суспензії для ін'єкцій, 1 флакон порошку + 1 шприц + 2 голки + 1 адаптер, 2 флакони порошку + 2 шприци + 4 голки + 2 адаптери, 5 флаконів порошку + 5 шприців + 10 голок + 5 адаптерів",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Pharmathen International S.A Industrial Park Sapes, Rodopi Prefecture",
+      "country": "Греція",
+      "additionalInfo": "",
+      "sourceOrder": 21471
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "365-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "CHLORAPREPINCOLORO(СУБСТАНД.)",
+      "medicineName": "CHLORAPREP INCOLORO 20 mg/ml + 0,70 ml/ml",
+      "dosageForm": "шкірний розчин, 60 аплікаторів по 1 мл",
+      "seriesRaw": "5344684",
+      "seriesValues": [
+        "5344684"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "BD INFECTION PREVENTION - Erembodegen-Dorp 86, Erembodegem, 9320",
+      "country": "Бельгія",
+      "additionalInfo": "",
+      "sourceOrder": 21472
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "366-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ADRENALINEINJECTION(СУБСТАНД.)",
+      "medicineName": "ADRENALINE INJECTION (EPINEPHRINE BITARTRATE)",
+      "dosageForm": "розчин для ін'єкцій, 1 мл в ампулі",
+      "seriesRaw": "IA02C01",
+      "seriesValues": [
+        "IA02C01"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "LAMTHONG KARNPAT PHARMACEUTICAL FACTORY CO. LTD.",
+      "country": "-",
+      "additionalInfo": "",
+      "sourceOrder": 21473
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "367-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "NITROFURANTOINPHARMEVID(СУБСТАНД.)",
+      "medicineName": "NITROFURANTION PHARMEVID (Nitrofurantoin) 100 mg",
+      "dosageForm": "тверді капсули № 30",
+      "seriesRaw": "8250243, 8250235",
+      "seriesValues": [
+        "8250243, 8250235",
+        "8250243",
+        "8250235"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Iasis Pharmaceuticals Hellas S.A.",
+      "country": "Греція",
+      "additionalInfo": "",
+      "sourceOrder": 21474
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "368-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "REMETHAN100R(СУБСТАНД.)",
+      "medicineName": "REMETHAN 100 R (Diclofenac Sodium 100mg)",
+      "dosageForm": "таблетки",
+      "seriesRaw": "104024",
+      "seriesValues": [
+        "104024"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "REMEDICA LTD",
+      "country": "Кіпр",
+      "additionalInfo": "",
+      "sourceOrder": 21475
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "369-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "TEICOPLANINPHARMLINE(СУБСТАНД.)",
+      "medicineName": "TEICOPLANIN PHARMLINE (Teicoplaninum)",
+      "dosageForm": "порошок та розчинник для розчину для ін'єкцій/інфузій або розчину для перорального застосування",
+      "seriesRaw": "2513534 (на вторинній упаковці та первинній упаковці - флакон з порошком)/ 2513797 (на первинній упаковці - розчинник",
+      "seriesValues": [
+        "2513534 (НА ВТОРИННІЙ УПАКОВЦІ ТА ПЕРВИННІЙ УПАКОВЦІ - ФЛАКОН З ПОРОШКОМ)/ 2513797 (НА ПЕРВИННІЙ УПАКОВЦІ - РОЗЧИННИК",
+        "2513534 (НА ВТОРИННІЙ УПАКОВЦІ",
+        "ПЕРВИННІЙ УПАКОВЦІ - ФЛАКОН З ПОРОШКОМ)/ 2513797 (НА ПЕРВИННІЙ УПАКОВЦІ - РОЗЧИННИК"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "S.C. Rompharm Company S.R.L.",
+      "country": "Румунія",
+      "additionalInfo": "",
+      "sourceOrder": 21476
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "369-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "TEICOPLANINPHARMLINE(СУБСТАНД.)",
+      "medicineName": "TEICOPLANIN PHARMLINE (Teicoplaninum) 400 mg",
+      "dosageForm": "порошок та розчинник для розчину для ін'єкцій/інфузій або розчину для перорального застосування",
+      "seriesRaw": "серії 2602581 (флакон з порошком та вторинна упаковка) та серії 2513798 (розчинник)",
+      "seriesValues": [
+        "2602581 (ФЛАКОН З ПОРОШКОМ ТА ВТОРИННА УПАКОВКА) ТА СЕРІЇ 2513798 (РОЗЧИННИК)",
+        "2602581 (ФЛАКОН З ПОРОШКОМ",
+        "ВТОРИННА УПАКОВКА)",
+        "СЕРІЇ 2513798 (РОЗЧИННИК)"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "S.C. Rompharm Company S.R.L.",
+      "country": "Румунія",
+      "additionalInfo": "",
+      "sourceOrder": 21477
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "370-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ADNAMIL(СУБСТАНД.)",
+      "medicineName": "ADNAMIL (Allopurinolum)",
+      "dosageForm": "таблетки № 30",
+      "seriesRaw": "HIY0325001",
+      "seriesValues": [
+        "HIY0325001"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Polfarmex S.A.",
+      "country": "Польща",
+      "additionalInfo": "",
+      "sourceOrder": 21478
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "371-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "CEVITIL(СУБСТАНД.)",
+      "medicineName": "CEVITIL (ASCORBIC ACID) 1 g",
+      "dosageForm": "шипучі таблетки у флаконі",
+      "seriesRaw": "2509984",
+      "seriesValues": [
+        "2509984"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "EPICO",
+      "country": "Єгипет",
+      "additionalInfo": "",
+      "sourceOrder": 21479
+    },
+    {
+      "documentDate": "2026-08-11",
+      "documentNumber": "372-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ATORVASTATINMEDICALVALLEY(СУБСТАНД.)",
+      "medicineName": "ATORVASTATIN MEDICAL VALLEY (Atorvastatinum) 40 mg",
+      "dosageForm": "таблетки, 30 таблеток, вкритих плівковою оболонкою, у блістері",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Laboratorios Liconsa, S.A",
+      "country": "Гвадалахара",
+      "additionalInfo": "",
+      "sourceOrder": 21480
+    },
+    {
+      "documentDate": "2026-08-13",
+      "documentNumber": "373-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/16490/01/01",
+      "medicineName": "НІМЕЛГАН",
+      "dosageForm": "гранули для оральної суспензії, по 100 мг; по 30 саше у коробці з картону",
+      "seriesRaw": "070324",
+      "seriesValues": [
+        "070324"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ТОВ \"АСТРАФАРМ\"",
+      "country": "Україна",
+      "additionalInfo": "Скасування розпорядження від 14.05.2026 № 244-001.2/002.0/17-26",
+      "sourceOrder": 21481
+    },
+    {
+      "documentDate": "2026-08-13",
+      "documentNumber": "374-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "DYSPORT500U(ФАЛЬСИФІКАТ)",
+      "medicineName": "DYSPORT® 500 U (Botulinum toxin type A)",
+      "dosageForm": "порошок для розчину для ін'єкцій",
+      "seriesRaw": "020302, 029035",
+      "seriesValues": [
+        "020302, 029035",
+        "020302",
+        "029035"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "з маркуванням виробника Ipsen Biopharm Ltd",
+      "country": "-",
+      "additionalInfo": "",
+      "sourceOrder": 21482
+    },
+    {
+      "documentDate": "2026-08-13",
+      "documentNumber": "375-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "NEBIDO(ФАЛЬСИФІКАТ)",
+      "medicineName": "NEBIDO(Testosterone undecylate) 250 mg/ml,",
+      "dosageForm": "термінально стерилізовані парентеральні розчини малого об'єму",
+      "seriesRaw": "KT0S5T4",
+      "seriesValues": [
+        "KT0S5T4"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "з маркуванням виробника BAYER AG",
+      "country": "-",
+      "additionalInfo": "",
+      "sourceOrder": 21483
+    },
+    {
+      "documentDate": "2026-08-13",
+      "documentNumber": "376-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/17285/01/01",
+      "medicineName": "ФЕНІБУТ",
+      "dosageForm": "таблетки по 250 мг по 10 таблеток у блістері, по 2 блістери у коробці з картону",
+      "seriesRaw": "070925",
+      "seriesValues": [
+        "070925"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ТОВ \"АСТРАФАРМ\"",
+      "country": "Україна,",
+      "additionalInfo": "Скасування розпорядження від 01.06.2026 № 276-001.2/002.0/17-26",
+      "sourceOrder": 21484
+    },
+    {
+      "documentDate": "2026-08-14",
+      "documentNumber": "377-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/6763/01/01",
+      "medicineName": "МЕЗИМ® КАПСУЛИ 10000",
+      "dosageForm": "капсули тверді з кишковорозчинними міні-таблетками; по 20 капсул у банці з поліпропілену; по 1 банці в картонній коробці",
+      "seriesRaw": "51225В",
+      "seriesValues": [
+        "51225В"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "БЕРЛІН-ХЕМІ АГ",
+      "country": "Німеччина",
+      "additionalInfo": "",
+      "sourceOrder": 21485
+    },
+    {
+      "documentDate": "2026-08-14",
+      "documentNumber": "378-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/20171/01/01",
+      "medicineName": "ПРЕСКОР®",
+      "dosageForm": "концентрат для приготування розчину для інфузій, по 2,5 мг/мл, по 5 мл у флаконі скляному, по 1 флакону в пачці",
+      "seriesRaw": "30825",
+      "seriesValues": [
+        "30825"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "АТ \"Фармак\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21486
+    },
+    {
+      "documentDate": "2026-08-14",
+      "documentNumber": "379-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "PHARMATON®50+SENIOR(ФАЛЬСИФІКАТ)",
+      "medicineName": "PHARMATON® 50+ SENIOR (Multivitamin)",
+      "dosageForm": "капсули у картонній коробці № 30, № 60",
+      "seriesRaw": "P0334801",
+      "seriesValues": [
+        "P0334801"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "з маркуванням виробника Swiss Caps AG, Husenstrasse 35, 9533 Kirchberg, Swiss",
+      "country": "Швейцарія",
+      "additionalInfo": "",
+      "sourceOrder": 21487
+    },
+    {
+      "documentDate": "2026-08-14",
+      "documentNumber": "380-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ACULIFEHEALTHCAREPRIVATELIMITED(UNIT9)(СУБСТАНД.)",
+      "medicineName": "всі ЛЗ, виробництва Aculife Healthcare Private Limited (Unit 9)",
+      "dosageForm": "-",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Aculife Healthcare Private Limited (Unit 9)",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21488
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "381-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/18904/01/01",
+      "medicineName": "ЛІНЕБІОТИК",
+      "dosageForm": "розчин для інфузій, 2 мг/мл; по 300 мл у флаконі, по 1 флакону у картонній коробці",
+      "seriesRaw": "6188004",
+      "seriesValues": [
+        "6188004"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ВЕМ Ілач Сан. ве Тік. А.С.",
+      "country": "Туреччина",
+      "additionalInfo": "",
+      "sourceOrder": 21489
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "BILASTINE(СУБСТАНД.)",
+      "medicineName": "BILASTIN",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21490
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "CINACALCETHYDROCHLORIDE(СУБСТАНД.)",
+      "medicineName": "CINACALCET HYDROCHLORIDE",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21491
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "CLEMASTINEFUMARATE(СУБСТАНД.)",
+      "medicineName": "CLEMASTINE FUMARATE",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21492
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "FOSAPREPITANTDIMEGLUMINE(СУБСТАНД.)",
+      "medicineName": "FOSAPREPITANT DIMEGLUMINE",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21493
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "ILAPRAZOLESODIUM(СУБСТАНД.)",
+      "medicineName": "ILAPRAZOLE SODIUM",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21494
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "MANGANESESULFATE(СУБСТАНД.)",
+      "medicineName": "MANGANESE SULFATE",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21495
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "PARICALCITOL(СУБСТАНД.)",
+      "medicineName": "PARICALCITOL",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21496
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "POLIDOCANOL(СУБСТАНД.)",
+      "medicineName": "POLIDOCANOL",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21497
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "ROSUVASTATINCALCIUM(СУБСТАНД.)",
+      "medicineName": "ROSUVASTATIN CALCIUM",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21498
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "SELENIOUSACID(СУБСТАНД.)",
+      "medicineName": "SELENIOUS ACID",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD., Китай",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21499
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "TADALAFIL(СУБСТАНД.)",
+      "medicineName": "TADALAFIL",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21500
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "382-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "TANDOSPIRONECITRATE(СУБСТАНД.)",
+      "medicineName": "TANDOSPIRONE CITRATE",
+      "dosageForm": "АФІ",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "LIANYUNGANG GUIKE PHARMACEUTICAL CO. LTD.",
+      "country": "Китай",
+      "additionalInfo": "",
+      "sourceOrder": 21501
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "383-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/3480/06/01",
+      "medicineName": "НАКЛОФЕН ДУО",
+      "dosageForm": "капсули по 75 мг по 10 капсул у блістері; по 2 блістери у картонній коробці",
+      "seriesRaw": "DH0676",
+      "seriesValues": [
+        "DH0676"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "КРКА, д.д., Ново место",
+      "country": "Словенія",
+      "additionalInfo": "",
+      "sourceOrder": 21502
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "384-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "LATANOPROST(СУБСТАНД.)",
+      "medicineName": "LATANOPROST 125 mcg/2,5 ml",
+      "dosageForm": "краплі",
+      "seriesRaw": "3141125, 3151225, 3010126, 3020126, 3030126",
+      "seriesValues": [
+        "3141125, 3151225, 3010126, 3020126, 3030126",
+        "3141125",
+        "3151225",
+        "3010126",
+        "3020126",
+        "3030126"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Zentiva k.s.",
+      "country": "Чехія",
+      "additionalInfo": "",
+      "sourceOrder": 21503
+    },
+    {
+      "documentDate": "2026-08-19",
+      "documentNumber": "384-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "SOFRADEX",
+      "medicineName": "SOFRADEX 40 mg/8 ml EEDRO BT1",
+      "dosageForm": "-",
+      "seriesRaw": "2110426",
+      "seriesValues": [
+        "2110426"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Zentiva k.s.",
+      "country": "Чехія",
+      "additionalInfo": "",
+      "sourceOrder": 21504
+    },
+    {
+      "documentDate": "2026-08-20",
+      "documentNumber": "385-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "НЕВСТАНОВЛЕНО",
+      "medicineName": "Кисень",
+      "dosageForm": "у балонах",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "згідно наданої інформації ПрАТ \"Рівнеазот\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21505
+    },
+    {
+      "documentDate": "2026-08-20",
+      "documentNumber": "386-001.001/002.0/17-26",
+      "eventType": "supplement",
+      "registrationNumber": "UA/5704/01/01",
+      "medicineName": "АМФОЛІП",
+      "dosageForm": "суспензія для розчину для інфузій, 5 мг/мл; по 2 мл, або по 10 мл, або по 20 мл у скляному флаконі; по 1 флакону в блістері; по 1 блістеру разом з голкою-фільтром у блістері в картонній коробці",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Бхарат Сірамс енд Вакцинс Лімітед",
+      "country": "Індія",
+      "additionalInfo": "Доповнення до документу: розпорядження від 12.05.2025 № 303-001.1/002.0/17-25",
+      "sourceOrder": 21506
+    },
+    {
+      "documentDate": "2026-08-21",
+      "documentNumber": "387-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/6666/01/02",
+      "medicineName": "ЕРГОС®",
+      "dosageForm": "таблетки по 50 мг по 4 таблетки у блістері; по 1 блістеру в коробці",
+      "seriesRaw": "010225",
+      "seriesValues": [
+        "010225"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ТОВ \"Фармацевтична компанія \"ФарКоС\"",
+      "country": "Україна",
+      "additionalInfo": "Скасування розпорядження від 28.10.2025 № 930-001.1/002.0/17-25",
+      "sourceOrder": 21507
+    },
+    {
+      "documentDate": "2026-08-21",
+      "documentNumber": "387-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/6666/01/02",
+      "medicineName": "ЕРГОС®",
+      "dosageForm": "таблетки по 50 мг; по 4 таблетки у блістері; по 1 блістеру в коробці",
+      "seriesRaw": "040325",
+      "seriesValues": [
+        "040325"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ТОВ \"Фармацевтична компанія \"ФарКоС\"",
+      "country": "Україна",
+      "additionalInfo": "Скасування розпорядження від 28.10.2025 № 930-001.1/002.0/17-25",
+      "sourceOrder": 21508
+    },
+    {
+      "documentDate": "2026-08-21",
+      "documentNumber": "388-001.001/002.0/17-26",
+      "eventType": "partial_cancellation",
+      "registrationNumber": "UA/2874/01/01",
+      "medicineName": "ЕНЗИСТАЛ®",
+      "dosageForm": "таблетки, вкриті цукровою оболонкою, кишковорозчинні по 10 таблеток у блістері; по 8 блістерів у картонній упаковці",
+      "seriesRaw": "б.н.",
+      "seriesValues": [
+        "Б.Н."
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Торрент Фармасьютікалс Лтд.",
+      "country": "Індія",
+      "additionalInfo": "Часткове скасування розпорядження від 09.10.2025 № 798-001.1/002.0/17-25",
+      "sourceOrder": 21509
+    },
+    {
+      "documentDate": "2026-08-24",
+      "documentNumber": "389-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "NORGINELIMITED(СУБСТАНД.)",
+      "medicineName": "всі ЛЗ, виробництва Norgine Limited, Сполучене Королівство",
+      "dosageForm": "-",
+      "seriesRaw": "всі серії",
+      "seriesValues": [],
+      "allSeries": true,
+      "seriesUnspecified": false,
+      "manufacturer": "Norgine Limited",
+      "country": "Сполучене Королівство",
+      "additionalInfo": "",
+      "sourceOrder": 21510
+    },
+    {
+      "documentDate": "2026-08-24",
+      "documentNumber": "390-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "LANZOTREDSOFTCAPSULES(СУБСТАНД.)",
+      "medicineName": "LANZOTRED SOFT CAPSULES (Enzalutamide) 40 mg",
+      "dosageForm": "капсули в алюмінієвому блістері",
+      "seriesRaw": "F10753P2 & G19850P2",
+      "seriesValues": [
+        "F10753P2 & G19850P2"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Lotus Pharmaceutical Co., Ltd. Nantou Plant",
+      "country": "Тайвань",
+      "additionalInfo": "",
+      "sourceOrder": 21511
+    },
+    {
+      "documentDate": "2026-08-24",
+      "documentNumber": "391-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "RHEUMESSER(СУБСТАНД.)",
+      "medicineName": "RHEUMESSER",
+      "dosageForm": "розчин для дисперсії для ін'єкцій/інфузій",
+      "seriesRaw": "G10759, K09548, K09549, K09548, H08873, M04154, G09087, G09087",
+      "seriesValues": [
+        "G10759, K09548, K09549, K09548, H08873, M04154, G09087, G09087",
+        "G10759",
+        "K09548",
+        "K09549",
+        "H08873",
+        "M04154",
+        "G09087"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "G.L. Pharma GmbH",
+      "country": "Австрія",
+      "additionalInfo": "",
+      "sourceOrder": 21512
+    },
+    {
+      "documentDate": "2026-08-24",
+      "documentNumber": "392-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "NEGAZOLE",
+      "medicineName": "NEGAZOLE 250MG (METRONIDAZOLE)",
+      "dosageForm": "таблетки, вкриті плівковою оболонкою, у блістерах",
+      "seriesRaw": "06056, 06764, 09307",
+      "seriesValues": [
+        "06056, 06764, 09307",
+        "06056",
+        "06764",
+        "09307"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Gulf Pharmaceutical Industries (Julphar)",
+      "country": "-",
+      "additionalInfo": "",
+      "sourceOrder": 21513
+    },
+    {
+      "documentDate": "2026-08-24",
+      "documentNumber": "393-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/0366/01/01",
+      "medicineName": "СОФОРИ ЯПОНСЬКОЇ НАСТОЙКА",
+      "dosageForm": "настойка, по 40 мл у флаконах полімерних",
+      "seriesRaw": "040424",
+      "seriesValues": [
+        "040424"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПрАТ Фармацевтична фабрика \"Віола\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21514
+    },
+    {
+      "documentDate": "2026-08-24",
+      "documentNumber": "394-001.001/002.0/17-26",
+      "eventType": "restore_permanent",
+      "registrationNumber": "UA/18122/01/01",
+      "medicineName": "МУЛЬТИГРИП БРОНХО",
+      "dosageForm": "порошок для орального розчину по 600 мг; по 3 г у саше; по 10 саше в картонній коробці",
+      "seriesRaw": "24196076A",
+      "seriesValues": [
+        "24196076A"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Білім Ілач Сан. ве Тід. А.Ш.",
+      "country": "Туреччина",
+      "additionalInfo": "Скасування розпорядження від 12.12.2024 № 11749-001.1/002.0/17-24",
+      "sourceOrder": 21515
+    },
+    {
+      "documentDate": "2026-08-24",
+      "documentNumber": "395-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/8311/01/01",
+      "medicineName": "ГЛОДУ НАСТОЙКА",
+      "dosageForm": "настойка для перорального застосування по 100 мл у флаконах полімерних",
+      "seriesRaw": "591025",
+      "seriesValues": [
+        "591025"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПП \"Кілафф\"",
+      "country": "Україна",
+      "additionalInfo": "Скасування розпорядження від 05.05.2026 № 227-001.2/002.0/17-26",
+      "sourceOrder": 21516
+    },
+    {
+      "documentDate": "2026-08-25",
+      "documentNumber": "396-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/7359/01/01",
+      "medicineName": "ЦИТРАМОН В",
+      "dosageForm": "таблетки; по 10 таблеток у блістерах; по 10 блістерів у пачці з картону;",
+      "seriesRaw": "10426",
+      "seriesValues": [
+        "10426"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПАТ \"Монфарм\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21517
+    },
+    {
+      "documentDate": "2026-08-25",
+      "documentNumber": "397-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/8794/02/01",
+      "medicineName": "КЛОТРИМАЗОЛ",
+      "dosageForm": "таблетки вагінальні по 100 мг; по 6 таблеток у блістері; по 1 блістеру з аплікатором у картонній пачці",
+      "seriesRaw": "ECM25002B1",
+      "seriesValues": [
+        "ECM25002B1"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Евертоджен Лайф Саєнсиз Лімітед",
+      "country": "Індія",
+      "additionalInfo": "Скасування розпорядження від 14.05.2026 № 243-001.2/002.0/17-26",
+      "sourceOrder": 21518
+    },
+    {
+      "documentDate": "2026-08-25",
+      "documentNumber": "398-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/8794/02/01",
+      "medicineName": "КЛОТРИМАЗОЛ",
+      "dosageForm": "таблетки вагінальні по 100 мг, по 6 таблеток у блістері; по 1 блістеру з аплікатором у картонній пачці;",
+      "seriesRaw": "ЕСМ25001В1",
+      "seriesValues": [
+        "ЕСМ25001В1"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Евертоджен Лайф Саєнсиз Лімітед",
+      "country": "Індія",
+      "additionalInfo": "Скасування розпорядження від 26.05.2026 № 263-001.2/002.0/17-26",
+      "sourceOrder": 21519
+    },
+    {
+      "documentDate": "2026-08-25",
+      "documentNumber": "399-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "SOLTOPIN(СУБСТАНД.)",
+      "medicineName": "SOLTROPIN (Mupirocinum) 20 mg/g",
+      "dosageForm": "мазь 15 г у тубі",
+      "seriesRaw": "S082414.1",
+      "seriesValues": [
+        "S082414.1"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "INFECTOPHARM Arzneimittel und Consilium GmbH",
+      "country": "Німеччина",
+      "additionalInfo": "",
+      "sourceOrder": 21520
+    },
+    {
+      "documentDate": "2026-08-25",
+      "documentNumber": "400-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ARANESP10MCG/4ML(СУБСТАНД.)",
+      "medicineName": "ARANESP 10 mcg/4 ml (DARBEPOETIN ALFA)",
+      "dosageForm": "розчин для ін'єкцій у попередньо наповненому шприці",
+      "seriesRaw": "1201165A, 1202944B",
+      "seriesValues": [
+        "1201165A, 1202944B",
+        "1201165A",
+        "1202944B"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Amgen Manufacturing Limited",
+      "country": "-",
+      "additionalInfo": "",
+      "sourceOrder": 21521
+    },
+    {
+      "documentDate": "2026-08-25",
+      "documentNumber": "400-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "ARANESP500MCG/1ML(СУБСТАНД.)",
+      "medicineName": "ARANESP 500 mcg/1 ml (DARBEPOETIN ALFA)",
+      "dosageForm": "розчин для ін'єкцій у попередньо наповненому шприці",
+      "seriesRaw": "1189992A, 1190934A",
+      "seriesValues": [
+        "1189992A, 1190934A",
+        "1189992A",
+        "1190934A"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Amgen Manufacturing Limited",
+      "country": "-",
+      "additionalInfo": "",
+      "sourceOrder": 21522
+    },
+    {
+      "documentDate": "2026-08-26",
+      "documentNumber": "401-001.001/002.0/17-26",
+      "eventType": "restore_temporary",
+      "registrationNumber": "UA/17310/01/01",
+      "medicineName": "СПИРТ ЕТИЛОВИЙ 70%",
+      "dosageForm": "розчин 70 %, по 100 мл у флаконах полімерних;",
+      "seriesRaw": "010325",
+      "seriesValues": [
+        "010325"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ТОВ \"МЕДЛЕВ\"",
+      "country": "Україна",
+      "additionalInfo": "Скасування розпорядження від 11.07.2025 № 455-001.1/002.0/17-25",
+      "sourceOrder": 21523
+    },
+    {
+      "documentDate": "2026-08-26",
+      "documentNumber": "402-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/6683/01/01",
+      "medicineName": "САЛІЦИЛОВА МАЗЬ",
+      "dosageForm": "мазь 2 % по 25 г у тубах ламінатних в пачці",
+      "seriesRaw": "030724",
+      "seriesValues": [
+        "030724"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПрАТ Фармацевтична фабрика \"Віола\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21524
+    },
+    {
+      "documentDate": "2026-08-26",
+      "documentNumber": "403-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/6763/01/01",
+      "medicineName": "МЕЗИМ® КАПСУЛИ 10000",
+      "dosageForm": "капсули тверді з кишковорозчинними міні-таблетками; по 20 капсул у банці",
+      "seriesRaw": "F160456 (cерія \"in bulk\" - 51225В)",
+      "seriesValues": [
+        "F160456 (CЕРІЯ \"IN BULK\" - 51225В)"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Адер Фармасьютіклс СРЛ, Італія",
+      "country": "Італія",
+      "additionalInfo": "",
+      "sourceOrder": 21525
+    },
+    {
+      "documentDate": "2026-08-26",
+      "documentNumber": "404-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/2448/02/01",
+      "medicineName": "ТОБРАДЕКС®/TOBRADEX EYE OINTMENT (Tobramycin/Dexamethasone)",
+      "dosageForm": "мазь очна; по 3,5 г у тубі",
+      "seriesRaw": "VLM44A",
+      "seriesValues": [
+        "VLM44A"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Новартіс Мануфактурінг НВ",
+      "country": "Бельгія",
+      "additionalInfo": "",
+      "sourceOrder": 21526
+    },
+    {
+      "documentDate": "2026-08-26",
+      "documentNumber": "405-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "WARFANT(СУБСТАНД.)",
+      "medicineName": "WARFANT 3 mg (WARFARIN SODIUM)",
+      "dosageForm": "таблетки № 100 у поліпропіленовому контейнері",
+      "seriesRaw": "25002",
+      "seriesValues": [
+        "25002"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Famar Italia S.p.A.",
+      "country": "Італiя",
+      "additionalInfo": "",
+      "sourceOrder": 21527
+    },
+    {
+      "documentDate": "2026-08-26",
+      "documentNumber": "406-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "TEVA-PREGABALIN(СУБСТАНД.)",
+      "medicineName": "TEVA-PREGABALIN Capsules 150 mg (Pregabalin)",
+      "dosageForm": "капсули тверді по 150 мг",
+      "seriesRaw": "100070495, 100068913",
+      "seriesValues": [
+        "100070495, 100068913",
+        "100070495",
+        "100068913"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Teva Canada Ltd",
+      "country": "Канада",
+      "additionalInfo": "",
+      "sourceOrder": 21528
+    },
+    {
+      "documentDate": "2026-08-26",
+      "documentNumber": "407-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "IVF-MHP75IU(СУБСТАНД.)",
+      "medicineName": "IVF-M HP 75IU (HIGHLY PURIFIED HUMAN MENOPAUSAL GONADOTROPIN)",
+      "dosageForm": "ліофілізований порошок для розчину для ін'єкцій",
+      "seriesRaw": "HMG24706, HMG24707, HMG25701, HMG25702, HMG25704",
+      "seriesValues": [
+        "HMG24706, HMG24707, HMG25701, HMG25702, HMG25704",
+        "HMG24706",
+        "HMG24707",
+        "HMG25701",
+        "HMG25702",
+        "HMG25704"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "LG CHEM, LTD.",
+      "country": "Корея",
+      "additionalInfo": "",
+      "sourceOrder": 21529
+    },
+    {
+      "documentDate": "2026-08-27",
+      "documentNumber": "408-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "DYSPORT500U(ФАЛЬСИФІКАТ)",
+      "medicineName": "DYSPORT® 500 U (Botulinum toxin type A)",
+      "dosageForm": "ліофілізований порошок",
+      "seriesRaw": "P22686",
+      "seriesValues": [
+        "P22686"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "з маркуванням Ipsen Farmaceutica Ltda.",
+      "country": "-",
+      "additionalInfo": "",
+      "sourceOrder": 21530
+    },
+    {
+      "documentDate": "2026-08-27",
+      "documentNumber": "409-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "TRODELVY(ФАЛЬСИФІКАТ)",
+      "medicineName": "TRODELVY (Sacituzumab govitecan)",
+      "dosageForm": "асептично оброблені парентеральні розчини малого об'єму",
+      "seriesRaw": "10008808",
+      "seriesValues": [
+        "10008808"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "GILEAD SCIENCES INC (1800 WHEELER AVE.,LA VERNE",
+      "country": "Каліфорнія",
+      "additionalInfo": "",
+      "sourceOrder": 21531
+    },
+    {
+      "documentDate": "2026-08-27",
+      "documentNumber": "410-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/15396/01/01",
+      "medicineName": "ПРОТЕКОН ФАСТ®",
+      "dosageForm": "таблетки, вкриті плівковою оболонкою, по 60 таблеток у контейнері; по 1 контейнеру у пачці з картону",
+      "seriesRaw": "EGD26001A1",
+      "seriesValues": [
+        "EGD26001A1"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Евертоджен Лайф Саєнсиз Лімітед",
+      "country": "Індія",
+      "additionalInfo": "",
+      "sourceOrder": 21532
+    },
+    {
+      "documentDate": "2026-08-27",
+      "documentNumber": "411-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "KEYTRUDA(ФАЛЬСИФІКАТ)",
+      "medicineName": "KEYTRUDA (Pembrolizumab) 25 mg/ml",
+      "dosageForm": "100 мл у флаконі",
+      "seriesRaw": "Z016478, Z016479",
+      "seriesValues": [
+        "Z016478, Z016479",
+        "Z016478",
+        "Z016479"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "з маркуванням виробника Merck Sharp & Dohme B.V.",
+      "country": "-",
+      "additionalInfo": "",
+      "sourceOrder": 21533
+    },
+    {
+      "documentDate": "2026-08-27",
+      "documentNumber": "412-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "MOUNJARO(ФАЛЬСИФІКАТ)",
+      "medicineName": "MOUNJARO (Tirzepatide), 5 mg/0.5 mL",
+      "dosageForm": "розчин для ін'єкцій, флакон з одноразовою дозою",
+      "seriesRaw": "2032307",
+      "seriesValues": [
+        "2032307"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "BSP Pharmaceuticals S.p.A., Latina Scalo",
+      "country": "Італiя",
+      "additionalInfo": "",
+      "sourceOrder": 21534
+    },
+    {
+      "documentDate": "2026-08-27",
+      "documentNumber": "412-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "MOUNJARO(ФАЛЬСИФІКАТ)",
+      "medicineName": "MOUNJARO (Tirzepatide), 15 mg/0.5 mL",
+      "dosageForm": "розчин для ін'єкцій, флакон з одноразовою дозою",
+      "seriesRaw": "2032316",
+      "seriesValues": [
+        "2032316"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "з маркуванням виробника BSP Pharmaceuticals S.p.A., Latina Scalo",
+      "country": "Італiя",
+      "additionalInfo": "",
+      "sourceOrder": 21535
+    },
+    {
+      "documentDate": "2026-08-27",
+      "documentNumber": "413-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "MOUNJARO(ФАЛЬСИФІКАТ)",
+      "medicineName": "MOUNJARO (tirzepatide)",
+      "dosageForm": "асептичний парентеральний розчин малого об’єму",
+      "seriesRaw": "955010",
+      "seriesValues": [
+        "955010"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ELI LILLY AND COMPANY",
+      "country": "-",
+      "additionalInfo": "",
+      "sourceOrder": 21536
+    },
+    {
+      "documentDate": "2026-08-28",
+      "documentNumber": "414-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/7848/01/01",
+      "medicineName": "Пантенол",
+      "dosageForm": "мазь, 50 мг/г по 30 г у тубі,по 1 тубі в картонній упаковці",
+      "seriesRaw": "15X59A",
+      "seriesValues": [
+        "15X59A"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Хемофарм, АД",
+      "country": "Сербія",
+      "additionalInfo": "",
+      "sourceOrder": 21537
+    },
+    {
+      "documentDate": "2026-08-31",
+      "documentNumber": "415-001.001/002.0/17-26",
+      "eventType": "temporary_ban",
+      "registrationNumber": "UA/7436/01/01",
+      "medicineName": "СТРЕПСІЛС® З ВІТАМІНОМ С ЗІ СМАКОМ АПЕЛЬСИНА",
+      "dosageForm": "льодяники, по 12 льодяників у блістері; по 2 блістери в картонній коробці",
+      "seriesRaw": "ST420",
+      "seriesValues": [
+        "ST420"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Реккітт Бенкізер Хелскер Інтернешнл Лімітед",
+      "country": "Велика Британiя",
+      "additionalInfo": "",
+      "sourceOrder": 21538
+    },
+    {
+      "documentDate": "2026-08-31",
+      "documentNumber": "416-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/18509/01/01",
+      "medicineName": "НОРМОЛАКТ",
+      "dosageForm": "сироп, 670 мг/мл по 100 мл у флаконі полімерному; по 1 флакону разом із дозувальною ложкою в пачці",
+      "seriesRaw": "1360824",
+      "seriesValues": [
+        "1360824"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "ПАТ \"Науково-виробничий центр \"Борщагівський хіміко-фармацевтичний завод\"",
+      "country": "Україна",
+      "additionalInfo": "",
+      "sourceOrder": 21539
+    },
+    {
+      "documentDate": "2026-08-31",
+      "documentNumber": "417-001.001/002.0/17-26",
+      "eventType": "permanent_ban",
+      "registrationNumber": "UA/10300/01/01",
+      "medicineName": "ЕНТОБАН",
+      "dosageForm": "сироп; по 120 мл у флаконі; по 1 флакону у картонній коробці",
+      "seriesRaw": "1825003",
+      "seriesValues": [
+        "1825003"
+      ],
+      "allSeries": false,
+      "seriesUnspecified": false,
+      "manufacturer": "Хербіон Пакистан Прайвет Лімітед",
+      "country": "Пакистан",
+      "additionalInfo": "",
+      "sourceOrder": 21540
     }
   ],
   "warnings": []
