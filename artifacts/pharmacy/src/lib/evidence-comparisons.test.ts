@@ -83,6 +83,22 @@ describe("generic evidence registry and resolver", () => {
       expect(record.indication.id).toBeTruthy();
       expect(record.indication.population).toBeTruthy();
       expect(record.indication.outcomes.length).toBeGreaterThan(0);
+      expect(
+        record.outcomeEvidence.map((outcome) => outcome.outcomeId),
+      ).toEqual(record.indication.outcomes.map((outcome) => outcome.id));
+      for (const outcome of record.outcomeEvidence) {
+        expect(["high", "moderate", "low", "very_low"]).toContain(
+          outcome.confidence,
+        );
+        expect(outcome.finding).toBeTruthy();
+        expect(outcome.confidenceRationale).toBeTruthy();
+        expect(outcome.sourceUrls.length).toBeGreaterThan(0);
+        expect(
+          outcome.sourceUrls.every((url) =>
+            record.sources.some((source) => source.url === url),
+          ),
+        ).toBe(true);
+      }
       expect(record.applicability).toEqual({
         compositionMatch: "exact",
         comparisonLevel: "ingredient",
@@ -123,6 +139,7 @@ describe("generic evidence registry and resolver", () => {
     ]);
     expect(sameIngredient.classification).toBe("same_ingredient");
     expect(sameIngredient.status).toBe("insufficient");
+    expect(sameIngredient.message).toContain("однакову діючу речовину");
 
     const sameClass = resolveEvidenceComparison([
       product("13", "ІБУПРОФЕН", "ібупрофен", "M01AE01"),
@@ -142,7 +159,7 @@ describe("generic evidence registry and resolver", () => {
       product("18", "ОМЕПРАЗОЛ", "омепразол", "A02BC01"),
     ]);
     expect(unrelated.classification).toBe("not_meaningfully_comparable");
-    expect(unrelated.message).toContain("Надійного порівняння немає");
+    expect(unrelated.message).toContain("Для цих діючих речовин");
   });
 
   it("fails closed for combinations, missing composition and wrong indication", () => {
@@ -156,19 +173,19 @@ describe("generic evidence registry and resolver", () => {
       kind: "combination",
       components: ["парацетамол", "ібупрофен"],
     });
-    expect(
-      resolveEvidenceComparison([
-        combination,
-        product("22", "НАПРОКСЕН", "напроксен", "M01AE02"),
-      ]).status,
-    ).toBe("insufficient");
+    const combinationResolution = resolveEvidenceComparison([
+      combination,
+      product("22", "НАПРОКСЕН", "напроксен", "M01AE02"),
+    ]);
+    expect(combinationResolution.status).toBe("insufficient");
+    expect(combinationResolution.message).toContain("точної комбінації");
 
     expect(
       resolveEvidenceComparison([
         product("23", "БЕЗ МНН", "", null),
         product("24", "НАПРОКСЕН", "напроксен", "M01AE02"),
       ]).message,
-    ).toContain("exact INN/composition не визначено");
+    ).toContain("Склад одного або обох препаратів");
 
     const wrongIndication = resolveEvidenceComparison(
       [cases[0].left, cases[0].right],

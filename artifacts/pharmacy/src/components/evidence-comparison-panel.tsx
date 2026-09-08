@@ -20,25 +20,30 @@ import type {
   ClinicalEvidenceComparison,
   ComparisonClassification,
   EvidenceComparisonResolution,
+  EvidenceConfidence,
   EvidenceDirectness,
+  EvidenceOutcomeAssessment,
+  EvidenceSource,
 } from "@/lib/evidence-comparisons";
 
 export const EVIDENCE_COMPARISON_DISCLAIMER =
-  "Клінічний висновок застосовується лише до exact INN/composition, вибраного показання, population та outcomes у verified evidence record. Він не переноситься автоматично на інші дози, форми, комбінації або показання, не є висновком про конкретний бренд і не замінює рішення лікаря.";
+  "Клінічний висновок стосується лише точно визначених діючих речовин, обраного показання, відповідної групи пацієнтів і наведених результатів. Він не переноситься автоматично на інші дози, форми, комбінації або показання, не є висновком про конкретний бренд і не замінює рішення лікаря.";
 
-function confidenceLabel(
-  value: ClinicalEvidenceComparison["confidence"],
-): string {
+function confidenceLabel(value: EvidenceConfidence): string {
   if (value === "high") return "Висока впевненість";
-  return value === "moderate" ? "Помірна впевненість" : "Низька впевненість";
+  if (value === "moderate") return "Помірна впевненість";
+  if (value === "low") return "Низька впевненість";
+  return "Дуже низька впевненість";
 }
 
-function confidenceBadgeClass(
-  value: ClinicalEvidenceComparison["confidence"],
-): string {
-  return value === "moderate"
-    ? "border-sky-500/40 bg-sky-500/10 text-sky-950 dark:text-sky-100"
-    : "border-amber-500/40 bg-amber-500/10 text-amber-950 dark:text-amber-100";
+function confidenceBadgeClass(value: EvidenceConfidence): string {
+  if (value === "high")
+    return "border-emerald-500/40 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100";
+  if (value === "moderate")
+    return "border-sky-500/40 bg-sky-500/10 text-sky-950 dark:text-sky-100";
+  if (value === "low")
+    return "border-amber-500/40 bg-amber-500/10 text-amber-950 dark:text-amber-100";
+  return "border-rose-500/40 bg-rose-500/10 text-rose-950 dark:text-rose-100";
 }
 
 function withoutRankingLanguage(value: string): string {
@@ -54,6 +59,11 @@ function withoutRankingLanguage(value: string): string {
 }
 
 const CONFIDENCE_GUIDE = [
+  {
+    value: "very_low",
+    label: "Дуже низька",
+    description: "Надійної оцінки ефекту немає; результат дуже невизначений.",
+  },
   {
     value: "low",
     label: "Низька",
@@ -97,7 +107,8 @@ function directnessPresentation(value: EvidenceDirectness): {
   }
   return {
     label: "Недостатньо доказів",
-    description: "Verified evidence record для вибраного контексту відсутній.",
+    description:
+      "Перевірений доказовий запис для вибраного контексту відсутній.",
   };
 }
 
@@ -126,6 +137,154 @@ function EvidenceList({ items }: { items: readonly string[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+function evidenceCountLabel(
+  studyCount: number | null,
+  participants: number | null,
+): string {
+  if (studyCount === null && participants === null)
+    return "Не наведено у перевіреному записі";
+  const parts: string[] = [];
+  if (studyCount !== null) parts.push(`${studyCount} дослідж.`);
+  if (participants !== null)
+    parts.push(
+      `${new Intl.NumberFormat("uk-UA").format(participants)} учасників`,
+    );
+  return parts.join(" · ");
+}
+
+function OutcomeEvidenceCard({
+  assessment,
+  sources,
+}: {
+  assessment: EvidenceOutcomeAssessment;
+  sources: readonly EvidenceSource[];
+}) {
+  const directness = directnessPresentation(assessment.directness);
+  const linkedSources = sources.filter((source) =>
+    assessment.sourceUrls.includes(source.url),
+  );
+  const missingQuantitativeEffect =
+    assessment.absoluteEffect === null && assessment.relativeEffect === null;
+
+  return (
+    <article
+      className="grid min-w-0 max-w-full gap-3 rounded-2xl border bg-background/70 p-4"
+      data-testid={`evidence-outcome-${assessment.outcomeId}`}
+    >
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+        <h3 className="min-w-0 break-words font-semibold">
+          {assessment.label}
+        </h3>
+        <div className="flex min-w-0 flex-wrap gap-2">
+          <Badge
+            className={confidenceBadgeClass(assessment.confidence)}
+            variant="outline"
+            data-testid="outcome-confidence-badge"
+          >
+            {confidenceLabel(assessment.confidence)}
+          </Badge>
+          <Badge variant="outline" data-testid="outcome-directness-badge">
+            {directness.label}
+          </Badge>
+        </div>
+      </div>
+
+      <p className="break-words text-sm leading-relaxed">
+        {withoutRankingLanguage(assessment.finding)}
+      </p>
+
+      <div className="grid min-w-0 gap-2 sm:grid-cols-2">
+        <div className="min-w-0 rounded-xl bg-muted/30 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Абсолютна різниця
+          </p>
+          <p className="mt-1 break-words text-sm">
+            {assessment.absoluteEffect ?? "Не наведено у перевіреному записі"}
+            {assessment.baselineRisk ? (
+              <span className="mt-1 block text-xs text-muted-foreground">
+                Базовий ризик: {assessment.baselineRisk}
+              </span>
+            ) : null}
+          </p>
+        </div>
+        <div className="min-w-0 rounded-xl bg-muted/30 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Відносний ефект
+          </p>
+          <p className="mt-1 break-words text-sm">
+            {assessment.relativeEffect ?? "Не наведено у перевіреному записі"}
+            {assessment.confidenceInterval ? (
+              <span className="mt-1 block text-xs text-muted-foreground">
+                95% ДІ: {assessment.confidenceInterval}
+              </span>
+            ) : null}
+          </p>
+        </div>
+        <div className="min-w-0 rounded-xl bg-muted/30 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Період оцінки
+          </p>
+          <p className="mt-1 break-words text-sm">
+            {assessment.timeHorizon ?? "Не наведено у перевіреному записі"}
+          </p>
+        </div>
+        <div className="min-w-0 rounded-xl bg-muted/30 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Обсяг доказів
+          </p>
+          <p className="mt-1 break-words text-sm">
+            {evidenceCountLabel(assessment.studyCount, assessment.participants)}
+          </p>
+        </div>
+      </div>
+
+      {missingQuantitativeEffect ? (
+        <p className="break-words rounded-xl border border-amber-500/35 bg-amber-500/10 p-3 text-xs leading-relaxed">
+          Кількісну різницю не показано: перевірений запис не містить достатньо
+          узгоджених абсолютних і відносних чисел для цього результату.
+        </p>
+      ) : null}
+
+      <div className="grid min-w-0 gap-1 text-xs leading-relaxed text-muted-foreground">
+        <p className="break-words">
+          <span className="font-semibold text-foreground">
+            Чому така впевненість:
+          </span>{" "}
+          {assessment.confidenceRationale}
+        </p>
+        <p className="break-words">
+          <span className="font-semibold text-foreground">Прямота:</span>{" "}
+          {directness.description}
+        </p>
+      </div>
+
+      {linkedSources.length > 0 ? (
+        <details className="group min-w-0 rounded-xl border bg-muted/20">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-medium">
+            <span>Джерела цього результату</span>
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none group-open:rotate-180" />
+          </summary>
+          <ul className="grid gap-2 border-t p-3 text-sm">
+            {linkedSources.map((source) => (
+              <li key={source.url} className="min-w-0">
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex max-w-full items-start gap-2 break-words text-primary hover:underline"
+                >
+                  <span>{source.title}</span>
+                  <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+    </article>
   );
 }
 
@@ -196,20 +355,9 @@ export function EvidenceComparisonPanel({
       <Card className="max-w-full overflow-hidden border-primary/25 bg-primary/[0.03]">
         <CardHeader className="space-y-3 p-4 sm:p-5">
           <div className="flex min-w-0 flex-wrap gap-2">
-            <Badge>Evidence MVP</Badge>
-            <Badge
-              className={confidenceBadgeClass(comparison.confidence)}
-              variant="outline"
-              data-testid="confidence-badge"
-            >
-              {confidenceLabel(comparison.confidence)}
-            </Badge>
-            <Badge
-              className="border-violet-500/40 bg-violet-500/10 text-violet-950 dark:text-violet-100"
-              variant="outline"
-              data-testid="directness-badge"
-            >
-              {directness.label}
+            <Badge>Клінічні докази</Badge>
+            <Badge variant="outline">
+              Впевненість — окремо для кожного результату
             </Badge>
           </div>
           <CardTitle
@@ -256,7 +404,7 @@ export function EvidenceComparisonPanel({
             </div>
             <div className="min-w-0 rounded-xl border bg-background/70 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Population
+                Для кого
               </p>
               <p className="mt-2 break-words text-sm leading-relaxed">
                 {comparison.indication.population}
@@ -264,7 +412,7 @@ export function EvidenceComparisonPanel({
             </div>
             <div className="min-w-0 rounded-xl border bg-background/70 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Outcomes
+                Що оцінювали
               </p>
               <p className="mt-2 break-words text-sm leading-relaxed">
                 {comparison.indication.outcomes
@@ -281,7 +429,17 @@ export function EvidenceComparisonPanel({
         icon={<Activity className="h-5 w-5" />}
         testId="evidence-effectiveness"
       >
-        <EvidenceList items={comparison.effectivenessOutcomes} />
+        <div className="grid min-w-0 gap-3">
+          {comparison.outcomeEvidence
+            .filter((outcome) => outcome.category === "effectiveness")
+            .map((outcome) => (
+              <OutcomeEvidenceCard
+                key={outcome.outcomeId}
+                assessment={outcome}
+                sources={comparison.sources}
+              />
+            ))}
+        </div>
       </EvidenceSection>
 
       <EvidenceSection
@@ -289,7 +447,34 @@ export function EvidenceComparisonPanel({
         icon={<ShieldCheck className="h-5 w-5" />}
         testId="evidence-safety"
       >
-        <EvidenceList items={comparison.keyRisks} />
+        <div className="grid min-w-0 gap-4">
+          {comparison.outcomeEvidence.some(
+            (outcome) => outcome.category === "safety",
+          ) ? (
+            <div className="grid min-w-0 gap-3">
+              {comparison.outcomeEvidence
+                .filter((outcome) => outcome.category === "safety")
+                .map((outcome) => (
+                  <OutcomeEvidenceCard
+                    key={outcome.outcomeId}
+                    assessment={outcome}
+                    sources={comparison.sources}
+                  />
+                ))}
+            </div>
+          ) : (
+            <p className="rounded-xl border border-amber-500/35 bg-amber-500/10 p-3 text-sm leading-relaxed">
+              Окремої надійної кількісної оцінки порівняльної безпеки у
+              перевіреному записі немає.
+            </p>
+          )}
+          <div className="min-w-0 rounded-xl border bg-muted/20 p-3">
+            <p className="mb-2 text-sm font-semibold">
+              Важливі ризики класу — не доказ переваги одного препарату
+            </p>
+            <EvidenceList items={comparison.keyRisks} />
+          </div>
+        </div>
       </EvidenceSection>
 
       <EvidenceSection
@@ -298,19 +483,19 @@ export function EvidenceComparisonPanel({
         testId="evidence-quality"
       >
         <div className="grid min-w-0 gap-4">
-          <div className="flex min-w-0 flex-wrap gap-2">
-            <Badge variant="outline">
-              {confidenceLabel(comparison.confidence)}
-            </Badge>
-            <Badge variant="outline">{directness.label}</Badge>
-          </div>
+          <p className="break-words text-sm leading-relaxed">
+            Впевненість оцінюється окремо для кожного результату. Один і той
+            самий запис може мати різну надійність для ефективності та безпеки.
+          </p>
 
           <div
-            className="grid min-w-0 gap-2 sm:grid-cols-3"
+            className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-4"
             aria-label="Шкала впевненості доказів"
           >
             {CONFIDENCE_GUIDE.map((level) => {
-              const isCurrent = comparison.confidence === level.value;
+              const isCurrent = comparison.outcomeEvidence.some(
+                (outcome) => outcome.confidence === level.value,
+              );
               return (
                 <div
                   key={level.value}
@@ -331,7 +516,7 @@ export function EvidenceComparisonPanel({
           <div className="grid min-w-0 gap-3 sm:grid-cols-2">
             <div className="min-w-0 rounded-xl border bg-muted/20 p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Чому така впевненість
+                Загальне обмеження запису
               </p>
               <p className="mt-2 break-words text-sm leading-relaxed">
                 {comparison.confidenceRationale}
@@ -401,7 +586,7 @@ export function EvidenceComparisonPanel({
 
       <Alert>
         <ShieldAlert className="h-4 w-4" />
-        <AlertTitle>Межі evidence comparison</AlertTitle>
+        <AlertTitle>Межі клінічного порівняння</AlertTitle>
         <AlertDescription>{EVIDENCE_COMPARISON_DISCLAIMER}</AlertDescription>
       </Alert>
     </section>
@@ -422,10 +607,14 @@ export function EvidenceComparisonUnavailable({
       <AlertTitle>Надійного клінічного порівняння немає</AlertTitle>
       <AlertDescription className="grid gap-2">
         <p className="break-words">{resolution.message}</p>
-        <p className="break-words text-xs">
-          Клінічний висновок не генерується з інструкцій або LLM. Поки exact
-          evidence match відсутній, FarmAssist показує лише реєстрові дані обох
-          препаратів.
+        <p className="break-words text-sm">
+          FarmAssist не визначає, який із цих препаратів ефективніший або
+          безпечніший. Нижче доступне лише порівняння їхніх реєстрових
+          характеристик.
+        </p>
+        <p className="break-words text-xs text-muted-foreground">
+          Щоб перевірити іншу пару, приберіть один препарат у верхній частині
+          сторінки та додайте інший.
         </p>
       </AlertDescription>
     </Alert>
@@ -448,11 +637,13 @@ export function EvidenceComparisonExperience({
     >
       <Card className="min-w-0 max-w-full overflow-hidden">
         <CardContent className="grid gap-3 p-4">
-          <div className="flex min-w-0 flex-wrap gap-2">
-            <Badge variant="secondary">Database-driven resolver</Badge>
-            <Badge variant="outline" data-testid="comparison-classification">
-              {classificationLabel(resolution.classification)}
-            </Badge>
+          <div className="grid min-w-0 gap-2">
+            <p className="text-sm font-semibold">Що порівнюється</p>
+            <div className="flex min-w-0 flex-wrap gap-2">
+              <Badge variant="outline" data-testid="comparison-classification">
+                {classificationLabel(resolution.classification)}
+              </Badge>
+            </div>
           </div>
           {resolution.identities ? (
             <div
@@ -465,17 +656,14 @@ export function EvidenceComparisonExperience({
                   className="min-w-0 rounded-xl border bg-muted/20 p-3"
                 >
                   <p className="break-words font-medium">
-                    {identity.rawInn || "INN/composition не визначено"}
+                    {identity.rawInn || "Діючу речовину або склад не визначено"}
                   </p>
                   <p className="mt-1 break-words text-xs text-muted-foreground">
                     {identity.kind === "combination"
-                      ? "Комбінація"
+                      ? "Комбінація діючих речовин"
                       : identity.kind === "monotherapy"
-                        ? "Монопрепарат"
+                        ? "Одна діюча речовина"
                         : "Невідомий склад"}
-                    {identity.therapeuticClassKey
-                      ? ` · ATC ${identity.therapeuticClassKey}`
-                      : ""}
                   </p>
                 </div>
               ))}

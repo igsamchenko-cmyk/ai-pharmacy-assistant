@@ -52,8 +52,10 @@ describe("evidence comparison mobile panel", () => {
       expect(html).toContain(comparison.indication.label);
       expect(html).toContain(comparison.indication.description);
       expect(html).toContain(comparison.indication.population);
-      for (const outcome of comparison.indication.outcomes)
+      for (const outcome of comparison.indication.outcomes) {
         expect(html).toContain(outcome.label);
+        expect(html).toContain(`data-testid="evidence-outcome-${outcome.id}"`);
+      }
       expect(html).toContain(comparison.alternatives);
       expect(html).toContain(comparison.comparisonType);
       expect(html).toContain(comparison.confidenceRationale);
@@ -63,8 +65,13 @@ describe("evidence comparison mobile panel", () => {
       expect(html).toContain("Якість доказів");
       expect(html).toContain("Джерела та методологія");
       expect(html).toContain(EVIDENCE_COMPARISON_DISCLAIMER);
-      expect(html).toContain('data-testid="confidence-badge"');
-      expect(html).toContain('data-testid="directness-badge"');
+      expect(html).toContain('data-testid="outcome-confidence-badge"');
+      expect(html).toContain('data-testid="outcome-directness-badge"');
+      expect(html).toContain("Абсолютна різниця");
+      expect(html).toContain("Відносний ефект");
+      expect(html).toContain("Обсяг доказів");
+      expect(html).toContain("Не наведено у перевіреному записі");
+      expect(html).toContain("Дуже низька");
       expect(html).toContain('data-testid="evidence-insufficient-data"');
       expect(html).toContain("motion-reduce:transition-none");
       expect(html).toContain("overflow-x-hidden");
@@ -80,7 +87,7 @@ describe("evidence comparison mobile panel", () => {
   it.each([
     ["apixaban-rivaroxaban-af", "Прямі + непрямі дані"],
     ["enalapril-lisinopril-hypertension", "Пряме порівняння"],
-    ["ibuprofen-naproxen-acute-pain", "Прямі + непрямі дані"],
+    ["ibuprofen-naproxen-acute-pain", "Пряме порівняння"],
   ])("shows structured directness for %s", (id, expectedLabel) => {
     const comparison = EVIDENCE_REGISTRY.find((item) => item.id === id)!;
     const html = renderToStaticMarkup(
@@ -119,7 +126,8 @@ describe("evidence comparison mobile panel", () => {
       }),
     );
 
-    expect(html).toContain("Database-driven resolver");
+    expect(html).toContain("Що порівнюється");
+    expect(html).not.toContain("Database-driven resolver");
     expect(html).toContain("Один терапевтичний клас");
     expect(html).toContain("апіксабан");
     expect(html).toContain("ривароксабан");
@@ -136,8 +144,11 @@ describe("evidence comparison mobile panel", () => {
     );
 
     expect(html).toContain("Надійного порівняння немає");
-    expect(html).toContain("verified evidence registry");
-    expect(html).toContain("не генерується з інструкцій або LLM");
+    expect(html).toContain("Для цих діючих речовин");
+    expect(html).toContain("не визначає, який із цих препаратів ефективніший");
+    expect(html).not.toContain("verified evidence registry");
+    expect(html).not.toContain("LLM");
+    expect(html).not.toContain("exact INN");
     expect(html).not.toContain('data-testid="evidence-effectiveness"');
   });
 });
